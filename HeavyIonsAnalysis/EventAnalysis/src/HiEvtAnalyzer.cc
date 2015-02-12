@@ -19,7 +19,6 @@
 #include "DataFormats/HeavyIonEvent/interface/Centrality.h"
 #include "DataFormats/HeavyIonEvent/interface/EvtPlane.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
-#include "RecoHI/HiCentralityAlgos/interface/CentralityProvider.h"
 
 #include "SimDataFormats/HiGenData/interface/GenHIEvent.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
@@ -46,6 +45,7 @@ private:
   // ----------member data ---------------------------
   edm::InputTag CentralityTag_;
   edm::InputTag CentralityBinTag_;
+
   edm::InputTag EvtPlaneTag_;
   edm::InputTag EvtPlaneFlatTag_;
 
@@ -60,7 +60,6 @@ private:
   bool doVertex_;
 
   edm::Service<TFileService> fs_;
-  CentralityProvider * centProvider;
 
   TTree * thi_;
 
@@ -107,7 +106,8 @@ private:
 // constructors and destructor
 //
 HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig) :
-  CentralityBinTag_(iConfig.getParameter<edm::InputTag> ("CentralityBin")),
+  CentralityTag_(iConfig.getParameter<edm::InputTag> ("CentralitySrc")),
+  CentralityBinTag_(iConfig.getParameter<edm::InputTag> ("CentralityBinSrc")),
   EvtPlaneTag_(iConfig.getParameter<edm::InputTag> ("EvtPlane")),
   EvtPlaneFlatTag_(iConfig.getParameter<edm::InputTag> ("EvtPlaneFlat")),
   HiMCTag_(iConfig.getParameter<edm::InputTag> ("HiMC")),
@@ -118,11 +118,6 @@ HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig) :
   doMC_(iConfig.getParameter<bool> ("doMC")),
   doVertex_(iConfig.getParameter<bool>("doVertex"))
 {
-  centProvider = 0;
-  if(doCentrality_)
-  {
-    centProvider = new CentralityProvider(iConfig, consumesCollector());
-  }
 
 }
 
@@ -131,8 +126,6 @@ HiEvtAnalyzer::~HiEvtAnalyzer()
 
   // do anything here that needs to be done at desctruction time
   // (e.g. close files, deallocate resources etc.)
-  if(centProvider)
-    delete centProvider;
 
 }
 
@@ -146,8 +139,6 @@ void
 HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
-  //ESHandle<SetupData> pSetup;
-  //iSetup.get<SetupRecord>().get(pSetup);
 
   // Run info
   event = iEvent.id().event();
@@ -177,17 +168,15 @@ HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     proc_id =  hepmcevt->GetEvent()->signal_process_id();
   }
 
-  //iEvent.getByLabel(CentralityBinTag_,binHandle);
-  //hiBin = *binHandle;
-
   if (doCentrality_) {
-    //if (!centProvider) centProvider = new CentralityProvider(iSetup, );
 
-    // make supre you do this first in every event
-    centProvider->newEvent(iEvent,iSetup);
-    const reco::Centrality* centrality = centProvider->raw();
+    edm::Handle<int> cbin_;
+    iEvent.getByLabel(CentralityBinTag_,cbin_);
+    hiBin = *cbin_;
 
-    hiBin = centProvider->getBin();
+    edm::Handle<reco::Centrality> centrality;
+    iEvent.getByLabel(CentralityTag_, centrality);
+
     hiNpix = centrality->multiplicityPixel();
     hiNpixelTracks = centrality->NpixelTracks();
     hiNtracks = centrality->Ntracks();
