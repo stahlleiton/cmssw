@@ -236,7 +236,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
         fileName = cms.untracked.string('onia2MuMuPAT.root'),
         outputCommands =  cms.untracked.vstring('drop *',
         'keep *_mergedtruth_*_*',                              # tracking particles and tracking vertices for hit by hit matching
-        'keep *_hiGenParticles_*_*',                           # generated particles
+        'keep *_genParticles_*_*',                           # generated particles
         'keep *_genMuons_*_Onia2MuMuPAT',                      # generated muons and parents
         'keep patMuons_patMuonsWithTrigger_*_Onia2MuMuPAT',    # All PAT muons including matches to triggers
         'keep patCompositeCandidates_*__Onia2MuMuPAT',         # PAT di-muons
@@ -257,7 +257,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
     process.outTnP = cms.OutputModule("PoolOutputModule",
         fileName = cms.untracked.string('tnp.root'),
         outputCommands = cms.untracked.vstring('drop *',
-            'keep *_hiGenParticles_*_*',                             # generated particles
+            'keep *_genParticles_*_*',                             # generated particles
             'keep *_genMuons_*_Onia2MuMuPAT',                      # generated muons and parents
             'keep *_tagMuonsDblTrgMCMatch__Onia2MuMuPAT',                # tagMuons MC matches for efficiency
             'keep *_tagMuonsSglTrgMCMatch__Onia2MuMuPAT',                # tagMuons MC matches for efficiency
