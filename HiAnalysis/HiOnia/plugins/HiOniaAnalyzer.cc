@@ -85,8 +85,7 @@ private:
   void fillGenInfo();
   bool isAbHadron(int pdgID);
   bool isAMixedbHadron(int pdgID, int momPdgID);
-  std::pair< int, float > findGenMCInfo(const reco::GenParticle *genJpsi);
-//  std::pair< int, float > findGenMCInfo(reco::GenParticleRef genJpsi);
+  std::pair<int, std::pair<float, float> >  findGenMCInfo(const reco::GenParticle *genJpsi);
 
   void fillRecoMuons(int theCentralityBin);
   bool isMuonInAccept(const pat::Muon* aMuon);
@@ -165,6 +164,7 @@ private:
   int Gen_QQ_size; // number of generated Onia
   int Gen_QQ_type[Max_QQ_size]; // Onia type: prompt, non-prompt, unmatched
   float Gen_QQ_ctau[Max_QQ_size];    // ctau: flight time
+  float Gen_QQ_ctau3D[Max_QQ_size];    // ctau: flight time
   int Gen_QQ_momId[Max_QQ_size];    // pdgId of mother particle of 2 muons
   
   int Gen_mu_size; // number of generated muons
@@ -1158,8 +1158,8 @@ HiOniaAnalyzer::checkTriggers(const pat::CompositeCandidate* aJpsiCand) {
     const pat::TriggerObjectStandAloneCollection mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
     const pat::TriggerObjectStandAloneCollection mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
     
-    const pat::TriggerObjectStandAloneCollection mu1HLTMatchesPath = muon1->triggerObjectMatchesByPath( theTriggerNames.at(iTr),true,false );
-    const pat::TriggerObjectStandAloneCollection mu2HLTMatchesPath = muon2->triggerObjectMatchesByPath( theTriggerNames.at(iTr),true,false );
+    const pat::TriggerObjectStandAloneCollection mu1HLTMatchesPath = muon1->triggerObjectMatchesByPath( theTriggerNames.at(iTr) );
+    const pat::TriggerObjectStandAloneCollection mu2HLTMatchesPath = muon2->triggerObjectMatchesByPath( theTriggerNames.at(iTr) );
     
     bool pass1 = false;
     bool pass2 = false;
@@ -1432,7 +1432,7 @@ HiOniaAnalyzer::fillGenInfo()
     for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
         it!=collGenParticles->end();++it) {
       const reco::GenParticle* gen = &(*it);
-//		  reco::GenParticleRef gen1(collGenParticles,iGenParticle);
+//                reco::GenParticleRef gen1(collGenParticles,iGenParticle);
 
       if (abs(gen->pdgId()) == _oniaPDG  && gen->status() == 2 &&
           gen->numberOfDaughters() >= 2) {
@@ -1451,10 +1451,10 @@ HiOniaAnalyzer::fillGenInfo()
         const reco::Candidate* genMuon2 = gen->daughter(mu2);
           
         Gen_QQ_type[Gen_QQ_size] = _isPromptMC ? 0 : 1; // prompt: 0, non-prompt: 1
-//        std::pair<int, float> MCinfo = findGenMCInfo(gen1);
-        std::pair<int, float> MCinfo = findGenMCInfo(gen);
+        std::pair<int, std::pair<float, float> > MCinfo = findGenMCInfo(gen);
         Gen_QQ_momId[Gen_QQ_size] = MCinfo.first;
-        Gen_QQ_ctau[Gen_QQ_size] = MCinfo.second;
+        Gen_QQ_ctau[Gen_QQ_size] = MCinfo.second.first;
+        Gen_QQ_ctau3D[Gen_QQ_size] = MCinfo.second.second;
         
         TLorentzVector vJpsi = lorentzMomentum(gen->p4());
         new((*Gen_QQ_4mom)[Gen_QQ_size])TLorentzVector(vJpsi);
@@ -1604,16 +1604,13 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
       if (muon->isGlobalMuon() && !selGlobalMuon(muon)) muType = muType+pow(2,2);
       if (muon->isTrackerMuon() && !selTrackerMuon(muon)) muType = muType+pow(2,3);
 
-///      if ( //muType==0 ||
-///        muType==1 ) {
-
       if ( (muType&1)==1) {
       nGoodMuons++;
 
         int trigBits=0;
         for (unsigned int iTr=1; iTr<NTRIGGERS; ++iTr) {
           const pat::TriggerObjectStandAloneCollection muHLTMatchesFilter = muon->triggerObjectMatchesByFilter(  HLTLastFilters[iTr] );
-          const pat::TriggerObjectStandAloneCollection muHLTMatchesPath = muon->triggerObjectMatchesByPath( theTriggerNames.at(iTr),true,false );
+          const pat::TriggerObjectStandAloneCollection muHLTMatchesPath = muon->triggerObjectMatchesByPath( theTriggerNames.at(iTr) );
 
           // apparently matching by path gives false positives so we use matching by filter for all triggers for which we know the filter name
           if ( muHLTMatchesFilter.size() > 0 ) {
@@ -1627,7 +1624,6 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
                 else
                   myRecoMuonHistos->Fill(muon, "EndCap_"+theLabel);
               }
-///           else if (muType==0) {
               else if ((muType&1)==1) {
                 myRecoGlbMuonHistos->Fill(muon, "All_"+theLabel);
                 if (isBarrel)
@@ -1635,7 +1631,6 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
                 else
                   myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
               }
-///           else if (muType==1) {
               else if ((muType&2)==2) {
                 myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
                 if (isBarrel)
@@ -1830,6 +1825,7 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Gen_QQ_type",      Gen_QQ_type,    "Gen_QQ_type[Gen_QQ_size]/I");
     myTree->Branch("Gen_QQ_4mom",      "TClonesArray", &Gen_QQ_4mom, 32000, 0);
     myTree->Branch("Gen_QQ_ctau",      Gen_QQ_ctau,    "Gen_QQ_ctau[Gen_QQ_size]/F");
+    myTree->Branch("Gen_QQ_ctau3D",      Gen_QQ_ctau3D,    "Gen_QQ_ctau3D[Gen_QQ_size]/F");
     myTree->Branch("Gen_QQ_mupl_4mom", "TClonesArray", &Gen_QQ_mupl_4mom, 32000, 0);
     myTree->Branch("Gen_QQ_mumi_4mom", "TClonesArray", &Gen_QQ_mumi_4mom, 32000, 0);
 
@@ -2108,12 +2104,12 @@ HiOniaAnalyzer::isAMixedbHadron(int pdgID, int momPdgID) {
 
 }
 
-std::pair<int, float>  
+std::pair<int, std::pair<float, float> >  
 HiOniaAnalyzer::findGenMCInfo(const reco::GenParticle* genJpsi) {
-//HiOniaAnalyzer::findGenMCInfo(reco::GenParticleRef genJpsi) {
 
   int momJpsiID = 0;
   float trueLife = -99.;
+  float trueLife3D = -99.;
 
   if (genJpsi->numberOfMothers()>0) {
     TVector3 trueVtx(0.0,0.0,0.0);
@@ -2122,47 +2118,50 @@ HiOniaAnalyzer::findGenMCInfo(const reco::GenParticle* genJpsi) {
 
     trueVtx.SetXYZ(genJpsi->vertex().x(),genJpsi->vertex().y(),genJpsi->vertex().z());
     trueP.SetXYZ(genJpsi->momentum().x(),genJpsi->momentum().y(),genJpsi->momentum().z());
-	    
+            
     bool aBhadron = false;
     reco::GenParticleRef Jpsimom = genJpsi->motherRef();       // find mothers
     if (Jpsimom.isNull()) {
-      std::pair<int, float> result = std::make_pair(momJpsiID, trueLife);
+      std::pair<float, float> trueLifePair = std::make_pair(trueLife, trueLife3D);
+      std::pair<int, std::pair<float, float> > result = std::make_pair(momJpsiID, trueLifePair);
       return result;
     } else {
       reco::GenParticleRef Jpsigrandmom = Jpsimom->motherRef();
       if (isAbHadron(Jpsimom->pdgId())) {
-	if (Jpsigrandmom.isNonnull() && isAMixedbHadron(Jpsimom->pdgId(),Jpsigrandmom->pdgId())) {
-	  momJpsiID = Jpsigrandmom->pdgId();
-	  trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-	} else {
-	  momJpsiID = Jpsimom->pdgId();
-	  trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z());
-	}
-	aBhadron = true;
+        if (Jpsigrandmom.isNonnull() && isAMixedbHadron(Jpsimom->pdgId(),Jpsigrandmom->pdgId())) {
+          momJpsiID = Jpsigrandmom->pdgId();
+          trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
+        } else {
+          momJpsiID = Jpsimom->pdgId();
+          trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z());
+        }
+        aBhadron = true;
       } else {
-	if (Jpsigrandmom.isNonnull() && isAbHadron(Jpsigrandmom->pdgId())) {
-	  reco::GenParticleRef JpsiGrandgrandmom = Jpsigrandmom->motherRef();
-	  if (JpsiGrandgrandmom.isNonnull() && isAMixedbHadron(Jpsigrandmom->pdgId(),JpsiGrandgrandmom->pdgId())) {
-	    momJpsiID = JpsiGrandgrandmom->pdgId();
-	    trueVtxMom.SetXYZ(JpsiGrandgrandmom->vertex().x(),JpsiGrandgrandmom->vertex().y(),JpsiGrandgrandmom->vertex().z());
-	  } else {
-	    momJpsiID = Jpsigrandmom->pdgId();
-	    trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-	  }
-	  aBhadron = true;
-	}
+        if (Jpsigrandmom.isNonnull() && isAbHadron(Jpsigrandmom->pdgId())) {
+          reco::GenParticleRef JpsiGrandgrandmom = Jpsigrandmom->motherRef();
+          if (JpsiGrandgrandmom.isNonnull() && isAMixedbHadron(Jpsigrandmom->pdgId(),JpsiGrandgrandmom->pdgId())) {
+            momJpsiID = JpsiGrandgrandmom->pdgId();
+            trueVtxMom.SetXYZ(JpsiGrandgrandmom->vertex().x(),JpsiGrandgrandmom->vertex().y(),JpsiGrandgrandmom->vertex().z());
+          } else {
+            momJpsiID = Jpsigrandmom->pdgId();
+            trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
+          }
+          aBhadron = true;
+        }
       }
       if (!aBhadron) {
-	momJpsiID = Jpsimom->pdgId();
-	trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z()); 
+        momJpsiID = Jpsimom->pdgId();
+        trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z()); 
       }
     } 
 
     TVector3 vdiff = trueVtx - trueVtxMom;
     trueLife = vdiff.Perp()*3.096916/trueP.Perp();
+    trueLife3D = vdiff.Mag()*3.096916/trueP.Mag();
   }
 
-  std::pair<int, float> result = std::make_pair(momJpsiID, trueLife);
+  std::pair<float, float> trueLifePair = std::make_pair(trueLife, trueLife3D);
+  std::pair<int, std::pair<float, float> > result = std::make_pair(momJpsiID, trueLifePair);
   return result;
 
 }
