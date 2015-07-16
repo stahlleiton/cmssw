@@ -311,6 +311,8 @@ EvtPlaneProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if(tracks.isValid()){
       for(reco::TrackCollection::const_iterator j = tracks->begin(); j != tracks->end(); j++){
 	
+	if(j->quality(reco::TrackBase::qualityByName("highPurity")) !=1) continue;
+
 	//Find possible collections with command line: edmDumpEventContent *.root
 #endif
 #ifdef RECOCHARGEDCANDIDATECOLLECTION
