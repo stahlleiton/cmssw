@@ -129,52 +129,34 @@ void TnPEffDraw() {
      ComPt1.push_back(plotEff_1bin(daPtData1[i], 1, "pt"));
   }
 
-  cout << __LINE__ << endl;
 
   RooDataSet *daEtaData0 = (RooDataSet*)f9->Get(cutTag + "/" + etaTag + "/fit_eff"); 
   RooDataSet *daEtaData1 = (RooDataSet*)f10->Get(cutTag + "/" + etaTag + "/fit_eff"); 
-  cout << __LINE__ << endl;
 
   TGraphAsymmErrors *ComEta0 = plotEff_1bin(daEtaData0, 1, "eta");
   TGraphAsymmErrors *ComEta1 = plotEff_1bin(daEtaData1, 1, "eta");
-  cout << __LINE__ << endl;
 
   RooDataSet *daCentMC1Bin[nCentBins];
   RooDataSet *daCentData1Bin[nCentBins];
-  cout << __LINE__ << endl;
   for (int i=0; i<nCentBins; i++)
   {
      daCentMC1Bin[i] = (RooDataSet*) fCentMC[i]->Get(cutTag + "/" + allTag + "/fit_eff");
      daCentData1Bin[i] = (RooDataSet*) fCentData[i]->Get(cutTag + "/" + allTag + "/fit_eff");
   }
-  cout << __LINE__ << endl;
 
   RooDataSet *daPtMC1Bin0 = (RooDataSet*)f9->Get(cutTag + "/" + allTag + "/fit_eff"); 
-  cout << __LINE__ << endl;
   RooDataSet *daPtData1Bin0 = (RooDataSet*)f10->Get(cutTag + "/" + allTag + "/fit_eff"); 
-  cout << __LINE__ << endl;
   RooDataSet *daAbsEtaMC1 = (RooDataSet*)f9->Get(cutTag + "/" + absetaTag + "/fit_eff"); 
-  cout << __LINE__ << endl;
   RooDataSet *daAbsEtaData1 = (RooDataSet*)f10->Get(cutTag + "/" + absetaTag + "/fit_eff"); 
-  cout << __LINE__ << endl;
 
-  cout << __LINE__ << endl;
   TGraphAsymmErrors* Com0Pt0 = plotEff_1bin(daPtMC1Bin0,0,"eta");
-  cout << __LINE__ << endl;
   TGraphAsymmErrors* Com0Pt1 = plotEff_1bin(daPtData1Bin0,0,"eta");
-  cout << __LINE__ << endl;
   vector<TGraphAsymmErrors*> Com0AbsEta0 = plotEff_Nbins(daAbsEtaMC1,0,"pt",absetaVar);
-  cout << __LINE__ << endl;
   vector<TGraphAsymmErrors*> Com0AbsEta1 = plotEff_Nbins(daAbsEtaData1,0,"pt",absetaVar);
-  cout << __LINE__ << endl;
 
-  cout << __LINE__ << endl;
   TGraphAsymmErrors *effCentMC = plotEffCent(daCentMC1Bin, 1);
-  cout << __LINE__ << endl;
   TGraphAsymmErrors *effCentData = plotEffCent(daCentData1Bin, 1);
-  cout << __LINE__ << endl;
 
-  cout << __LINE__ << endl;
   effCentMC->SetMarkerStyle(20);
   effCentMC->SetMarkerSize(1.4);
   effCentMC->SetMarkerColor(kRed+1);
@@ -462,21 +444,13 @@ TGraphAsymmErrors *plotEff_1bin(RooDataSet *a, int aa, const char* varx){
 }
 
 vector<TGraphAsymmErrors*> plotEff_Nbins(RooDataSet *a, int aa, const char* varx, const char* var2){
-   cout << __LINE__ << endl;
   const RooArgSet *set = a->get();
-   cout << __LINE__ << endl;
   RooRealVar *xAx = (RooRealVar*)set->find(varx);
-   cout << __LINE__ << endl;
   RooRealVar *abseta = (RooRealVar*)set->find(var2);
-   cout << __LINE__ << endl;
   RooRealVar *eff = (RooRealVar*)set->find("efficiency");
-   cout << __LINE__ << endl;
 
-   cout << __LINE__ << endl;
   const int nbins = xAx->getBinning().numBins();
-   cout << __LINE__ << endl;
   const int nbins2 = abseta->getBinning().numBins();
-   cout << __LINE__ << endl;
   cout << nbins << " " << nbins2 << endl;
 
   double **tx = new double*[nbins2], **txhi = new double*[nbins2], **txlo = new double*[nbins2];
