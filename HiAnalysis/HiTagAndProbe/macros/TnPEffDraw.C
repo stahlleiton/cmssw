@@ -33,40 +33,42 @@ using namespace RooFit;
 using namespace std;
 
 const int nCentBins = 7;
+const int nAbsEtaBins = 1;
 const double tx[nCentBins]={381.23,330.35,261.37,158.7,86.3,53.5,16.2};
-TString cutTag("MuonIDTrg");
+TString cutTag("MuonTrg"); // MuonIDTrg
 TString cutLegend("Muon ID");
 TString etaTag("PassingGlb_eta");
-TString absetaTag("PassingGlb_abseta");
+TString absetaTag("PassingGlb_1bin"); // "PassingGlb_abseta"
+TString absetaVar("eta");
 TString ptTag("PassingGlb_pt");
 TString allTag("PassingGlb_1bin");
 const char* fCentMCNames[nCentBins] = 
 {
-   "MuId_cent_20150907/res_Cent0005_/data_MuId_Cent0005_.root",
-   "MuId_cent_20150907/res_Cent0510_/data_MuId_Cent0510_.root",
-   "MuId_cent_20150907/res_Cent1020_/data_MuId_Cent1020_.root",
-   "MuId_cent_20150907/res_Cent2040_/data_MuId_Cent2040_.root",
-   "MuId_cent_20150907/res_Cent4050_/data_MuId_Cent4050_.root",
-   "MuId_cent_20150907/res_Cent5060_/data_MuId_Cent5060_.root",
-   "MuId_cent_20150907/res_Cent60100_/data_MuId_Cent60100_.root",
+   "fitdata/Trg_cent_20150907/res_Cent0005_/data_Trg_Cent0005_.root",
+   "fitdata/Trg_cent_20150907/res_Cent0510_/data_Trg_Cent0510_.root",
+   "fitdata/Trg_cent_20150907/res_Cent1020_/data_Trg_Cent1020_.root",
+   "fitdata/Trg_cent_20150907/res_Cent2040_/data_Trg_Cent2040_.root",
+   "fitdata/Trg_cent_20150907/res_Cent4050_/data_Trg_Cent4050_.root",
+   "fitdata/Trg_cent_20150907/res_Cent5060_/data_Trg_Cent5060_.root",
+   "fitdata/Trg_cent_20150907/res_Cent60100_/data_Trg_Cent60100_.root",
 };
 const char* fCentDataNames[nCentBins] = 
 {
-   "MuId_cent_20150907/res_Cent0005_/data_MuId_Cent0005_.root",
-   "MuId_cent_20150907/res_Cent0510_/data_MuId_Cent0510_.root",
-   "MuId_cent_20150907/res_Cent1020_/data_MuId_Cent1020_.root",
-   "MuId_cent_20150907/res_Cent2040_/data_MuId_Cent2040_.root",
-   "MuId_cent_20150907/res_Cent4050_/data_MuId_Cent4050_.root",
-   "MuId_cent_20150907/res_Cent5060_/data_MuId_Cent5060_.root",
-   "MuId_cent_20150907/res_Cent60100_/data_MuId_Cent60100_.root",
+   "fitdata/Trg_cent_20150907/res_Cent0005_/data_Trg_Cent0005_.root",
+   "fitdata/Trg_cent_20150907/res_Cent0510_/data_Trg_Cent0510_.root",
+   "fitdata/Trg_cent_20150907/res_Cent1020_/data_Trg_Cent1020_.root",
+   "fitdata/Trg_cent_20150907/res_Cent2040_/data_Trg_Cent2040_.root",
+   "fitdata/Trg_cent_20150907/res_Cent4050_/data_Trg_Cent4050_.root",
+   "fitdata/Trg_cent_20150907/res_Cent5060_/data_Trg_Cent5060_.root",
+   "fitdata/Trg_cent_20150907/res_Cent60100_/data_Trg_Cent60100_.root",
 };
-const char* fPtDataName = "MuId_3etabins_20150908/tnp_Ana_RD_PbPb_MuonID_AllMB.root";
-const char* fEtaDataName = "MuId_3etabins_20150908/tnp_Ana_RD_PbPb_MuonID_AllMB.root";
+const char* fDataName = "fitdata/Trg_4etabins_20150908/tnp_Ana_Data_PbPb_MuonTrg_AllMB.root";
+const char* fMCName = "fitmc/Trg_20150908/tnp_Ana_MC_PbPb_MuonTrg_AllMB.root";
 
 // Function Define
 TH2F *plotEff2D(RooDataSet *a, TString b);
-vector<TGraphAsymmErrors*> plotEffPt(RooDataSet *a, int aa);
-TGraphAsymmErrors *plotEffEta(RooDataSet *a, int aa);
+vector<TGraphAsymmErrors*> plotEff_Nbins(RooDataSet *a, int aa, const char* varx, const char* var2);
+TGraphAsymmErrors *plotEff_1bin(RooDataSet *a, int aa, const char* varx);
 TGraphAsymmErrors *plotEffCent(RooDataSet **a1,int aa);
 void formatTH1F(TH1* a, int b, int c, int d);
 void formatTGraph(TGraph* a, int b, int c, int d);
@@ -96,45 +98,74 @@ void TnPEffDraw() {
      fCentData[i] = new TFile(fCentDataNames[i]);
   }
   
-  //pt and eta root files as well as single bin for integrated efficiency
-  TFile *f9 = new TFile(fEtaDataName);
-  TFile *f10 = new TFile(fEtaDataName);
+  //data and MC root files as well as single bin for integrated efficiency
+  TFile *f9 = new TFile(fDataName);
+  TFile *f10 = new TFile(fMCName);
 
   TCanvas *c1 = new TCanvas("c1","",700,600);
 
-  RooDataSet *daPtData0 = (RooDataSet*)f9->Get(cutTag + "/" + ptTag + "/fit_eff"); 
-  RooDataSet *daPtData1 = (RooDataSet*)f10->Get(cutTag + "/" + ptTag + "/fit_eff"); 
+  vector<RooDataSet*> daPtData0, daPtData1;
 
-  vector<TGraphAsymmErrors*> ComPt0 = plotEffPt(daPtData0, 1);
-  vector<TGraphAsymmErrors*> ComPt1 = plotEffPt(daPtData1, 1);
+  if (nAbsEtaBins==1)
+  {
+     daPtData0.push_back((RooDataSet*)f9->Get(cutTag + "/" + ptTag + "/fit_eff")); 
+     daPtData1.push_back((RooDataSet*)f10->Get(cutTag + "/" + ptTag + "/fit_eff")); 
+  }
+  else
+  {
+     for (int i=0; i<nAbsEtaBins; i++)
+     {
+        daPtData0.push_back((RooDataSet*)f9->Get(cutTag + "/" + ptTag + Form("%i/fit_eff",i+1))); 
+        daPtData1.push_back((RooDataSet*)f10->Get(cutTag + "/" + ptTag + Form("%i/fit_eff",i+1))); 
+     }
+  }
+
+  vector<TGraphAsymmErrors*> ComPt0, ComPt1;
+  
+  for (unsigned int i=0; i<daPtData0.size(); i++)
+  {
+  cout << daPtData0[i] << endl;
+     ComPt0.push_back(plotEff_1bin(daPtData0[i], 1, "pt"));
+     ComPt1.push_back(plotEff_1bin(daPtData1[i], 1, "pt"));
+  }
+
+  cout << __LINE__ << endl;
 
   RooDataSet *daEtaData0 = (RooDataSet*)f9->Get(cutTag + "/" + etaTag + "/fit_eff"); 
   RooDataSet *daEtaData1 = (RooDataSet*)f10->Get(cutTag + "/" + etaTag + "/fit_eff"); 
+  cout << __LINE__ << endl;
 
-  TGraphAsymmErrors *ComEta0 = plotEffEta(daEtaData0, 1);
-  TGraphAsymmErrors *ComEta1 = plotEffEta(daEtaData1, 1);
+  TGraphAsymmErrors *ComEta0 = plotEff_1bin(daEtaData0, 1, "eta");
+  TGraphAsymmErrors *ComEta1 = plotEff_1bin(daEtaData1, 1, "eta");
+  cout << __LINE__ << endl;
 
   RooDataSet *daCentMC1Bin[nCentBins];
   RooDataSet *daCentData1Bin[nCentBins];
+  cout << __LINE__ << endl;
   for (int i=0; i<nCentBins; i++)
   {
      daCentMC1Bin[i] = (RooDataSet*) fCentMC[i]->Get(cutTag + "/" + allTag + "/fit_eff");
      daCentData1Bin[i] = (RooDataSet*) fCentData[i]->Get(cutTag + "/" + allTag + "/fit_eff");
   }
+  cout << __LINE__ << endl;
 
   RooDataSet *daPtMC1Bin0 = (RooDataSet*)f9->Get(cutTag + "/" + allTag + "/fit_eff"); 
+  cout << __LINE__ << endl;
   RooDataSet *daPtData1Bin0 = (RooDataSet*)f10->Get(cutTag + "/" + allTag + "/fit_eff"); 
+  cout << __LINE__ << endl;
   RooDataSet *daAbsEtaMC1 = (RooDataSet*)f9->Get(cutTag + "/" + absetaTag + "/fit_eff"); 
+  cout << __LINE__ << endl;
   RooDataSet *daAbsEtaData1 = (RooDataSet*)f10->Get(cutTag + "/" + absetaTag + "/fit_eff"); 
+  cout << __LINE__ << endl;
 
   cout << __LINE__ << endl;
-  TGraphAsymmErrors* Com0Pt0 = plotEffEta(daPtMC1Bin0,0);
+  TGraphAsymmErrors* Com0Pt0 = plotEff_1bin(daPtMC1Bin0,0,"eta");
   cout << __LINE__ << endl;
-  TGraphAsymmErrors* Com0Pt1 = plotEffEta(daPtData1Bin0,0);
+  TGraphAsymmErrors* Com0Pt1 = plotEff_1bin(daPtData1Bin0,0,"eta");
   cout << __LINE__ << endl;
-  vector<TGraphAsymmErrors*> Com0AbsEta0 = plotEffPt(daAbsEtaMC1,0);
+  vector<TGraphAsymmErrors*> Com0AbsEta0 = plotEff_Nbins(daAbsEtaMC1,0,"pt",absetaVar);
   cout << __LINE__ << endl;
-  vector<TGraphAsymmErrors*> Com0AbsEta1 = plotEffPt(daAbsEtaData1,0);
+  vector<TGraphAsymmErrors*> Com0AbsEta1 = plotEff_Nbins(daAbsEtaData1,0,"pt",absetaVar);
   cout << __LINE__ << endl;
 
   cout << __LINE__ << endl;
@@ -143,6 +174,7 @@ void TnPEffDraw() {
   TGraphAsymmErrors *effCentData = plotEffCent(daCentData1Bin, 1);
   cout << __LINE__ << endl;
 
+  cout << __LINE__ << endl;
   effCentMC->SetMarkerStyle(20);
   effCentMC->SetMarkerSize(1.4);
   effCentMC->SetMarkerColor(kRed+1);
@@ -236,9 +268,10 @@ void TnPEffDraw() {
      leg1->SetFillColor(0);
      leg1->SetBorderSize(0);
      leg1->SetTextSize(0.035);
-     double etamin = ((RooRealVar*) daPtData0->get()->find("abseta"))->getBinning().binLow(i);
-     double etamax = ((RooRealVar*) daPtData0->get()->find("abseta"))->getBinning().binHigh(i);
-     leg1->SetHeader(TString("#splitline{") + cutLegend + Form(" Efficiency}{(p^{#mu}_{T}>1.5, |#eta| #in [%.1f, %.1f])}",etamin,etamax));
+     double ptmin = ((RooRealVar*) daPtData0[i]->get()->find("pt"))->getBinning().binLow(0);
+     double etamin = ((RooRealVar*) daPtData0[i]->get()->find("abseta"))->getBinning().binLow(0);
+     double etamax = ((RooRealVar*) daPtData0[i]->get()->find("abseta"))->getBinning().binHigh(0);
+     leg1->SetHeader(TString("#splitline{") + cutLegend + Form(" Efficiency}{(p^{#mu}_{T}>%.1f, |#eta| #in [%.1f, %.1f])}",ptmin,etamin,etamax));
      sprintf(legs,"MC PYTHIA+EvtGen: %.4f^{ + %.3f}_{ - %.3f}", TrkAbsEta0[i][0], TrkAbsEta0[i][1], TrkAbsEta0[i][2]);
      leg1->AddEntry(ComPt0[i],legs,"pl");
      sprintf(legs,"Data: %.4f^{ + %.3f}_{ - %.3f}", TrkAbsEta1[i][0], TrkAbsEta1[i][1], TrkAbsEta1[i][2]);
@@ -271,7 +304,8 @@ void TnPEffDraw() {
   leg1->SetFillColor(0);
   leg1->SetBorderSize(0);
   leg1->SetTextSize(0.035);
-  leg1->SetHeader(TString("#splitline{") + cutLegend + " Efficiency}{(p^{#mu}_{T}>1.5)}");
+  double ptmin = ((RooRealVar*) daEtaData0->get()->find("pt"))->getBinning().binLow(0);
+  leg1->SetHeader(TString("#splitline{") + cutLegend + Form(" Efficiency}{(p^{#mu}_{T}>%.1f)}",ptmin));
   sprintf(legs,"MC PYTHIA+EvtGen: %.4f^{ + %.3f}_{ - %.3f}", Trk0[0], Trk0[1], Trk0[2]);
   leg1->AddEntry(ComPt0[0],legs,"pl");
   sprintf(legs,"Data: %.4f^{ + %.3f}_{ - %.3f}", Trk1[0], Trk1[1], Trk1[2]);
@@ -373,9 +407,9 @@ void formatTGraph(TGraph* a, int b, int c, int d)
 
 }
 
-TGraphAsymmErrors *plotEffEta(RooDataSet *a, int aa){
+TGraphAsymmErrors *plotEff_1bin(RooDataSet *a, int aa, const char* varx){
   const RooArgSet *set = a->get();
-  RooRealVar *xAx = (RooRealVar*)set->find("eta");
+  RooRealVar *xAx = (RooRealVar*)set->find(varx);
   RooRealVar *eff = (RooRealVar*)set->find("efficiency");
 
   const int nbins = xAx->getBinning().numBins();
@@ -427,14 +461,23 @@ TGraphAsymmErrors *plotEffEta(RooDataSet *a, int aa){
 
 }
 
-vector<TGraphAsymmErrors*> plotEffPt(RooDataSet *a, int aa){
+vector<TGraphAsymmErrors*> plotEff_Nbins(RooDataSet *a, int aa, const char* varx, const char* var2){
+   cout << __LINE__ << endl;
   const RooArgSet *set = a->get();
-  RooRealVar *xAx = (RooRealVar*)set->find("pt");
-  RooRealVar *abseta = (RooRealVar*)set->find("abseta");
+   cout << __LINE__ << endl;
+  RooRealVar *xAx = (RooRealVar*)set->find(varx);
+   cout << __LINE__ << endl;
+  RooRealVar *abseta = (RooRealVar*)set->find(var2);
+   cout << __LINE__ << endl;
   RooRealVar *eff = (RooRealVar*)set->find("efficiency");
+   cout << __LINE__ << endl;
 
+   cout << __LINE__ << endl;
   const int nbins = xAx->getBinning().numBins();
+   cout << __LINE__ << endl;
   const int nbins2 = abseta->getBinning().numBins();
+   cout << __LINE__ << endl;
+  cout << nbins << " " << nbins2 << endl;
 
   double **tx = new double*[nbins2], **txhi = new double*[nbins2], **txlo = new double*[nbins2];
   double **ty = new double*[nbins2], **tyhi = new double*[nbins2], **tylo = new double*[nbins2];
