@@ -37,40 +37,42 @@ const double tx[nCentBins]={381.23,330.35,261.37,158.7,86.3,53.5,16.2};
 TString cutTag("MuonIDTrg");
 TString cutLegend("Muon ID");
 TString etaTag("PassingGlb_eta");
+TString absetaTag("PassingGlb_abseta");
 TString ptTag("PassingGlb_pt");
 TString allTag("PassingGlb_1bin");
 const char* fCentMCNames[nCentBins] = 
 {
-   "MuIdTrg_cent_20150907/res_Cent0005_/data_MuIdTrg_Cent0005_.root",
-   "MuIdTrg_cent_20150907/res_Cent0510_/data_MuIdTrg_Cent0510_.root",
-   "MuIdTrg_cent_20150907/res_Cent1020_/data_MuIdTrg_Cent1020_.root",
-   "MuIdTrg_cent_20150907/res_Cent2040_/data_MuIdTrg_Cent2040_.root",
-   "MuIdTrg_cent_20150907/res_Cent4050_/data_MuIdTrg_Cent4050_.root",
-   "MuIdTrg_cent_20150907/res_Cent5060_/data_MuIdTrg_Cent5060_.root",
-   "MuIdTrg_cent_20150907/res_Cent60100_/data_MuIdTrg_Cent60100_.root"
+   "MuId_cent_20150907/res_Cent0005_/data_MuId_Cent0005_.root",
+   "MuId_cent_20150907/res_Cent0510_/data_MuId_Cent0510_.root",
+   "MuId_cent_20150907/res_Cent1020_/data_MuId_Cent1020_.root",
+   "MuId_cent_20150907/res_Cent2040_/data_MuId_Cent2040_.root",
+   "MuId_cent_20150907/res_Cent4050_/data_MuId_Cent4050_.root",
+   "MuId_cent_20150907/res_Cent5060_/data_MuId_Cent5060_.root",
+   "MuId_cent_20150907/res_Cent60100_/data_MuId_Cent60100_.root",
 };
 const char* fCentDataNames[nCentBins] = 
 {
-   "MuIdTrg_cent_20150907/res_Cent0005_/data_MuIdTrg_Cent0005_.root",
-   "MuIdTrg_cent_20150907/res_Cent0510_/data_MuIdTrg_Cent0510_.root",
-   "MuIdTrg_cent_20150907/res_Cent1020_/data_MuIdTrg_Cent1020_.root",
-   "MuIdTrg_cent_20150907/res_Cent2040_/data_MuIdTrg_Cent2040_.root",
-   "MuIdTrg_cent_20150907/res_Cent4050_/data_MuIdTrg_Cent4050_.root",
-   "MuIdTrg_cent_20150907/res_Cent5060_/data_MuIdTrg_Cent5060_.root",
-   "MuIdTrg_cent_20150907/res_Cent60100_/data_MuIdTrg_Cent60100_.root"
+   "MuId_cent_20150907/res_Cent0005_/data_MuId_Cent0005_.root",
+   "MuId_cent_20150907/res_Cent0510_/data_MuId_Cent0510_.root",
+   "MuId_cent_20150907/res_Cent1020_/data_MuId_Cent1020_.root",
+   "MuId_cent_20150907/res_Cent2040_/data_MuId_Cent2040_.root",
+   "MuId_cent_20150907/res_Cent4050_/data_MuId_Cent4050_.root",
+   "MuId_cent_20150907/res_Cent5060_/data_MuId_Cent5060_.root",
+   "MuId_cent_20150907/res_Cent60100_/data_MuId_Cent60100_.root",
 };
-const char* fPtDataName = "MuIdTrg_3etabins_20150907/tnp_Ana_RD_PbPb_MuonIDTrg_AllMB.root";
-const char* fEtaDataName = "MuIdTrg_3etabins_20150907/tnp_Ana_RD_PbPb_MuonIDTrg_AllMB.root";
+const char* fPtDataName = "MuId_3etabins_20150908/tnp_Ana_RD_PbPb_MuonID_AllMB.root";
+const char* fEtaDataName = "MuId_3etabins_20150908/tnp_Ana_RD_PbPb_MuonID_AllMB.root";
 
 // Function Define
 TH2F *plotEff2D(RooDataSet *a, TString b);
-TGraphAsymmErrors *plotEffPt(RooDataSet *a, int aa);
+vector<TGraphAsymmErrors*> plotEffPt(RooDataSet *a, int aa);
 TGraphAsymmErrors *plotEffEta(RooDataSet *a, int aa);
 TGraphAsymmErrors *plotEffCent(RooDataSet **a1,int aa);
 void formatTH1F(TH1* a, int b, int c, int d);
 void formatTGraph(TGraph* a, int b, int c, int d);
 void formatTLeg(TLegend* a);
 void CalEffErr(TGraph *a, double *b);
+void CalEffErr(vector<TGraphAsymmErrors*> a, double **b);
 
 // From here you need to set up your environments.
 void TnPEffDraw() {
@@ -103,13 +105,12 @@ void TnPEffDraw() {
   RooDataSet *daPtData0 = (RooDataSet*)f9->Get(cutTag + "/" + ptTag + "/fit_eff"); 
   RooDataSet *daPtData1 = (RooDataSet*)f10->Get(cutTag + "/" + ptTag + "/fit_eff"); 
 
-  TGraphAsymmErrors *ComPt0 = plotEffPt(daPtData0, 1);
-  TGraphAsymmErrors *ComPt1 = plotEffPt(daPtData1, 1);
+  vector<TGraphAsymmErrors*> ComPt0 = plotEffPt(daPtData0, 1);
+  vector<TGraphAsymmErrors*> ComPt1 = plotEffPt(daPtData1, 1);
 
   RooDataSet *daEtaData0 = (RooDataSet*)f9->Get(cutTag + "/" + etaTag + "/fit_eff"); 
   RooDataSet *daEtaData1 = (RooDataSet*)f10->Get(cutTag + "/" + etaTag + "/fit_eff"); 
 
- 
   TGraphAsymmErrors *ComEta0 = plotEffEta(daEtaData0, 1);
   TGraphAsymmErrors *ComEta1 = plotEffEta(daEtaData1, 1);
 
@@ -123,12 +124,24 @@ void TnPEffDraw() {
 
   RooDataSet *daPtMC1Bin0 = (RooDataSet*)f9->Get(cutTag + "/" + allTag + "/fit_eff"); 
   RooDataSet *daPtData1Bin0 = (RooDataSet*)f10->Get(cutTag + "/" + allTag + "/fit_eff"); 
+  RooDataSet *daAbsEtaMC1 = (RooDataSet*)f9->Get(cutTag + "/" + absetaTag + "/fit_eff"); 
+  RooDataSet *daAbsEtaData1 = (RooDataSet*)f10->Get(cutTag + "/" + absetaTag + "/fit_eff"); 
 
-  TGraphAsymmErrors *Com0Pt0 = plotEffPt(daPtMC1Bin0,0);
-  TGraphAsymmErrors *Com0Pt1 = plotEffPt(daPtData1Bin0,0);
+  cout << __LINE__ << endl;
+  TGraphAsymmErrors* Com0Pt0 = plotEffEta(daPtMC1Bin0,0);
+  cout << __LINE__ << endl;
+  TGraphAsymmErrors* Com0Pt1 = plotEffEta(daPtData1Bin0,0);
+  cout << __LINE__ << endl;
+  vector<TGraphAsymmErrors*> Com0AbsEta0 = plotEffPt(daAbsEtaMC1,0);
+  cout << __LINE__ << endl;
+  vector<TGraphAsymmErrors*> Com0AbsEta1 = plotEffPt(daAbsEtaData1,0);
+  cout << __LINE__ << endl;
 
+  cout << __LINE__ << endl;
   TGraphAsymmErrors *effCentMC = plotEffCent(daCentMC1Bin, 1);
+  cout << __LINE__ << endl;
   TGraphAsymmErrors *effCentData = plotEffCent(daCentData1Bin, 1);
+  cout << __LINE__ << endl;
 
   effCentMC->SetMarkerStyle(20);
   effCentMC->SetMarkerSize(1.4);
@@ -139,14 +152,18 @@ void TnPEffDraw() {
   effCentData->SetMarkerColor(kBlue+1);
   effCentData->SetLineColor(kBlue+1);
 
-  ComPt0->SetMarkerStyle(20);
-  ComPt0->SetMarkerSize(1.4);
-  ComPt0->SetMarkerColor(kRed+1);
-  ComPt0->SetLineColor(kRed+1);
-  ComPt1->SetMarkerStyle(25);
-  ComPt1->SetMarkerSize(1.4);
-  ComPt1->SetMarkerColor(kBlue+1);
-  ComPt1->SetLineColor(kBlue+1);
+  int nbins_abseta = ComPt0.size();
+  for (int i=0; i<nbins_abseta; i++)
+  {
+     ComPt0[i]->SetMarkerStyle(20);
+     ComPt0[i]->SetMarkerSize(1.4);
+     ComPt0[i]->SetMarkerColor(kRed+1);
+     ComPt0[i]->SetLineColor(kRed+1);
+     ComPt1[i]->SetMarkerStyle(25);
+     ComPt1[i]->SetMarkerSize(1.4);
+     ComPt1[i]->SetMarkerColor(kBlue+1);
+     ComPt1[i]->SetLineColor(kBlue+1);
+  }
 
   ComEta0->SetMarkerStyle(20);
   ComEta0->SetMarkerSize(1.4);
@@ -160,9 +177,18 @@ void TnPEffDraw() {
 
   // 1 Bin
   double Trk0[4];
-  CalEffErr(Com0Pt0, Trk0);
   double Trk1[4];
+  double** TrkAbsEta0 = new double*[nbins_abseta];
+  double** TrkAbsEta1 = new double*[nbins_abseta];
+  for (int i=0; i<nbins_abseta; i++) 
+  {
+     TrkAbsEta0[i] = new double[4];
+     TrkAbsEta1[i] = new double[4];
+  }
+  CalEffErr(Com0Pt0, Trk0);
   CalEffErr(Com0Pt1, Trk1);
+  CalEffErr(Com0AbsEta0, TrkAbsEta0);
+  CalEffErr(Com0AbsEta1, TrkAbsEta1);
 
 
 
@@ -197,34 +223,39 @@ void TnPEffDraw() {
   hPad1->GetYaxis()->SetRangeUser(0.,1.05);
   hPad2->GetYaxis()->SetRangeUser(0.,1.05);
 
-  hPad->Draw();
 
-  TLatex *lt1 = new TLatex();
-  lt1->SetNDC();
+  for (int i=0; i<nbins_abseta; i++)
+  {
+     hPad->Draw();
+     TLatex *lt1 = new TLatex();
+     lt1->SetNDC();
 
-  char legs[512];
-  TLegend *leg1 = new TLegend(0.43,0.21,0.66,0.43);
-  leg1->SetFillStyle(0);
-  leg1->SetFillColor(0);
-  leg1->SetBorderSize(0);
-  leg1->SetTextSize(0.035);
-  leg1->SetHeader(cutLegend + " Efficiency (p^{#mu}_{T}>3.5)");
-  sprintf(legs,"MC PYTHIA+EvtGen: %.4f^{ + %.3f}_{ - %.3f}", Trk0[0], Trk0[1], Trk0[2]);
-  leg1->AddEntry(ComPt0,legs,"pl");
-  sprintf(legs,"Data: %.4f^{ + %.3f}_{ - %.3f}", Trk1[0], Trk1[1], Trk1[2]);
-  leg1->AddEntry(ComPt1,legs,"pl");
-  leg1->Draw("same");
+     char legs[512];
+     TLegend *leg1 = new TLegend(0.43,0.21,0.66,0.43);
+     leg1->SetFillStyle(0);
+     leg1->SetFillColor(0);
+     leg1->SetBorderSize(0);
+     leg1->SetTextSize(0.035);
+     double etamin = ((RooRealVar*) daPtData0->get()->find("abseta"))->getBinning().binLow(i);
+     double etamax = ((RooRealVar*) daPtData0->get()->find("abseta"))->getBinning().binHigh(i);
+     leg1->SetHeader(TString("#splitline{") + cutLegend + Form(" Efficiency}{(p^{#mu}_{T}>1.5, |#eta| #in [%.1f, %.1f])}",etamin,etamax));
+     sprintf(legs,"MC PYTHIA+EvtGen: %.4f^{ + %.3f}_{ - %.3f}", TrkAbsEta0[i][0], TrkAbsEta0[i][1], TrkAbsEta0[i][2]);
+     leg1->AddEntry(ComPt0[i],legs,"pl");
+     sprintf(legs,"Data: %.4f^{ + %.3f}_{ - %.3f}", TrkAbsEta1[i][0], TrkAbsEta1[i][1], TrkAbsEta1[i][2]);
+     leg1->AddEntry(ComPt1[i],legs,"pl");
+     leg1->Draw("same");
 
-  ComPt0->Draw("pz same");
-  ComPt1->Draw("pz same");
+     ComPt0[i]->Draw("pz same");
+     ComPt1[i]->Draw("pz same");
 
-  lt1->SetTextSize(0.05);
-  lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
-  //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
-  lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
+     lt1->SetTextSize(0.05);
+     lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
+     //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
+     lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
 
-  c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_PT.png");
-  c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_PT.pdf");
+     c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.png",i));
+     c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.pdf",i));
+  }
 
    //---------- This is for eta dependence
   hPad1->Draw();
@@ -232,6 +263,20 @@ void TnPEffDraw() {
   ComEta0->Draw("pz same");
   ComEta1->Draw("pz same");
 
+  TLatex *lt1 = new TLatex();
+  lt1->SetNDC();
+  char legs[512];
+  TLegend *leg1 = new TLegend(0.43,0.21,0.66,0.43);
+  leg1->SetFillStyle(0);
+  leg1->SetFillColor(0);
+  leg1->SetBorderSize(0);
+  leg1->SetTextSize(0.035);
+  leg1->SetHeader(TString("#splitline{") + cutLegend + " Efficiency}{(p^{#mu}_{T}>1.5)}");
+  sprintf(legs,"MC PYTHIA+EvtGen: %.4f^{ + %.3f}_{ - %.3f}", Trk0[0], Trk0[1], Trk0[2]);
+  leg1->AddEntry(ComPt0[0],legs,"pl");
+  sprintf(legs,"Data: %.4f^{ + %.3f}_{ - %.3f}", Trk1[0], Trk1[1], Trk1[2]);
+  leg1->AddEntry(ComPt1[0],legs,"pl");
+  leg1->Draw("same");
   leg1->Draw("same");
 
   lt1->SetTextSize(0.05);
@@ -382,56 +427,74 @@ TGraphAsymmErrors *plotEffEta(RooDataSet *a, int aa){
 
 }
 
-TGraphAsymmErrors *plotEffPt(RooDataSet *a, int aa){
+vector<TGraphAsymmErrors*> plotEffPt(RooDataSet *a, int aa){
   const RooArgSet *set = a->get();
   RooRealVar *xAx = (RooRealVar*)set->find("pt");
+  RooRealVar *abseta = (RooRealVar*)set->find("abseta");
   RooRealVar *eff = (RooRealVar*)set->find("efficiency");
 
   const int nbins = xAx->getBinning().numBins();
+  const int nbins2 = abseta->getBinning().numBins();
 
-  double *tx = new double[nbins], *txhi = new double[nbins], *txlo = new double[nbins];
-  double *ty = new double[nbins], *tyhi = new double[nbins], *tylo = new double[nbins];
+  double **tx = new double*[nbins2], **txhi = new double*[nbins2], **txlo = new double*[nbins2];
+  double **ty = new double*[nbins2], **tyhi = new double*[nbins2], **tylo = new double*[nbins2];
+  for (int i=0; i<nbins2; i++)
+  {
+     tx[i] = new double[nbins];
+     txlo[i] = new double[nbins];
+     txhi[i] = new double[nbins];
+     ty[i] = new double[nbins];
+     tylo[i] = new double[nbins];
+     tyhi[i] = new double[nbins];
+  }
 
-  for (int i=0; i<nbins; i++) {
+  for (int i=0; i<nbins*nbins2; i++) {
     a->get(i);
-    ty[i] = eff->getVal();
-    tx[i] = xAx->getVal();
-    txhi[i] = fabs(xAx->getErrorHi());
-    txlo[i] = fabs(xAx->getErrorLo()); 
-    tyhi[i] = fabs(eff->getErrorHi());
-    tylo[i] = fabs(eff->getErrorLo()); 
+    int bin1 = xAx->getBinning().binNumber(xAx->getVal());
+    int bin2 = abseta->getBinning().binNumber(abseta->getVal());
+    ty[bin2][bin1] = eff->getVal();
+    tx[bin2][bin1] = xAx->getVal();
+    txhi[bin2][bin1] = fabs(xAx->getErrorHi());
+    txlo[bin2][bin1] = fabs(xAx->getErrorLo()); 
+    tyhi[bin2][bin1] = fabs(eff->getErrorHi());
+    tylo[bin2][bin1] = fabs(eff->getErrorLo()); 
   }
 
   cout<<"NBins pt: "<<nbins<<endl;
 
-  const double *x = tx;
-  const double *xhi = txhi;
-  const double *xlo = txlo;
-  const double *y = ty;
-  const double *yhi = tyhi;
-  const double *ylo = tylo;
 
-  TGraphAsymmErrors *b = new TGraphAsymmErrors();
-  if(aa == 1) {*b = TGraphAsymmErrors(nbins,x,y,xlo,xhi,ylo,yhi);}
-  if(aa == 0) {*b = TGraphAsymmErrors(nbins,x,y,0,0,ylo,yhi);}
-  b->SetMaximum(1.1);
-  b->SetMinimum(0.0);
-  b->SetMarkerStyle(20);
-  b->SetMarkerColor(kRed+2);
-  b->SetMarkerSize(1.0);
-  b->SetTitle("");
-  b->GetXaxis()->SetTitleSize(0.05);
-  b->GetYaxis()->SetTitleSize(0.05);
-  b->GetXaxis()->SetTitle("p_{T} [GeV/c]");
-  b->GetYaxis()->SetTitle("Efficiency");
-  b->GetXaxis()->CenterTitle();
-  //b->Draw("apz");
-
-  for (int i=0; i<nbins; i++) {
-    cout << x[i] << " " << y[i] << " " << yhi[i] << " " << ylo[i] << endl;
+  vector<TGraphAsymmErrors*> result;
+  for (int i=0; i<nbins2; i++)
+  {
+     const double *x = tx[i];
+     const double *xhi = txhi[i];
+     const double *xlo = txlo[i];
+     const double *y = ty[i];
+     const double *yhi = tyhi[i];
+     const double *ylo = tylo[i];
+     TGraphAsymmErrors *b = new TGraphAsymmErrors();
+     if(aa == 1) {*b = TGraphAsymmErrors(nbins,x,y,xlo,xhi,ylo,yhi);}
+     if(aa == 0) {*b = TGraphAsymmErrors(nbins,x,y,0,0,ylo,yhi);}
+     b->SetMaximum(1.1);
+     b->SetMinimum(0.0);
+     b->SetMarkerStyle(20);
+     b->SetMarkerColor(kRed+2);
+     b->SetMarkerSize(1.0);
+     b->SetTitle("");
+     b->GetXaxis()->SetTitleSize(0.05);
+     b->GetYaxis()->SetTitleSize(0.05);
+     b->GetXaxis()->SetTitle("p_{T} [GeV/c]");
+     b->GetYaxis()->SetTitle("Efficiency");
+     b->GetXaxis()->CenterTitle();
+     //b->Draw("apz");
+     result.push_back(b);
   }
 
-  return b;
+  // for (int i=0; i<nbins; i++) {
+  //   cout << x[i] << " " << y[i] << " " << yhi[i] << " " << ylo[i] << endl;
+  // }
+
+  return result;
 
 }
 
@@ -553,5 +616,36 @@ void CalEffErr(TGraph *a, double *b){
     //return b[3];
 }
 
+void CalEffErr(vector<TGraphAsymmErrors*> a, double **b){
+    const int nbins = 100;
+    const int vsize = a.size();
 
+    for (int vbin=0; vbin<vsize; vbin++)
+    {
+       double x[nbins], y[nbins];
+       double sum = 0, errHighSum = 0, errLowSum = 0, sqSumHigh = 0, sqSumLow = 0;
+       //double b[3] = 0;
+
+       int nBins = a[vbin]->GetN();
+       for(int i=0;i<a[vbin]->GetN();i++){
+          a[vbin]->GetPoint(i,x[i],y[i]);
+          //cout<<"Eff x = "<<x[i]<<" y = "<<y[i]<<endl;
+          double eHigh = a[vbin]->GetErrorYhigh(i);
+          double eLow = a[vbin]->GetErrorYlow(i);
+          //cout<<"Err high = "<<eHigh<<" low = "<<eLow<<endl;
+          sum += y[i];
+          errHighSum += eHigh;
+          sqSumHigh += eHigh*eHigh;
+          errLowSum += eLow;
+          sqSumLow += eLow*eLow;
+       }
+       b[vbin][0] = sum/nBins;
+       b[vbin][1] = sqrt(sqSumHigh)/nBins;
+       b[vbin][2] = sqrt(sqSumLow)/nBins;
+       //cout<<"b1 : "<<b[0]<<", b2 : "<<b[1]<<", b3 : "<<b[2]<<endl;
+
+       cout<<b[vbin][0]<<"^{"<<b[vbin][1]<<"}_{"<<b[vbin][2]<<"}"<<endl;
+    }
+    //return b[3];
+}
 
