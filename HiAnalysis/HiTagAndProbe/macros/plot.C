@@ -47,10 +47,11 @@ void plot(const char *filename)
                      TDirectoryFile *tdir3 = dynamic_cast<TDirectoryFile*>(obj3);
                      tdir3->cd();
                      TCanvas *canv = (TCanvas*) gDirectory->Get("fit_canvas");
-                     canv->SaveAs(dir2name + TString("/") + TString(obj3->GetName()) + TString(".pdf"));
-                     canv->SaveAs(dir2name + TString("/") + TString(obj3->GetName()) + TString(".png"));
+                     if (!canv) continue;
+                     canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".pdf");
+                     canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".png");
                   }
-                  if (TString(obj3->GetTitle()) == "fit_eff_plots")
+                  if (TString(obj3->GetTitle()) == "fit_eff_plots" || TString(obj3->GetTitle()) == "cnt_eff_plots")
                   {
                      // we are in a directory with efficiency plots. Print these efficiency plots.
                      TDirectoryFile *tdir3 = dynamic_cast<TDirectoryFile*>(obj3);
@@ -65,8 +66,9 @@ void plot(const char *filename)
                         {
                            cout << obj4->GetName() << endl;
                            TCanvas *canv = (TCanvas*) obj4;
-                           canv->SaveAs(dir2name + TString("/") + TString(obj4->GetName()) + TString(".pdf"));
-                           canv->SaveAs(dir2name + TString("/") + TString(obj4->GetName()) + TString(".png"));
+                           TString prefix = (TString(obj3->GetTitle()) == "fit_eff_plots") ? "fit_" : "cut_";
+                           canv->SaveAs(dir2name + "/" + prefix + TString(obj4->GetName()) + ".pdf");
+                           canv->SaveAs(dir2name + "/" + prefix + TString(obj4->GetName()) + ".png");
                         }
                      }
                   }

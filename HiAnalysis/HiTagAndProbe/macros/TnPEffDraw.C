@@ -32,38 +32,76 @@
 using namespace RooFit;
 using namespace std;
 
+/////////////////////////////////////////////////
+//              P A R A M E T E R S            //
+/////////////////////////////////////////////////
+
+// Choose the efficiency type.
+// Possible values: MUIDTRG, MUID, TRG, TRK
+#define MUID
+
+// Location of the files
 const int nCentBins = 7;
-const int nAbsEtaBins = 1;
-const double tx[nCentBins]={381.23,330.35,261.37,158.7,86.3,53.5,16.2};
-TString cutTag("MuonTrg"); // MuonIDTrg
-TString cutLegend("Muon ID");
-TString etaTag("PassingGlb_eta");
-TString absetaTag("PassingGlb_1bin"); // "PassingGlb_abseta"
-TString absetaVar("eta");
-TString ptTag("PassingGlb_pt");
-TString allTag("PassingGlb_1bin");
 const char* fCentMCNames[nCentBins] = 
 {
-   "fitdata/Trg_cent_20150907/res_Cent0005_/data_Trg_Cent0005_.root",
-   "fitdata/Trg_cent_20150907/res_Cent0510_/data_Trg_Cent0510_.root",
-   "fitdata/Trg_cent_20150907/res_Cent1020_/data_Trg_Cent1020_.root",
-   "fitdata/Trg_cent_20150907/res_Cent2040_/data_Trg_Cent2040_.root",
-   "fitdata/Trg_cent_20150907/res_Cent4050_/data_Trg_Cent4050_.root",
-   "fitdata/Trg_cent_20150907/res_Cent5060_/data_Trg_Cent5060_.root",
-   "fitdata/Trg_cent_20150907/res_Cent60100_/data_Trg_Cent60100_.root",
+   "fitmc/MuID_cent_20150909/res_Cent0005_/MuID_cent_20150909_Cent0005_.root",
+   "fitmc/MuID_cent_20150909/res_Cent0510_/MuID_cent_20150909_Cent0510_.root",
+   "fitmc/MuID_cent_20150909/res_Cent1020_/MuID_cent_20150909_Cent1020_.root",
+   "fitmc/MuID_cent_20150909/res_Cent2040_/MuID_cent_20150909_Cent2040_.root",
+   "fitmc/MuID_cent_20150909/res_Cent4050_/MuID_cent_20150909_Cent4050_.root",
+   "fitmc/MuID_cent_20150909/res_Cent5060_/MuID_cent_20150909_Cent5060_.root",
+   "fitmc/MuID_cent_20150909/res_Cent60100_/MuID_cent_20150909_Cent60100_.root",
 };
 const char* fCentDataNames[nCentBins] = 
 {
-   "fitdata/Trg_cent_20150907/res_Cent0005_/data_Trg_Cent0005_.root",
-   "fitdata/Trg_cent_20150907/res_Cent0510_/data_Trg_Cent0510_.root",
-   "fitdata/Trg_cent_20150907/res_Cent1020_/data_Trg_Cent1020_.root",
-   "fitdata/Trg_cent_20150907/res_Cent2040_/data_Trg_Cent2040_.root",
-   "fitdata/Trg_cent_20150907/res_Cent4050_/data_Trg_Cent4050_.root",
-   "fitdata/Trg_cent_20150907/res_Cent5060_/data_Trg_Cent5060_.root",
-   "fitdata/Trg_cent_20150907/res_Cent60100_/data_Trg_Cent60100_.root",
+   "fitdata/MuId_cent_20150907/res_Cent0005_/data_MuId_Cent0005_.root",
+   "fitdata/MuId_cent_20150907/res_Cent0510_/data_MuId_Cent0510_.root",
+   "fitdata/MuId_cent_20150907/res_Cent1020_/data_MuId_Cent1020_.root",
+   "fitdata/MuId_cent_20150907/res_Cent2040_/data_MuId_Cent2040_.root",
+   "fitdata/MuId_cent_20150907/res_Cent4050_/data_MuId_Cent4050_.root",
+   "fitdata/MuId_cent_20150907/res_Cent5060_/data_MuId_Cent5060_.root",
+   "fitdata/MuId_cent_20150907/res_Cent60100_/data_MuId_Cent60100_.root",
 };
-const char* fDataName = "fitdata/Trg_4etabins_20150908/tnp_Ana_Data_PbPb_MuonTrg_AllMB.root";
-const char* fMCName = "fitmc/Trg_20150908/tnp_Ana_MC_PbPb_MuonTrg_AllMB.root";
+const char* fDataName = "fitdata/MuId_4etabins_20150908/tnp_Ana_RD_PbPb_MuonID_AllMB.root";
+const char* fMCName = "fitmc/MuID_20150908/tnp_Ana_MC_PbPb_MuonID_AllMB.root";
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+// Other parameters
+const double tx[nCentBins]={381.23,330.35,261.37,158.7,86.3,53.5,16.2};
+TString etaTag("PassingGlb_eta");
+TString ptTag("PassingGlb_pt");
+TString allTag("PassingGlb_1bin");
+
+// Automatic parameters (shouldn't require modification by the user)
+#ifdef MUIDTRG
+const int nAbsEtaBins = 4;
+TString cutTag("MuonIDTrg"); 
+TString cutLegend("Muon ID + trigger");
+TString absetaTag("PassingGlb_abseta");
+TString absetaVar("abseta");
+#else
+TString absetaTag("PassingGlb_1bin");
+TString absetaVar("eta");
+const int nAbsEtaBins = 1;
+#ifdef TRG
+TString cutTag("MuonTrg"); 
+TString cutLegend("Muon trigger");
+#else
+#ifdef TRK
+TString cutTag("MuonTrk"); 
+TString cutLegend("Inner tracking");
+#else
+TString cutTag("MuonIDTrg"); 
+TString cutLegend("Muon ID");
+#endif // ifdef TRK
+#endif // ifdef TRG
+#endif // ifdeg MUIDTRG
+
 
 // Function Define
 TH2F *plotEff2D(RooDataSet *a, TString b);
@@ -99,8 +137,8 @@ void TnPEffDraw() {
   }
   
   //data and MC root files as well as single bin for integrated efficiency
-  TFile *f9 = new TFile(fDataName);
-  TFile *f10 = new TFile(fMCName);
+  TFile *f9 = new TFile(fMCName);
+  TFile *f10 = new TFile(fDataName);
 
   TCanvas *c1 = new TCanvas("c1","",700,600);
 
@@ -205,6 +243,22 @@ void TnPEffDraw() {
   CalEffErr(Com0AbsEta1, TrkAbsEta1);
 
 
+  c1->cd();
+  TPad *pad1 = new TPad("pad1","pad1",0, 0.26 ,1,1);
+  c1->cd();
+  TPad *pad2 = new TPad("pad2","pad2",0,0,1,0.3*0.96);
+  pad1->SetBottomMargin(0.04);
+  pad2->SetTopMargin(0);
+  pad2->SetFillColor(0);
+  pad2->SetFillStyle(0);
+  pad2->SetBottomMargin(gStyle->GetPadBottomMargin()/0.3);
+  pad1->SetTopMargin(gStyle->GetPadTopMargin()/0.7);
+  // pad2->SetGridy();
+  pad1->Draw();
+  pad1->cd();
+
+  // // adapt text size
+  // lTextSize *= 1./0.7;
 
 
   TH1F *hPad = new TH1F("hPad",";p^{#mu}_{T} [GeV/c];Single #mu Efficiency",5,0,30);
@@ -213,20 +267,20 @@ void TnPEffDraw() {
   hPad->GetXaxis()->CenterTitle();
   hPad1->GetXaxis()->CenterTitle();
   hPad2->GetXaxis()->CenterTitle();
-  hPad->GetXaxis()->SetLabelSize(0.05);
-  hPad->GetXaxis()->SetTitleSize(0.05);
+  hPad->GetXaxis()->SetLabelSize(0.);
+  hPad->GetXaxis()->SetTitleSize(0.);
   hPad->GetXaxis()->SetTitleOffset(1.2);
   hPad->GetYaxis()->SetLabelSize(0.05);
   hPad->GetYaxis()->SetTitleSize(0.05);
   hPad->GetYaxis()->SetTitleOffset(1.);
-  hPad1->GetXaxis()->SetLabelSize(0.05);
-  hPad1->GetXaxis()->SetTitleSize(0.05);
+  hPad1->GetXaxis()->SetLabelSize(0.);
+  hPad1->GetXaxis()->SetTitleSize(0.);
   hPad1->GetXaxis()->SetTitleOffset(1.2);
   hPad1->GetYaxis()->SetLabelSize(0.05);
   hPad1->GetYaxis()->SetTitleSize(0.05);
   hPad1->GetYaxis()->SetTitleOffset(1.);
-  hPad2->GetXaxis()->SetLabelSize(0.05);
-  hPad2->GetXaxis()->SetTitleSize(0.05);
+  hPad2->GetXaxis()->SetLabelSize(0.);
+  hPad2->GetXaxis()->SetTitleSize(0.);
   hPad2->GetXaxis()->SetTitleOffset(1.2);
   hPad2->GetYaxis()->SetLabelSize(0.05);
   hPad2->GetYaxis()->SetTitleSize(0.05);
@@ -237,9 +291,32 @@ void TnPEffDraw() {
   hPad1->GetYaxis()->SetRangeUser(0.,1.05);
   hPad2->GetYaxis()->SetRangeUser(0.,1.05);
 
+  pad2->cd();
+  double tsize = (1./0.3)*hPad->GetYaxis()->GetTitleSize(); // 1./0.36
+  TH1F *hPadr = (TH1F*) hPad->Clone("hPadr"); hPadr->GetYaxis()->SetRangeUser(0.45,1.55);
+  hPadr->GetYaxis()->SetTitle("Scale Factor");
+  hPadr->GetXaxis()->SetTitleSize(tsize);
+  hPadr->GetXaxis()->SetLabelSize(tsize);
+  hPadr->GetYaxis()->SetTitleSize(tsize);
+  hPadr->GetYaxis()->SetLabelSize(tsize);
+  TH1F *hPad1r = (TH1F*) hPad1->Clone("hPad1r"); hPad1r->GetYaxis()->SetRangeUser(0.45,1.55);
+  hPad1r->GetYaxis()->SetTitle("Scale Factor");
+  hPad1r->GetXaxis()->SetTitleSize(tsize);
+  hPad1r->GetXaxis()->SetLabelSize(tsize);
+  hPad1r->GetYaxis()->SetTitleSize(tsize);
+  hPad1r->GetYaxis()->SetLabelSize(tsize);
+  TH1F *hPad2r = (TH1F*) hPad2->Clone("hPad2r"); hPad2r->GetYaxis()->SetRangeUser(0.45,1.55);
+  hPad2r->GetYaxis()->SetTitle("Scale Factor");
+  hPad2r->GetXaxis()->SetTitleSize(tsize);
+  hPad2r->GetXaxis()->SetLabelSize(tsize);
+  hPad2r->GetYaxis()->SetTitleSize(tsize);
+  hPad2r->GetYaxis()->SetLabelSize(tsize);
+
+  pad1->cd();
 
   for (int i=0; i<nbins_abseta; i++)
   {
+     pad1->cd();
      hPad->Draw();
      TLatex *lt1 = new TLatex();
      lt1->SetNDC();
@@ -268,11 +345,46 @@ void TnPEffDraw() {
      //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
      lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
 
+     // now take care of the data/mc ratio panel
+     c1->cd();
+     // pad2->SetFrameFillStyle(4000);
+     pad2->Draw();
+     pad2->cd();
+     hPadr->Draw();
+
+     int nbins = ComPt0[i]->GetN();
+     double *xr = new double[nbins];
+     double *yr = new double[nbins];
+     double *xrlo = new double[nbins];
+     double *yrlo = new double[nbins];
+     double *xrhi = new double[nbins];
+     double *yrhi = new double[nbins];
+
+     // here we assume that the mc uncertainty is negligible compared to the data one: simply scale everything by the central value.
+     for (int j=0; j<nbins; j++)
+     {
+        xr[j] = ComPt1[i]->GetX()[j];
+        xrlo[j] = ComPt1[i]->GetErrorXlow(j);
+        xrhi[j] = ComPt1[i]->GetErrorXhigh(j);
+        yr[j] = ComPt1[i]->GetY()[j]/ComPt0[i]->GetY()[j];
+        yrlo[j] = ComPt1[i]->GetErrorYlow(j)/ComPt0[i]->GetY()[j];
+        yrhi[j] = ComPt1[i]->GetErrorYhigh(j)/ComPt0[i]->GetY()[j];
+     }
+     TGraphAsymmErrors *gratio = new TGraphAsymmErrors(nbins,xr,yr,xrlo,xrhi,yrlo,yrhi);
+     gratio->SetMarkerStyle(20);
+     gratio->SetMarkerColor(kBlack);
+     gratio->SetMarkerSize(1.0);
+     gratio->SetLineColor(kBlack);
+     gratio->SetLineWidth(1);
+     gratio->Draw("pz same");
+
+     // save
      c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.png",i));
      c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.pdf",i));
   }
 
    //---------- This is for eta dependence
+  pad1->cd();
   hPad1->Draw();
 
   ComEta0->Draw("pz same");
@@ -300,10 +412,44 @@ void TnPEffDraw() {
   //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
   lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
 
+  // now take care of the data/mc ratio panel
+  c1->cd();
+  // pad2->SetFrameFillStyle(4000);
+  pad2->Draw();
+  pad2->cd();
+  hPad1r->Draw();
+
+  int nbins = ComEta0->GetN();
+  double *xr = new double[nbins];
+  double *yr = new double[nbins];
+  double *xrlo = new double[nbins];
+  double *yrlo = new double[nbins];
+  double *xrhi = new double[nbins];
+  double *yrhi = new double[nbins];
+
+  // here we assume that the mc uncertainty is negligible compared to the data one: simply scale everything by the central value.
+  for (int j=0; j<nbins; j++)
+  {
+     xr[j] = ComEta1->GetX()[j];
+     xrlo[j] = ComEta1->GetErrorXlow(j);
+     xrhi[j] = ComEta1->GetErrorXhigh(j);
+     yr[j] = ComEta1->GetY()[j]/ComEta0->GetY()[j];
+     yrlo[j] = ComEta1->GetErrorYlow(j)/ComEta0->GetY()[j];
+     yrhi[j] = ComEta1->GetErrorYhigh(j)/ComEta0->GetY()[j];
+  }
+  TGraphAsymmErrors *gratio1 = new TGraphAsymmErrors(nbins,xr,yr,xrlo,xrhi,yrlo,yrhi);
+  gratio1->SetMarkerStyle(20);
+  gratio1->SetMarkerColor(kBlack);
+  gratio1->SetMarkerSize(1.0);
+  gratio1->SetLineColor(kBlack);
+  gratio1->SetLineWidth(1);
+  gratio1->Draw("pz same");
+
   c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Eta.png");
   c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Eta.pdf");
   
   //-------- This is for cent dependence
+  pad1->cd();
   hPad2->Draw();
 
   effCentMC->Draw("pz same");
@@ -315,6 +461,39 @@ void TnPEffDraw() {
   lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
   //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
   lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
+
+  // now take care of the data/mc ratio panel
+  c1->cd();
+  // pad2->SetFrameFillStyle(4000);
+  pad2->Draw();
+  pad2->cd();
+  hPad2r->Draw();
+
+  int nbins2 = effCentMC->GetN();
+  double* xr2 = new double[nbins2];
+  double* yr2 = new double[nbins2];
+  double* xr2lo = new double[nbins2];
+  double* yr2lo = new double[nbins2];
+  double* xr2hi = new double[nbins2];
+  double* yr2hi = new double[nbins2];
+
+  // here we assume that the mc uncertainty is negligible compared to the data one: simply scale everything by the central value.
+  for (int j=0; j<nbins2; j++)
+  {
+     xr2[j] = effCentData->GetX()[j];
+     xr2lo[j] = effCentData->GetErrorXlow(j);
+     xr2hi[j] = effCentData->GetErrorXhigh(j);
+     yr2[j] = effCentData->GetY()[j]/effCentMC->GetY()[j];
+     yr2lo[j] = effCentData->GetErrorYlow(j)/effCentMC->GetY()[j];
+     yr2hi[j] = effCentData->GetErrorYhigh(j)/effCentMC->GetY()[j];
+  }
+  TGraphAsymmErrors *gratio2 = new TGraphAsymmErrors(nbins2,xr2,yr2,xr2lo,xr2hi,yr2lo,yr2hi);
+  gratio2->SetMarkerStyle(20);
+  gratio2->SetMarkerColor(kBlack);
+  gratio2->SetMarkerSize(1.0);
+  gratio2->SetLineColor(kBlack);
+  gratio2->SetLineWidth(1);
+  gratio2->Draw("pz same");
 
   c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Cent.png");
   c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Cent.pdf");
