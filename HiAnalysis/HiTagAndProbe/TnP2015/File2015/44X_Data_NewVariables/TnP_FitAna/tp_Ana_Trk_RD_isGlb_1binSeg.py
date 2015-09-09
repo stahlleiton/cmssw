@@ -16,14 +16,14 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     InputDirectoryName = cms.string("MuonTrk"),
     InputTreeName = cms.string("fitter_tree"),
     #numbrer of CPUs to use for fitting
-    OutputFileName = cms.string("tnp_Ana_RD_PbPb_MuonTrk_AllMB.root"),
-    NumCPU = cms.uint32(25),
+    OutputFileName = cms.string("tnp_Ana_RD_PbPb_MuonTrk_AllMB_20150901_isGlb_1binSeg.root"),
+    NumCPU = cms.uint32(1),
     # specifies wether to save the RooWorkspace containing the data for each bin and
     # the pdf object with the initial and final state snapshots
     SaveWorkspace = cms.bool(True),
-    #binsForMassPlots = cms.uint32(45),
-    #binnedFit = cms.bool(True),
-    #binsForFit = cms.uint32(45),
+    binsForMassPlots = cms.uint32(45),
+    binnedFit = cms.bool(True),
+    binsForFit = cms.uint32(45),
     #WeightVariable = cms.string("weight"),
     
     # defines all the real variables of the probes available in the input tree; can be used to select a subset of the probes
@@ -96,62 +96,15 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     Efficiencies = cms.PSet(
             #the name of the parameter set becomes the name of the directory
             # for multiple passing flags in EfficiencyCategorAndState = cms.vstring("flag1","state","flag2","state",...),
-            isGlb_1bin = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt  = cms.vdouble(0,30),
-                    eta = cms.vdouble(-2.4,2.4),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
             isGlb_1binSeg = cms.PSet(
                 EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
-                    pt  = cms.vdouble(0,30),
+                    pt  = cms.vdouble(0,20),
                     eta = cms.vdouble(-2.4,2.4),
                     staValidStations= cms.vdouble(1,10),
                 ),
                 BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_pt = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(0, 3.5, 7., 10.5, 30.0),
-                    eta = cms.vdouble(-2.4,2.4),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_ptSeg = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(0, 3.5, 7., 10.5, 30.0),
-                    eta = cms.vdouble(-2.4,2.4),
-                    staValidStations= cms.vdouble(1,10),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_eta = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
-                    pt = cms.vdouble(0.,20.0),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_etaSeg = cms.PSet(
-                    EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
-                    UnbinnedVariables = cms.vstring("mass"),
-                    BinnedVariables = cms.PSet(
-                        eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
-                        pt = cms.vdouble(0.,20.0),
-                        staValidStations= cms.vdouble(1,10),
-                    ),
-                    BinToPDFmap = cms.vstring(PDFName)
             ),
     )
 )

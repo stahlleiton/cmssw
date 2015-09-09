@@ -84,12 +84,6 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
           "Gaussian::signal1(mass, mean[3.1,3.0,3.2], sigma[0.10,0.05,1.0])",
           "Gaussian::signal2(mass, mean1[3.7,3.5,3.9], sigma2[0.15,0.05,1.00])",
           "SUM::signal(vFrac[0.8,0,1]*signal1, signal2)",
-          #"Chebychev::backgroundPass(mass, {cP[0,-0.3,0.3], cP2[0,-0.3,0.3], cP3[0,-0.3,0.3], cP4[0,-0.3,0.3], cP5[0,-0.3,0.3]})",
-          #"Chebychev::backgroundFail(mass, {cF[0,-0.3,0.3], cF2[0,-0.3,0.3], cF3[0,-0.3,0.3], cF4[0,-0.3,0.3], cF5[0,-0.3,0.3]})",
-          #"Chebychev::backgroundPass(mass, {cP[0,-0.3,0.3], cP2[0,-0.3,0.3], cP3[0,-0.3,0.3]})",
-          #"Chebychev::backgroundFail(mass, {cF[0,-1.0,1.0], cF2[0,-1.0,1.0], cF3[0,-1.0,1.0]})",
-          #"Chebychev::backgroundPass(mass, {cP[0,-0.4,0.4], cP2[0.015,-0.3,0.3], cP3[-0.031,-0.3,0.3]})", ### good
-          #"Chebychev::backgroundFail(mass, {cF[-0.33,-1.0,1.0], cF2[0.05,-1.0,1.0], cF3[0.02,-1.0,1.0]})", ### good
           "Chebychev::backgroundPass(mass, {cP[0,-0.4,0.4], cP2[0.0,-0.04,0.04], cP3[-0.031,-0.3,0.3]})", ### good
           "Chebychev::backgroundFail(mass, {cF[-0.33,-1.0,1.0], cF2[0.05,-1.0,1.0], cF3[0.02,-1.0,1.0]})", ### good
           "efficiency[0.9,0,1]",

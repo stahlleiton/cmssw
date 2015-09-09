@@ -1,6 +1,13 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("TagProbe")
+
+# setup 'analysis'  options
+options = VarParsing.VarParsing ('analysis')
+options.outputFile = 'output.root'
+options.inputFiles = 'input.root'
+options.parseArguments()
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
@@ -14,12 +21,12 @@ PDFName = "cbPlusPoly2nd"
 process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # IO parameters:
     # InputFileNames = cms.vstring("/u/user/dmoon/WORK/cms5320/src/UserCode/TnP44X/2ndRound/Data/tnp_Prod_Data_PbPb_AllMB_29072015.root"),
-    InputFileNames = cms.vstring("/afs/cern.ch/user/c/chflores/work/public/TnP_2015/TP_Prod_Samples/Data/tnp_Prod_Data_PbPb_AllMB_25082015.root"),
+    InputFileNames = cms.vstring(options.inputFiles),
     InputDirectoryName = cms.string("MuonIDTrg"),
     InputTreeName = cms.string("fitter_tree"),
-    OutputFileName = cms.string("tnp_Ana_RD_PbPb_MuonIDTrg_AllMB.root"),
+    OutputFileName = cms.string(options.outputFile),
     #numbrer of CPUs to use for fitting
-    NumCPU = cms.uint32(25),
+    NumCPU = cms.uint32(1),
     # specifies wether to save the RooWorkspace containing the data for each bin and
     # the pdf object with the initial and final state snapshots
     #binnedFit = cms.bool(True),
@@ -147,60 +154,6 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
     Efficiencies = cms.PSet(
             #the name of the parameter set becomes the name of the directory
-            PassingGlb_pt1 = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(2.5, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8.5, 30),
-                    abseta = cms.vdouble(0, 1.2),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_pt2 = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(2.5, 3, 3.5, 4, 4.5, 5.5, 30),
-                    abseta = cms.vdouble(1.2, 1.6),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_pt3 = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 30),
-                    abseta = cms.vdouble(1.6, 2.1),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_pt4 = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(1.5, 2, 2.5, 3, 3.5, 4, 5, 30),
-                    abseta = cms.vdouble(2.1, 2.4),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_abseta = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(1.5, 30),
-                    abseta = cms.vdouble(0, 1.2, 1.6, 2.1, 2.4),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
-            PassingGlb_eta = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
-                UnbinnedVariables = cms.vstring("mass"),
-                BinnedVariables = cms.PSet(
-                    eta = cms.vdouble(-2.4,-2.1,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.1,2.4),
-                    pt= cms.vdouble(1.5, 30),
-                ),
-                BinToPDFmap = cms.vstring(PDFName)
-            ),
             PassingGlb_1bin = cms.PSet(
                 EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
                 UnbinnedVariables = cms.vstring("mass"),
