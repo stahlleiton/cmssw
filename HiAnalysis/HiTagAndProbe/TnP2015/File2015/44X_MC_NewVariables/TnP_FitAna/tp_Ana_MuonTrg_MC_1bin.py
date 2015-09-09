@@ -1,6 +1,13 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("TagProbe")
+
+# setup 'analysis'  options
+options = VarParsing.VarParsing ('analysis')
+options.outputFile = 'output.root'
+options.inputFiles = 'input.root'
+options.parseArguments()
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
@@ -14,10 +21,10 @@ PDFName = "cbGausPlusExpo"
 
 process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # IO parameters:
-    InputFileNames = cms.vstring(" /afs/cern.ch/user/c/chflores/work/public/TnP_2015/TP_Prod_Samples/MC/tnp_Prod_MC_PbPb_AllMB_08092015.root"),
+    InputFileNames = cms.vstring(options.inputFiles),
     InputDirectoryName = cms.string("MuonTrg"),
     InputTreeName = cms.string("fitter_tree"),
-    OutputFileName = cms.string("tnp_Ana_MC_PbPb_MuonTrg_AllMB.root"),
+    OutputFileName = cms.string(options.outputFile),
     #numbrer of CPUs to use for fitting
     NumCPU = cms.uint32(25),
     # specifies wether to save the RooWorkspace containing the data for each bin and
@@ -126,24 +133,6 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # there will be a separate output directory for each calculation that includes a simultaneous fit, side band subtraction and counting. 
     Efficiencies = cms.PSet(
         #the name of the parameter set becomes the name of the directory
-        PassingGlb_pt = cms.PSet(
-           EfficiencyCategoryAndState = cms.vstring("HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"),
-           UnbinnedVariables = cms.vstring("mass","weight"),
-           BinnedVariables = cms.PSet(
-              pt = cms.vdouble(1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6.5, 30),
-              abseta = cms.vdouble(0,2.4),
-              ),
-           BinToPDFmap = cms.vstring(PDFName)
-           ),
-        PassingGlb_eta = cms.PSet(
-           EfficiencyCategoryAndState = cms.vstring("HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"),
-           UnbinnedVariables = cms.vstring("mass","weight"),
-           BinnedVariables = cms.PSet(
-              eta = cms.vdouble(-2.4,-2.1,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.1,2.4),
-              pt= cms.vdouble(1.5, 30),
-              ),
-           BinToPDFmap = cms.vstring(PDFName)
-           ),
         PassingGlb_1bin = cms.PSet(
            EfficiencyCategoryAndState = cms.vstring("HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"),
            UnbinnedVariables = cms.vstring("mass","weight"),
