@@ -38,32 +38,32 @@ using namespace std;
 
 // Choose the efficiency type.
 // Possible values: MUIDTRG, MUID, TRG, TRK
-#define MUID
+#define TRK
 
 // Location of the files
 const int nCentBins = 7;
 const char* fCentMCNames[nCentBins] = 
 {
-   "fitmc/MuID_cent_20150909/res_Cent0005_/MuID_cent_20150909_Cent0005_.root",
-   "fitmc/MuID_cent_20150909/res_Cent0510_/MuID_cent_20150909_Cent0510_.root",
-   "fitmc/MuID_cent_20150909/res_Cent1020_/MuID_cent_20150909_Cent1020_.root",
-   "fitmc/MuID_cent_20150909/res_Cent2040_/MuID_cent_20150909_Cent2040_.root",
-   "fitmc/MuID_cent_20150909/res_Cent4050_/MuID_cent_20150909_Cent4050_.root",
-   "fitmc/MuID_cent_20150909/res_Cent5060_/MuID_cent_20150909_Cent5060_.root",
-   "fitmc/MuID_cent_20150909/res_Cent60100_/MuID_cent_20150909_Cent60100_.root",
+   "fitmc/Trk_cent_20150909/res_Cent0005_/MuTrk_cent_20150909_Cent0005_.root",
+   "fitmc/Trk_cent_20150909/res_Cent0510_/MuTrk_cent_20150909_Cent0510_.root",
+   "fitmc/Trk_cent_20150909/res_Cent1020_/MuTrk_cent_20150909_Cent1020_.root",
+   "fitmc/Trk_cent_20150909/res_Cent2040_/MuTrk_cent_20150909_Cent2040_.root",
+   "fitmc/Trk_cent_20150909/res_Cent4050_/MuTrk_cent_20150909_Cent4050_.root",
+   "fitmc/Trk_cent_20150909/res_Cent5060_/MuTrk_cent_20150909_Cent5060_.root",
+   "fitmc/Trk_cent_20150909/res_Cent60100_/MuTrk_cent_20150909_Cent60100_.root",
 };
 const char* fCentDataNames[nCentBins] = 
 {
-   "fitdata/MuId_cent_20150907/res_Cent0005_/data_MuId_Cent0005_.root",
-   "fitdata/MuId_cent_20150907/res_Cent0510_/data_MuId_Cent0510_.root",
-   "fitdata/MuId_cent_20150907/res_Cent1020_/data_MuId_Cent1020_.root",
-   "fitdata/MuId_cent_20150907/res_Cent2040_/data_MuId_Cent2040_.root",
-   "fitdata/MuId_cent_20150907/res_Cent4050_/data_MuId_Cent4050_.root",
-   "fitdata/MuId_cent_20150907/res_Cent5060_/data_MuId_Cent5060_.root",
-   "fitdata/MuId_cent_20150907/res_Cent60100_/data_MuId_Cent60100_.root",
+   "fitdata/Trk_cent_20150909/res_Cent0005_/MuTrk_cent_20150909_Cent0005_.root",
+   "fitdata/Trk_cent_20150909/res_Cent0510_/MuTrk_cent_20150909_Cent0510_.root",
+   "fitdata/Trk_cent_20150909/res_Cent1020_/MuTrk_cent_20150909_Cent1020_.root",
+   "fitdata/Trk_cent_20150909/res_Cent2040_/MuTrk_cent_20150909_Cent2040_.root",
+   "fitdata/Trk_cent_20150909/res_Cent4050_/MuTrk_cent_20150909_Cent4050_.root",
+   "fitdata/Trk_cent_20150909/res_Cent5060_/MuTrk_cent_20150909_Cent5060_.root",
+   "fitdata/Trk_cent_20150909/res_Cent60100_/MuTrk_cent_20150909_Cent60100_.root",
 };
-const char* fDataName = "fitdata/MuId_4etabins_20150908/tnp_Ana_RD_PbPb_MuonID_AllMB.root";
-const char* fMCName = "fitmc/MuID_20150908/tnp_Ana_MC_PbPb_MuonID_AllMB.root";
+const char* fDataName = "fitdata/Trk_20150909/tnp_Ana_RD_PbPb_MuonTrk_AllMB.root";
+const char* fMCName = "fitmc/Trk_20150909/tnp_Ana_MC_PbPb_MuonTrk_AllMB.root";
 
 
 
@@ -73,9 +73,9 @@ const char* fMCName = "fitmc/MuID_20150908/tnp_Ana_MC_PbPb_MuonID_AllMB.root";
 
 // Other parameters
 const double tx[nCentBins]={381.23,330.35,261.37,158.7,86.3,53.5,16.2};
-TString etaTag("PassingGlb_eta");
-TString ptTag("PassingGlb_pt");
-TString allTag("PassingGlb_1bin");
+TString etaTag("PassingGlb_etaSeg");
+TString ptTag("PassingGlb_ptSeg");
+TString allTag("PassingGlb_1binSeg");
 
 // Automatic parameters (shouldn't require modification by the user)
 #ifdef MUIDTRG
@@ -102,6 +102,18 @@ TString cutLegend("Muon ID");
 #endif // ifdef TRG
 #endif // ifdeg MUIDTRG
 
+#ifdef TRK
+const double effmin = 0.8;
+const double sfrange = 0.08;
+#else
+#ifdef MUID
+const double effmin = 0.8;
+const double sfrange = 0.08;
+#else
+const double effmin = 0.;
+const double sfrange = 0.55;
+#endif // ifdef MUID
+#endif // ifdef TRK
 
 // Function Define
 TH2F *plotEff2D(RooDataSet *a, TString b);
@@ -162,7 +174,6 @@ void TnPEffDraw() {
   
   for (unsigned int i=0; i<daPtData0.size(); i++)
   {
-  cout << daPtData0[i] << endl;
      ComPt0.push_back(plotEff_1bin(daPtData0[i], 1, "pt"));
      ComPt1.push_back(plotEff_1bin(daPtData1[i], 1, "pt"));
   }
@@ -287,30 +298,34 @@ void TnPEffDraw() {
   hPad2->GetYaxis()->SetTitleOffset(1.);
 
 
-  hPad->GetYaxis()->SetRangeUser(0.,1.05);
-  hPad1->GetYaxis()->SetRangeUser(0.,1.05);
-  hPad2->GetYaxis()->SetRangeUser(0.,1.05);
+  hPad->GetYaxis()->SetRangeUser(effmin,1.05);
+  hPad1->GetYaxis()->SetRangeUser(effmin,1.05);
+  hPad2->GetYaxis()->SetRangeUser(effmin,1.05);
 
   pad2->cd();
-  double tsize = (1./0.3)*hPad->GetYaxis()->GetTitleSize(); // 1./0.36
-  TH1F *hPadr = (TH1F*) hPad->Clone("hPadr"); hPadr->GetYaxis()->SetRangeUser(0.45,1.55);
+  pad2->SetGridy();
+  double tsize = (1./0.36)*hPad->GetYaxis()->GetTitleSize(); // 1./0.36
+  TH1F *hPadr = (TH1F*) hPad->Clone("hPadr"); hPadr->GetYaxis()->SetRangeUser(1.-sfrange,1.+sfrange);
   hPadr->GetYaxis()->SetTitle("Scale Factor");
   hPadr->GetXaxis()->SetTitleSize(tsize);
   hPadr->GetXaxis()->SetLabelSize(tsize);
   hPadr->GetYaxis()->SetTitleSize(tsize);
   hPadr->GetYaxis()->SetLabelSize(tsize);
-  TH1F *hPad1r = (TH1F*) hPad1->Clone("hPad1r"); hPad1r->GetYaxis()->SetRangeUser(0.45,1.55);
+  hPadr->GetYaxis()->SetNdivisions(504,kTRUE);
+  TH1F *hPad1r = (TH1F*) hPad1->Clone("hPad1r"); hPad1r->GetYaxis()->SetRangeUser(1.-sfrange,1.+sfrange);
   hPad1r->GetYaxis()->SetTitle("Scale Factor");
   hPad1r->GetXaxis()->SetTitleSize(tsize);
   hPad1r->GetXaxis()->SetLabelSize(tsize);
   hPad1r->GetYaxis()->SetTitleSize(tsize);
   hPad1r->GetYaxis()->SetLabelSize(tsize);
-  TH1F *hPad2r = (TH1F*) hPad2->Clone("hPad2r"); hPad2r->GetYaxis()->SetRangeUser(0.45,1.55);
+  hPad1r->GetYaxis()->SetNdivisions(504,kTRUE);
+  TH1F *hPad2r = (TH1F*) hPad2->Clone("hPad2r"); hPad2r->GetYaxis()->SetRangeUser(1.-sfrange,1.+sfrange);
   hPad2r->GetYaxis()->SetTitle("Scale Factor");
   hPad2r->GetXaxis()->SetTitleSize(tsize);
   hPad2r->GetXaxis()->SetLabelSize(tsize);
   hPad2r->GetYaxis()->SetTitleSize(tsize);
   hPad2r->GetYaxis()->SetLabelSize(tsize);
+  hPad2r->GetYaxis()->SetNdivisions(504,kTRUE);
 
   pad1->cd();
 
@@ -328,8 +343,8 @@ void TnPEffDraw() {
      leg1->SetBorderSize(0);
      leg1->SetTextSize(0.035);
      double ptmin = ((RooRealVar*) daPtData0[i]->get()->find("pt"))->getBinning().binLow(0);
-     double etamin = ((RooRealVar*) daPtData0[i]->get()->find("abseta"))->getBinning().binLow(0);
-     double etamax = ((RooRealVar*) daPtData0[i]->get()->find("abseta"))->getBinning().binHigh(0);
+     double etamin = ((RooRealVar*) daPtData0[i]->get()->find(absetaVar))->getBinning().binLow(0);
+     double etamax = ((RooRealVar*) daPtData0[i]->get()->find(absetaVar))->getBinning().binHigh(0);
      leg1->SetHeader(TString("#splitline{") + cutLegend + Form(" Efficiency}{(p^{#mu}_{T}>%.1f, |#eta| #in [%.1f, %.1f])}",ptmin,etamin,etamax));
      sprintf(legs,"MC PYTHIA+EvtGen: %.4f^{ + %.3f}_{ - %.3f}", TrkAbsEta0[i][0], TrkAbsEta0[i][1], TrkAbsEta0[i][2]);
      leg1->AddEntry(ComPt0[i],legs,"pl");
