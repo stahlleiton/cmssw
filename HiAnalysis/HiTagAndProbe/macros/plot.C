@@ -4,6 +4,10 @@
 #include "TCanvas.h"
 #include "TKey.h"
 
+#include "RooWorkspace.h"
+
+#include "TagProbeFitter.C"
+
 #include <iostream>
 #include <stdlib.h>
 
@@ -46,10 +50,21 @@ void plot(const char *filename)
                      // we are in a directory with mass fits. Print the canvases with these fits.
                      TDirectoryFile *tdir3 = dynamic_cast<TDirectoryFile*>(obj3);
                      tdir3->cd();
-                     TCanvas *canv = (TCanvas*) gDirectory->Get("fit_canvas");
-                     if (!canv) continue;
-                     canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".pdf");
-                     canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".png");
+
+                     RooWorkspace *myws = (RooWorkspace*) gDirectory->Get("w");
+                     if (myws)
+                     {
+                        TagProbeFitter tnpf;
+                        tnpf.setBinsForMassPlots(50);
+                        tnpf.saveFitPlot(myws,dir2name + "/" + TString(obj3->GetName()) + ".pdf",dir2name + "/" + TString(obj3->GetName()) + "_pulls.pdf");
+                     }
+                     else
+                     {
+                        TCanvas *canv = (TCanvas*) gDirectory->Get("fit_canvas");
+                        if (!canv) continue;
+                        canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".pdf");
+                        canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".png");
+                     }
                   }
                   if (TString(obj3->GetTitle()) == "fit_eff_plots" || TString(obj3->GetTitle()) == "cnt_eff_plots")
                   {
