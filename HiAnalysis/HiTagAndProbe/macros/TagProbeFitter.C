@@ -783,9 +783,19 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
       frames.push_back(mass->frame(Name("Failing"), Title("Failing Probes"), Bins(massBins)));
       frames.push_back(mass->frame(Name("All"),     Title("All Probes"), Bins(massBins)));
   }
+  canvas2.cd(1);
+  if (massBins == 0) {
+      frames2.push_back(mass->frame(Name("Passing"), Title("Passing Probes")));
+      frames2.push_back(mass->frame(Name("Failing"), Title("Failing Probes")));
+      frames2.push_back(mass->frame(Name("All"),     Title("All Probes")));
+  } else {
+      frames2.push_back(mass->frame(Name("Passing"), Title("Passing Probes"), Bins(massBins)));
+      frames2.push_back(mass->frame(Name("Failing"), Title("Failing Probes"), Bins(massBins)));
+      frames2.push_back(mass->frame(Name("All"),     Title("All Probes"), Bins(massBins)));
+  }
 
-  double minMass = 2.0;
-  double maxMass = 5.0;
+  double minMass = mass->getMin();
+  double maxMass = mass->getMax();
   //double minMass = 2.6;
   //double maxMass = 3.5;
   TH1F *hChi2 = new TH1F("hChi2","",3,0, 3);
@@ -807,7 +817,7 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   frames[0]->Draw();
   // dmoon
   RooFitResult *fitRes = (RooFitResult*)gDirectory->Get("fitresults");
-  TH1 *hdatapass = dataPass->createHistogram("hdatapass",*mass,Bins(massBins));
+  TH1 *hdatapass = dataPass->createHistogram("hdatapass",*mass,Binning(massBins,minMass,maxMass));
   cout<<"Mass Bins : "<<massBins<<endl;
   unsigned int nBins = hdatapass->GetNbinsX();
   cout<<"nBins : "<<nBins<<endl;
@@ -843,7 +853,8 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   hPvlu->SetBinContent(1, pVlu);
 
   canvas2.cd(1);
-  hPullPass->Draw();
+  frames2[0]->addPlotable(hpullpass,"P");
+  frames2[0]->Draw();
 
   // plot the Failing Probes
   canvas.cd(2);
@@ -851,7 +862,7 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   pdf.plotOn(frames[1], Slice(efficiencyCategory, "Failed"), ProjWData(*dataFail), LineColor(kRed+1), Components("backgroundFail"), LineStyle(kDashed));
   pdf.plotOn(frames[1], Slice(efficiencyCategory, "Failed"), ProjWData(*dataFail), LineColor(kRed+1));
   frames[1]->Draw();
-  TH1 *hdatafail = dataFail->createHistogram("hdatafail",*mass,Bins(massBins));
+  TH1 *hdatafail = dataFail->createHistogram("hdatafail",*mass,Binning(massBins,minMass,maxMass));
   nBins = hdatafail->GetNbinsX();
   RooHist *hpullfail = frames[1]->pullHist(); hpullfail->SetName("pull_Failing");
   Chi2 = 0.0;
@@ -879,7 +890,8 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   hPvlu->SetBinContent(2, pVlu);
 
   canvas2.cd(2);
-  hPullFail->Draw();
+  frames2[1]->addPlotable(hpullfail,"P");
+  frames2[1]->Draw();
 
   // plot the All Probes
   canvas.cd(3);
@@ -887,7 +899,7 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   pdf.plotOn(frames.back(), ProjWData(*dataAll), LineColor(kBlue+1), Components("backgroundPass,backgroundFail"), LineStyle(kDashed));
   pdf.plotOn(frames.back(), ProjWData(*dataAll), LineColor(kBlue+1));
   frames.back()->Draw();
-  TH1 *hdataall = dataAll->createHistogram("hdataall",*mass,Bins(massBins));
+  TH1 *hdataall = dataAll->createHistogram("hdataall",*mass,Binning(massBins,minMass,maxMass));
   nBins = hdataall->GetNbinsX();
   RooHist *hpullall = frames.back()->pullHist(); hpullall->SetName("pull_Alling");
   Chi2 = 0.0;
@@ -915,7 +927,8 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   hPvlu->SetBinContent(3, pVlu);
 
   canvas2.cd(3);
-  hPullAll->Draw();
+  frames2[2]->addPlotable(hpullall,"P");
+  frames2[2]->Draw();
 
   // plot the Fit Results
   canvas.cd(4);
@@ -960,19 +973,19 @@ void TagProbeFitter::saveDistributionsPlot(RooWorkspace* w){
   for(unsigned int i=0; i<reals.size(); i++){
     // plot the Passing Probes
     canvas.cd(3*i+1);
-    frames.push_back(reals[i]->frame(Name("Passing"), Title("Passing Probes"), Bins(100)));
+    frames.push_back(reals[i]->frame(Name("Passing"), Title("Passing Probes"), Bins(massBins)));
     dataPass->plotOn(frames.back(), LineColor(kGreen+1));
     dataPass->statOn(frames.back());
     frames.back()->Draw();
     // plot the Failing Probes
     canvas.cd(3*i+2);
-    frames.push_back(reals[i]->frame(Name("Failing"), Title("Failing Probes"), Bins(100)));
+    frames.push_back(reals[i]->frame(Name("Failing"), Title("Failing Probes"), Bins(massBins)));
     dataFail->plotOn(frames.back(), LineColor(kRed+1));
     dataFail->statOn(frames.back());
     frames.back()->Draw();
     // plot the All Probes
     canvas.cd(3*i+3);
-    frames.push_back(reals[i]->frame(Name("All"), Title("All Probes"), Bins(100)));
+    frames.push_back(reals[i]->frame(Name("All"), Title("All Probes"), Bins(massBins)));
     dataAll->plotOn(frames.back(), LineColor(kBlue+1));
     dataAll->statOn(frames.back());
     frames.back()->Draw();

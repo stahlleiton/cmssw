@@ -11,6 +11,12 @@
 #include <iostream>
 #include <stdlib.h>
 
+// print efficiencies with cut method?
+bool print_cuteff = false;
+
+// print efficiencies with fit method?
+bool print_fiteff = false;
+
 using namespace std;
 
 // A "simple" macro to read a ROOT file as created by the TnP fitting code, and print the canvases corresponding to the mass fits,
@@ -66,7 +72,7 @@ void plot(const char *filename)
                         canv->SaveAs(dir2name + "/" + TString(obj3->GetName()) + ".png");
                      }
                   }
-                  if (TString(obj3->GetTitle()) == "fit_eff_plots" || TString(obj3->GetTitle()) == "cnt_eff_plots")
+                  if ((print_fiteff && TString(obj3->GetTitle()) == "fit_eff_plots") || (print_cuteff && TString(obj3->GetTitle()) == "cnt_eff_plots"))
                   {
                      // we are in a directory with efficiency plots. Print these efficiency plots.
                      TDirectoryFile *tdir3 = dynamic_cast<TDirectoryFile*>(obj3);
