@@ -35,6 +35,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     #binnedFit = cms.bool(True),
     #binsForFit = cms.uint32(50),
     WeightVariable = cms.string("weight"),
+    SaveWorkspace = cms.bool(True),
     
     # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies
     Variables = cms.PSet(

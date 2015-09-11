@@ -28,7 +28,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # specifies wether to save the RooWorkspace containing the data for each bin and
     # the pdf object with the initial and final state snapshots
     SaveWorkspace = cms.bool(True),
-    binsForMassPlots = cms.uint32(45),
+    binsForMassPlots = cms.uint32(50),
     #binnedFit = cms.bool(False),
     #binsForFit = cms.uint32(45),
     WeightVariable = cms.string("weight"),
@@ -104,20 +104,19 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
         #the name of the parameter set becomes the name of the directory
         # for multiple passing flags in EfficiencyCategorAndState = cms.vstring("flag1","state","flag2","state",...),
        PassingGlb_1bin = cms.PSet(
-                                   EfficiencyCategoryAndState = cms.vstring("QualityMu","true"),
+                                   EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                                    UnbinnedVariables = cms.vstring("mass","weight"),
                                    BinnedVariables = cms.PSet(
-                                                              pt  = cms.vdouble(1.5,20),
+                                                              pt  = cms.vdouble(0,30),
                                                               eta = cms.vdouble(-2.4,2.4),
-
                                                               ),
                                    BinToPDFmap = cms.vstring(PDFName)
                                    ),
-       PassingGlb_1bin_Seg = cms.PSet(
-                                      EfficiencyCategoryAndState = cms.vstring("QualityMu","true"),
+       PassingGlb_1binSeg = cms.PSet(
+                                      EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                                       UnbinnedVariables = cms.vstring("mass","weight"),
                                       BinnedVariables = cms.PSet(
-                                                                 pt  = cms.vdouble(1.5,20),
+                                                                 pt  = cms.vdouble(0,30),
                                                                  eta = cms.vdouble(-2.4,2.4),
                                                                  staValidStations= cms.vdouble(1,10),
                                                                  ),

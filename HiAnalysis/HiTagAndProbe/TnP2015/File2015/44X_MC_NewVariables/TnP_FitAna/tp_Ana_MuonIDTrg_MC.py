@@ -28,6 +28,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     #binnedFit = cms.bool(True),
     #binsForFit = cms.uint32(50),
     WeightVariable = cms.string("weight"),
+    SaveWorkspace = cms.bool(True),
     
     # defines all the real variables of the probes available in the input tree and intended for use in the efficiencies
     Variables = cms.PSet(
@@ -117,9 +118,9 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
       ),
       cbGausPlusExpo = cms.vstring(
         "Gaussian::signal1(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1])",
-        "CBShape::signal2(mass, mean, sigma2[0.02, 0.02, 0.3], alpha[2.0, 1.0, 10.0], n[4, 0.5, 100.])",
-        "SUM::signalPass(fracP[0.8,0,1]*signal1,signal2)",
-        "SUM::signalFail(fracF[0.8,0,1]*signal1,signal2)",
+        "CBShape::signal2(mass, mean, sigma2[0.02, 0.005, 0.1], alpha[2.0, 0.2, 4.0], n[4, 0.5, 20.])",
+        "SUM::signalPass(fracP[0.2,0,1]*signal1,signal2)",
+        "SUM::signalFail(fracF[0.2,0,1]*signal1,signal2)",
         "Exponential::backgroundPass(mass, lp[0,-5.0,5.0])",
         "Exponential::backgroundFail(mass, lf[0,-5.0,5.0])",  # same slope, they're both muons
         "efficiency[0.9,0,1]",

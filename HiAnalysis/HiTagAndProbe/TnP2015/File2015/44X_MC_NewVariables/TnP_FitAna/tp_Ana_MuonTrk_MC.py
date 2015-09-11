@@ -12,16 +12,16 @@ PDFName = "twoGaussPlusPoly6v1"
 
 process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # IO parameters:
-    InputFileNames = cms.vstring("tnp_Prod_MC_PbPb_AllMB_02082015.root"),
+    InputFileNames = cms.vstring(" /afs/cern.ch/user/c/chflores/work/public/TnP_2015/TP_Prod_Samples/MC/tnp_Prod_MC_PbPb_AllMB_08092015.root "),
     InputDirectoryName = cms.string("MuonTrk"),
     InputTreeName = cms.string("fitter_tree"),
     #numbrer of CPUs to use for fitting
-    OutputFileName = cms.string("tnp_Ana_MC_PbPb_MuonTrk_AllMB_PreHPQalCuts_02082015.root"),
-    NumCPU = cms.uint32(1),
+    OutputFileName = cms.string("tnp_Ana_MC_PbPb_MuonTrk_AllMB.root"),
+    NumCPU = cms.uint32(25),
     # specifies wether to save the RooWorkspace containing the data for each bin and
     # the pdf object with the initial and final state snapshots
     SaveWorkspace = cms.bool(True),
-    binsForMassPlots = cms.uint32(45),
+    binsForMassPlots = cms.uint32(50),
     #binnedFit = cms.bool(False),
     #binsForFit = cms.uint32(45),
     WeightVariable = cms.string("weight"),
@@ -96,67 +96,64 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     Efficiencies = cms.PSet(
         #the name of the parameter set becomes the name of the directory
         # for multiple passing flags in EfficiencyCategorAndState = cms.vstring("flag1","state","flag2","state",...),
-       PassingGlb_pt = cms.PSet(
-                                EfficiencyCategoryAndState = cms.vstring("QualityMu","true"),
-                                UnbinnedVariables = cms.vstring("mass","weight"),
-                                BinnedVariables = cms.PSet(
-                                                           pt = cms.vdouble(1.5, 7., 10.5, 20.0),
-                                                           eta = cms.vdouble(-2.4,2.4),
-
-                                                           ),
-                                BinToPDFmap = cms.vstring(PDFName)
-                                ),
-       PassingGlb_ptSeg = cms.PSet(
-                                    EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
-                                    UnbinnedVariables = cms.vstring("mass","weight"),
-                                    BinnedVariables = cms.PSet(
-                                                               pt = cms.vdouble(0, 7., 10.5, 20.0),
-                                                               eta = cms.vdouble(-2.4,2.4),
-                                                               staValidStations= cms.vdouble(1,10),
-                                                               ),
-                                    BinToPDFmap = cms.vstring(PDFName)
-                                    ),
-       PassingGlb_1bin = cms.PSet(
-                                   EfficiencyCategoryAndState = cms.vstring("QualityMu","true"),
-                                   UnbinnedVariables = cms.vstring("mass","weight"),
-                                   BinnedVariables = cms.PSet(
-                                                              pt  = cms.vdouble(1.5,20),
-                                                              eta = cms.vdouble(-2.4,2.4),
-
-                                                              ),
-                                   BinToPDFmap = cms.vstring(PDFName)
-                                   ),
-       PassingGlb_1bin_Seg = cms.PSet(
-                                      EfficiencyCategoryAndState = cms.vstring("QualityMu","true"),
-                                      UnbinnedVariables = cms.vstring("mass","weight"),
-                                      BinnedVariables = cms.PSet(
-                                                                 pt  = cms.vdouble(1.5,20),
-                                                                 eta = cms.vdouble(-2.4,2.4),
-                                                                 staValidStations= cms.vdouble(1,10),
-                                                                 ),
-                                      BinToPDFmap = cms.vstring(PDFName)
-                                    ),
-       PassingGlb_eta = cms.PSet(
-                                  EfficiencyCategoryAndState = cms.vstring("QualityMu","true"),
-                                  UnbinnedVariables = cms.vstring("mass","weight"),
-                                  BinnedVariables = cms.PSet(
-                                                             eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
-                                                             pt = cms.vdouble(1.5,20.0),
-
-                                                             ),
-                                  BinToPDFmap = cms.vstring(PDFName)
-                                  ),
-        PassingGlb_etaSeg = cms.PSet(
-                                     EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
-                                     UnbinnedVariables = cms.vstring("mass","weight"),
-                                     BinnedVariables = cms.PSet(
-                                                                    eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
-                                                                    pt = cms.vdouble(0.,20.0),
-                                                                    staValidStations= cms.vdouble(1,10),
-                                                                                 ),
-                                     BinToPDFmap = cms.vstring(PDFName)
-                                     ),
-                            )
+            PassingGlb_1bin = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                UnbinnedVariables = cms.vstring("mass","weight"),
+                BinnedVariables = cms.PSet(
+                    pt  = cms.vdouble(0,30),
+                    eta = cms.vdouble(-2.4,2.4),
+                ),
+                BinToPDFmap = cms.vstring(PDFName)
+            ),
+            PassingGlb_1binSeg = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                UnbinnedVariables = cms.vstring("mass","weight"),
+                BinnedVariables = cms.PSet(
+                    pt  = cms.vdouble(0,30),
+                    eta = cms.vdouble(-2.4,2.4),
+                    staValidStations= cms.vdouble(1,10),
+                ),
+                BinToPDFmap = cms.vstring(PDFName)
+            ),
+            PassingGlb_pt = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                UnbinnedVariables = cms.vstring("mass","weight"),
+                BinnedVariables = cms.PSet(
+                    pt = cms.vdouble(0, 3.5, 7., 10.5, 30.0),
+                    eta = cms.vdouble(-2.4,2.4),
+                ),
+                BinToPDFmap = cms.vstring(PDFName)
+            ),
+            PassingGlb_ptSeg = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                UnbinnedVariables = cms.vstring("mass","weight"),
+                BinnedVariables = cms.PSet(
+                    pt = cms.vdouble(0, 3.5, 7., 10.5, 30.0),
+                    eta = cms.vdouble(-2.4,2.4),
+                    staValidStations= cms.vdouble(1,10),
+                ),
+                BinToPDFmap = cms.vstring(PDFName)
+            ),
+            PassingGlb_eta = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                UnbinnedVariables = cms.vstring("mass","weight"),
+                BinnedVariables = cms.PSet(
+                    eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
+                    pt = cms.vdouble(0.,30.0),
+                ),
+                BinToPDFmap = cms.vstring(PDFName)
+            ),
+            PassingGlb_etaSeg = cms.PSet(
+                    EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                    UnbinnedVariables = cms.vstring("mass","weight"),
+                    BinnedVariables = cms.PSet(
+                        eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
+                        pt = cms.vdouble(0.,30.0),
+                        staValidStations= cms.vdouble(1,10),
+                    ),
+                    BinToPDFmap = cms.vstring(PDFName)
+            ),
+    )
 )
 
 process.fitness = cms.Path(
