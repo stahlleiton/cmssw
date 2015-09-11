@@ -30,6 +30,7 @@
 #include "TPostScript.h"
 #include "TMath.h"
 
+#include "toyStudy.h"
 
 using namespace RooFit;
 using namespace std;
@@ -41,6 +42,12 @@ using namespace std;
 // Choose the efficiency type.
 // Possible values: MUIDTRG, MUID, TRG, TRK
 #define MUIDTRG
+
+// pp or PbPb?
+TString collTag = "PbPb";
+
+// do the toy study for the correction factors? (only applies if MUIDTRG)
+bool doToys = true;
 
 // Location of the files
 const int nCentBins = 7;
@@ -371,7 +378,7 @@ void TnPEffDraw() {
      lt1->SetTextSize(0.05);
      lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
      //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
-     lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
+     lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
 
      // now take care of the data/mc ratio panel
      c1->cd();
@@ -407,8 +414,8 @@ void TnPEffDraw() {
      gratio->Draw("pz same");
 
      // save
-     c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.png",i));
-     c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.pdf",i));
+     c1->SaveAs(cutTag + Form("Eff%i_",i) + collTag + "_RD_MC_PT.png");
+     c1->SaveAs(cutTag + Form("Eff%i_",i) + collTag + "_RD_MC_PT.pdf");
 
      // in case we are looking at muon Id + trigger: get the scale factor at the same time
 #ifdef MUIDTRG
@@ -422,6 +429,9 @@ void TnPEffDraw() {
      TF1 *fdata = new TF1("fdata","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
      fdata->SetParNames("eff0","x0","m");
      fdata->SetParameters(0.8,0.1,1.0);
+     fdata->SetParLimits(0,0,1);
+     fdata->SetParLimits(1,0.,10.);
+     fdata->SetParLimits(2,0,10.);
      fdata->SetLineWidth(2);
      fdata->SetLineColor(kBlue);
      ComPt1[i]->Fit(fdata,"RME");
@@ -434,10 +444,8 @@ void TnPEffDraw() {
      tchi.DrawLatex(0.6,0.92,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
 
      // fit mc
-     TF1 *fmc = new TF1("fmc","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
-     fmc->SetParNames("eff0","x0","m");
+     TF1 *fmc = (TF1*) fdata->Clone("fmc");;
      fmc->SetParameters(0.9,0.5,2.5);
-     fmc->SetLineWidth(2);
      fmc->SetLineColor(kRed);
      ComPt0[i]->Fit(fmc,"RME");
      leg1->AddEntry(fmc,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)),"pl");
@@ -468,8 +476,8 @@ void TnPEffDraw() {
      tchi.DrawLatex(0.6,0.8,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
 
      // save
-     c1->SaveAs(cutTag + Form("SF%i_PbPb_RD_MC_PT.png",i));
-     c1->SaveAs(cutTag + Form("SF%i_PbPb_RD_MC_PT.pdf",i));
+     c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.png");
+     c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.pdf");
 
      // print the fit results to file
      file_sfs << "Data " << etamin << " " << etamax << endl;
@@ -477,6 +485,9 @@ void TnPEffDraw() {
      file_sfs << "MC " << etamin << " " << etamax << endl;
      file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)) << endl;
      file_sfs << endl;
+
+     // toys study
+     if (doToys) toyStudy(ComPt1[i], ComPt0[i], fdata, fmc, cutTag + Form("toys%i_",i) + collTag + "_RD_MC_PT");
 #endif // ifdef MUIDTRG
   }
 
@@ -507,7 +518,7 @@ void TnPEffDraw() {
   lt1->SetTextSize(0.05);
   lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
   //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
-  lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
+  lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
 
   // now take care of the data/mc ratio panel
   c1->cd();
@@ -542,8 +553,8 @@ void TnPEffDraw() {
   gratio1->SetLineWidth(1);
   gratio1->Draw("pz same");
 
-  c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Eta.png");
-  c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Eta.pdf");
+  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.png");
+  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.pdf");
   
   //-------- This is for cent dependence
   pad1->cd();
@@ -557,7 +568,7 @@ void TnPEffDraw() {
   lt1->SetTextSize(0.05);
   lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
   //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
-  lt1->DrawLatex(0.43,0.54,"PbPb  #sqrt{s_{NN}} = 2.76 TeV");
+  lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
 
   // now take care of the data/mc ratio panel
   c1->cd();
@@ -592,8 +603,8 @@ void TnPEffDraw() {
   gratio2->SetLineWidth(1);
   gratio2->Draw("pz same");
 
-  c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Cent.png");
-  c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Cent.pdf");
+  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.png");
+  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.pdf");
 
 
   // close the file for correction functions
