@@ -1,4 +1,8 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string.h>
+
 #include "TSystem.h"
 #include "TTree.h"
 #include "TKey.h"
@@ -6,16 +10,13 @@
 #include "TH2.h"
 #include "TPave.h"
 #include "TText.h"
-#include <sstream>
-#include <string.h>
 
 #include "TROOT.h"
 #include "TFile.h"
 #include "TGraphAsymmErrors.h"
-#include "TH1.h"
-#include "TH2.h"
 #include "TCanvas.h"
 #include "TLegend.h"
+#include "TF1.h"
 
 #include "RooFit.h"
 #include "RooRealVar.h"
@@ -27,6 +28,7 @@
 #include "TDirectory.h"
 #include "TCollection.h"
 #include "TPostScript.h"
+#include "TMath.h"
 
 
 using namespace RooFit;
@@ -84,6 +86,7 @@ TString cutTag("MuonIDTrg");
 TString cutLegend("Muon ID + trigger");
 TString absetaTag("PassingGlb_abseta");
 TString absetaVar("abseta");
+ofstream file_sfs("correction_functions.txt");
 #else
 TString absetaVar("eta");
 TString absetaTag("PassingGlb_1bin");
@@ -337,7 +340,7 @@ void TnPEffDraw() {
      lt1->SetNDC();
 
      char legs[512];
-     TLegend *leg1 = new TLegend(0.43,0.21,0.66,0.43);
+     TLegend *leg1 = new TLegend(0.43,0.05,0.66,0.43);
      leg1->SetFillStyle(0);
      leg1->SetFillColor(0);
      leg1->SetBorderSize(0);
@@ -406,6 +409,75 @@ void TnPEffDraw() {
      // save
      c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.png",i));
      c1->SaveAs(cutTag + Form("Eff%i_PbPb_RD_MC_PT.pdf",i));
+
+     // in case we are looking at muon Id + trigger: get the scale factor at the same time
+#ifdef MUIDTRG
+     pad1->cd();
+     double ptmax = ((RooRealVar*) daPtData0[i]->get()->find("pt"))->getMax();
+     TLatex tchi; tchi.SetNDC();
+     tchi.SetTextSize(0.035);
+     double chi2, pval; int dof;
+
+     // fit data
+     TF1 *fdata = new TF1("fdata","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
+     fdata->SetParNames("eff0","x0","m");
+     fdata->SetParameters(0.8,0.1,1.0);
+     fdata->SetLineWidth(2);
+     fdata->SetLineColor(kBlue);
+     ComPt1[i]->Fit(fdata,"RME");
+     leg1->AddEntry(fdata,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)),"pl");
+
+     chi2 = ComPt1[i]->Chisquare(fdata);
+     dof = ComPt1[i]->GetN() - fdata->GetNpar();
+     pval = TMath::Prob(chi2,dof);
+     tchi.SetTextColor(kBlue);
+     tchi.DrawLatex(0.6,0.92,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
+     // fit mc
+     TF1 *fmc = new TF1("fmc","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
+     fmc->SetParNames("eff0","x0","m");
+     fmc->SetParameters(0.9,0.5,2.5);
+     fmc->SetLineWidth(2);
+     fmc->SetLineColor(kRed);
+     ComPt0[i]->Fit(fmc,"RME");
+     leg1->AddEntry(fmc,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)),"pl");
+
+     chi2 = ComPt0[i]->Chisquare(fmc);
+     dof = ComPt0[i]->GetN() - fmc->GetNpar();
+     pval = TMath::Prob(chi2,dof);
+     tchi.SetTextColor(kRed);
+     tchi.DrawLatex(0.6,0.88,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
+     leg1->Draw();
+
+     // now the bottom panel
+     pad2->cd();
+     // hPadr->Draw();
+     TF1 *fratio = new TF1("fratio","[0]*TMath::Erf((x-[1])/[2])/([3]*TMath::Erf((x-[4])/[5]))",ptmin,ptmax);
+     fratio->SetParameters(
+           fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2),
+           fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)
+           );
+     fratio->Draw("same");
+
+     chi2 = gratio->Chisquare(fratio);
+     dof = gratio->GetN() - fratio->GetNpar();
+     pval = TMath::Prob(chi2,dof);
+     tchi.SetTextColor(kBlack);
+     tchi.SetTextSize(0.035*0.7/0.3);
+     tchi.DrawLatex(0.6,0.8,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
+     // save
+     c1->SaveAs(cutTag + Form("SF%i_PbPb_RD_MC_PT.png",i));
+     c1->SaveAs(cutTag + Form("SF%i_PbPb_RD_MC_PT.pdf",i));
+
+     // print the fit results to file
+     file_sfs << "Data " << etamin << " " << etamax << endl;
+     file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)) << endl;
+     file_sfs << "MC " << etamin << " " << etamax << endl;
+     file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)) << endl;
+     file_sfs << endl;
+#endif // ifdef MUIDTRG
   }
 
    //---------- This is for eta dependence
@@ -524,6 +596,10 @@ void TnPEffDraw() {
   c1->SaveAs(cutTag + "Eff_PbPb_RD_MC_Cent.pdf");
 
 
+  // close the file for correction functions
+#ifdef MUIDTRG
+  file_sfs.close();
+#endif
 }
 
 void formatTH1F(TH1* a, int b, int c, int d){
