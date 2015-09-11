@@ -126,8 +126,18 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
         "signalFractionInPassing[0.9]"
       ),
       cbPlusPoly2nd = cms.vstring(
-        "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1], alpha[2.0, 1.0, 10.0], n[4, 0.5, 100.])",
+        "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1], alpha[2.0, 0.2, 10.0], n[4, 0.5, 20.])",
         ##"Gaussian::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1])",
+        "Chebychev::backgroundPass(mass, {cPass[0,-0.5,0.5], cPass2[0,-0.5,0.5]})",
+        "Chebychev::backgroundFail(mass, {cFail[0,-0.5,0.5], cFail2[0,-0.5,0.5]})",
+        #"Exponential::backgroundPass(mass, lp[0,-5,5])",
+        #"Exponential::backgroundFail(mass, lf[0,-5,5])",  # same slope, they're both muons
+        "efficiency[0.9,0,1]",
+        "signalFractionInPassing[0.9]"
+      ),
+      gaussPlusPoly2nd = cms.vstring(
+        # "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1], alpha[2.0, 1.0, 10.0], n[4, 0.5, 100.])",
+        "Gaussian::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1])",
         "Chebychev::backgroundPass(mass, {cPass[0,-0.5,0.5], cPass2[0,-0.5,0.5]})",
         "Chebychev::backgroundFail(mass, {cFail[0,-0.5,0.5], cFail2[0,-0.5,0.5]})",
         #"Exponential::backgroundPass(mass, lp[0,-5,5])",

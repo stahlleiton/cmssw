@@ -90,7 +90,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" and "signalFractionInPassing[0.9]" are used for initial values  
     PDFs = cms.PSet(
       cbPlusExpo = cms.vstring(
-        "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.5], alpha[2.0, 0.2, 4.0], n[4, 0.5, 100.])",
+        "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.05], alpha[2.0, 0.2, 4.0], n[4, 0.5, 10.])",
         "Exponential::backgroundPass(mass, lp[0,-5,5])",
         "Exponential::backgroundFail(mass, lf[0,-5,5])",
         "efficiency[0.9,0,1]",
@@ -133,7 +133,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
         "signalFractionInPassing[0.9]"
       ),
       cbPlusPoly2nd = cms.vstring(
-        "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1], alpha[2.0, 1.0, 10.0], n[4, 0.5, 100.])",
+        "CBShape::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1], alpha[2.0, 0.2, 4.0], n[4, 0.5, 20.])",
         ##"Gaussian::signal(mass, mean[3.1,3.0,3.2], sigma[0.02, 0.01, 0.1])",
         "Chebychev::backgroundPass(mass, {cPass[0,-0.5,0.5], cPass2[0,-0.5,0.5]})",
         "Chebychev::backgroundFail(mass, {cFail[0,-0.5,0.5], cFail2[0,-0.5,0.5]})",

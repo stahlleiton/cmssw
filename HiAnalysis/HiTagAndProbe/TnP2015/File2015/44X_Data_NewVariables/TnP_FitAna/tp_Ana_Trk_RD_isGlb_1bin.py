@@ -1,6 +1,13 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("TagProbe")
+
+# setup 'analysis'  options
+options = VarParsing.VarParsing ('analysis')
+options.outputFile = 'output.root'
+options.inputFiles = 'input.root'
+options.parseArguments()
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
@@ -12,18 +19,18 @@ PDFName = "twoGaussPlusPoly6v1"
 
 process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # IO parameters:
-    InputFileNames = cms.vstring(" /afs/cern.ch/user/c/chflores/work/public/TnP_2015/TP_Prod_Samples/Data/tnp_Prod_Data_PbPb_AllMB_25082015.root "),
+    InputFileNames = cms.vstring(options.inputFiles),
     InputDirectoryName = cms.string("MuonTrk"),
     InputTreeName = cms.string("fitter_tree"),
+    OutputFileName = cms.string(options.outputFile),
     #numbrer of CPUs to use for fitting
-    OutputFileName = cms.string("tnp_Ana_RD_PbPb_MuonTrk_AllMB_20150901_isGlb_1bin.root"),
-    NumCPU = cms.uint32(1),
+    NumCPU = cms.uint32(25),
     # specifies wether to save the RooWorkspace containing the data for each bin and
     # the pdf object with the initial and final state snapshots
     SaveWorkspace = cms.bool(True),
-    binsForMassPlots = cms.uint32(45),
-    binnedFit = cms.bool(True),
-    binsForFit = cms.uint32(45),
+    binsForMassPlots = cms.uint32(50),
+    # binnedFit = cms.bool(True),
+    # binsForFit = cms.uint32(45),
     #WeightVariable = cms.string("weight"),
     
     # defines all the real variables of the probes available in the input tree; can be used to select a subset of the probes
@@ -82,9 +89,9 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
         "signalFractionInPassing[0.9]"
       ),
       twoGaussPlusPoly6v1 = cms.vstring(
-          "Gaussian::signal1(mass, mean[3.1,3.0,3.2], sigma[0.10,0.05,1.0])",
-          "Gaussian::signal2(mass, mean1[3.7,3.5,3.9], sigma2[0.15,0.05,1.00])",
-          "SUM::signal(vFrac[0.8,0,1]*signal1, signal2)",
+          "Gaussian::signal1(mass, mean[3.1,3.0,3.2], sigma[0.10,0.05,0.3])",
+          "Gaussian::signal2(mass, mean1[3.5,3.3,3.7], sigma2[0.15,0.07,0.3])",
+          "SUM::signal(vFrac[0.9,0.6,1]*signal1, signal2)",
           "Chebychev::backgroundPass(mass, {cP[0,-0.4,0.4], cP2[0.0,-0.04,0.04], cP3[-0.031,-0.3,0.3]})", ### good
           "Chebychev::backgroundFail(mass, {cF[-0.33,-1.0,1.0], cF2[0.05,-1.0,1.0], cF3[0.02,-1.0,1.0]})", ### good
           "efficiency[0.9,0,1]",
@@ -96,12 +103,22 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     Efficiencies = cms.PSet(
             #the name of the parameter set becomes the name of the directory
             # for multiple passing flags in EfficiencyCategorAndState = cms.vstring("flag1","state","flag2","state",...),
-            isGlb_1bin = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+            PassingGlb_1bin = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
-                    pt  = cms.vdouble(0,20),
+                    pt  = cms.vdouble(0,30),
                     eta = cms.vdouble(-2.4,2.4),
+                ),
+                BinToPDFmap = cms.vstring(PDFName)
+            ),
+            PassingGlb_1binSeg = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
+                UnbinnedVariables = cms.vstring("mass"),
+                BinnedVariables = cms.PSet(
+                    pt  = cms.vdouble(0,30),
+                    eta = cms.vdouble(-2.4,2.4),
+                    staValidStations= cms.vdouble(1,10),
                 ),
                 BinToPDFmap = cms.vstring(PDFName)
             ),

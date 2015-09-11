@@ -21,7 +21,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     # specifies wether to save the RooWorkspace containing the data for each bin and
     # the pdf object with the initial and final state snapshots
     SaveWorkspace = cms.bool(True),
-    #binsForMassPlots = cms.uint32(45),
+    binsForMassPlots = cms.uint32(50),
     #binnedFit = cms.bool(True),
     #binsForFit = cms.uint32(45),
     #WeightVariable = cms.string("weight"),
@@ -82,9 +82,9 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
         "signalFractionInPassing[0.9]"
       ),
       twoGaussPlusPoly6v1 = cms.vstring(
-          "Gaussian::signal1(mass, mean[3.1,3.0,3.2], sigma[0.10,0.05,1.0])",
-          "Gaussian::signal2(mass, mean1[3.7,3.5,3.9], sigma2[0.15,0.05,1.00])",
-          "SUM::signal(vFrac[0.8,0,1]*signal1, signal2)",
+          "Gaussian::signal1(mass, mean[3.1,3.0,3.2], sigma[0.10,0.05,0.3])",
+          "Gaussian::signal2(mass, mean1[3.5,3.3,3.7], sigma2[0.15,0.07,0.3])",
+          "SUM::signal(vFrac[0.9,0.6,1]*signal1, signal2)",
           "Chebychev::backgroundPass(mass, {cP[0,-0.4,0.4], cP2[0.0,-0.04,0.04], cP3[-0.031,-0.3,0.3]})", ### good
           "Chebychev::backgroundFail(mass, {cF[-0.33,-1.0,1.0], cF2[0.05,-1.0,1.0], cF3[0.02,-1.0,1.0]})", ### good
           "efficiency[0.9,0,1]",
@@ -96,8 +96,8 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     Efficiencies = cms.PSet(
             #the name of the parameter set becomes the name of the directory
             # for multiple passing flags in EfficiencyCategorAndState = cms.vstring("flag1","state","flag2","state",...),
-            isGlb_1bin = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+            PassingGlb_1bin = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
                     pt  = cms.vdouble(0,30),
@@ -105,8 +105,8 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                 ),
                 BinToPDFmap = cms.vstring(PDFName)
             ),
-            isGlb_1binSeg = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+            PassingGlb_1binSeg = cms.PSet(
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
                     pt  = cms.vdouble(0,30),
@@ -116,7 +116,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                 BinToPDFmap = cms.vstring(PDFName)
             ),
             PassingGlb_pt = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
                     pt = cms.vdouble(0, 3.5, 7., 10.5, 30.0),
@@ -125,7 +125,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                 BinToPDFmap = cms.vstring(PDFName)
             ),
             PassingGlb_ptSeg = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
                     pt = cms.vdouble(0, 3.5, 7., 10.5, 30.0),
@@ -135,20 +135,20 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                 BinToPDFmap = cms.vstring(PDFName)
             ),
             PassingGlb_eta = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+                EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
                     eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
-                    pt = cms.vdouble(0.,20.0),
+                    pt = cms.vdouble(0.,30.0),
                 ),
                 BinToPDFmap = cms.vstring(PDFName)
             ),
             PassingGlb_etaSeg = cms.PSet(
-                    EfficiencyCategoryAndState = cms.vstring("GlobalMu","true","GlobalCuts2","true"),
+                    EfficiencyCategoryAndState = cms.vstring("GlobalMu","true"),
                     UnbinnedVariables = cms.vstring("mass"),
                     BinnedVariables = cms.PSet(
                         eta = cms.vdouble(-2.4,-1.6,-1.2,-0.9,0.9,1.2,1.6,2.4),
-                        pt = cms.vdouble(0.,20.0),
+                        pt = cms.vdouble(0.,30.0),
                         staValidStations= cms.vdouble(1,10),
                     ),
                     BinToPDFmap = cms.vstring(PDFName)
