@@ -428,7 +428,8 @@ void TnPEffDraw() {
      // fit data
      TF1 *fdata = new TF1("fdata","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
      fdata->SetParNames("eff0","x0","m");
-     fdata->SetParameters(0.8,0.1,1.0);
+     // Initialize the normalization to the efficiency in the last point
+     fdata->SetParameters(ComPt1[i]->GetX()[ComPt1[i]->GetN()-1],0.1,1.0);
      fdata->SetParLimits(0,0,1);
      fdata->SetParLimits(1,0.,10.);
      fdata->SetParLimits(2,0,10.);
@@ -445,7 +446,8 @@ void TnPEffDraw() {
 
      // fit mc
      TF1 *fmc = (TF1*) fdata->Clone("fmc");;
-     fmc->SetParameters(0.9,0.5,2.5);
+     // Initialize the normalization to the efficiency in the last point
+     fmc->SetParameters(ComPt0[i]->GetX()[ComPt0[i]->GetN()-1],0.5,2.5); 
      fmc->SetLineColor(kRed);
      ComPt0[i]->Fit(fmc,"RME");
      leg1->AddEntry(fmc,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)),"pl");

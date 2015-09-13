@@ -11,6 +11,8 @@
 #include "TTree.h"
 #include "TLegend.h"
 #include "TLatex.h"
+#include "TH1F.h"
+#include "TArrow.h"
 
 #include <fstream>
 
@@ -148,7 +150,9 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
       cdata_dists->cd(j+1);
       TString hname = Form("distdata%i",j);
       TString hname_fit = Form("distdata%i_fit",j);
-      TH1F *hdist = new TH1F(hname,hname,10,ydata[j]-5.*eyldata[j],ydata[j]+5.*eyhdata[j]);
+      double xmin = min(ydata[j]-5.*eyldata[j], fdata->Eval(xdata[j])-5.*eyldata[j]);
+      double xmax = max(ydata[j]+5.*eyldata[j], fdata->Eval(xdata[j])+5.*eyldata[j]);
+      TH1F *hdist = new TH1F(hname,hname,10,xmin,xmax);
       hdist->GetXaxis()->SetTitle("Efficiency"); hdist->GetYaxis()->SetTitle("Counts");
       hdist->SetLineColor(kBlue); hdist->SetMarkerColor(kBlue);
       TH1F *hdist_fit = new TH1F(hname_fit,hname_fit,10,ydata[j]-5.*eyldata[j],ydata[j]+5.*eyhdata[j]);
@@ -167,6 +171,14 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
       TLatex *lt1 = new TLatex();
       lt1->SetNDC();
       lt1->DrawLatex(0.43,0.95,Form("p_{T} #in [%.1f,%.1f]",xdata[j]-exldata[j],xdata[j]+exhdata[j]));
+
+      // represent the input for these distribitions
+      TArrow *arrlow = new TArrow(ydata[j],70.,ydata[j]-eyldata[j],70.,0.01,"|->");
+      arrlow->SetLineColor(kBlue); arrlow->Draw();
+      TArrow *arrhigh = new TArrow(ydata[j],70.,ydata[j]+eyhdata[j],70.,0.01,"|->");
+      arrhigh->SetLineColor(kBlue); arrhigh->Draw();
+      TArrow *arrfit = new TArrow(fdata->Eval(xdata[j]),50.,fdata->Eval(xdata[j]),0.,0.01,"->");
+      arrfit->SetLineColor(kCyan); arrfit->Draw();
    }
    cdata_dists->SaveAs(TString("toysdata_dists_") + outputname + ".pdf");
 
@@ -176,7 +188,9 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
       cmc_dists->cd(j+1);
       TString hname = Form("distmc%i",j);
       TString hname_fit = Form("distmc%i_fit",j);
-      TH1F *hdist = new TH1F(hname,hname,10,ymc[j]-5.*eylmc[j],ymc[j]+5.*eyhmc[j]);
+      double xmin = min(ymc[j]-5.*eylmc[j], fmc->Eval(xmc[j])-5.*eylmc[j]);
+      double xmax = max(ymc[j]+5.*eylmc[j], fmc->Eval(xmc[j])+5.*eylmc[j]);
+      TH1F *hdist = new TH1F(hname,hname,10,xmin,xmax);
       hdist->GetXaxis()->SetTitle("Efficiency"); hdist->GetYaxis()->SetTitle("Counts");
       hdist->SetLineColor(kRed); hdist->SetMarkerColor(kRed);
       TH1F *hdist_fit = new TH1F(hname_fit,hname_fit,10,ymc[j]-5.*eylmc[j],ymc[j]+5.*eyhmc[j]);
@@ -195,6 +209,14 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
       TLatex *lt1 = new TLatex();
       lt1->SetNDC();
       lt1->DrawLatex(0.43,0.95,Form("p_{T} #in [%.1f,%.1f]",xmc[j]-exlmc[j],xmc[j]+exhmc[j]));
+
+      // represent the input for these distribitions
+      TArrow *arrlow = new TArrow(ymc[j],70.,ymc[j]-eylmc[j],70.,0.01,"|->");
+      arrlow->SetLineColor(kRed); arrlow->Draw();
+      TArrow *arrhigh = new TArrow(ymc[j],70.,ymc[j]+eyhmc[j],70.,0.01,"|->");
+      arrhigh->SetLineColor(kRed); arrhigh->Draw();
+      TArrow *arrfit = new TArrow(fmc->Eval(xmc[j]),50.,fmc->Eval(xmc[j]),0.,0.01,"->");
+      arrfit->SetLineColor(kMagenta); arrfit->Draw();
    }
    cmc_dists->SaveAs(TString("toysmc_dists_") + outputname + ".pdf");
 
