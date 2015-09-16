@@ -61,7 +61,7 @@ class TagProbeFitter {
   void setQuiet(bool quiet_=true);
   
   ///saves the fit canvas
-  void saveFitPlot(RooWorkspace* w, const char* canvname="canv.pdf", const char* canv2name="canv2.pdf");
+  void saveFitPlot(RooWorkspace* w, TString canvname="canv", TString canv2name="canv2");
 
   protected:
   ///pointer to the input TTree Chain of data
@@ -748,7 +748,7 @@ void TagProbeFitter::setInitialValues(RooWorkspace* w){
   w->saveSnapshot("initialState",w->components());
 }
 
-void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const char *canv2name){
+void TagProbeFitter::saveFitPlot(RooWorkspace* w, TString canvname, TString canv2name){
   // save refferences for convenience
   RooCategory& efficiencyCategory = *w->cat("_efficiencyCategory_");
   RooAbsData* dataAll = (binnedFit ? w->data("data_binned") : w->data("data") );
@@ -937,8 +937,10 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   // draw only the parameter box not the whole frame
   frames.back()->findObject(Form("%s_paramBox",pdf.GetName()))->Draw();
   //save and clean up
-  canvas.SaveAs(canvname);
-  canvas2.SaveAs(canv2name);
+  canvas.SaveAs(canvname + ".png");
+  canvas.SaveAs(canvname + ".pdf");
+  canvas2.SaveAs(canv2name + ".png");
+  canvas2.SaveAs(canv2name + ".pdf");
   // hChi2->Write();
   // hPvlu->Write();
   // hpullpass->Write();

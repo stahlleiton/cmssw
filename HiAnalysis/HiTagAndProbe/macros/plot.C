@@ -62,7 +62,7 @@ void plot(const char *filename)
                      {
                         TagProbeFitter tnpf;
                         tnpf.setBinsForMassPlots(50);
-                        tnpf.saveFitPlot(myws,dir2name + "/" + TString(obj3->GetName()) + ".pdf",dir2name + "/" + TString(obj3->GetName()) + "_pulls.pdf");
+                        tnpf.saveFitPlot(myws,dir2name + "/" + TString(obj3->GetName()),dir2name + "/" + TString(obj3->GetName()) + "_pulls");
                      }
                      else
                      {
