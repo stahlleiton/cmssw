@@ -822,8 +822,8 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, const char *canvname, const ch
   unsigned int nBins = hdatapass->GetNbinsX();
   cout<<"nBins : "<<nBins<<endl;
   RooHist *hpullpass = frames[0]->pullHist(); hpullpass->SetName("pull_Passing");
-  unsigned int lowSgn = hdatapass->GetXaxis()->FindBin(2.5);
-  unsigned int highSgn = hdatapass->GetXaxis()->FindBin(3.5);
+  unsigned int lowSgn = hdatapass->GetXaxis()->FindBin(minMass);
+  unsigned int highSgn = hdatapass->GetXaxis()->FindBin(maxMass);
   cout<<"low Sgn : "<<lowSgn<<", high Sgn : "<<highSgn<<endl;
   double Chi2 = 0;
   int nFullBinsPull = 0;
