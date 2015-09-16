@@ -44,10 +44,11 @@ using namespace std;
 #define MUIDTRG
 
 // pp or PbPb?
-TString collTag = "PbPb";
+bool isPbPb = false;
+TString collTag = isPbPb ? "PbPb" : "pp";
 
 // do the toy study for the correction factors? (only applies if MUIDTRG)
-bool doToys = true;
+bool doToys = false;
 
 // Location of the files
 const int nCentBins = 7;
@@ -71,8 +72,8 @@ const char* fCentDataNames[nCentBins] =
    "fitdata/MuIdTrg_cent_20150911/res_Cent5060_/muidtrg_Cent5060_.root",
    "fitdata/MuIdTrg_cent_20150911/res_Cent60100_/muidtrg_Cent60100_.root",
 };
-const char* fDataName = "fitdata/MuIdTrg_20150911/tnp_Ana_RD_PbPb_MuonIDTrg_AllMB.root";
-const char* fMCName = "fitmc/MuIDTrg_20150910/tnp_Ana_MC_PbPb_MuonIDTrg_AllMB.root";
+const char* fDataName = "MuIdTrg/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root";
+const char* fMCName = "MuIdTrg/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root";
 
 
 
@@ -152,10 +153,12 @@ void TnPEffDraw() {
   TFile* fCentMC[nCentBins];
   TFile* fCentData[nCentBins];
 
-  for (int i=0; i<nCentBins; i++)
-  {
-     fCentMC[i] = new TFile(fCentMCNames[i]);
-     fCentData[i] = new TFile(fCentDataNames[i]);
+  if (isPbPb) {
+     for (int i=0; i<nCentBins; i++)
+     {
+        fCentMC[i] = new TFile(fCentMCNames[i]);
+        fCentData[i] = new TFile(fCentDataNames[i]);
+     }
   }
   
   //data and MC root files as well as single bin for integrated efficiency
@@ -197,10 +200,12 @@ void TnPEffDraw() {
 
   RooDataSet *daCentMC1Bin[nCentBins];
   RooDataSet *daCentData1Bin[nCentBins];
-  for (int i=0; i<nCentBins; i++)
-  {
-     daCentMC1Bin[i] = (RooDataSet*) fCentMC[i]->Get(cutTag + "/" + allTag + "/fit_eff");
-     daCentData1Bin[i] = (RooDataSet*) fCentData[i]->Get(cutTag + "/" + allTag + "/fit_eff");
+  if (isPbPb) {
+     for (int i=0; i<nCentBins; i++)
+     {
+        daCentMC1Bin[i] = (RooDataSet*) fCentMC[i]->Get(cutTag + "/" + allTag + "/fit_eff");
+        daCentData1Bin[i] = (RooDataSet*) fCentData[i]->Get(cutTag + "/" + allTag + "/fit_eff");
+     }
   }
 
   RooDataSet *daPtMC1Bin0 = (RooDataSet*)f9->Get(cutTag + "/" + allTag + "/fit_eff"); 
@@ -213,17 +218,19 @@ void TnPEffDraw() {
   vector<TGraphAsymmErrors*> Com0AbsEta0 = plotEff_Nbins(daAbsEtaMC1,0,"pt",absetaVar);
   vector<TGraphAsymmErrors*> Com0AbsEta1 = plotEff_Nbins(daAbsEtaData1,0,"pt",absetaVar);
 
-  TGraphAsymmErrors *effCentMC = plotEffCent(daCentMC1Bin, 1);
-  TGraphAsymmErrors *effCentData = plotEffCent(daCentData1Bin, 1);
+  TGraphAsymmErrors *effCentMC = isPbPb ? plotEffCent(daCentMC1Bin, 1) : NULL;
+  TGraphAsymmErrors *effCentData = isPbPb ? plotEffCent(daCentData1Bin, 1) : NULL;
 
-  effCentMC->SetMarkerStyle(20);
-  effCentMC->SetMarkerSize(1.4);
-  effCentMC->SetMarkerColor(kRed+1);
-  effCentMC->SetLineColor(kRed+1);
-  effCentData->SetMarkerStyle(25);
-  effCentData->SetMarkerSize(1.4);
-  effCentData->SetMarkerColor(kBlue+1);
-  effCentData->SetLineColor(kBlue+1);
+  if (isPbPb) {
+     effCentMC->SetMarkerStyle(20);
+     effCentMC->SetMarkerSize(1.4);
+     effCentMC->SetMarkerColor(kRed+1);
+     effCentMC->SetLineColor(kRed+1);
+     effCentData->SetMarkerStyle(25);
+     effCentData->SetMarkerSize(1.4);
+     effCentData->SetMarkerColor(kBlue+1);
+     effCentData->SetLineColor(kBlue+1);
+  }
 
   int nbins_abseta = ComPt0.size();
   for (int i=0; i<nbins_abseta; i++)
@@ -558,55 +565,57 @@ void TnPEffDraw() {
   c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.png");
   c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.pdf");
   
-  //-------- This is for cent dependence
-  pad1->cd();
-  hPad2->Draw();
+  //-------- This is for centrality dependence
+  if (isPbPb) {
+     pad1->cd();
+     hPad2->Draw();
 
-  effCentMC->Draw("pz same");
-  effCentData->Draw("pz same");
+     effCentMC->Draw("pz same");
+     effCentData->Draw("pz same");
 
-  leg1->Draw("same");
+     leg1->Draw("same");
 
-  lt1->SetTextSize(0.05);
-  lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
-  //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
-  lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
+     lt1->SetTextSize(0.05);
+     lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
+     //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
+     lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
 
-  // now take care of the data/mc ratio panel
-  c1->cd();
-  // pad2->SetFrameFillStyle(4000);
-  pad2->Draw();
-  pad2->cd();
-  hPad2r->Draw();
+     // now take care of the data/mc ratio panel
+     c1->cd();
+     // pad2->SetFrameFillStyle(4000);
+     pad2->Draw();
+     pad2->cd();
+     hPad2r->Draw();
 
-  int nbins2 = effCentMC->GetN();
-  double* xr2 = new double[nbins2];
-  double* yr2 = new double[nbins2];
-  double* xr2lo = new double[nbins2];
-  double* yr2lo = new double[nbins2];
-  double* xr2hi = new double[nbins2];
-  double* yr2hi = new double[nbins2];
+     int nbins2 = effCentMC->GetN();
+     double* xr2 = new double[nbins2];
+     double* yr2 = new double[nbins2];
+     double* xr2lo = new double[nbins2];
+     double* yr2lo = new double[nbins2];
+     double* xr2hi = new double[nbins2];
+     double* yr2hi = new double[nbins2];
 
-  // here we assume that the mc uncertainty is negligible compared to the data one: simply scale everything by the central value.
-  for (int j=0; j<nbins2; j++)
-  {
-     xr2[j] = effCentData->GetX()[j];
-     xr2lo[j] = effCentData->GetErrorXlow(j);
-     xr2hi[j] = effCentData->GetErrorXhigh(j);
-     yr2[j] = effCentData->GetY()[j]/effCentMC->GetY()[j];
-     yr2lo[j] = effCentData->GetErrorYlow(j)/effCentMC->GetY()[j];
-     yr2hi[j] = effCentData->GetErrorYhigh(j)/effCentMC->GetY()[j];
+     // here we assume that the mc uncertainty is negligible compared to the data one: simply scale everything by the central value.
+     for (int j=0; j<nbins2; j++)
+     {
+        xr2[j] = effCentData->GetX()[j];
+        xr2lo[j] = effCentData->GetErrorXlow(j);
+        xr2hi[j] = effCentData->GetErrorXhigh(j);
+        yr2[j] = effCentData->GetY()[j]/effCentMC->GetY()[j];
+        yr2lo[j] = effCentData->GetErrorYlow(j)/effCentMC->GetY()[j];
+        yr2hi[j] = effCentData->GetErrorYhigh(j)/effCentMC->GetY()[j];
+     }
+     TGraphAsymmErrors *gratio2 = new TGraphAsymmErrors(nbins2,xr2,yr2,xr2lo,xr2hi,yr2lo,yr2hi);
+     gratio2->SetMarkerStyle(20);
+     gratio2->SetMarkerColor(kBlack);
+     gratio2->SetMarkerSize(1.0);
+     gratio2->SetLineColor(kBlack);
+     gratio2->SetLineWidth(1);
+     gratio2->Draw("pz same");
+
+     c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.png");
+     c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.pdf");
   }
-  TGraphAsymmErrors *gratio2 = new TGraphAsymmErrors(nbins2,xr2,yr2,xr2lo,xr2hi,yr2lo,yr2hi);
-  gratio2->SetMarkerStyle(20);
-  gratio2->SetMarkerColor(kBlack);
-  gratio2->SetMarkerSize(1.0);
-  gratio2->SetLineColor(kBlack);
-  gratio2->SetLineWidth(1);
-  gratio2->Draw("pz same");
-
-  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.png");
-  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.pdf");
 
 
   // close the file for correction functions
