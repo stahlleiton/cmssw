@@ -96,7 +96,7 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
 
       // fit the graphs
       TF1 *ftoydata = (TF1*) fdata->Clone(Form("ftoydata%i",i));
-      ftoydata->SetLineColor(kBlack);
+      ftoydata->SetLineColor(kOrange+7);
       TF1 *ftoymc = (TF1*) fmc->Clone(Form("ftoymc%i",i));
       ftoymc->SetLineColor(kBlack);
 
