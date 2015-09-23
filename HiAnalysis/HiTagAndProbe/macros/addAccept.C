@@ -14,8 +14,8 @@ TTree* copyTree(TTree* told) {
    int nentries = told->GetEntries();
    for (int i=0; i<nentries; i++) {
       told->GetEntry(i);
-      accept = ((abseta<1.2 && pt>3.5) ||(1.2<=abseta<2.4 && pt>=4.5-1.25*abseta));
-      tag_accept = ((tag_abseta<1.2 && tag_pt>3.5) ||(1.2<=tag_abseta<2.4 && tag_pt>=4.5-1.25*tag_abseta));
+      accept = ((abseta<1.2 && pt>3.5) ||(abseta>=1.2 && abseta<2.4 && pt>=4.5-1.25*abseta));
+      tag_accept = ((tag_abseta<1.2 && tag_pt>3.5) ||(tag_abseta>=1.2 && tag_abseta<2.4 && tag_pt>=4.5-1.25*tag_abseta));
       tnew->Fill();
    }
 
