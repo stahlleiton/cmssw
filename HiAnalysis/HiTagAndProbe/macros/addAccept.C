@@ -29,7 +29,7 @@ void addAccept(const char *filein, const char *fileout) {
    fout->cd();
    TDirectory *tdir_trk = fout->mkdir("MuonTrk");
    tdir_trk->cd();
-   TTree *tr_trk = ((TTree*) fin->Get("MuonTrk/fitter_tree"))->CloneTree();
+   TTree *tr_trk = copyTree((TTree*) fin->Get("MuonTrk/fitter_tree"));
 
    fout->cd();
    TDirectory *tdir_mutrg = fout->mkdir("MuonTrg");
