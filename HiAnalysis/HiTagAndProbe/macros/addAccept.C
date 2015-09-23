@@ -5,9 +5,9 @@ TTree* copyTree(TTree* told) {
    TTree *tnew = told->CloneTree(0);
    int tag_accept, accept; float pt,tag_pt,abseta,tag_abseta;
    told->SetBranchAddress("pt",&pt);
-   told->SetBranchAddress("tag_pt",&pt);
+   told->SetBranchAddress("tag_pt",&tag_pt);
    told->SetBranchAddress("abseta",&abseta);
-   told->SetBranchAddress("tag_abseta",&abseta);
+   told->SetBranchAddress("tag_abseta",&tag_abseta);
    tnew->Branch("accept",&accept,"accept/I");
    tnew->Branch("tag_accept",&tag_accept,"tag_accept/I");
 
