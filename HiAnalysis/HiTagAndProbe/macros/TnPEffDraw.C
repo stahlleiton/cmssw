@@ -45,10 +45,10 @@ using namespace std;
 
 // pp or PbPb?
 bool isPbPb = false;
-TString collTag = isPbPb ? "PbPb" : "pp";
+TString collTag = "PbPb"; // isPbPb ? "PbPb" : "pp";
 
 // do the toy study for the correction factors? (only applies if MUIDTRG)
-bool doToys = false;
+bool doToys = true;
 
 // Location of the files
 const int nCentBins = 7;
@@ -72,8 +72,8 @@ const char* fCentDataNames[nCentBins] =
    "fitdata/MuIdTrg_cent_20150911/res_Cent5060_/muidtrg_Cent5060_.root",
    "fitdata/MuIdTrg_cent_20150911/res_Cent60100_/muidtrg_Cent60100_.root",
 };
-const char* fDataName = "MuIdTrg/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root";
-const char* fMCName = "MuIdTrg/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root";
+const char* fDataName = "fitdata_pp/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root";
+const char* fMCName = "fitmc_pp/tnp_Ana_MC_pp_MuonIDTrg_AllMB.root";
 
 
 
@@ -421,7 +421,7 @@ void TnPEffDraw() {
      gratio->Draw("pz same");
 
      // save
-     c1->SaveAs(cutTag + Form("Eff%i_",i) + collTag + "_RD_MC_PT.png");
+     c1->SaveAs(cutTag + Form("Eff%i_",i) + collTag + "_RD_MC_PT.root");
      c1->SaveAs(cutTag + Form("Eff%i_",i) + collTag + "_RD_MC_PT.pdf");
 
      // in case we are looking at muon Id + trigger: get the scale factor at the same time
@@ -442,7 +442,7 @@ void TnPEffDraw() {
      fdata->SetParLimits(2,0,10.);
      fdata->SetLineWidth(2);
      fdata->SetLineColor(kBlue);
-     ComPt1[i]->Fit(fdata,"RME");
+     ComPt1[i]->Fit(fdata,"WRME");
      leg1->AddEntry(fdata,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)),"pl");
 
      chi2 = ComPt1[i]->Chisquare(fdata);
@@ -454,9 +454,10 @@ void TnPEffDraw() {
      // fit mc
      TF1 *fmc = (TF1*) fdata->Clone("fmc");;
      // Initialize the normalization to the efficiency in the last point
-     fmc->SetParameters(ComPt0[i]->GetX()[ComPt0[i]->GetN()-1],0.5,2.5); 
+     if (isPbPb) fmc->SetParameters(ComPt0[i]->GetX()[ComPt0[i]->GetN()-1],0.5,2.5); 
+     else fmc->SetParameters(ComPt0[i]->GetX()[ComPt0[i]->GetN()-1],2.2,1.5); 
      fmc->SetLineColor(kRed);
-     ComPt0[i]->Fit(fmc,"RME");
+     ComPt0[i]->Fit(fmc,"WRME");
      leg1->AddEntry(fmc,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)),"pl");
 
      chi2 = ComPt0[i]->Chisquare(fmc);
@@ -485,7 +486,7 @@ void TnPEffDraw() {
      tchi.DrawLatex(0.6,0.8,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
 
      // save
-     c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.png");
+     c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.root");
      c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.pdf");
 
      // print the fit results to file
@@ -562,7 +563,7 @@ void TnPEffDraw() {
   gratio1->SetLineWidth(1);
   gratio1->Draw("pz same");
 
-  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.png");
+  c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.root");
   c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Eta.pdf");
   
   //-------- This is for centrality dependence
@@ -613,7 +614,7 @@ void TnPEffDraw() {
      gratio2->SetLineWidth(1);
      gratio2->Draw("pz same");
 
-     c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.png");
+     c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.root");
      c1->SaveAs(cutTag + "Eff_" + collTag + "_RD_MC_Cent.pdf");
   }
 

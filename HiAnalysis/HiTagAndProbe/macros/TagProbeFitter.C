@@ -853,6 +853,7 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, TString canvname, TString canv
   hPvlu->SetBinContent(1, pVlu);
 
   canvas2.cd(1);
+  gPad->SetGridy();
   frames2[0]->addPlotable(hpullpass,"P");
   frames2[0]->Draw();
 
@@ -890,6 +891,7 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, TString canvname, TString canv
   hPvlu->SetBinContent(2, pVlu);
 
   canvas2.cd(2);
+  gPad->SetGridy();
   frames2[1]->addPlotable(hpullfail,"P");
   frames2[1]->Draw();
 
@@ -927,6 +929,7 @@ void TagProbeFitter::saveFitPlot(RooWorkspace* w, TString canvname, TString canv
   hPvlu->SetBinContent(3, pVlu);
 
   canvas2.cd(3);
+  gPad->SetGridy();
   frames2[2]->addPlotable(hpullall,"P");
   frames2[2]->Draw();
 

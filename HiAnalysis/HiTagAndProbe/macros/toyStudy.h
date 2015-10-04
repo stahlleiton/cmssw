@@ -100,8 +100,8 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
       TF1 *ftoymc = (TF1*) fmc->Clone(Form("ftoymc%i",i));
       ftoymc->SetLineColor(kBlack);
 
-      gtoydata->Fit(ftoydata,"RM");
-      gtoymc->Fit(ftoymc,"RM");
+      gtoydata->Fit(ftoydata,"WRM");
+      gtoymc->Fit(ftoymc,"WRM");
 
       // compute the efficiency from fit, for the tree
       for (int j=0; j<nbinsdata; j++) {

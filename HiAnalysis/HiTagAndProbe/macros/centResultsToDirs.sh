@@ -1,7 +1,7 @@
 #!/bin/bash
 
-theFiles="MuTrk_cent_20150909_Cent*_.root"
-theCfg="tp_Ana_Trk_RD_isGlb_1bin.py"
+theFiles="MuIdTrg_cent_dxyzPVCuts_Cent*.root"
+theCfg="tp_Ana_MuIdTrg_1bin.py"
 
 for file in $theFiles; do
    tag="res`echo $file | grep -o '_Cent.*_'`"
