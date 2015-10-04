@@ -155,8 +155,8 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
              EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true","dxyzPVCuts","true"),
              UnbinnedVariables = cms.vstring("mass","weight"),
              BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(2.5, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8.5, 30),
-                    abseta = cms.vdouble(0, 1.2),
+                    pt = cms.vdouble(3.4, 4, 4.5, 5, 5.5, 6.5, 30),
+                    abseta = cms.vdouble(0, 0.9),
                 ),
              BinToPDFmap = cms.vstring(PDFName)
              ),
@@ -165,8 +165,8 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
              EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true","dxyzPVCuts","true"),
              UnbinnedVariables = cms.vstring("mass","weight"),
              BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(2.5, 3, 3.5, 4, 4.5, 5.5, 30),
-                    abseta = cms.vdouble(1.2, 1.6),
+                    pt = cms.vdouble(2.1, 2.5, 3, 3.5, 4, 4.5, 5, 6, 30),
+                    abseta = cms.vdouble(0.9, 1.6),
                 ),
              BinToPDFmap = cms.vstring(PDFName)
              ),
@@ -175,7 +175,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
              EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true","dxyzPVCuts","true"),
              UnbinnedVariables = cms.vstring("mass","weight"),
              BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 30),
+                    pt = cms.vdouble(1.7, 2, 2.5, 3, 3.5, 4, 4.5, 5.5, 30),
                     abseta = cms.vdouble(1.6, 2.1),
                 ),
              BinToPDFmap = cms.vstring(PDFName)
@@ -185,7 +185,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
              EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true","dxyzPVCuts","true"),
              UnbinnedVariables = cms.vstring("mass","weight"),
              BinnedVariables = cms.PSet(
-                    pt = cms.vdouble(1.5, 2, 2.5, 3, 3.5, 4, 5, 30),
+                    pt = cms.vdouble(1.5,2,2.5,3,3.5,4,5,30),
                     abseta = cms.vdouble(2.1, 2.4),
                 ),
              BinToPDFmap = cms.vstring(PDFName)
