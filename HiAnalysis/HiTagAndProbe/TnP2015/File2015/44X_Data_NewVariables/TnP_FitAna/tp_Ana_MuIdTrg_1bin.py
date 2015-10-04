@@ -84,6 +84,7 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                           Tk        = cms.vstring("Tk", "dummy[true=1,false=0]"),
                           TrackCuts = cms.vstring("TrackCuts", "dummy[true=1,false=0]"),
                           TrackerMu = cms.vstring("TrackerMu", "dummy[true=1,false=0]"),
+                          dxyzPVCuts = cms.vstring("dxyzPVCuts","dummy[true=1,false=0]"),
     ),
 
     # defines all the PDFs that will be available for the efficiency calculations; uses RooFit's "factory" syntax;
@@ -155,7 +156,8 @@ process.TagProbeFitTreeAnalyzer = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
     Efficiencies = cms.PSet(
             #the name of the parameter set becomes the name of the directory
             PassingGlb_1bin = cms.PSet(
-                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
+                # EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true"), # "default" (git 08/31/15)
+                EfficiencyCategoryAndState = cms.vstring("QualityCuts","true","HLTL1v0","true","HLTL1v1","true","HLTL1v2","true","dxyzPVCuts","true"),
                 UnbinnedVariables = cms.vstring("mass"),
                 BinnedVariables = cms.PSet(
                     pt = cms.vdouble(1.5, 30),
