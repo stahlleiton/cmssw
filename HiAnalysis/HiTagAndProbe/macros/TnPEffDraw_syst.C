@@ -407,6 +407,7 @@ void TnPEffDraw_syst() {
   hPadr->GetYaxis()->SetLabelSize(tsize);
   hPadr->GetYaxis()->SetNdivisions(504,kTRUE);
   TH1F *hPadr_syst = (TH1F*) hPadr->Clone("hPadr_syst");hPadr_syst->GetYaxis()->SetRangeUser(1.-.1,1.+.1);
+  TH1F *hPad_syst = (TH1F*) hPad->Clone("hPad_syst");
   TH1F *hPad1r = (TH1F*) hPad1->Clone("hPad1r"); hPad1r->GetYaxis()->SetRangeUser(1.-sfrange,1.+sfrange);
   hPad1r->GetYaxis()->SetTitle("Scale Factor");
   hPad1r->GetXaxis()->SetTitleSize(tsize);
@@ -415,6 +416,7 @@ void TnPEffDraw_syst() {
   hPad1r->GetYaxis()->SetLabelSize(tsize);
   hPad1r->GetYaxis()->SetNdivisions(504,kTRUE);
   TH1F *hPad1r_syst = (TH1F*) hPad1r->Clone("hPad1r_syst");hPad1r_syst->GetYaxis()->SetRangeUser(1.-.1,1.+.1);
+  TH1F *hPad1_syst = (TH1F*) hPad1->Clone("hPad1_syst");
   TH1F *hPad2r = (TH1F*) hPad2->Clone("hPad2r"); hPad2r->GetYaxis()->SetRangeUser(1.-sfrange,1.+sfrange);
   hPad2r->GetYaxis()->SetTitle("Scale Factor");
   hPad2r->GetXaxis()->SetTitleSize(tsize);
@@ -611,11 +613,11 @@ void TnPEffDraw_syst() {
      // plot systematics
      TGraphAsymmErrors *graphssyst[nSyst];
      //data
-     for (int k=0; k<nSyst; k++) graphssyst[k] = ComPt0[k][i];
-     plotSysts(graphssyst, c1, pad1, hPad, pad2, hPadr_syst, header, Form("syst_data_pt_%i",i));
-     //mc
      for (int k=0; k<nSyst; k++) graphssyst[k] = ComPt1[k][i];
-     plotSysts(graphssyst, c1, pad1, hPad, pad2, hPadr_syst, header, Form("syst_mc_pt_%i",i));
+     plotSysts(graphssyst, c1, pad1, hPad_syst, pad2, hPadr_syst, header, Form("syst_data_pt_%i",i));
+     //mc
+     for (int k=0; k<nSyst; k++) graphssyst[k] = ComPt0[k][i];
+     plotSysts(graphssyst, c1, pad1, hPad_syst, pad2, hPadr_syst, header, Form("syst_mc_pt_%i",i));
 
      // toys study ///FIXME
      // if (doToys) toyStudy(ComPt1[i], ComPt0[i], fdata, fmc, cutTag + Form("toys%i_",i) + collTag + "_RD_MC_PT");
@@ -694,9 +696,9 @@ void TnPEffDraw_syst() {
 
   // plot systematics
   //data
-  plotSysts(ComEta0, c1, pad1, hPad1, pad2, hPad1r_syst, header, "syst_data_eta");
+  plotSysts(ComEta1, c1, pad1, hPad1_syst, pad2, hPad1r_syst, header, "syst_data_eta");
   //mc
-  plotSysts(ComEta1, c1, pad1, hPad1, pad2, hPad1r_syst, header, "syst_mc_eta");
+  plotSysts(ComEta0, c1, pad1, hPad1_syst, pad2, hPad1r_syst, header, "syst_mc_eta");
   
   //-------- This is for centrality dependence
   if (isPbPb) {
