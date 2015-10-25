@@ -31,7 +31,7 @@
 #include "TPostScript.h"
 #include "TMath.h"
 
-#include "toyStudy.h"
+#include "toyStudy_syst.h"
 
 using namespace RooFit;
 using namespace std;
@@ -46,10 +46,10 @@ using namespace std;
 
 // pp or PbPb?
 bool isPbPb = false; // if true, will compute the centrality dependence
-TString collTag = "PbPb"; // isPbPb ? "PbPb" : "pp";
+TString collTag = "pp"; // isPbPb ? "PbPb" : "pp";
 
 // do the toy study for the correction factors? (only applies if MUIDTRG)
-bool doToys = false;
+bool doToys = true;
 
 // Location of the files
 const int nCentBins = 7;
@@ -90,6 +90,20 @@ const char* fMCName[nSyst] = {
    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/bkgdfcn/pbpb_mc/tnp_Ana_MC_PbPb_MuonIDTrg_AllMB.root",
    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/tagsel/pbpb_mc/tnp_Ana_MC_PbPb_MuonIDTrg_AllMB.root",
 };
+// const char* fDataName[nSyst] = {
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/nominal/pp_data/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/massrange/pp_data/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/signalfcn/pp_data/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/bkgdfcn/pp_data/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/tagsel/pp_data/tnp_Ana_RD_pp_MuonIDTrg_AllMB.root",
+// };
+// const char* fMCName[nSyst] = {
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/nominal/pp_mc/tnp_Ana_MC_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/massrange/pp_mc/tnp_Ana_MC_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/signalfcn/pp_mc/tnp_Ana_MC_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/bkgdfcn/pp_mc/tnp_Ana_MC_pp_MuonIDTrg_AllMB.root",
+//    "/home/emilien/Documents/Postdoc_LLR/TagAndProbe/systs/tagsel/pp_mc/tnp_Ana_MC_pp_MuonIDTrg_AllMB.root",
+// };
 
 // names for systematics
 const char* systName[nSyst] = {
@@ -126,9 +140,9 @@ TString absetaTag("PassingGlb_abseta");
 TString cutTag("MuonIDTrg"); 
 TString cutLegend("Muon ID + trigger");
 #else
-const int nAbsEtaBins = 4;//2;
+const int nAbsEtaBins = 2;//4;
 TString absetaTag("PassingSTA_abseta");
-TString cutTag = isPbPb ? TString("fitTkFromSta") : TString("tpTree"); 
+TString cutTag = collTag=="PbPb" ? TString("fitTkFromSta") : TString("tpTree"); 
 TString cutLegend("STA muon");
 #endif // ifdef MUIDTRG
 #else
@@ -233,6 +247,7 @@ void TnPEffDraw_syst() {
      for (unsigned int i=0; i<daPtData0[k].size(); i++)
      {
         ComPt0[k].push_back(plotEff_1bin(daPtData0[k][i], 1, "pt"));
+        cout << k << " " << i <<  " " << daPtData1[k][i] << endl;
         ComPt1[k].push_back(plotEff_1bin(daPtData1[k][i], 1, "pt"));
      }
   }
@@ -430,6 +445,10 @@ void TnPEffDraw_syst() {
   TString header;
   for (int i=0; i<nbins_abseta; i++)
   {
+     TF1 *fdata = NULL;
+     TF1 *fmc = NULL;
+     double ptmin, ptmax;
+
      for (int k=0; k<nSyst; k++)
      {
         pad1->cd();
@@ -443,7 +462,7 @@ void TnPEffDraw_syst() {
         leg1->SetFillColor(0);
         leg1->SetBorderSize(0);
         leg1->SetTextSize(0.035);
-        double ptmin = ((RooRealVar*) daPtData0[k][i]->get()->find("pt"))->getBinning().binLow(0);
+        ptmin = ((RooRealVar*) daPtData0[k][i]->get()->find("pt"))->getBinning().binLow(0);
         double etamin, etamax;
         if (daPtData0[k][i]->get()->find("abseta"))
         {
@@ -503,6 +522,9 @@ void TnPEffDraw_syst() {
               if (!fitres) fitres = (RooFitResult*) f9[0]->Get(cutTag + "/" + ptTag + Form("%i/",i+1) + tag + Form("%i__cbPlusPoly2nd/fitresults",j));
               if (!fitres) fitres = (RooFitResult*) f9[0]->Get(cutTag + "/" + ptTag + Form("%i/",i+1) + tag + Form("%i__cbPlusPoly3rd/fitresults",j));
               if (!fitres) fitres = (RooFitResult*) f9[0]->Get(cutTag + "/" + ptTag + Form("%i/",i+1) + tag + Form("%i__cbPlusExpo/fitresults",j));
+              if (!fitres) fitres = (RooFitResult*) f9[0]->Get(cutTag + "/" + ptTag + Form("%i/",i+1) + tag + Form("%i__GaussPlusExpo/fitresults",j));
+              if (!fitres) fitres = (RooFitResult*) f9[0]->Get(cutTag + "/" + ptTag + Form("%i/",i+1) + tag + Form("%i__GaussPlusPoly/fitresults",j));
+              if (!fitres) fitres = (RooFitResult*) f9[0]->Get(cutTag + "/" + ptTag + Form("%i/",i+1) + tag + Form("%i__GaussPlusPoly2/fitresults",j));
               if (!fitres) cerr << "ERROR I couldn't find the fit results! Expect a crash soon..." << endl;
               tntot[j] = ((RooRealVar*) fitres->floatParsFinal().find("numSignalAll"))->getVal();
               delete fitres;
@@ -538,89 +560,90 @@ void TnPEffDraw_syst() {
         // in case we are looking at muon Id + trigger: get the scale factor at the same time
 #if defined MUIDTRG || defined STA
         pad1->cd();
-        double ptmax = ((RooRealVar*) daPtData0[k][i]->get()->find("pt"))->getMax();
+        ptmax = ((RooRealVar*) daPtData0[k][i]->get()->find("pt"))->getMax();
         TLatex tchi; tchi.SetNDC();
         tchi.SetTextSize(0.035);
         double chi2, pval; int dof;
 
-        // fit data
-        TF1 *fdata = new TF1("fdata","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
-        fdata->SetParNames("eff0","x0","m");
-        // Initialize the normalization to the efficiency in the last point
-        fdata->SetParameters(ComPt1[k][i]->GetX()[ComPt1[k][i]->GetN()-1],0.1,1.0);
-        fdata->SetParLimits(0,0,1);
-        fdata->SetParLimits(1,0.,10.);
-        fdata->SetParLimits(2,0,10.);
-        fdata->SetLineWidth(2);
-        fdata->SetLineColor(kBlue);
-        ComPt1[k][i]->Fit(fdata,"WRME");
-        leg1->AddEntry(fdata,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)),"pl");
-
-        chi2 = ComPt1[k][i]->Chisquare(fdata);
-        dof = ComPt1[k][i]->GetN() - fdata->GetNpar();
-        pval = TMath::Prob(chi2,dof);
-        tchi.SetTextColor(kBlue);
-        tchi.DrawLatex(0.6,0.92,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
-
-        // fit mc
-        TF1 *fmc = (TF1*) fdata->Clone("fmc");;
-        // Initialize the normalization to the efficiency in the last point
-        if (isPbPb) fmc->SetParameters(ComPt0[k][i]->GetX()[ComPt0[k][i]->GetN()-1],0.5,2.5); 
-        else fmc->SetParameters(ComPt0[k][i]->GetX()[ComPt0[k][i]->GetN()-1],2.2,1.5); 
-        fmc->SetLineColor(kRed);
-        ComPt0[k][i]->Fit(fmc,"WRME");
-        leg1->AddEntry(fmc,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)),"pl");
-
-        chi2 = ComPt0[k][i]->Chisquare(fmc);
-        dof = ComPt0[k][i]->GetN() - fmc->GetNpar();
-        pval = TMath::Prob(chi2,dof);
-        tchi.SetTextColor(kRed);
-        tchi.DrawLatex(0.6,0.88,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
-
-        leg1->Draw();
-
-        // now the bottom panel
-        pad2->cd();
-        // hPadr->Draw();
-        TF1 *fratio = new TF1("fratio","[0]*TMath::Erf((x-[1])/[2])/([3]*TMath::Erf((x-[4])/[5]))",ptmin,ptmax);
-        fratio->SetParameters(
-              fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2),
-              fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)
-              );
-        fratio->Draw("same");
-
-        chi2 = gratio->Chisquare(fratio);
-        dof = gratio->GetN() - fratio->GetNpar();
-        pval = TMath::Prob(chi2,dof);
-        tchi.SetTextColor(kBlack);
-        tchi.SetTextSize(0.035*0.7/0.3);
-        tchi.DrawLatex(0.6,0.8,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
-
-        // save (nominal only)
         if (k==0) {
+           // fit data
+           fdata = new TF1("fdata","[0]*TMath::Erf((x-[1])/[2])",ptmin,ptmax);
+           fdata->SetParNames("eff0","x0","m");
+           // Initialize the normalization to the efficiency in the last point
+           fdata->SetParameters(ComPt1[k][i]->GetX()[ComPt1[k][i]->GetN()-1],0.1,1.0);
+           fdata->SetParLimits(0,0,1);
+           fdata->SetParLimits(1,0.,10.);
+           fdata->SetParLimits(2,0,10.);
+           fdata->SetLineWidth(2);
+           fdata->SetLineColor(kBlue);
+           ComPt1[k][i]->Fit(fdata,"WRME");
+           leg1->AddEntry(fdata,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)),"pl");
+
+           chi2 = ComPt1[k][i]->Chisquare(fdata);
+           dof = ComPt1[k][i]->GetN() - fdata->GetNpar();
+           pval = TMath::Prob(chi2,dof);
+           tchi.SetTextColor(kBlue);
+           tchi.DrawLatex(0.6,0.92,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
+           // fit mc
+           fmc = (TF1*) fdata->Clone("fmc");;
+           // Initialize the normalization to the efficiency in the last point
+           if (isPbPb) fmc->SetParameters(ComPt0[k][i]->GetX()[ComPt0[k][i]->GetN()-1],0.5,2.5); 
+           else fmc->SetParameters(ComPt0[k][i]->GetX()[ComPt0[k][i]->GetN()-1],2.2,1.5); 
+           fmc->SetLineColor(kRed);
+           ComPt0[k][i]->Fit(fmc,"WRME");
+           leg1->AddEntry(fmc,Form("%0.2f*TMath::Erf((x-%0.2f)/%0.2f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)),"pl");
+
+           chi2 = ComPt0[k][i]->Chisquare(fmc);
+           dof = ComPt0[k][i]->GetN() - fmc->GetNpar();
+           pval = TMath::Prob(chi2,dof);
+           tchi.SetTextColor(kRed);
+           tchi.DrawLatex(0.6,0.88,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
+           leg1->Draw();
+
+           // now the bottom panel
+           pad2->cd();
+           // hPadr->Draw();
+           TF1 *fratio = new TF1("fratio","[0]*TMath::Erf((x-[1])/[2])/([3]*TMath::Erf((x-[4])/[5]))",ptmin,ptmax);
+           fratio->SetParameters(
+                 fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2),
+                 fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)
+                 );
+           fratio->Draw("same");
+
+           chi2 = gratio->Chisquare(fratio);
+           dof = gratio->GetN() - fratio->GetNpar();
+           pval = TMath::Prob(chi2,dof);
+           tchi.SetTextColor(kBlack);
+           tchi.SetTextSize(0.035*0.7/0.3);
+           tchi.DrawLatex(0.6,0.8,Form("#chi^{2}/dof = %.1f/%d (p-value: %.2f)",chi2,dof,pval));
+
+           // save (nominal only)
            c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.root");
            c1->SaveAs(cutTag + Form("SF%i_",i) + collTag + "_RD_MC_PT.pdf");
-        }
 
-        // print the fit results to file
-        file_sfs << "Data " << etamin << " " << etamax << endl;
-        file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)) << endl;
-        file_sfs << "MC " << etamin << " " << etamax << endl;
-        file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)) << endl;
-        file_sfs << endl;
+           // print the fit results to file
+           file_sfs << "Data " << etamin << " " << etamax << endl;
+           file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fdata->GetParameter(0),fdata->GetParameter(1),fdata->GetParameter(2)) << endl;
+           file_sfs << "MC " << etamin << " " << etamax << endl;
+           file_sfs << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",fmc->GetParameter(0),fmc->GetParameter(1),fmc->GetParameter(2)) << endl;
+           file_sfs << endl;
+        }
      }
 
      // plot systematics
-     TGraphAsymmErrors *graphssyst[nSyst];
+     TGraphAsymmErrors *graphssyst_data[nSyst];
      //data
-     for (int k=0; k<nSyst; k++) graphssyst[k] = ComPt1[k][i];
-     plotSysts(graphssyst, c1, pad1, hPad_syst, pad2, hPadr_syst, header, Form("syst_data_pt_%i",i));
+     for (int k=0; k<nSyst; k++) graphssyst_data[k] = ComPt1[k][i];
+     plotSysts(graphssyst_data, c1, pad1, hPad_syst, pad2, hPadr_syst, header, Form("syst_data_pt_%i",i));
      //mc
-     for (int k=0; k<nSyst; k++) graphssyst[k] = ComPt0[k][i];
-     plotSysts(graphssyst, c1, pad1, hPad_syst, pad2, hPadr_syst, header, Form("syst_mc_pt_%i",i));
+     TGraphAsymmErrors *graphssyst_mc[nSyst];
+     for (int k=0; k<nSyst; k++) graphssyst_mc[k] = ComPt0[k][i];
+     plotSysts(graphssyst_mc, c1, pad1, hPad_syst, pad2, hPadr_syst, header, Form("syst_mc_pt_%i",i));
 
-     // toys study ///FIXME
-     // if (doToys) toyStudy(ComPt1[i], ComPt0[i], fdata, fmc, cutTag + Form("toys%i_",i) + collTag + "_RD_MC_PT");
+     // toys study 
+     if (doToys) toyStudy(nSyst, graphssyst_data, graphssyst_mc, fdata, fmc, cutTag + Form("toys%i_",i) + collTag + "_RD_MC_PT", 2);
 #endif // ifdef MUIDTRG or STA
   }
 
@@ -1123,82 +1146,84 @@ void CalEffErr(vector<TGraphAsymmErrors*> a, double **b){
 }
 
 void plotSysts(TGraphAsymmErrors *graphs[nSyst], TCanvas *c1, TPad *p1, TH1F *h1, TPad *pr, TH1F *hr, TString header, TString tag){
-        p1->cd();
-        h1->Draw();
-        TLatex *lt1 = new TLatex();
-        lt1->SetNDC();
+   p1->cd();
+   h1->Draw();
+   TLatex *lt1 = new TLatex();
+   lt1->SetNDC();
 
-        char legs[512];
-        TLegend *leg1 = new TLegend(0.43,0.05,0.66,0.43);
-        leg1->SetFillStyle(0);
-        leg1->SetFillColor(0);
-        leg1->SetBorderSize(0);
-        leg1->SetTextSize(0.035);
-        leg1->SetHeader(header);
-        for (int k=0; k<nSyst; k++) {
-           graphs[k]->SetMarkerColor(k<4 ? k+1 : k+2);
-           graphs[k]->SetMarkerStyle(k+20);
-           graphs[k]->SetLineColor(k<4 ? k+1 : k+2);
-           leg1->AddEntry(graphs[k],systName[k],"pl");
-           graphs[k]->Draw("pz same");
-        }
-        leg1->Draw("same");
+   char legs[512];
+   TLegend *leg1 = new TLegend(0.43,0.05,0.66,0.43);
+   leg1->SetFillStyle(0);
+   leg1->SetFillColor(0);
+   leg1->SetBorderSize(0);
+   leg1->SetTextSize(0.035);
+   leg1->SetHeader(header);
+   for (int k=0; k<nSyst; k++) {
+      graphs[k]->SetMarkerColor(k<4 ? k+1 : k+2);
+      graphs[k]->SetMarkerStyle(k+20);
+      graphs[k]->SetLineColor(k<4 ? k+1 : k+2);
+      leg1->AddEntry(graphs[k],systName[k],"pl");
+      graphs[k]->Draw("pz same");
+   }
+   leg1->Draw("same");
 
-        // lt1->SetTextSize(0.05);
-        // lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
-        // //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
-        // lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
+   // lt1->SetTextSize(0.05);
+   // lt1->DrawLatex(0.43,0.60,"CMS Preliminary");
+   // //lt1->DrawLatex(0.43,0.54,"pp  #sqrt{s} = 2.76 TeV");
+   // lt1->DrawLatex(0.43,0.54,collTag + "  #sqrt{s_{NN}} = 2.76 TeV");
 
-        // now take care of the data/mc ratio panel
-        c1->cd();
-        // pad2->SetFrameFillStyle(4000);
-        pr->Draw();
-        pr->cd();
-        hr->Draw();
+   // now take care of the data/mc ratio panel
+   c1->cd();
+   // pad2->SetFrameFillStyle(4000);
+   pr->Draw();
+   pr->cd();
+   hr->Draw();
 
-        int nbins_mc = graphs[0]->GetN();
-        int nbins = graphs[0]->GetN();
-        double **xr = new double*[nSyst];
-        double **yr = new double*[nSyst];
-        double **xrlo = new double*[nSyst];
-        double **yrlo = new double*[nSyst];
-        double **xrhi = new double*[nSyst];
-        double **yrhi = new double*[nSyst];
-        for (int j=0; j<nSyst; j++) {
-           xr[j] = new double[nbins];
-           yr[j] = new double[nbins];
-           xrlo[j] = new double[nbins];
-           yrlo[j] = new double[nbins];
-           xrhi[j] = new double[nbins];
-           yrhi[j] = new double[nbins];
-        }
+   int nbins_mc = graphs[0]->GetN();
+   int nbins = graphs[0]->GetN();
+   double **xr = new double*[nSyst];
+   double **yr = new double*[nSyst];
+   double **xrlo = new double*[nSyst];
+   double **yrlo = new double*[nSyst];
+   double **xrhi = new double*[nSyst];
+   double **yrhi = new double*[nSyst];
+   for (int j=0; j<nSyst; j++) {
+      xr[j] = new double[nbins];
+      yr[j] = new double[nbins];
+      xrlo[j] = new double[nbins];
+      yrlo[j] = new double[nbins];
+      xrhi[j] = new double[nbins];
+      yrhi[j] = new double[nbins];
+   }
 
-        TGraphAsymmErrors *gratio[nSyst];
+   TGraphAsymmErrors *gratio[nSyst];
 
-        TGraphAsymmErrors* ComPt0_forRatio = NULL;
-        ComPt0_forRatio = graphs[0];
+   TGraphAsymmErrors* ComPt0_forRatio = NULL;
+   ComPt0_forRatio = graphs[0];
 
-        // here we assume that the mc uncertainty is negligible compared to the data one: simply scale everything by the central value.
-        for (int k=1; k<nSyst; k++) {
-           for (int j=0; j<nbins; j++)
-           {
-              xr[k][j] = graphs[k]->GetX()[j];
-              xrlo[k][j] = graphs[k]->GetErrorXlow(j);
-              xrhi[k][j] = graphs[k]->GetErrorXhigh(j);
-              yr[k][j] = graphs[k]->GetY()[j]/ComPt0_forRatio->GetY()[j];
-              yrlo[k][j] = graphs[k]->GetErrorYlow(j)/ComPt0_forRatio->GetY()[j];
-              yrhi[k][j] = graphs[k]->GetErrorYhigh(j)/ComPt0_forRatio->GetY()[j];
-           }
-           gratio[k] = new TGraphAsymmErrors(nbins,xr[k],yr[k],xrlo[k],xrhi[k],yrlo[k],yrhi[k]);
-           gratio[k]->SetMarkerStyle(20+k);
-           gratio[k]->SetMarkerColor(k<4 ? k+1 : k+2);
-           gratio[k]->SetMarkerSize(1.0);
-           gratio[k]->SetLineColor(k<4 ? k+1 : k+2);
-           gratio[k]->SetLineWidth(1);
-           gratio[k]->Draw("pz same");
-        }
+   for (int k=1; k<nSyst; k++) {
+      double maxvar=-1;
+      for (int j=0; j<nbins; j++)
+      {
+         xr[k][j] = graphs[k]->GetX()[j];
+         xrlo[k][j] = graphs[k]->GetErrorXlow(j);
+         xrhi[k][j] = graphs[k]->GetErrorXhigh(j);
+         yr[k][j] = graphs[k]->GetY()[j]/ComPt0_forRatio->GetY()[j];
+         maxvar = max(maxvar, yr[k][j]);
+         yrlo[k][j] = graphs[k]->GetErrorYlow(j)/ComPt0_forRatio->GetY()[j];
+         yrhi[k][j] = graphs[k]->GetErrorYhigh(j)/ComPt0_forRatio->GetY()[j];
+      }
+      cout << "MAX (" << tag << ", " << systName[k] << "): " << maxvar << endl;
+      gratio[k] = new TGraphAsymmErrors(nbins,xr[k],yr[k],xrlo[k],xrhi[k],yrlo[k],yrhi[k]);
+      gratio[k]->SetMarkerStyle(20+k);
+      gratio[k]->SetMarkerColor(k<4 ? k+1 : k+2);
+      gratio[k]->SetMarkerSize(1.0);
+      gratio[k]->SetLineColor(k<4 ? k+1 : k+2);
+      gratio[k]->SetLineWidth(1);
+      gratio[k]->Draw("pz same");
+   }
 
-        // save
-        c1->SaveAs(tag + ".root");
-        c1->SaveAs(tag + ".pdf");
+   // save
+   c1->SaveAs(tag + ".root");
+   c1->SaveAs(tag + ".pdf");
 }

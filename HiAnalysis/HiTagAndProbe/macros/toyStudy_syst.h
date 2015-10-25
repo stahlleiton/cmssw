@@ -33,21 +33,54 @@ double assym_gaus(double *x, double *par) {
       return TMath::Gaus(x[0],mean,sigmah,kTRUE);
 };
 
-void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 *fmc, TString outputname) {
-   const int nbinsdata = gdata->GetN();
-   const double *xdata = gdata->GetX();
-   const double *exldata = gdata->GetEXlow();
-   const double *exhdata = gdata->GetEXhigh();
-   const double *ydata = gdata->GetY();
-   const double *eyldata = gdata->GetEYlow();
-   const double *eyhdata = gdata->GetEYhigh();
-   const int nbinsmc = gmc->GetN();
-   const double *xmc = gmc->GetX();
-   const double *exlmc = gmc->GetEXlow();
-   const double *exhmc = gmc->GetEXhigh();
-   const double *ymc = gmc->GetY();
-   const double *eylmc = gmc->GetEYlow();
-   const double *eyhmc = gmc->GetEYhigh();
+double* systerr(TGraphAsymmErrors **graph, int nsyst) {
+   int nbins = graph[0]->GetN();
+   double *ans = new double[nbins];
+
+   for (int i=0; i<nbins; i++) {
+      double ynom = graph[0]->GetY()[i];
+      double eylnom = graph[0]->GetEYlow()[i];
+      double eyhnom = graph[0]->GetEYhigh()[i];
+      ans[i] = 0;
+      for (int k=1; k<nsyst; k++) {
+         double ysyst = graph[k]->GetY()[i];
+         double eylsyst = graph[k]->GetEYlow()[i];
+         double eyhsyst = graph[k]->GetEYhigh()[i];
+         if (ysyst-ynom>0) { // upward fluctuation
+            double errc = sqrt(fabs(pow(eyhsyst,2)-pow(eyhnom,2)));
+            if (ysyst-ynom>errc && ysyst-ynom>ans[i]) ans[i] = ysyst-ynom;
+            // if (ysyst-ynom<errc && ysyst-ynom>1e-2) cout << "AAAA " << i << " " << k << " " << ysyst-ynom << " " << errc << endl;
+         }
+         if (ysyst-ynom<0) { // downward fluctuation
+            double errc = sqrt(fabs(pow(eylsyst,2)-pow(eylnom,2)));
+            if (-ysyst+ynom>errc && -ysyst+ynom>ans[i]) ans[i] = -ysyst+ynom;
+            // if (-ysyst+ynom<errc && -ysyst+ynom>1e-2) cout << "AAAA " << i << " " << k << " " << ysyst-ynom << " " << errc << endl;
+         }
+      }
+   }
+
+   return ans;
+}
+
+void toyStudy(int nsyst, TGraphAsymmErrors **gdata, TGraphAsymmErrors **gmc, TF1 *fdata, TF1 *fmc, TString outputname, int systmode=0) {
+   const int nbinsdata = gdata[0]->GetN();
+   const double *xdata = gdata[0]->GetX();
+   const double *exldata = gdata[0]->GetEXlow();
+   const double *exhdata = gdata[0]->GetEXhigh();
+   const double *ydata = gdata[0]->GetY();
+   const double *eyldata = gdata[0]->GetEYlow();
+   const double *eyhdata = gdata[0]->GetEYhigh();
+   double *eyldata_syst = systerr(gdata,nsyst);
+   double *eyhdata_syst = eyldata_syst;
+   const int nbinsmc = gmc[0]->GetN();
+   const double *xmc = gmc[0]->GetX();
+   const double *exlmc = gmc[0]->GetEXlow();
+   const double *exhmc = gmc[0]->GetEXhigh();
+   const double *ymc = gmc[0]->GetY();
+   const double *eylmc = gmc[0]->GetEYlow();
+   const double *eyhmc = gmc[0]->GetEYhigh();
+   double *eylmc_syst = systerr(gmc,nsyst);
+   double *eyhmc_syst = eyldata_syst;
 
    TF1 *tfAsyGauss = new TF1("tfAsy",assym_gaus,0,1.0,3);
    // tfAsyGauss->SetNpx(1000);
@@ -81,69 +114,98 @@ void toyStudy(TGraphAsymmErrors *gdata, TGraphAsymmErrors *gmc, TF1 *fdata, TF1 
    cdata->cd(); hPad->Draw();
    cmc->cd(); hPad->Draw();
 
-   for (int i=0; i<nToys; i++) {
-      // generate the toys
-      // data
-      TGraphAsymmErrors *gtoydata = new TGraphAsymmErrors(nbinsdata,xdata,ydata,exldata,exhdata,eyldata,eyhdata);
-      for (int j=0; j<nbinsdata; j++) {
-         tfAsyGauss->SetParameters(ydata[j],eyldata[j],eyhdata[j]);
-         effdata[j] = tfAsyGauss->GetRandom();
-         gtoydata->SetPoint(j,xdata[j],effdata[j]);
+   int systmodemin=systmode;
+   int systmodemax=systmode;
+   if (systmode==2) {
+      systmodemin=0;
+      systmodemax=1;
+   }
+
+   for (int systmode2=systmodemax; systmode2>=systmodemin; systmode2--) {
+      for (int i=0; i<nToys; i++) {
+         // generate the toys
+         // data
+         TGraphAsymmErrors *gtoydata = new TGraphAsymmErrors(nbinsdata,xdata,ydata,exldata,exhdata,eyldata,eyhdata);
+         for (int j=0; j<nbinsdata; j++) {
+            if (systmode2==0) tfAsyGauss->SetParameters(ydata[j],eyldata[j],eyhdata[j]);
+            else tfAsyGauss->SetParameters(ydata[j],sqrt(pow(eyldata[j],2)+pow(eyldata_syst[j],2)),sqrt(pow(eyhdata[j],2)+pow(eyhdata_syst[j],2)));
+            effdata[j] = tfAsyGauss->GetRandom();
+            gtoydata->SetPoint(j,xdata[j],effdata[j]);
+         }
+
+         // mc
+         TGraphAsymmErrors *gtoymc = new TGraphAsymmErrors(nbinsmc,xmc,ymc,exlmc,exhmc,eylmc,eyhmc);
+         for (int j=0; j<nbinsmc; j++) {
+            if (systmode2==0) tfAsyGauss->SetParameters(ymc[j],eylmc[j],eyhmc[j]);
+            else tfAsyGauss->SetParameters(ymc[j],sqrt(pow(eylmc[j],2)+pow(eylmc_syst[j],2)),sqrt(pow(eyhmc[j],2)+pow(eyhmc_syst[j],2)));
+            effmc[j] = tfAsyGauss->GetRandom();
+            gtoymc->SetPoint(j,xmc[j],effmc[j]);
+         }
+
+         // fit the graphs
+         TF1 *ftoydata = (TF1*) fdata->Clone(Form("ftoydata%i",i));
+         ftoydata->SetLineColor(systmode2==1 ? kOrange+3 : kOrange+7);
+         // ftoydata->SetParameter(2,gtoydata->GetX()[nbinsdata]);
+         TF1 *ftoymc = (TF1*) fmc->Clone(Form("ftoymc%i",i));
+         ftoymc->SetLineColor(systmode2==1 ? kGray : kBlack);
+         // ftoymc->SetParameter(2,gtoymc->GetX()[nbinsmc]);
+
+         gtoydata->Fit(ftoydata,"WRM");
+         gtoymc->Fit(ftoymc,"WRM");
+
+         // compute the efficiency from fit, for the tree
+         for (int j=0; j<nbinsdata; j++) {
+            effdata_fit[j] = ftoydata->Eval(xdata[j]);
+         }
+         for (int j=0; j<nbinsmc; j++) {
+            effmc_fit[j] = ftoymc->Eval(xmc[j]);
+         }
+
+         // draw
+         cdata->cd();
+         ftoydata->Draw("l same");
+         cmc->cd();
+         ftoymc->Draw("l same");
+
+         // print results to file
+         if (systmode2==systmode) {
+            fileout << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",ftoydata->GetParameter(0),ftoydata->GetParameter(1),ftoydata->GetParameter(2)) << endl;
+            // fileout << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",ftoymc->GetParameter(0),ftoymc->GetParameter(1),ftoymc->GetParameter(2)) << endl;
+            tr->Fill();
+         }
       }
-
-      // mc
-      TGraphAsymmErrors *gtoymc = new TGraphAsymmErrors(nbinsmc,xmc,ymc,exlmc,exhmc,eylmc,eyhmc);
-      for (int j=0; j<nbinsmc; j++) {
-         tfAsyGauss->SetParameters(ymc[j],eylmc[j],eyhmc[j]);
-         effmc[j] = tfAsyGauss->GetRandom();
-         gtoymc->SetPoint(j,xmc[j],effmc[j]);
-      }
-
-      // fit the graphs
-      TF1 *ftoydata = (TF1*) fdata->Clone(Form("ftoydata%i",i));
-      ftoydata->SetLineColor(kOrange+7);
-      // ftoydata->SetParameter(2,gtoydata->GetX()[nbinsdata]);
-      TF1 *ftoymc = (TF1*) fmc->Clone(Form("ftoymc%i",i));
-      ftoymc->SetLineColor(kBlack);
-      // ftoymc->SetParameter(2,gtoymc->GetX()[nbinsmc]);
-
-      gtoydata->Fit(ftoydata,"WRM");
-      gtoymc->Fit(ftoymc,"WRM");
-
-      // compute the efficiency from fit, for the tree
-      for (int j=0; j<nbinsdata; j++) {
-         effdata_fit[j] = ftoydata->Eval(xdata[j]);
-      }
-      for (int j=0; j<nbinsmc; j++) {
-         effmc_fit[j] = ftoymc->Eval(xmc[j]);
-      }
-
-      // draw
-      cdata->cd();
-      ftoydata->Draw("l same");
-      cmc->cd();
-      ftoymc->Draw("l same");
-
-      // print results to file
-      fileout << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",ftoydata->GetParameter(0),ftoydata->GetParameter(1),ftoydata->GetParameter(2)) << endl;
-      // fileout << Form("%0.4f*TMath::Erf((x-%0.4f)/%0.4f)",ftoymc->GetParameter(0),ftoymc->GetParameter(1),ftoymc->GetParameter(2)) << endl;
-      tr->Fill();
    }
 
 
    // superimpose nominal results
    cdata->cd();
-   gdata->Draw("pz same");
+   double eyldatastatsyst[nbinsdata];
+   double eyhdatastatsyst[nbinsdata];
+   for (int i=0; i<nbinsdata; i++) {
+      eyldatastatsyst[i] = sqrt(pow(eyldata[i],2)+pow(eyldata_syst[i],2));
+      eyhdatastatsyst[i] = sqrt(pow(eyhdata[i],2)+pow(eyhdata_syst[i],2));
+   }
+   TGraphAsymmErrors *gdatasyst = new TGraphAsymmErrors(nbinsdata,xdata,ydata,exldata,exhdata,eyldatastatsyst,eyhdatastatsyst);
+   gdatasyst->Draw("pz same");
+   gdata[0]->Draw("p|| same");
    fdata->Draw("l same");
    TLegend *tlegdata = new TLegend(0.6,0.2,0.9,0.4);
-   tlegdata->AddEntry(gdata,"Data","lp");
+   tlegdata->AddEntry(gdata[0],"Data","lp");
    tlegdata->AddEntry(fdata,"Nominal fit","lp");
    tlegdata->Draw();
    cmc->cd();
-   gmc->Draw("pz same");
+   double eylmcstatsyst[nbinsmc];
+   double eyhmcstatsyst[nbinsmc];
+   for (int i=0; i<nbinsmc; i++) {
+      eylmcstatsyst[i] = sqrt(pow(eylmc[i],2)+pow(eylmc_syst[i],2));
+      eyhmcstatsyst[i] = sqrt(pow(eyhmc[i],2)+pow(eyhmc_syst[i],2));
+   }
+   TGraphAsymmErrors *gmcsyst = new TGraphAsymmErrors(nbinsmc,xmc,ymc,exlmc,exhmc,eylmcstatsyst,eyhmcstatsyst);
+   gmcsyst->Draw("pz same");
+   gmc[0]->Draw("p|| same");
    fmc->Draw("l same");
    TLegend *tlegmc = new TLegend(0.6,0.2,0.9,0.4);
-   tlegmc->AddEntry(gmc,"MC","lp");
+   tlegmc->AddEntry(gmc[0],"MC","lp");
    tlegmc->AddEntry(fmc,"Nominal fit","lp");
    tlegmc->Draw();
 
