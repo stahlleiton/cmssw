@@ -38,33 +38,33 @@ struct GreaterByVProb {
 //
 
 class HiOnia2MuMuPAT : public edm::EDProducer {
- public:
-  explicit HiOnia2MuMuPAT(const edm::ParameterSet&);
-  ~HiOnia2MuMuPAT();
+  public:
+    explicit HiOnia2MuMuPAT(const edm::ParameterSet&);
+    ~HiOnia2MuMuPAT();
 
- private:
-  virtual void beginJob() ;
-  virtual void produce(edm::Event&, const edm::EventSetup&);
-  virtual void endJob() ;
-  bool isAbHadron(int pdgID);
-  bool isAMixedbHadron(int pdgID, int momPdgID);
-  std::pair<int, float> findJpsiMCInfo(reco::GenParticleRef genJpsi);
+  private:
+    virtual void beginJob() ;
+    virtual void produce(edm::Event&, const edm::EventSetup&);
+    virtual void endJob() ;
+    bool isAbHadron(int pdgID);
+    bool isAMixedbHadron(int pdgID, int momPdgID);
+    std::pair<int, std::pair<float, float> > findJpsiMCInfo(reco::GenParticleRef genJpsi);
 
   // ----------member data ---------------------------
- private:
-  edm::InputTag muons_;
-  edm::InputTag thebeamspot_;
-  edm::InputTag thePVs_;
-  StringCutObjectSelector<pat::Muon> higherPuritySelection_;
-  StringCutObjectSelector<pat::Muon> lowerPuritySelection_; 
-  StringCutObjectSelector<reco::Candidate, true> dimuonSelection_;
-  bool addCommonVertex_, addMuonlessPrimaryVertex_;
-  bool resolveAmbiguity_;
-  bool addMCTruth_;
-  GreaterByPt<pat::CompositeCandidate> pTComparator_;
-  GreaterByVProb<pat::CompositeCandidate> vPComparator_;
+  private:
+    edm::InputTag muons_;
+    edm::InputTag thebeamspot_;
+    edm::InputTag thePVs_;
+    StringCutObjectSelector<pat::Muon> higherPuritySelection_;
+    StringCutObjectSelector<pat::Muon> lowerPuritySelection_; 
+    StringCutObjectSelector<reco::Candidate, true> dimuonSelection_;
+    bool addCommonVertex_, addMuonlessPrimaryVertex_;
+    bool resolveAmbiguity_;
+    bool addMCTruth_;
+    GreaterByPt<pat::CompositeCandidate> pTComparator_;
+    GreaterByVProb<pat::CompositeCandidate> vPComparator_;
 
-  InvariantMassFromVertex massCalculator;
+    InvariantMassFromVertex massCalculator;
 };
 
 //
