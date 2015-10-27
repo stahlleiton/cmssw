@@ -1245,12 +1245,12 @@ HiOniaAnalyzer::makeCuts(int sign) {
                         (sign == 2 && muon1->charge() + muon2->charge() == -2) );
 
       if (thisSign) {
-        /*
         // global + global?
         if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selGlobalMuon)){
           _thePassedCats[sign].push_back(GlbGlb);  _thePassedCands[sign].push_back(cand);
                   continue;
         }       
+        /*
         // global + tracker? (x2)    
         if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selTrackerMuon)){
           _thePassedCats[sign].push_back(GlbTrk);  _thePassedCands[sign].push_back(cand);
@@ -1260,13 +1260,13 @@ HiOniaAnalyzer::makeCuts(int sign) {
         if (checkCuts(cand,muon2,muon1,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selTrackerMuon)){
           _thePassedCats[sign].push_back(GlbTrk);  _thePassedCands[sign].push_back(cand);
                   continue;
-        }*/
-        
+        }
         // tracker + tracker?  
         if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selTrackerMuon,&HiOniaAnalyzer::selTrackerMuon)){
           _thePassedCats[sign].push_back(TrkTrk);  _thePassedCands[sign].push_back(cand);
           continue;
         }
+				*/
       }
     }
   }
@@ -1305,14 +1305,16 @@ HiOniaAnalyzer::theBestQQ(int sign) {
 
 bool
 HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon) {
-  // return (fabs(aMuon->eta()) < 2.4 &&
-  //      ((fabs(aMuon->eta()) < 1.0 && aMuon->pt() >= 3.4) ||
-  //       (1.0 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.5 && aMuon->pt() >= 5.8-2.4*fabs(aMuon->eta())) ||
-  //       (1.5 <= fabs(aMuon->eta()) && aMuon->pt() >= 3.3667-7.0/9.0*fabs(aMuon->eta()))));
-  return (fabs(aMuon->eta()) < 2.4 &&
-          ((fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 3.3) ||
-           (1.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
-           (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
+		// for global muons (2011) 
+   return (fabs(aMuon->eta()) < 2.4 &&
+        ((fabs(aMuon->eta()) < 1.0 && aMuon->pt() >= 3.4) ||
+         (1.0 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.5 && aMuon->pt() >= 5.8-2.4*fabs(aMuon->eta())) ||
+         (1.5 <= fabs(aMuon->eta()) && aMuon->pt() >= 3.3667-7.0/9.0*fabs(aMuon->eta()))));
+	// for tracker muons (2013)
+  //return (fabs(aMuon->eta()) < 2.4 &&
+  //        ((fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 3.3) ||
+  //         (1.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
+  //         (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
 }
 
 bool
@@ -1610,7 +1612,8 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
       if (muon->isGlobalMuon() && !selGlobalMuon(muon)) muType = muType+pow(2,2);
       if (muon->isTrackerMuon() && !selTrackerMuon(muon)) muType = muType+pow(2,3); 
 
-      if ( (muType&2)==2 ) {
+      if ( (muType&1)==1 ) { //global muons
+      //if ( (muType&2)==2 ) { //tracker muons
         nGoodMuons++;
 
         int trigBits=0;
@@ -1637,7 +1640,7 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
                 else
                   myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
               }
-              else if ((muType&2)==2) {
+							else if ((muType&2)==2) {
                 myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
                 if (isBarrel)
                   myRecoTrkMuonHistos->Fill(muon, "Barrel_"+theLabel);
