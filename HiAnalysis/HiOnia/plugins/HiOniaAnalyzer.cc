@@ -1630,14 +1630,14 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
                 else
                   myRecoMuonHistos->Fill(muon, "EndCap_"+theLabel);
               }
-              else if (muType==0) {
+							else if ((muType&1)==1) {
                 myRecoGlbMuonHistos->Fill(muon, "All_"+theLabel);
                 if (isBarrel)
                   myRecoGlbMuonHistos->Fill(muon, "Barrel_"+theLabel);
                 else
                   myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
               }
-              else if (muType==1) {
+              else if ((muType&2)==2) {
                 myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
                 if (isBarrel)
                   myRecoTrkMuonHistos->Fill(muon, "Barrel_"+theLabel);
