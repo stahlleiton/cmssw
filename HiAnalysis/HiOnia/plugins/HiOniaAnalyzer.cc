@@ -48,6 +48,8 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 
+#include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 #include "DataFormats/HeavyIonEvent/interface/Centrality.h"
@@ -425,15 +427,20 @@ private:
   static const unsigned int sNTRIGGERS = 20;
   unsigned int NTRIGGERS;
   unsigned int NTRIGGERS_DBL;
+  unsigned int nTrig;
 
   // MC 8E29
   bool isTriggerMatched[sNTRIGGERS];
   std::string HLTLastFilters[sNTRIGGERS];
   bool alreadyFilled[sNTRIGGERS];
   int HLTriggers;
+  int trigPrescale[sNTRIGGERS];
 
   std::map<std::string, int> mapTriggerNameToIntFired_;
   std::map<std::string, int> mapTriggerNameToPrescaleFac_;
+
+  HLTPrescaleProvider hltPrescaleProvider;
+  bool hltPrescaleInit;
 
   const edm::ParameterSet _iConfig;
 };
@@ -491,6 +498,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _isMC(iConfig.getUntrackedParameter<bool>("isMC",false) ),
   _isPromptMC(iConfig.getUntrackedParameter<bool>("isPromptMC",true) ),
   _oniaPDG(iConfig.getParameter<int>("oniaPDG")),
+  hltPrescaleProvider(iConfig, consumesCollector(), *this),
   _iConfig(iConfig)
 {
    //now do what ever initialization is needed
@@ -522,6 +530,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   NTRIGGERS_DBL = _dblTriggerPathNames.size();
   NTRIGGERS = NTRIGGERS_DBL + _sglTriggerPathNames.size() + 1; // + 1 for "NoTrigger"
   std::cout << "NTRIGGERS_DBL = " << NTRIGGERS_DBL << "\t NTRIGGERS_SGL = " << _sglTriggerPathNames.size() << "\t NTRIGGERS = " << NTRIGGERS << std::endl;
+  nTrig = NTRIGGERS - 1;
 
   isTriggerMatched[0]=true; // first entry 'hardcoded' true to accept "all" events
   HLTLastFilters[0] = "";
@@ -564,6 +573,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
 
   for(std::vector<std::string>::iterator it = theTriggerNames.begin(); it != theTriggerNames.end(); ++it){
       mapTriggerNameToIntFired_[*it] = -9999;
+      mapTriggerNameToPrescaleFac_[*it] = -1;
   }
 }
 
@@ -626,6 +636,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       HLTriggers += pow(2,iTr-1);
       hStats->Fill(iTr); // event info
     }
+    trigPrescale[iTr-1] = mapTriggerNameToPrescaleFac_[theTriggerNames.at(iTr)];
   }
 
   if (_isHI || _isPA) {
@@ -1695,8 +1706,11 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("runNb",   &runNb,     "runNb/i");
   myTree->Branch("LS",      &lumiSection, "LS/i"); 
   myTree->Branch("zVtx",    &zVtx,        "zVtx/F"); 
-  myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/I");
   myTree->Branch("Centrality", &centBin, "Centrality/I");
+
+  myTree->Branch("nTrig", &nTrig, "nTrig/I");
+  myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
+  myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/I");
 
   myTree->Branch("Npix",&Npix,"Npix/I");
   myTree->Branch("NpixelTracks",&NpixelTracks,"NpixelTracks/I");
@@ -1955,6 +1969,9 @@ HiOniaAnalyzer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
   hltConfigInit = false;
   if( hltConfig.init(iRun, iSetup, pro, changed) ) hltConfigInit = true;
 
+  hltPrescaleInit = false;
+  if( hltPrescaleProvider.init(iRun, iSetup, pro, changed) ) hltPrescaleInit = true;
+
   return;
 }
 
@@ -2044,7 +2061,7 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
   catch(...) {
     //    std::cout << "[HiOniaAnalyzer::hltReport] --- J/psi TriggerResults NOT present in current event" << std::endl;
   }
-  if ( collTriggerResults.isValid() ){
+  if ( collTriggerResults.isValid() && (collTriggerResults->size()==hltConfig.size()) ){
     //    std::cout << "[HiOniaAnalyzer::hltReport] --- J/psi TriggerResults IS valid in current event" << std::endl;
       
     // loop over Trigger Results to check if paths was fired
@@ -2056,12 +2073,25 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
         }
 
         //-------prescale factor------------
-        /*
-        if (!_isMC) {
-          const std::pair<int,int> prescales(hltConfig.prescaleValues(iEvent,iSetup,triggerPathName));
-          mapTriggerNameToPrescaleFac_[triggerPathName] = prescales.first * prescales.second;
-        }
-        */
+        if ( !_isMC &&  hltPrescaleInit && hltPrescaleProvider.prescaleSet(iEvent,iSetup)>=0 ) {
+          std::pair<std::vector<std::pair<std::string,int> >,int> detailedPrescaleInfo = hltPrescaleProvider.prescaleValuesInDetail(iEvent, iSetup, triggerPathName);
+          //get HLT prescale info from hltPrescaleProvider     
+          const int hltPrescale = detailedPrescaleInfo.second;
+          //get L1 prescale info from hltPrescaleProvider
+          int l1Prescale = 1;     
+          if (detailedPrescaleInfo.first.size()==1) {
+            l1Prescale = detailedPrescaleInfo.first.at(0).second;
+          }
+          else if (detailedPrescaleInfo.first.size()>1) {
+            std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << triggerPathName << " has complex L1 seed " << hltConfig.hltL1GTSeeds(triggerPathName).at(0).second << std::endl;
+            std::cout << "[HiOniaAnalyzer::hltReport] --- Need to define a proper way to compute the total L1 prescale, default L1 prescale value set to 1 "  << std::endl;
+          }
+          else {
+            std::cout << "[HiOniaAnalyzer::hltReport] --- L1 prescale was NOT found for TriggerName " << triggerPathName  << " , default L1 prescale value set to 1 " <<  std::endl;
+          }
+          //compute the total prescale = HLT prescale * L1 prescale
+          mapTriggerNameToPrescaleFac_[triggerPathName] = hltPrescale * l1Prescale;
+        } 
       }
     }
   } else std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerResults NOT valid in current event" << std::endl;
@@ -2108,33 +2138,39 @@ HiOniaAnalyzer::findGenMCInfo(const reco::GenParticle* genJpsi) {
       std::pair<float, float> trueLifePair = std::make_pair(trueLife, trueLife3D);
       std::pair<int, std::pair<float, float>> result = std::make_pair(momJpsiID, trueLifePair);
       return result;
-    } else if (Jpsimom->numberOfMothers()<=0) {
+    } 
+    else if (Jpsimom->numberOfMothers()<=0) {
       if (isAbHadron(Jpsimom->pdgId())) {  
         momJpsiID = Jpsimom->pdgId();
         trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z());
         aBhadron = true;
       }
-    } else {
+    } 
+    else {
       reco::GenParticleRef Jpsigrandmom = Jpsimom->motherRef();   
       if (isAbHadron(Jpsimom->pdgId())) {       
         if (Jpsigrandmom.isNonnull() && isAMixedbHadron(Jpsimom->pdgId(),Jpsigrandmom->pdgId())) {       
           momJpsiID = Jpsigrandmom->pdgId();
           trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-        } else {                  
+        } 
+        else {                  
           momJpsiID = Jpsimom->pdgId();
           trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z());
         }
         aBhadron = true;
-      } else if (Jpsigrandmom.isNonnull() && isAbHadron(Jpsigrandmom->pdgId()))  {        
+      } 
+      else if (Jpsigrandmom.isNonnull() && isAbHadron(Jpsigrandmom->pdgId()))  {        
         if (Jpsigrandmom->numberOfMothers()<=0) {
           momJpsiID = Jpsigrandmom->pdgId();
           trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-        } else { 
+        } 
+        else { 
           reco::GenParticleRef JpsiGrandgrandmom = Jpsigrandmom->motherRef();
           if (JpsiGrandgrandmom.isNonnull() && isAMixedbHadron(Jpsigrandmom->pdgId(),JpsiGrandgrandmom->pdgId())) {
             momJpsiID = JpsiGrandgrandmom->pdgId();
             trueVtxMom.SetXYZ(JpsiGrandgrandmom->vertex().x(),JpsiGrandgrandmom->vertex().y(),JpsiGrandgrandmom->vertex().z());
-          } else {
+          } 
+          else {
             momJpsiID = Jpsigrandmom->pdgId();
             trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
           }
