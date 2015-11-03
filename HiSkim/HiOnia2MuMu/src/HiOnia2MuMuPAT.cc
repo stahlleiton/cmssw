@@ -190,8 +190,9 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
           muonLess.reserve(thePrimaryV.tracksSize());
           if( addMuonlessPrimaryVertex_ && thePrimaryV.tracksSize()>2) {
             // Primary vertex matched to the dimuon, now refit it removing the two muons
-            // This is sure to make sense in the case of pp reconstruction and not PbPb reconstruction; Make sure you know what you are doing.
-            edm::LogWarning("HiOnia2MuMuPAT_addMuonlessPrimaryVertex") << "If muonLessPV is turned on, ctau is calculated with muonLessPV only.\n" ;
+            edm::LogWarning("HiOnia2MuMuPAT_addMuonlessPrimaryVertex") <<
+              "This is sure to make sense in the case of pp reconstruction and not PbPb reconstruction; Make sure you know what you are doing.\n" <<
+              "If muonLessPV is turned on, ctau is calculated with muonLessPV only.\n" ;
 
             // I need to go back to the reco::Muon object, as the TrackRef in the pat::Muon can be an embedded ref.
             const reco::Muon *rmu1 = dynamic_cast<const reco::Muon *>(it->originalObject());
