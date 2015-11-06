@@ -247,10 +247,11 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
           // count the number of high Purity tracks with pT > 900 MeV attached to the chosen vertex      
           // this makes sense only in case of pp reconstruction
+          // -> and this is only necessary when muonLessPV is used!
           double vertexWeight = -1., sumPTPV = -1.;
           int countTksOfPV = -1;
          
-          if(thePVs_==edm::InputTag("offlinePrimaryVertices")) {
+          if (addMuonlessPrimaryVertex_) {
             const reco::Muon *rmu1 = dynamic_cast<const reco::Muon *>(it->originalObject());
             const reco::Muon *rmu2 = dynamic_cast<const reco::Muon *>(it2->originalObject());
             try {
