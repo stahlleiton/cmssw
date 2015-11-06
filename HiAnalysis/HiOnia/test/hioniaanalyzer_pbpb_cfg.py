@@ -3,54 +3,69 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("HIOnia")
 
-# setup 'analysis'  options
+# Conditions
+isPbPb = True;
+isData = True;
+useEventPlane = False;
+muonSelection = "GlbTrk" # GlbGlb, GlbTrk, TrkTrk are availale
+
+# Setup 'analysis'  options
 options = VarParsing.VarParsing ('analysis')
 
 # setup any defaults you want
 options.outputFile = "Jpsi_Histos.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
-options.inputFiles = 'file:/tmp/camelia/onia2MuMuPAT_740_AOD.root'
-options.maxEvents = -1 # -1 means all events
+options.inputFiles = 'file:/home/llr/cms/chapon/data_CMS/promptskims2015/CMSSW_7_5_4/test/step2_reRECO_740_9_1_e5r.root'
+options.maxEvents = 10 # -1 means all events
 
-# get and parse the command line arguments
+# Get and parse the command line arguments
 options.parseArguments()
-
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
-# tag for running on 2011 data in 7xy
+#Global Tag:
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
+if isData:
+  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
+else:
+  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc_HIon', '')
 
-# centrality part
-process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
-process.centralityBin.Centrality             = cms.InputTag("hiCentrality")
-process.centralityBin.centralityVariable     = cms.string("HFtowers")
-process.centralityBin.nonDefaultGlauberModel = cms.string("HydjetDrum5")
+#Centrality Tags for CMSSW 7_5_X: 
+#            Sample                            Centrality Tag                                             
+#        Hydjet 2.76 TeV:  "CentralityTable_HFtowers200_HydjetDrum_run1v750x01_mc"             
+#        Hydjet 5 TeV:     "CentralityTable_HFtowers200_HydjetDrum5_v750x02_mc"                   
+#        Data 2.76 TeV:    "CentralityTable_HFtowers200_Glauber2010A_eff99_run1v750x01_offline"       
+#        Data Run2:        "CentralityTable_HFtowers200_Glauber2015A_v750x01_offline"                    
+#Centrality Variables: 
+#            Sample             Variable 
+#        Hydjet 2.76 TeV:   HFtowersHydjetDrum
+#        Hydjet 5 TeV:      HFtowersHydjetDrum5
+#        Data 2.76 TeV:     HFtowers
+#        Data Run2:         HFtowers#
+#nonDefaultGlauberModels: 
+#            Sample           Name
+#        Hydjet 2.76 TeV:   HydjetDrum
+#        Hydjet 5 TeV:      HydjetDrum5
+
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi") 
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
+process.centralityBin.nonDefaultGlauberModel = cms.string("")   # Only for MC Hydjet  
 
 process.GlobalTag.toGet.extend([
    cms.PSet(record = cms.string("HeavyIonRcd"),
-      tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5_v740x01_mc"),
-      connect = cms.untracked.string("frontier://FrontierProd/CMS_COND_31X_PHYSICSTOOLS"),
-      label = cms.untracked.string("HFtowersHydjetDrum5")
+      tag = cms.string("CentralityTable_HFtowers200_Glauber2010A_eff99_run1v750x01_offline"),
+      connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+      label = cms.untracked.string("HFtowers")
    ),
 ])
 
+# Event plane (Not working currently)
+#process.load("RecoHI.HiEvtPlaneAlgos.HiEvtPlane_cfi")
 
-# event plane
-process.load("RecoHI.HiEvtPlaneAlgos.HiEvtPlane_cfi")
-'''
-process.GlobalTag.toGet.extend([
-        cms.PSet(record = cms.string("HeavyIonRPRcd"),
-                 tag = cms.string('/afs/cern.ch/user/m/mironov/scratch0/CMSSW_7_4_0/src/HiAnalysis/HiOnia/test/HeavyIonRPRcd_Hydjet_74x_v02_mc.db'),
-                 connect = cms.untracked.string("frontier://FrontierProd/CMS_COND_PAT_000")
-                 )
-        ])
-'''
-
-
+#Options:
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 process.source = cms.Source("PoolSource",
@@ -59,6 +74,8 @@ process.source = cms.Source("PoolSource",
     )
 )
 
+'''
+#Trigger Filter
 process.hltDblMuOpen = cms.EDFilter("HLTHighLevel",
                  TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
                  HLTPaths = cms.vstring("HLT_HIL1DoubleMu0_HighQ_v*"),
@@ -66,6 +83,7 @@ process.hltDblMuOpen = cms.EDFilter("HLTHighLevel",
                  andOr = cms.bool(True),
                  throw = cms.bool(False)
 )
+'''
 
 process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                                 srcMuon             = cms.InputTag("patMuonsWithTrigger"),
@@ -107,7 +125,7 @@ process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                                 isPA = cms.untracked.bool(False),
                                 isMC = cms.untracked.bool(False),
                                 isPromptMC = cms.untracked.bool(False),
-                                useEvtPlane = cms.untracked.bool(False),
+                                useEvtPlane = cms.untracked.bool(useEventPlane),
                                 runVersionChange = cms.untracked.uint32(182133),
 
                                 #-- Histogram configuration
@@ -123,18 +141,18 @@ process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                                 
                                 #--
                                 # NumberOfTriggers = cms.uint32(8),
-                                dblTriggerPathNames = cms.vstring("HLT_HIL1DoubleMu0_HighQ_v*",
-                                                                  "HLT_HIL2DoubleMu3_v*",
-                                                                  "HLT_HIL3DoubleMuOpen_v*",
-                                                                  "HLT_HIL3DoubleMuOpen_Mgt2_OS_NoCowboy_v*"),
+                                dblTriggerPathNames = cms.vstring("HLT_HIL1DoubleMu0_HighQ_v2",
+                                                                  "HLT_HIL2DoubleMu3_v2",
+                                                                  "HLT_HIL3DoubleMuOpen_v2",
+                                                                  "HLT_HIL3DoubleMuOpen_Mgt2_OS_NoCowboy_v2"),
                                 dblTriggerFilterNames = cms.vstring("hltHIDoubleMuLevel1PathL1HighQFiltered",
                                                                     "hltHIL2DoubleMu3L2Filtered",
                                                                     "hltHIDimuonL3FilteredOpen",
                                                                     "hltHIDimuonL3FilteredMg2OSnoCowboy"),
-                                sglTriggerPathNames = cms.vstring("HLT_HIL2Mu3_NHitQ_v*",
-                                                                  "HLT_HIL2Mu7_v*",
-                                                                  "HLT_HIL2Mu15_v*",
-                                                                  "HLT_HIL3Mu3_v*"),
+                                sglTriggerPathNames = cms.vstring("HLT_HIL2Mu3_NHitQ_v2",
+                                                                  "HLT_HIL2Mu7_v2",
+                                                                  "HLT_HIL2Mu15_v2",
+                                                                  "HLT_HIL3Mu3_v2"),
                                 sglTriggerFilterNames = cms.vstring("hltHIL2Mu3NHitL2Filtered",
                                                                     "hltHIL2Mu7L2Filtered",
                                                                     "hltHIL2Mu15L2Filtered",
@@ -143,6 +161,4 @@ process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
 
                                 )
 
-
-#process.p = cms.Path(process.hltDblMuOpen*process.hionia)
 process.p = cms.Path(process.centralityBin*process.hionia)

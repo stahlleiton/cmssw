@@ -34,6 +34,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         isPA = cms.untracked.bool(False),
                         isMC = cms.untracked.bool(False),
                         isPromptMC = cms.untracked.bool(False),
+                        useEvtPlane = cms.untracked.bool(False),
 
                         #-- Histogram configuration
                         combineCategories = cms.bool(False),
