@@ -9,7 +9,7 @@ process = cms.Process("Onia2MuMuPAT")
 
 # Conditions
 isPbPb = True;
-isData = True;
+isMC = True;
 keepGeneralTracks = False;
 keepEventPlane = False;
 muonSelection = "GlbTrk" # GlbGlb, GlbTrk, TrkTrk are availale
@@ -43,10 +43,10 @@ process.load("Configuration.StandardSequences.MagneticField_38T_cff")
 # tag for running on 2011 data in 7xy
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-if isData:
-  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
-else:
+if isMC:
   process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc_HIon', '')
+else:
+  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
 
 
 # BSC or HF coincidence (masked unprescaled L1 bits)
@@ -95,7 +95,7 @@ process.hltOniaHI.andOr = True
 process.hltOniaHI.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
 
 from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import *
-onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isData, HLT="HLT", Filter=False)
+onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT="HLT", Filter=False)
 
 ##### Onia2MuMuPAT input collections/options
 process.onia2MuMuPatGlbGlb.dimuonSelection          = cms.string("mass > 0")
@@ -104,18 +104,18 @@ if isPbPb:
   process.onia2MuMuPatGlbGlb.primaryVertexTag         = cms.InputTag("hiSelectedVertex")
   process.patMuonsWithoutTrigger.pvSrc                = cms.InputTag("hiSelectedVertex")
   process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = False
-  if isData:
+  if isMC:
     process.genMuons.src = "hiGenParticles"
 else: # ispp
   process.onia2MuMuPatGlbGlb.primaryVertexTag         = cms.InputTag("offlinePrimaryVertices")
   process.patMuonsWithoutTrigger.pvSrc                = cms.InputTag("offlinePrimaryVertices")
   # Adding muonLessPV gives you lifetime values wrt. muonLessPV only
   process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = True
-  if isData:
+  if isMC:
     process.genMuons.src = "genParticles"
 
 ##### Remove few paths for MC
-if not isData:
+if isMC:
   process.patMuonSequence.remove(process.bscOrHfCoinc)
   process.patMuonSequence.remove(process.collisionEventSelection)
   process.patMuonSequence.remove(process.hltOniaHI)

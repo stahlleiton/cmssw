@@ -17,9 +17,6 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
         fileNames = cms.untracked.vstring()
     )
 
-    # 2011 PbPb reco (glb-glb pairs)
-    IN_ACCEPTANCE = '( (abs(eta)<1.0 && pt>=3.4) || (1.0<=abs(eta)<1.5 && pt>=5.8-2.4*abs(eta)) || (1.5<=abs(eta)<2.4 && pt>=3.3667-7.0/9.0*abs(eta)) )'
-
     # Prune generated particles to muons and their parents
     process.genMuons = cms.EDProducer("GenParticlePruner",
         src = cms.InputTag("hiGenParticles"),
@@ -128,8 +125,6 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
         'keep L1GlobalTriggerRecord_*_*_*',                    # For HLT and L1 prescales
         'keep *_hiSelectedVertex_*_*',
         'keep *_hiCentrality_*_*',
-        'keep *_hiEvtPlane_*_*',                               # for v2 analysis
-        'keep *_hiEvtPlaneFlat_*_*',                           # for v2 analysis
         'keep *_standAloneMuons_*_*'),
         SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('Onia2MuMuPAT') ) if Filter else cms.untracked.PSet()
     )
