@@ -10,12 +10,6 @@
  Implementation:
      [Notes on implementation]
 */
-//
-// Original Author:  Torsten Dahms,40 4-A32,+41227671635,
-//         Created:  Mon Nov 29 03:13:35 CET 2010
-// $Id: HiOniaAnalyzer.cc,v 1.23.2.23 2013/06/18 16:21:49 tdahms Exp $
-//
-//
 
 
 // system include files
@@ -48,17 +42,13 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 #include "DataFormats/HeavyIonEvent/interface/Centrality.h"
 #include "DataFormats/HeavyIonEvent/interface/EvtPlane.h"
 
 #include "HiAnalysis/HiOnia/interface/MyCommonHistoManager.h"
-
-// adding Event Plane by dmoon 
-#include "DataFormats/HeavyIonEvent/interface/EvtPlane.h"
-
-// delta R
 #include "DataFormats/Math/interface/deltaR.h"
 
 //
@@ -343,17 +333,18 @@ private:
   edm::Handle<edm::TriggerResults> collTriggerResults;
 
   // data members
-  edm::InputTag       _patMuon;
-  edm::InputTag       _patMuonNoTrig;
-  edm::InputTag       _patJpsi;
-  edm::InputTag       _recoTracks;
-  edm::InputTag       _genParticle;
-  edm::InputTag       _thePVs;
+  edm::EDGetTokenT<pat::MuonCollection>               _patMuonToken;
+  edm::EDGetTokenT<pat::MuonCollection>               _patMuonNoTrigToken;
+  edm::EDGetTokenT<pat::CompositeCandidateCollection> _patJpsiToken;
+  edm::EDGetTokenT<reco::TrackCollection>             _recoTracksToken;
+  edm::EDGetTokenT<reco::GenParticleCollection>       _genParticleToken;
+  edm::EDGetTokenT<reco::VertexCollection>            _thePVsToken;
+  edm::EDGetTokenT<edm::TriggerResults>               _tagTriggerResultsToken;
+  edm::EDGetTokenT<reco::Centrality>                  _centralityTagToken;
+  edm::EDGetTokenT<int>                               _centralityBinTagToken;
+  edm::EDGetTokenT<reco::EvtPlaneCollection>          _evtPlaneTagToken;
+  edm::EDGetTokenT<reco::EvtPlaneCollection>          _evtPlaneFlatTagToken;
   edm::InputTag       _tagTriggerResults;
-  edm::InputTag       _centralityTag;
-  edm::InputTag       _centralityBinTag;
-  edm::InputTag       _evtPlaneTag;
-  edm::InputTag       _evtPlaneFlatTag;
   std::string         _histfilename;
   std::string         _datasetname;
  
@@ -384,6 +375,7 @@ private:
   bool           _isPA;
   bool           _isMC;
   bool           _isPromptMC;
+  bool           _useEvtPlane;
 
   int _oniaPDG;
 
@@ -452,17 +444,18 @@ private:
 // constructors and destructor
 //
 HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
-  _patMuon(iConfig.getParameter<edm::InputTag>("srcMuon")),
-  _patMuonNoTrig(iConfig.getParameter<edm::InputTag>("srcMuonNoTrig")),
-  _patJpsi(iConfig.getParameter<edm::InputTag>("src")),
-  _recoTracks(iConfig.getParameter<edm::InputTag>("srcTracks")),
-  _genParticle(iConfig.getParameter<edm::InputTag>("genParticles")),
-  _thePVs(iConfig.getParameter<edm::InputTag>("primaryVertexTag")),
+  _patMuonToken(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("srcMuon"))),
+  _patMuonNoTrigToken(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("srcMuonNoTrig"))),
+  _patJpsiToken(consumes<pat::CompositeCandidateCollection>(iConfig.getParameter<edm::InputTag>("src"))),
+  _recoTracksToken(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("srcTracks"))),
+  _genParticleToken(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("genParticles"))),
+  _thePVsToken(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertexTag"))),
+  _tagTriggerResultsToken(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResultsLabel"))),
+  _centralityTagToken(consumes<reco::Centrality>(iConfig.getParameter<edm::InputTag> ("CentralitySrc"))),
+  _centralityBinTagToken(consumes<int>(iConfig.getParameter<edm::InputTag> ("CentralityBinSrc"))),
+  _evtPlaneTagToken(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag> ("EvtPlane"))),
+  _evtPlaneFlatTagToken(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag> ("EvtPlaneFlat"))),
   _tagTriggerResults(iConfig.getParameter<edm::InputTag>("triggerResultsLabel")),
-  _centralityTag(iConfig.getParameter<edm::InputTag> ("CentralitySrc")),
-  _centralityBinTag(iConfig.getParameter<edm::InputTag> ("CentralityBinSrc")),
-  _evtPlaneTag(iConfig.getParameter<edm::InputTag> ("EvtPlane")),
-  _evtPlaneFlatTag(iConfig.getParameter<edm::InputTag> ("EvtPlaneFlat")),
   _histfilename(iConfig.getParameter<std::string>("histFileName")),             
   _datasetname(iConfig.getParameter<std::string>("dataSetName")),
   _centralityranges(iConfig.getParameter< std::vector<double> >("centralityRanges")),           
@@ -492,6 +485,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _isPA(iConfig.getUntrackedParameter<bool>("isPA",true) ),
   _isMC(iConfig.getUntrackedParameter<bool>("isMC",false) ),
   _isPromptMC(iConfig.getUntrackedParameter<bool>("isPromptMC",true) ),
+  _useEvtPlane(iConfig.getUntrackedParameter<bool>("useEvtPlane",false) ),
   _oniaPDG(iConfig.getParameter<int>("oniaPDG")),
   _iConfig(iConfig)
 {
@@ -600,7 +594,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   lumiSection = iEvent.luminosityBlock();
   
   edm::Handle<reco::VertexCollection> privtxs;
-  iEvent.getByLabel(_thePVs, privtxs);
+  iEvent.getByToken(_thePVsToken, privtxs); 
   reco::VertexCollection::const_iterator privtx;
 
   nPV = privtxs->size();
@@ -623,7 +617,6 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hZVtx->Fill(zVtx);
   hPileUp->Fill(nPV);
 
-  return;
   this->hltReport(iEvent, iSetup);
 
   for (unsigned int iTr = 1 ; iTr < theTriggerNames.size() ; iTr++) {
@@ -637,10 +630,10 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (_isHI || _isPA) {
 
     edm::Handle<reco::Centrality> centrality;
-    iEvent.getByLabel(_centralityTag, centrality);
+    iEvent.getByToken(_centralityTagToken, centrality); 
 
     edm::Handle<int> cbin_;
-    iEvent.getByLabel(_centralityBinTag,cbin_);
+    iEvent.getByToken(_centralityBinTagToken, cbin_);
     centBin = *cbin_;
     hCent->Fill(centBin);
     
@@ -710,10 +703,10 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     SumET_ET = 0;
   }
 
-  if (_isHI) {
+  if (_isHI && _useEvtPlane) {
     nEP = 0; 
     edm::Handle<reco::EvtPlaneCollection> flatEvtPlanes;
-    iEvent.getByLabel(_evtPlaneTag,flatEvtPlanes);
+    iEvent.getByToken(_evtPlaneTagToken,flatEvtPlanes);
     
     if(flatEvtPlanes.isValid()) {
       for (reco::EvtPlaneCollection::const_iterator rp = flatEvtPlanes->begin(); rp!=flatEvtPlanes->end(); rp++) {
@@ -729,7 +722,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     nNfEP = 0;
      edm::Handle<reco::EvtPlaneCollection> noFlatEvtPlanes;
-     iEvent.getByLabel(_evtPlaneFlatTag,noFlatEvtPlanes);
+     iEvent.getByToken(_evtPlaneFlatTagToken,noFlatEvtPlanes);
      if(noFlatEvtPlanes.isValid()){
       for (reco::EvtPlaneCollection::const_iterator rp = noFlatEvtPlanes->begin();rp !=noFlatEvtPlanes->end(); rp++) {
         NfRpAng[nNfEP] = rp->angle();
@@ -742,13 +735,13 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout << "Warning! Can't get non-flattened hiEvtPlane product!" << std::endl;
   }
 
-  iEvent.getByLabel(_patJpsi,collJpsi); 
-  iEvent.getByLabel(_patMuon,collMuon);
-  iEvent.getByLabel(_patMuonNoTrig,collMuonNoTrig);
-  iEvent.getByLabel(_recoTracks,collTracks);
+  iEvent.getByToken(_patJpsiToken,collJpsi); 
+  iEvent.getByToken(_patMuonToken,collMuon);
+  iEvent.getByToken(_patMuonNoTrigToken,collMuonNoTrig);
+  iEvent.getByToken(_recoTracksToken,collTracks);
 
   if (_isMC) {
-    iEvent.getByLabel(_genParticle,collGenParticles);
+    iEvent.getByToken(_genParticleToken,collGenParticles);
     this->fillGenInfo();
   }
   
@@ -1272,7 +1265,7 @@ HiOniaAnalyzer::makeCuts(int sign) {
           _thePassedCats[sign].push_back(TrkTrk);  _thePassedCands[sign].push_back(cand);
           continue;
         }
-				*/
+        */
       }
     }
   }
@@ -1311,16 +1304,14 @@ HiOniaAnalyzer::theBestQQ(int sign) {
 
 bool
 HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon) {
-		// for global muons (2011) 
-   return (fabs(aMuon->eta()) < 2.4 &&
-        ((fabs(aMuon->eta()) < 1.0 && aMuon->pt() >= 3.4) ||
-         (1.0 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.5 && aMuon->pt() >= 5.8-2.4*fabs(aMuon->eta())) ||
-         (1.5 <= fabs(aMuon->eta()) && aMuon->pt() >= 3.3667-7.0/9.0*fabs(aMuon->eta()))));
-	// for tracker muons (2013)
-  //return (fabs(aMuon->eta()) < 2.4 &&
-  //        ((fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 3.3) ||
-  //         (1.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
-  //         (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
+  // return (fabs(aMuon->eta()) < 2.4 &&
+  //      ((fabs(aMuon->eta()) < 1.0 && aMuon->pt() >= 3.4) ||
+  //       (1.0 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.5 && aMuon->pt() >= 5.8-2.4*fabs(aMuon->eta())) ||
+  //       (1.5 <= fabs(aMuon->eta()) && aMuon->pt() >= 3.3667-7.0/9.0*fabs(aMuon->eta()))));
+  return (fabs(aMuon->eta()) < 2.4 &&
+          ((fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 3.3) ||
+           (1.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
+           (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
 }
 
 bool
@@ -1619,7 +1610,6 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
       if (muon->isTrackerMuon() && !selTrackerMuon(muon)) muType = muType+pow(2,3); 
 
       if ( (muType&1)==1 ) { //global muons
-      //if ( (muType&2)==2 ) { //tracker muons
         nGoodMuons++;
 
         int trigBits=0;
@@ -2039,7 +2029,7 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
     for (std::map<std::string, unsigned int>::iterator it = mapTriggernameToHLTbit.begin(); it != mapTriggernameToHLTbit.end(); it++) {
       unsigned int triggerIndex= hltConfig.triggerIndex( it->first );
       if (triggerIndex >= n) {
-        //      std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << it->first << " not available in config!" << std::endl;
+              std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << it->first << " not available in config!" << std::endl;
       }
       else {
         it->second= triggerIndex;
@@ -2050,13 +2040,13 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
     
   // Get Trigger Results
   try {
-    iEvent.getByLabel( _tagTriggerResults, collTriggerResults );
+    iEvent.getByToken( _tagTriggerResultsToken, collTriggerResults );
     //    std::cout << "[HiOniaAnalyzer::hltReport] --- J/psi TriggerResult is present in current event" << std::endl;
   }
   catch(...) {
     //    std::cout << "[HiOniaAnalyzer::hltReport] --- J/psi TriggerResults NOT present in current event" << std::endl;
   }
-  if ( collTriggerResults.isValid() &&  (collTriggerResults->size()==hltConfig.size()) ){
+  if ( collTriggerResults.isValid() && (collTriggerResults->size()==hltConfig.size()) ){
     //    std::cout << "[HiOniaAnalyzer::hltReport] --- J/psi TriggerResults IS valid in current event" << std::endl;
       
     // loop over Trigger Results to check if paths was fired
@@ -2066,10 +2056,9 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
         if (collTriggerResults->accept( mapTriggernameToHLTbit[triggerPathName] ) ){
           mapTriggerNameToIntFired_[triggerPathName] = 3;
         }
-        
         //-------prescale factor------------
-        if ( !_isMC &&  hltConfig.prescaleSet(iEvent,iSetup)>=0 ) {
-          std::pair<std::vector<std::pair<std::string,int> >,int> detailedPrescaleInfo = hltConfig.prescaleValuesInDetail(iEvent, iSetup, triggerPathName);
+        if ( !_isMC && hltConfig.prescaleSet(iEvent,iSetup)>=0 ) { 
+          std::pair<std::vector<std::pair<std::string,int> >,int> detailedPrescaleInfo = hltConfig.prescaleValuesInDetail(iEvent, iSetup, triggerPathName); 
           //get HLT prescale info from hltPrescaleProvider     
           const int hltPrescale = detailedPrescaleInfo.second;
           //get L1 prescale info from hltPrescaleProvider
