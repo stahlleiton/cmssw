@@ -1,13 +1,20 @@
 import FWCore.ParameterSet.Config as cms
 
 hionia = cms.EDAnalyzer('HiOniaAnalyzer',
-                        src = cms.InputTag("onia2MuMuPatTrkTrk"),
-                        srcTracks = cms.InputTag("srcTracks"),
-                        genParticles = cms.InputTag("genMuons"),
+                        srcMuon          = cms.InputTag("patMuonsWithTrigger"),
+                        srcMuonNoTrig    = cms.InputTag("patMuonsWithoutTrigger"),
+                        src              = cms.InputTag("onia2MuMuPatGlbGlb"),
+                        srcTracks        = cms.InputTag("hiGeneralTracks"),
+                        genParticles     = cms.InputTag("genMuons"),
+                        EvtPlane         = cms.InputTag("hiEvtPlane","recoLevel"),
+                        EvtPlaneFlat     = cms.InputTag("hiEvtPlaneFlat",""),
                         primaryVertexTag = cms.InputTag("hiSelectedVertex"),
+                        
                         triggerResultsLabel = cms.InputTag("TriggerResults"),
-                        srcCentrality = cms.InputTag("hiCentrality"),
 
+                        CentralitySrc    = cms.InputTag("hiCentrality"),
+                        CentralityBinSrc = cms.InputTag("centralityBin","HFtowers"),
+                        
                         #-- Reco Details
                         useBeamSpot = cms.bool(False),
                         useRapidity = cms.bool(True),
@@ -17,6 +24,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         
                         pTBinRanges = cms.vdouble(0.5, 3.0, 6.0, 8.0, 10.0, 15.0, 35.0),
                         etaBinRanges = cms.vdouble(0.0, 2.5),
+                        centralityRanges = cms.vdouble(20,40,100),
                         
                         onlyTheBest = cms.bool(False),		
                         applyCuts = cms.bool(True),			
@@ -26,15 +34,17 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         removeTrueMuons = cms.untracked.bool(False),
                         storeSameSign = cms.untracked.bool(False),
                         
-                        muonLessPV = cms.bool(True),
+                        muonLessPV = cms.bool(False),
                         
                         #-- Gen Details
                         oniaPDG = cms.int32(443),
+                        muonSel = cms.string("GlbGlb"),
                         isHI = cms.untracked.bool(True),
                         isPA = cms.untracked.bool(False),
                         isMC = cms.untracked.bool(False),
                         isPromptMC = cms.untracked.bool(False),
                         useEvtPlane = cms.untracked.bool(False),
+                        useGeTracks = cms.untracked.bool(False),
 
                         #-- Histogram configuration
                         combineCategories = cms.bool(False),

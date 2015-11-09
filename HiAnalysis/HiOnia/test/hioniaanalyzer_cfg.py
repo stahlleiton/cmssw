@@ -4,33 +4,36 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 process = cms.Process("HIOnia")
 
 # Conditions
-isPbPb = True;
-isData = True;
-useEventPlane = False;
-muonSelection = "GlbTrk" # GlbGlb, GlbTrk, TrkTrk are availale
+isPbPb = True
+isMC   = False
+useEventPlane    = False
+useGeneralTracks = False
+muonSelection  = "GlbGlb" # Available options: GlbGlb, GlbTrk, TrkTrk, or combanation of them as: GlbGlb+GlbTrk+TrkTrk
 
 # Setup 'analysis'  options
 options = VarParsing.VarParsing ('analysis')
 
 # setup any defaults you want
-options.outputFile = "Jpsi_Histos.root"
+options.outputFile = "Jpsi_TEST.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
-options.inputFiles = 'file:/home/llr/cms/chapon/data_CMS/promptskims2015/CMSSW_7_5_4/test/step2_reRECO_740_9_1_e5r.root'
-options.maxEvents = 10 # -1 means all events
+options.inputFiles = 'file:/home/llr/cms/stahl/OniaCode/CMSSW_7_5_3_patch1/src/HiAnalysis/HiOnia/test/onia2MuMuPAT_740.root'
+#file:/home/llr/cms/chapon/data_CMS/promptskims2015/CMSSW_7_5_4/test/step2_reRECO_740_9_1_e5r.root'
+options.maxEvents = 100 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
 process.load("FWCore.MessageService.MessageLogger_cfi")
+process.MessageLogger.categories.extend(["GetManyWithoutRegistration","GetByLabelWithoutRegistration"])
 process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #Global Tag:
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-if isData:
-  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
+if isMC:
+  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc_hi', '')
 else:
-  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc_HIon', '')
+  process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
 
 #Centrality Tags for CMSSW 7_5_X: 
 #            Sample                            Centrality Tag                                             
@@ -43,24 +46,34 @@ else:
 #        Hydjet 2.76 TeV:   HFtowersHydjetDrum
 #        Hydjet 5 TeV:      HFtowersHydjetDrum5
 #        Data 2.76 TeV:     HFtowers
-#        Data Run2:         HFtowers#
+#        Data Run2:         HFtowers
 #nonDefaultGlauberModels: 
 #            Sample           Name
 #        Hydjet 2.76 TeV:   HydjetDrum
 #        Hydjet 5 TeV:      HydjetDrum5
 
-process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi") 
-process.centralityBin.Centrality = cms.InputTag("hiCentrality")
-process.centralityBin.centralityVariable = cms.string("HFtowers")
-process.centralityBin.nonDefaultGlauberModel = cms.string("")   # Only for MC Hydjet  
+if isPbPb:
+  process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi") 
+  process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+  if isMC:
+    process.centralityBin.centralityVariable = cms.string("HFtowersHydjetDrum5")
+    process.centralityBin.nonDefaultGlauberModel = cms.string("HydjetDrum5")  
+    process.GlobalTag.toGet.extend([cms.PSet(
+          record  = cms.string("HeavyIonRcd"),
+          tag     = cms.string("CentralityTable_HFtowers200_HydjetDrum5_v750x02_mc"),
+          connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+          label   = cms.untracked.string("HFtowersHydjetDrum5")
+          )])
+  else:
+    process.centralityBin.centralityVariable = cms.string("HFtowers")
+    process.centralityBin.nonDefaultGlauberModel = cms.string("")    
+    process.GlobalTag.toGet.extend([cms.PSet(
+          record  = cms.string("HeavyIonRcd"),
+          tag     = cms.string("CentralityTable_HFtowers200_Glauber2010A_eff99_run1v750x01_offline"),
+          connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+          label   = cms.untracked.string("HFtowers")
+          )])
 
-process.GlobalTag.toGet.extend([
-   cms.PSet(record = cms.string("HeavyIonRcd"),
-      tag = cms.string("CentralityTable_HFtowers200_Glauber2010A_eff99_run1v750x01_offline"),
-      connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
-      label = cms.untracked.string("HFtowers")
-   ),
-])
 
 # Event plane (Not working currently)
 #process.load("RecoHI.HiEvtPlaneAlgos.HiEvtPlane_cfi")
@@ -86,18 +99,15 @@ process.hltDblMuOpen = cms.EDFilter("HLTHighLevel",
 '''
 
 process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
+                                #-- Collections
                                 srcMuon             = cms.InputTag("patMuonsWithTrigger"),
                                 srcMuonNoTrig       = cms.InputTag("patMuonsWithoutTrigger"),
                                 src                 = cms.InputTag("onia2MuMuPatGlbGlb"),
                                 srcTracks           = cms.InputTag("hiGeneralTracks"),
-                                genParticles        = cms.InputTag("hiGenParticles"),
-                                primaryVertexTag    = cms.InputTag("hiSelectedVertex"),
+                                EvtPlane            = cms.InputTag("hiEvtPlane","recoLevel"),
+                                EvtPlaneFlat        = cms.InputTag("hiEvtPlaneFlat",""),
+
                                 triggerResultsLabel = cms.InputTag("TriggerResults","","HLT"),
-                             
-                                CentralitySrc    = cms.InputTag("hiCentrality"),
-                                CentralityBinSrc = cms.InputTag("centralityBin","HFtowers"),
-                                EvtPlane         = cms.InputTag("hiEvtPlane","recoLevel"),
-                                EvtPlaneFlat     = cms.InputTag("hiEvtPlaneFlat",""),   
 
                                 #-- Reco Details
                                 useBeamSpot = cms.bool(False),
@@ -117,15 +127,16 @@ process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                                 removeSignalEvents = cms.untracked.bool(False),
                                 removeTrueMuons    = cms.untracked.bool(False),
                                 storeSameSign      = cms.untracked.bool(True),
-                                muonLessPV         = cms.bool(False), # this has to be FALSE for HI reco algo
                                 
                                 #-- Gen Details
                                 oniaPDG = cms.int32(443),
-                                isHI = cms.untracked.bool(True),
+                                muonSel = cms.string(muonSelection),
+                                isHI = cms.untracked.bool(isPbPb),
                                 isPA = cms.untracked.bool(False),
-                                isMC = cms.untracked.bool(False),
+                                isMC = cms.untracked.bool(isMC),
                                 isPromptMC = cms.untracked.bool(False),
                                 useEvtPlane = cms.untracked.bool(useEventPlane),
+                                useGeTracks = cms.untracked.bool(useGeneralTracks),
                                 runVersionChange = cms.untracked.uint32(182133),
 
                                 #-- Histogram configuration
@@ -157,8 +168,25 @@ process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                                                                     "hltHIL2Mu7L2Filtered",
                                                                     "hltHIL2Mu15L2Filtered",
                                                                     "hltHISingleMu3L3Filtered")
-
-
                                 )
+
+if isPbPb:
+  process.hionia.primaryVertexTag = cms.InputTag("hiSelectedVertex")
+  process.hionia.genParticles     = cms.InputTag("hiGenParticles")
+  process.hionia.muonLessPV       = cms.bool(False)
+  process.hionia.CentralitySrc    = cms.InputTag("hiCentrality")
+  if isMC:
+    process.hionia.CentralityBinSrc = cms.InputTag("centralityBin","HFtowersHydjetDrum5")  
+  else:
+    process.hionia.CentralityBinSrc = cms.InputTag("centralityBin","HFtowers")
+else:    
+  process.hionia.primaryVertexTag = cms.InputTag("offlinePrimaryVertices")
+  process.hionia.genParticles     = cms.InputTag("genParticles")
+  process.hionia.muonLessPV       = cms.bool(True)
+  process.hionia.CentralitySrc    = cms.InputTag("")
+  process.hionia.CentralityBinSrc = cms.InputTag("")
+
+
+                           
 
 process.p = cms.Path(process.centralityBin*process.hionia)

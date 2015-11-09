@@ -9,8 +9,8 @@ process = cms.Process("Onia2MuMuPAT")
 
 # Conditions
 isPbPb = True;
-isMC = True;
-keepGeneralTracks = False;
+isMC = False;
+keepGeneralTracks = True;
 keepEventPlane = False;
 muonSelection = "GlbTrk" # GlbGlb, GlbTrk, TrkTrk are availale
 
@@ -19,7 +19,8 @@ options = VarParsing.VarParsing ('analysis')
 
 # setup any defaults you want
 options.inputFiles = 'file:/afs/cern.ch/user/t/tuos/work/public/reco2AOD/round2April28/DIMUON/step2_RAW2DIGI_L1Reco_DIMUONskim_AOD.root'#step2_reRECO_740_100_1_lRV.root'
-options.outputFile = '/tmp/miheejo/onia2MuMuPAT_740_AOD.root'
+#/afs/cern.ch/user/t/tuos/work/public/reco2AOD/round2April28/DIMUON/step2_RAW2DIGI_L1Reco_DIMUONskim_AOD.root'#step2_reRECO_740_100_1_lRV.root'
+options.outputFile = 'onia2MuMuPAT_740.root'
 
 options.maxEvents = -1 # -1 means all events
 
@@ -52,13 +53,14 @@ else:
 # BSC or HF coincidence (masked unprescaled L1 bits)
 process.load('L1Trigger.Skimmer.l1Filter_cfi')
 process.bscOrHfCoinc = process.l1Filter.clone(
-    algorithms = cms.vstring('L1_HcalHfCoincPmORBscMinBiasThresh1_BptxAND_instance1', 'L1_NotBsc2_BscMinBiasOR', 'L1_HcalHfCoincidencePm')
+    algorithms = cms.vstring('*','L1_HcalHfCoincPmORBscMinBiasThresh1_BptxAND_instance1', 'L1_NotBsc2_BscMinBiasOR', 'L1_HcalHfCoincidencePm')
     )
 
 # HLT dimuon trigger
 import HLTrigger.HLTfilters.hltHighLevel_cfi
 process.hltOniaHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
 process.hltOniaHI.HLTPaths = [
+    "*",
     "HLT_HIL1DoubleMu0_v*",
     "HLT_HIL1DoubleMu0_2HF_v*",
     "HLT_HIL1DoubleMu0_2HF0_v*",
@@ -90,6 +92,7 @@ process.hltOniaHI.HLTPaths = [
     "HLT_HIL3Mu15_NHitQ15_2HF_v*",
     "HLT_HIL3Mu15_NHitQ15_2HF0_v*"
                              ]
+
 process.hltOniaHI.throw = False
 process.hltOniaHI.andOr = True
 process.hltOniaHI.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
@@ -106,6 +109,7 @@ if isPbPb:
   process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = False
   if isMC:
     process.genMuons.src = "hiGenParticles"
+    process.onia2MuMuPatGlbGlb.genParticles = "hiGenParticles"
 else: # ispp
   process.onia2MuMuPatGlbGlb.primaryVertexTag         = cms.InputTag("offlinePrimaryVertices")
   process.patMuonsWithoutTrigger.pvSrc                = cms.InputTag("offlinePrimaryVertices")
@@ -113,9 +117,14 @@ else: # ispp
   process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = True
   if isMC:
     process.genMuons.src = "genParticles"
+    process.onia2MuMuPatGlbGlb.genParticles = "genParticles"
 
 ##### Remove few paths for MC
 if isMC:
+  process.patMuonSequence.remove(process.bscOrHfCoinc)
+  process.patMuonSequence.remove(process.collisionEventSelection)
+  process.patMuonSequence.remove(process.hltOniaHI)
+if not isMC:
   process.patMuonSequence.remove(process.bscOrHfCoinc)
   process.patMuonSequence.remove(process.collisionEventSelection)
   process.patMuonSequence.remove(process.hltOniaHI)
@@ -148,8 +157,6 @@ if keepGeneralTracks:
 ##### If event plane collection has to be kept
 if keepEventPlane:
   process.outOnia2MuMu.outputCommands.extend(('keep *_hiEvtPlane_*_*','keep *_hiEvtPlaneFlat_*_*'))
-
-
 
 
 
