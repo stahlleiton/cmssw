@@ -29,9 +29,10 @@
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 
 HiOnia2MuMuPAT::HiOnia2MuMuPAT(const edm::ParameterSet& iConfig):
-  muons_(iConfig.getParameter<edm::InputTag>("muons")),
-  thebeamspot_(iConfig.getParameter<edm::InputTag>("beamSpotTag")),
-  thePVs_(iConfig.getParameter<edm::InputTag>("primaryVertexTag")),
+  muonsToken_(consumes< edm::View<pat::Muon> >(iConfig.getParameter<edm::InputTag>("muons"))),
+  thebeamspotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpotTag"))),
+  thePVsToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertexTag"))),
+  theGenParticlesToken_(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("genParticles"))),
   higherPuritySelection_(iConfig.getParameter<std::string>("higherPuritySelection")),
   lowerPuritySelection_(iConfig.getParameter<std::string>("lowerPuritySelection")),
   dimuonSelection_(iConfig.existsAs<std::string>("dimuonSelection") ? iConfig.getParameter<std::string>("dimuonSelection") : ""),
@@ -40,7 +41,7 @@ HiOnia2MuMuPAT::HiOnia2MuMuPAT(const edm::ParameterSet& iConfig):
   resolveAmbiguity_(iConfig.getParameter<bool>("resolvePileUpAmbiguity")),
   addMCTruth_(iConfig.getParameter<bool>("addMCTruth"))
 {  
-    produces<pat::CompositeCandidateCollection>();  
+  produces<pat::CompositeCandidateCollection>();  
 }
 
 
@@ -81,12 +82,12 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // get the stored reco BS, and copy its position in a Vertex object (theBeamSpotV)
   Handle<BeamSpot> theBeamSpot;
-  iEvent.getByLabel(thebeamspot_,theBeamSpot);
+  iEvent.getByToken(thebeamspotToken_,theBeamSpot);
   BeamSpot bs = *theBeamSpot;
   theBeamSpotV = Vertex(bs.position(), bs.covariance3D());
 
   Handle<VertexCollection> priVtxs;
-  iEvent.getByLabel(thePVs_, priVtxs);
+  iEvent.getByToken(thePVsToken_, priVtxs);
   if ( priVtxs->begin() != priVtxs->end() ) {
     thePrimaryV = Vertex(*(priVtxs->begin()));
   }
@@ -96,7 +97,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
  
   // // ---------------------------
   Handle< View<pat::Muon> > muons;
-  iEvent.getByLabel(muons_,muons);
+  iEvent.getByToken(muonsToken_ , muons);
 
   edm::ESHandle<TransientTrackBuilder> theTTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theTTBuilder);
@@ -247,11 +248,12 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
           // count the number of high Purity tracks with pT > 900 MeV attached to the chosen vertex      
           // this makes sense only in case of pp reconstruction
-          // -> and this is only necessary when muonLessPV is used!
           double vertexWeight = -1., sumPTPV = -1.;
           int countTksOfPV = -1;
          
-          if (addMuonlessPrimaryVertex_) {
+          EDConsumerBase::Labels thePVsLabel;
+          EDConsumerBase::labelsForToken(thePVsToken_, thePVsLabel);
+          if(thePVsLabel.module==(std::string)("offlinePrimaryVertices")) {
             const reco::Muon *rmu1 = dynamic_cast<const reco::Muon *>(it->originalObject());
             const reco::Muon *rmu2 = dynamic_cast<const reco::Muon *>(it2->originalObject());
             try {
@@ -403,7 +405,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
           } else {
             Handle<GenParticleCollection>theGenParticles;
-            iEvent.getByLabel("genParticles", theGenParticles);
+            iEvent.getByToken(theGenParticlesToken_, theGenParticles);
             if (theGenParticles.isValid()){
               for(size_t iGenParticle=0; iGenParticle<theGenParticles->size();++iGenParticle) {
                 const Candidate & genCand = (*theGenParticles)[iGenParticle];

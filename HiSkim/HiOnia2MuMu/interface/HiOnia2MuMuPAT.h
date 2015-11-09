@@ -18,6 +18,8 @@
 #include "DataFormats/Provenance/interface/Provenance.h"
 #include <DataFormats/PatCandidates/interface/CompositeCandidate.h>
 #include <DataFormats/PatCandidates/interface/Muon.h>
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include <CommonTools/UtilAlgos/interface/StringCutObjectSelector.h>
 #include "RecoVertex/VertexTools/interface/InvariantMassFromVertex.h"
@@ -52,9 +54,10 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
 
   // ----------member data ---------------------------
   private:
-    edm::InputTag muons_;
-    edm::InputTag thebeamspot_;
-    edm::InputTag thePVs_;
+    edm::EDGetTokenT< edm::View<pat::Muon> >        muonsToken_;         
+    edm::EDGetTokenT<reco::BeamSpot>                thebeamspotToken_;
+    edm::EDGetTokenT<reco::VertexCollection>        thePVsToken_;
+    edm::EDGetTokenT<reco::GenParticleCollection>   theGenParticlesToken_;
     StringCutObjectSelector<pat::Muon> higherPuritySelection_;
     StringCutObjectSelector<pat::Muon> lowerPuritySelection_; 
     StringCutObjectSelector<reco::Candidate, true> dimuonSelection_;
