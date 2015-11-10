@@ -58,19 +58,15 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
     process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltHIL3MuonCandidates")')
     
     # Common offline event selection
-    process.load("HeavyIonsAnalysis.Configuration.collisionEventSelection_cff")
+    #process.load("HeavyIonsAnalysis.Configuration.collisionEventSelection_cff")
     
     # Make a sequence
     process.patMuonSequence = cms.Sequence(
-        process.bscOrHfCoinc *
         process.hltOniaHI *
-        process.collisionEventSelection *
         process.genMuons *
         process.patMuonsWithTriggerSequence
     )
-    if MC:
-        process.patMuonSequence.remove(process.bscOrHfCoinc)
-    else:
+    if not MC:
         process.patMuonSequence.remove(process.genMuons)
       
     # Make dimuon candidates
@@ -78,11 +74,11 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
         muons                    = cms.InputTag("patMuonsWithTrigger"),
         beamSpotTag              = cms.InputTag("offlineBeamSpot"),
         primaryVertexTag         = cms.InputTag("hiSelectedVertex"),
-        genParticles             = cms.InputTag("hiGenParticles"),
+        genParticles             = cms.InputTag("genParticles"),
         # At least one muon must pass this selection
         higherPuritySelection    = cms.string("(isGlobalMuon || (innerTrack.isNonnull && genParticleRef(0).isNonnull)) && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"),
         # BOTH muons must pass this selection
-        lowerPuritySelection     = cms.string("(isGlobalMuon || isTrackerMuon || (innerTrack.isNonnull && genParticleRef(0).isNonnull)) && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"),
+        lowerPuritySelection     = cms.string("((isGlobalMuon && isTrackerMuon) || (innerTrack.isNonnull && genParticleRef(0).isNonnull)) && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"),
         dimuonSelection          = cms.string(""), ## The dimuon must pass this selection before vertexing
         addCommonVertex          = cms.bool(True), ## Embed the full reco::Vertex out of the common vertex fit
         addMuonlessPrimaryVertex = cms.bool(True), ## Embed the primary vertex re-made from all the tracks except the two muons
