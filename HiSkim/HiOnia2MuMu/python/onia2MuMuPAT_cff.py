@@ -62,15 +62,11 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
     
     # Make a sequence
     process.patMuonSequence = cms.Sequence(
-        process.bscOrHfCoinc *
         process.hltOniaHI *
-        process.collisionEventSelection *
         process.genMuons *
         process.patMuonsWithTriggerSequence
     )
-    if MC:
-        process.patMuonSequence.remove(process.bscOrHfCoinc)
-    else:
+    if not  MC:
         process.patMuonSequence.remove(process.genMuons)
       
     # Make dimuon candidates
@@ -78,7 +74,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True):
         muons                    = cms.InputTag("patMuonsWithTrigger"),
         beamSpotTag              = cms.InputTag("offlineBeamSpot"),
         primaryVertexTag         = cms.InputTag("hiSelectedVertex"),
-        genParticles             = cms.InputTag("hiGenParticles"),
+        genParticles             = cms.InputTag("genParticles"),
         # At least one muon must pass this selection
         higherPuritySelection    = cms.string("(isGlobalMuon || (innerTrack.isNonnull && genParticleRef(0).isNonnull)) && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"),
         # BOTH muons must pass this selection

@@ -49,12 +49,13 @@ if isMC:
 else:
   process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run1_data', '')
 
-
+'''
 # BSC or HF coincidence (masked unprescaled L1 bits)
 process.load('L1Trigger.Skimmer.l1Filter_cfi')
 process.bscOrHfCoinc = process.l1Filter.clone(
     algorithms = cms.vstring('*','L1_HcalHfCoincPmORBscMinBiasThresh1_BptxAND_instance1', 'L1_NotBsc2_BscMinBiasOR', 'L1_HcalHfCoincidencePm')
     )
+'''
 
 # HLT dimuon trigger
 import HLTrigger.HLTfilters.hltHighLevel_cfi
@@ -108,8 +109,8 @@ if isPbPb:
   process.patMuonsWithoutTrigger.pvSrc                = cms.InputTag("hiSelectedVertex")
   process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = False
   if isMC:
-    process.genMuons.src = "hiGenParticles"
-    process.onia2MuMuPatGlbGlb.genParticles = "hiGenParticles"
+    process.genMuons.src = "genParticles"
+    process.onia2MuMuPatGlbGlb.genParticles = "genParticles"
 else: # ispp
   process.onia2MuMuPatGlbGlb.primaryVertexTag         = cms.InputTag("offlinePrimaryVertices")
   process.patMuonsWithoutTrigger.pvSrc                = cms.InputTag("offlinePrimaryVertices")
@@ -121,12 +122,8 @@ else: # ispp
 
 ##### Remove few paths for MC
 if isMC:
-  process.patMuonSequence.remove(process.bscOrHfCoinc)
-  process.patMuonSequence.remove(process.collisionEventSelection)
   process.patMuonSequence.remove(process.hltOniaHI)
 if not isMC:
-  process.patMuonSequence.remove(process.bscOrHfCoinc)
-  process.patMuonSequence.remove(process.collisionEventSelection)
   process.patMuonSequence.remove(process.hltOniaHI)
 
 ##### Dimuon pair selection
@@ -140,12 +137,12 @@ if muonSelection == "GlbGlb":
 elif muonSelection == "GlbTrk":
   highP = "isGlobalMuon";
   process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("("+highP+commonP1+")"+commonP2)
-  lowP = "isGlobalMuon || isTrackerMuon";
+  lowP = "isGlobalMuon && isTrackerMuon";
   process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
 elif muonSelection == "TrkTrk":
-  highP = "isGlobalMuon || isTrackerMuon";
+  highP = "isTrackerMuon";
   process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("("+highP+commonP1+")"+commonP2)
-  lowP = "isGlobalMuon || isTrackerMuon";
+  lowP = "isTrackerMuon";
   process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
 else:
   print "Using default settings in HiSkim/HiOnia2MuMu/python/onia2MuMuPAT_cff.py file!"
