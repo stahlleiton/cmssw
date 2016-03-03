@@ -76,11 +76,11 @@ process.TFileService = cms.Service("TFileService",
 #############################
 # full gen jets followed by filters to select signal-only genjets
 process.load('HeavyIonsAnalysis.JetAnalysis.GenJetSequence')
-process.load('HeavyIonsAnalysis.JetAnalysis.hiSignalGenFilters')
+process.load('HeavyIonsAnalysis.JetAnalysis.hiCleanedGenFilters')
 
 
 # nominal jet reco sequence
-process.load('HeavyIonsAnalysis.JetAnalysis.FullJetSequence_nominalPbPb')
+process.load('HeavyIonsAnalysis.JetAnalysis.FullJetSequence_cleanedPbPb')
 # replace above with this one for JEC:
 #process.load('HeavyIonsAnalysis.JetAnalysis.FullJetSequence_JECPbPb')
 
@@ -157,7 +157,7 @@ process.ana_step = cms.Path(
                             process.hiEvtAnalyzer*
                             process.HiGenParticleAna*
                             process.akHiGenJets +
-                            process.hiSignalGenFilters + 
+                            process.hiCleanedGenFilters + 
                             process.jetSequences +
                             process.ggHiNtuplizer +
                             process.ggHiNtuplizerGED +
