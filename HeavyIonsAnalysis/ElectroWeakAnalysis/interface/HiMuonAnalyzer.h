@@ -45,7 +45,7 @@
 #include <map>
 
 
-typedef std::map< std::string, std::vector< Short_t > >  IndexMap;
+typedef std::map< std::string, std::vector< Char_t > >   IndexMap;
 typedef std::vector< std::string >                       StringVector;
 typedef std::map< std::string , bool >                   StringBoolMap;
 typedef edm::Handle< edm::TriggerResults >               TriggerResultHandle;
@@ -115,12 +115,12 @@ class HiMuonEvent
   std::vector < Float_t        >  Pat_Muon_dBErr;
   
   // Reco Muon Kinematic
-  UShort_t                        Reco_Muon_N;
+  UChar_t                         Reco_Muon_N;
   TClonesArray*                   Reco_Muon_P4;
   std::vector < Char_t         >  Reco_Muon_Charge;
   // Reco Muon Matched Index
-  std::vector < Short_t        >  Reco_Muon_Gen_Index;
-  std::vector < Short_t        >  Reco_Muon_PF_Index;
+  std::vector < Char_t         >  Reco_Muon_Gen_Index;
+  std::vector < Char_t         >  Reco_Muon_PF_Index;
   // Reco Muon ID Flags
   std::vector < Bool_t         >  Reco_Muon_isPFMuon;
   std::vector < Bool_t         >  Reco_Muon_isGlobalMuon;
@@ -205,8 +205,8 @@ class HiMuonEvent
   UShort_t                        Reco_DiMuon_N;
   TClonesArray*                   Reco_DiMuon_P4;
   std::vector < Char_t         >  Reco_DiMuon_Charge;
-  std::vector < UShort_t       >  Reco_DiMuon_Muon1_Index;
-  std::vector < UShort_t       >  Reco_DiMuon_Muon2_Index;
+  std::vector < UChar_t        >  Reco_DiMuon_Muon1_Index;
+  std::vector < UChar_t        >  Reco_DiMuon_Muon2_Index;
   std::vector < Bool_t         >  Reco_DiMuon_isCowBoy;
   TClonesArray*                   Reco_DiMuon_Vertex;
   std::vector < Float_t        >  Reco_DiMuon_VertexProb;
@@ -220,11 +220,11 @@ class HiMuonEvent
   std::vector < Float_t        >  PF_Candidate_Phi;
   std::vector < Float_t        >  PF_Candidate_Pt;
   // PF Muon
-  UShort_t                        PF_Muon_N;
+  UChar_t                         PF_Muon_N;
   TClonesArray*                   PF_Muon_P4;
   std::vector < Char_t         >  PF_Muon_Charge;
-  std::vector < Short_t        >  PF_Muon_Gen_Index;
-  std::vector < Short_t        >  PF_Muon_Reco_Index;
+  std::vector < Char_t         >  PF_Muon_Gen_Index;
+  std::vector < Char_t         >  PF_Muon_Reco_Index;
   // Reco Muon Isolation
   std::vector < Float_t        >  PF_Muon_PFIsoR03_ChargedEM_SumPt;
   std::vector < Float_t        >  PF_Muon_PFIsoR03_NeutralEM_SumEt;
@@ -244,8 +244,8 @@ class HiMuonEvent
   UShort_t                        PF_DiMuon_N;
   TClonesArray*                   PF_DiMuon_P4;
   std::vector < Char_t         >  PF_DiMuon_Charge;
-  std::vector < UShort_t       >  PF_DiMuon_Muon1_Index;
-  std::vector < UShort_t       >  PF_DiMuon_Muon2_Index;
+  std::vector < UChar_t        >  PF_DiMuon_Muon1_Index;
+  std::vector < UChar_t        >  PF_DiMuon_Muon2_Index;
   TClonesArray*                   PF_DiMuon_Vertex;
   std::vector < Float_t        >  PF_DiMuon_VertexProb;
   std::vector < Float_t        >  PF_DiMuon_DCA;
@@ -256,18 +256,17 @@ class HiMuonEvent
   TClonesArray*                   PF_MuonMET_P4T;
   // Gen Particle
   TClonesArray*                   Gen_Particle_P4;
-  std::vector < Char_t         >  Gen_Particle_Charge;
-  std::vector < UInt_t         >  Gen_Particle_PdgId;
-  std::vector < UShort_t       >  Gen_Particle_Status;
+  std::vector < Int_t          >  Gen_Particle_PdgId;
+  std::vector < UChar_t        >  Gen_Particle_Status;
   std::vector < std::vector < UShort_t > >  Gen_Particle_Mother_Index;
   std::vector < std::vector < UShort_t > >  Gen_Particle_Daughter_Index;
   // Gen Muon
-  UShort_t                        Gen_Muon_N;
+  UChar_t                         Gen_Muon_N;
   TClonesArray*                   Gen_Muon_P4;
   std::vector < Char_t         >  Gen_Muon_Charge;
   std::vector < UShort_t       >  Gen_Muon_Particle_Index;
-  std::vector < Short_t        >  Gen_Muon_Reco_Index;
-  std::vector < Short_t        >  Gen_Muon_PF_Index;
+  std::vector < Char_t         >  Gen_Muon_Reco_Index;
+  std::vector < Char_t         >  Gen_Muon_PF_Index;
 };
 
 
@@ -326,14 +325,14 @@ getCollection(const edm::Event & event, const edm::EDGetTokenT<T> token, edm::Ha
 
 template < class inT , class mT >
 static inline
-std::vector< std::vector< Short_t > >
+std::vector< std::vector< Char_t > >
 doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDeltaR, double maxDPtRel)
 {
-  std::vector< Short_t > inV;
-  std::map< Short_t, Short_t > mMap;
+  std::vector< Char_t > inV;
+  std::map< Char_t, Char_t > mMap;
   for (ushort icand = 0; icand < inC.size(); icand++) {
     const reco::Candidate& inCand = inC.at(icand);
-    std::vector< std::pair< float , Short_t > > indexPair;
+    std::vector< std::pair< float , Char_t > > indexPair;
     for (ushort icand2 = 0; icand2 < mC.size(); icand2++) {
       const reco::Candidate& mCand = mC.at(icand2);
       double deltaR = reco::deltaR( inCand.eta(), inCand.phi(), mCand.eta(), mCand.phi());
@@ -344,11 +343,11 @@ doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDel
     inV.push_back( (indexPair.size() > 0) ? indexPair[0].second : -1 );
     if (indexPair.size() > 0) mMap[indexPair[0].second] = icand;
   }
-  std::vector< Short_t > mV;
+  std::vector< Char_t > mV;
   for (ushort icand = 0; icand < mC.size(); icand++) {
     mV.push_back( (mMap.count(icand) > 0) ? mMap[icand] : -1 );
   }
-  std::vector< std::vector< Short_t > > output;
+  std::vector< std::vector< Char_t > > output;
   output.push_back( inV );
   output.push_back( mV );
   return output;
