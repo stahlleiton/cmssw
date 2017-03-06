@@ -68,7 +68,7 @@ HiMuonAnalyzer::~HiMuonAnalyzer()
 void
 HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-
+  hStats_->Fill(0); // Fill "All" bin for each event
   StringBoolMap doMuon;
 
   // Fill Event Tree always
@@ -106,9 +106,7 @@ HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (genParticleHandle.isValid()) {
     for (uint i = 0; i < genParticleHandle->size(); i++ ) {
       const reco::GenParticle& genParticle = genParticleHandle->at(i);
-      if (genParticle.status() == 1) {
-        genParticleCollection.push_back( genParticle );
-      }
+      genParticleCollection.push_back( genParticle );
     }
     doMuon["Gen"] = true;
   }
@@ -116,7 +114,7 @@ HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::sort(genParticleCollection.begin(), genParticleCollection.end(), genParticlePTComparator_);
   reco::GenParticleCollection genMuonCollection;
   for (uint i = 0; i < genParticleCollection.size(); i++ ) {
-    if (abs(genParticleCollection.at(i).pdgId()) == 13) genMuonCollection.push_back( genParticleCollection.at(i) );
+    if ( (abs(genParticleCollection.at(i).pdgId()) == 13) && (genParticleCollection.at(i).status()==1) ) genMuonCollection.push_back( genParticleCollection.at(i) );
   }
 
   // If Reco Muon collection exist, fill the Reco Muon tree
@@ -261,6 +259,15 @@ void
 HiMuonAnalyzer::beginJob()
 {
   firstEvent_ = true;
+  uint NTRIGGERS = _triggerPathNames.size();
+  hStats_ = fs_->make<TH1F>("hStats","hStats;;Number of Events",2*NTRIGGERS+2,0,2*NTRIGGERS+2);
+  hStats_->GetXaxis()->SetBinLabel( 1 , "All_Events" );
+  hStats_->GetXaxis()->SetBinLabel( 2+NTRIGGERS, "All_Muons" );
+  for (uint i = 0; i < NTRIGGERS; ++i ) {
+    hStats_->GetXaxis()->SetBinLabel( (i+2) , _triggerPathNames.at(i).c_str() ); // event trigger firing
+    hStats_->GetXaxis()->SetBinLabel( (i+3+NTRIGGERS) , _triggerPathNames.at(i).c_str() ); // muon trigger matching
+  }
+  hStats_->Sumw2();
 }
 
 // ------------ method called once each job just after ending the event loop  ---------------------
@@ -311,6 +318,7 @@ HiMuonEvent::Fill(const edm::Event& iEvent, const edm::EventSetup& iSetup, const
       }
       this->Event_Trigger_isFired.push_back  ( isTriggerFired       );
       this->Event_Trigger_Prescale.push_back ( prescaleValue        );
+      if (isTriggerFired) hStats_->Fill(iTr+1);
     }
   }
 }
@@ -326,11 +334,13 @@ HiMuonEvent::Fill(const pat::MuonCollection& patMuonCollection, const IndexMap& 
   for (ushort imuon = 0; imuon < patMuonCollection.size(); imuon++) { 
     const pat::Muon& patMuon = patMuonCollection.at(imuon);
     // Pat Muon Information
-    ULong_t trigBits = 0;
+    std::vector<unsigned char> trigBits;
     for (ushort iTr = 0; iTr < filterNames_.size(); iTr++) {
       const pat::TriggerObjectStandAloneCollection muHLTMatchesFilter = patMuon.triggerObjectMatchesByFilter( filterNames_.at(iTr) );
-      if (muHLTMatchesFilter.size() > 0) { trigBits += (ULong_t(1) << iTr); }
+      trigBits.push_back( muHLTMatchesFilter.size() > 0 );
+      if (muHLTMatchesFilter.size() > 0) { hStats_->Fill(2+filterNames_.size()+iTr); }
     }
+    hStats_->Fill(1+filterNames_.size());
     this->Pat_Muon_dB.push_back     ( patMuon.dB  ( pat::Muon::PV2D ) );
     this->Pat_Muon_dBErr.push_back  ( patMuon.edB ( pat::Muon::PV2D ) );
     this->Pat_Muon_TriggerMatched.push_back( trigBits );
@@ -350,7 +360,8 @@ HiMuonEvent::IniTrackBuilder(const edm::EventSetup& iSetup)
 void
 HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap& indexMap, const short muonIndex)
 {
-  for (ushort imuon = 0 , idimuon = 0; imuon < recoMuonCollection.size(); imuon++) {
+  this->Reco_Muon_N = recoMuonCollection.size();
+  for (ushort imuon = 0; imuon < recoMuonCollection.size(); imuon++) {
     if ( (muonIndex >= 0) && (imuon != muonIndex) ) continue;
     const reco::Muon& recoMuon = recoMuonCollection.at(imuon);
     // Reco Muon Information
@@ -557,6 +568,8 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
         InvariantMassFromVertex massCalculator;
         massWErr = massCalculator.invariantMass( VtxForInvMass, _muMasses ).error();
       }
+      ushort idimuon = this->Reco_DiMuon_Charge.size();
+      this->Reco_DiMuon_N = idimuon + 1;
       new ((*this->Reco_DiMuon_P4)[idimuon]) TLorentzVector( diMuonP4 );
       this->Reco_DiMuon_Charge.push_back      ( charge    );
       this->Reco_DiMuon_isCowBoy.push_back    ( isCowBoy  );
@@ -566,7 +579,6 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
       this->Reco_DiMuon_MassError.push_back   ( massWErr  );
       this->Reco_DiMuon_Muon1_Index.push_back ( imuon     );
       this->Reco_DiMuon_Muon2_Index.push_back ( imuon2    );
-      idimuon++;
     }
   }
 }
@@ -589,7 +601,7 @@ HiMuonEvent::pfIsolation(const reco::Candidate& muon, const reco::PFCandidateCol
     const reco::PFCandidate& pfCand = pfCandColl.at(icand);
     if ( (pfCand.particleId() == reco::PFCandidate::mu) && isMatched(muon, pfCand, 0.0000001, 0.0000001) ) continue;
     double deltaR = reco::deltaR(muon.eta(), muon.phi(), pfCand.eta(), pfCand.phi());
-    if ( (deltaR < coneSize) && (deltaR >= vetoArea) ) sumPt += pfCand.pt();
+    if ( (deltaR < coneSize) && (deltaR >= vetoArea) ) ( (pfCand.charge()!=0) ? (sumPt += pfCand.pt()) : (sumPt += pfCand.et()) );
   }
   return sumPt;
 }
@@ -622,38 +634,39 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
     puAlgo.setCheckClosestZVertex(true);
     int ivertex = puAlgo.chargedHadronVertex( priVtxCollection, pfCandidate );
     if( ivertex!=-1 && ivertex!=0 ) { isPFPU = true; }
-    bool keepPFCandidate = false, isCharged = false;
+    bool keepPFCandidate = false;
     // Fill PF Charged EM collection
     if ( pfCandidate.particleId()==reco::PFCandidate::e || pfCandidate.particleId()==reco::PFCandidate::mu ) {
-      pfChargedEMCollection.push_back( pfCandidate ); keepPFCandidate = true; isCharged = true;
+      pfChargedEMCollection.push_back( pfCandidate ); keepPFCandidate = true;
     }
     // Fill PF Charged Hadron collection
     if ( pfCandidate.particleId()==reco::PFCandidate::h && isPFPU==false ) {
-      pfChargedHadronCollection.push_back( pfCandidate ); keepPFCandidate = true; isCharged = true;
+      pfChargedHadronCollection.push_back( pfCandidate ); keepPFCandidate = true;
     }
     // Fill PF Charged Hadron from PU collection
     if ( pfCandidate.particleId()==reco::PFCandidate::h && isPFPU==true ) {
-      if (pfCandidate.pt() > 0.5 ) { pfChargedHadronPUCollection.push_back( pfCandidate ); keepPFCandidate = true; isCharged = true; }
+      if (pfCandidate.pt() > 0.5 ) { pfChargedHadronPUCollection.push_back( pfCandidate ); keepPFCandidate = true; }
     }
     // Fill PF Neutral EM collection
     if ( pfCandidate.particleId()==reco::PFCandidate::gamma || pfCandidate.particleId()==reco::PFCandidate::egamma_HF ) {
-      if (pfCandidate.pt() > 0.5 ) { pfNeutralEMCollection.push_back( pfCandidate ); keepPFCandidate = true; isCharged = false; }
+      if (pfCandidate.pt() > 0.5 ) { pfNeutralEMCollection.push_back( pfCandidate ); keepPFCandidate = true; }
     }
     // Fill PF Neutral Hadron collection
     if ( pfCandidate.particleId()==reco::PFCandidate::h0 || pfCandidate.particleId()==reco::PFCandidate::h_HF ) {
-      if (pfCandidate.pt() > 0.5 ) { pfNeutralHadronCollection.push_back( pfCandidate );  keepPFCandidate = true; isCharged = false; }
+      if (pfCandidate.pt() > 0.5 ) { pfNeutralHadronCollection.push_back( pfCandidate );  keepPFCandidate = true; }
     }
     if (keepPFCandidate && pfMuonCollection.size()>0) {
       this->PF_Candidate_isPU.push_back ( isPFPU );
       this->PF_Candidate_Id.push_back   ( pfCandidate.particleId() );
       this->PF_Candidate_Eta.push_back  ( pfCandidate.eta()        );
       this->PF_Candidate_Phi.push_back  ( pfCandidate.phi()        );
-      this->PF_Candidate_Pt.push_back   ( isCharged ? pfCandidate.pt() : pfCandidate.et() );
+      this->PF_Candidate_Pt.push_back   ( (pfCandidate.charge()!=0) ? pfCandidate.pt() : pfCandidate.et() );
     }
   }
   pfMETP4.SetPtEtaPhiM( pfMETP4.Pt(), 0.0, pfMETP4.Phi(), 0.0 );
   this->PF_MET_P2.Set( pfMETP4.Px() , pfMETP4.Py() );
   // PF Muon
+  this->PF_Muon_N = pfMuonCollection.size();
   for (ushort imuon = 0, idimuon = 0; imuon < pfMuonCollection.size(); imuon++) { 
     const reco::PFCandidate& pfMuon = pfMuonCollection.at(imuon);
     // PF Muon Information
@@ -731,6 +744,7 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
         InvariantMassFromVertex massCalculator;
         massWErr = massCalculator.invariantMass( VtxForInvMass, _muMasses ).error();
       }
+      this->PF_DiMuon_N = idimuon + 1;
       new ((*this->PF_DiMuon_P4)[idimuon]) TLorentzVector( diMuonP4 );
       this->PF_DiMuon_Charge.push_back      ( charge    );
       new ((*this->PF_DiMuon_Vertex)[idimuon]) TVector3( diMuonVtx );
@@ -745,133 +759,62 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
 }
 
 //--------------------------------------------------------------------------------------------------
-reco::GenParticle 
-HiMuonEvent::findPrevious(const reco::GenParticle& genParticle, const std::bitset< 15 >& statusBits)
+int 
+HiMuonEvent::findGenIndex(const reco::GenParticleRef& genMatchRef, const reco::GenParticleCollection& genCollection)
 {
-  if ((genParticle.statusFlags().flags_ & statusBits)!=0) return genParticle;
-  if (genParticle.numberOfMothers() <= 0)                 return reco::GenParticle();
-  reco::GenParticleRef genPrevious = genParticle.motherRef();
-  if (genPrevious.isNull() || !genPrevious.isAvailable()) return reco::GenParticle();
-  if (genPrevious->pdgId() != genParticle.pdgId())        return reco::GenParticle();
-  return findPrevious( *genPrevious , statusBits );
-}
-
-//--------------------------------------------------------------------------------------------------
-reco::GenParticleRef 
-HiMuonEvent::findMotherRef(const reco::GenParticle& genParticle)
-{
-  if (genParticle.numberOfMothers() <= 0)                return reco::GenParticleRef();
-  reco::GenParticleRef genMother = genParticle.motherRef();
-  if (genMother.isNull() || !genMother.isAvailable())    return reco::GenParticleRef();
-  if (genMother->pdgId() != genParticle.pdgId())         return genMother;
-  return findMotherRef( *genMother );
+  if ( genMatchRef.isNonnull() && genMatchRef.isAvailable() ) {
+    const reco::GenParticle& genMatch = *genMatchRef;
+    for (uint ipar = 0; ipar < genCollection.size(); ipar++ ) {
+      const reco::GenParticle& genParticle = genCollection.at(ipar);
+      if ( isMatched(genParticle, genMatch, 0.0000001, 0.0000001) && (genParticle.pdgId() == genMatch.pdgId()) && (genParticle.status() == genMatch.status()) ) return ipar;
+    }
+  }
+  return -1;
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 HiMuonEvent::Fill(const reco::GenParticleCollection& genParticleCollection, const IndexMap& indexMap)
 {
-  reco::GenParticleCollection genNeutrinoCollection;
   reco::GenParticleCollection genMuonCollection;
-  for (uint i = 0; i < genParticleCollection.size(); i++ ) {
-    const reco::GenParticle& genParticle = genParticleCollection.at(i);
-    if (abs(genParticle.pdgId()) == 13) {
-      genMuonCollection.push_back ( genParticle );
+  std::vector< ushort > genMuonIndex;
+  for (uint ipar = 0; ipar < genParticleCollection.size(); ipar++ ) {
+    const reco::GenParticle& genParticle = genParticleCollection.at(ipar);
+    // Fill the Gen Muon Collection
+    if ( (abs(genParticle.pdgId()) == 13) && (genParticle.status() == 1) ) { genMuonCollection.push_back( genParticle ); genMuonIndex.push_back( ipar ); }
+    // Fill the Gen Particle Variables
+    TLorentzVector p4 = TLorentzVector();
+    p4.SetPtEtaPhiM( genParticle.pt() , genParticle.eta() , genParticle.phi() , genParticle.mass() );
+    new ((*this->Gen_Particle_P4)[ipar]) TLorentzVector( p4 );
+    this->Gen_Particle_Status.push_back ( genParticle.status()     );
+    this->Gen_Particle_PdgId.push_back  ( abs(genParticle.pdgId()) );
+    this->Gen_Particle_Charge.push_back ( genParticle.charge()     );
+    std::vector< ushort > motherIndex;
+    for (uint imom = 0; imom < genParticle.numberOfMothers(); imom++ ) {
+      int index = findGenIndex(genParticle.motherRef(imom), genParticleCollection);
+      if (index >= 0) motherIndex.push_back( index ); 
     }
-    if ( (abs(genParticle.pdgId()) == 12) || (abs(genParticle.pdgId()) == 14) || (abs(genParticle.pdgId()) == 16) ) {
-      genNeutrinoCollection.push_back ( genParticle );
+    this->Gen_Particle_Mother_Index.push_back( motherIndex );
+    std::vector< ushort > daughterIndex;
+    for (uint idau = 0; idau < genParticle.numberOfDaughters(); idau++ ) {
+      int index = findGenIndex(genParticle.daughterRef(idau), genParticleCollection);
+      if (index >= 0) daughterIndex.push_back( index );
     }
+    this->Gen_Particle_Daughter_Index.push_back( daughterIndex );
   }
+  // Gen Muon
+  this->Gen_Muon_N = genMuonCollection.size();
   for (uint  imuon = 0; imuon < genMuonCollection.size(); imuon++ ) {
     const reco::GenParticle& genMuon = genMuonCollection.at(imuon);
     // Gen Muon Information
     TLorentzVector muP4 = TLorentzVector();
     muP4.SetPtEtaPhiM( genMuon.pt() , genMuon.eta() , genMuon.phi() , genMuon.mass() );
     new ((*this->Gen_Muon_P4)[imuon]) TLorentzVector( muP4 );
-    // Check if pre FSR muons exist and save its momenta for Rochester
-    std::bitset< 15 > statusBits; statusBits[reco::GenStatusFlags::kIsLastCopyBeforeFSR] = 1; statusBits[reco::GenStatusFlags::kFromHardProcessBeforeFSR] = 1;
-    const reco::GenParticle& genMuonPreFSR = findPrevious(genMuon, statusBits);
-    muP4.SetPtEtaPhiM( genMuonPreFSR.pt() , genMuonPreFSR.eta() , genMuonPreFSR.phi() , genMuonPreFSR.mass() );
-    new ((*this->Gen_Muon_PreFSR_P4)[imuon]) TLorentzVector( muP4 );
     this->Gen_Muon_Charge.push_back     ( genMuon.charge()           );
+    this->Gen_Muon_Particle_Index.push_back ( genMuonIndex[imuon]    );
     this->Gen_Muon_Reco_Index.push_back ( indexMap.at("RECO")[imuon] );
     this->Gen_Muon_PF_Index.push_back   ( indexMap.at("PF")[imuon]   );
   }
-  for (uint  ineu = 0; ineu < genNeutrinoCollection.size(); ineu++ ) {
-    const reco::GenParticle& genNeu = genNeutrinoCollection.at(ineu);
-    // Gen Neutrino Information
-    TLorentzVector neuP4 = TLorentzVector();
-    neuP4.SetPtEtaPhiM( genNeu.pt() , genNeu.eta() , genNeu.phi() , genNeu.mass() );
-    new ((*this->Gen_Neu_P4)[ineu]) TLorentzVector( neuP4 );
-    this->Gen_Neu_PdgId.push_back      ( abs(genNeu.pdgId())        );
-  }
-  uint idimuon = 0 , imunu = 0;
-  reco::GenParticleCollection genMuonNeuCollection;
-  for (uint  imuon = 0; imuon < genMuonCollection.size(); imuon++ ) {
-    const reco::GenParticle&    genMuon = genMuonCollection.at(imuon);
-    const reco::GenParticleRef& genMom  = findMotherRef(genMuon);
-    // Gen Dimuon
-    for (uint  imuon2 = imuon+1; imuon2 < genMuonCollection.size(); imuon2++ ) {
-      const reco::GenParticle&    genMuon2 = genMuonCollection.at(imuon2);
-      const reco::GenParticleRef& genMom2  = findMotherRef(genMuon2);
-      // Gen Dimuon Information
-      if ( genMom.isNonnull() && genMom.isAvailable() && (genMom == genMom2) ) {
-        TLorentzVector diMuonP4 = TLorentzVector();
-        diMuonP4.SetPtEtaPhiM( genMom->pt() , genMom->eta() , genMom->phi() , genMom->mass() ); 
-        Char_t charge = genMom->charge();
-        UInt_t pdgId = abs(genMom->pdgId());
-        new ((*this->Gen_DiMuon_P4)[idimuon]) TLorentzVector( diMuonP4 );
-        this->Gen_DiMuon_Charge.push_back      ( charge   );
-        this->Gen_DiMuon_PdgId.push_back       ( pdgId    );
-        this->Gen_DiMuon_Muon1_Index.push_back ( imuon    );
-        this->Gen_DiMuon_Muon2_Index.push_back ( imuon2   );
-        idimuon++;
-      }
-    }
-    // Gen Muon+Neutrino
-    for (uint  ineu = 0; ineu < genNeutrinoCollection.size(); ineu++ ) {
-      const reco::GenParticle&    genNeu  = genNeutrinoCollection.at(ineu);
-      const reco::GenParticleRef& genMom2 = findMotherRef(genNeu);
-      // Gen Muon+Neutrino Information
-      if ( genMom.isNonnull() && genMom.isAvailable() && (genMom == genMom2) ) {
-        TLorentzVector muNuP4 = TLorentzVector();
-        muNuP4.SetPtEtaPhiM( genMom->pt() , genMom->eta() , genMom->phi() , genMom->mass() ); 
-        Char_t charge = genMom->charge();
-        UInt_t pdgId = abs(genMom->pdgId());
-        new ((*this->Gen_MuonNeu_P4)[imunu]) TLorentzVector( muNuP4 );
-        this->Gen_MuonNeu_Charge.push_back      ( charge );
-        this->Gen_MuonNeu_PdgId.push_back       ( pdgId  );
-        this->Gen_MuonNeu_Muon_Index.push_back  ( imuon  );
-        this->Gen_MuonNeu_Neu_Index.push_back   ( ineu   );
-        genMuonNeuCollection.push_back( *genMom );
-        imunu++;
-      }
-    }
-  }
-  uint inumunu = 0;
-  for (uint  imunu = 0; imunu < genMuonNeuCollection.size(); imunu++ ) {
-    const reco::GenParticle&    genMuNu = genMuonNeuCollection.at(imunu);
-    const reco::GenParticleRef& genMom  = findMotherRef(genMuNu);
-    for (uint  ineu = 0; ineu < genNeutrinoCollection.size(); ineu++ ) {
-      const reco::GenParticle&    genNeu  = genNeutrinoCollection.at(ineu);
-      const reco::GenParticleRef& genMom2 = findMotherRef(genNeu);
-      // Do not use the same neutrino as the one from the W decay
-      if (ineu == this->Gen_MuonNeu_Neu_Index.at(imunu)) continue;
-      // Gen W+Neutrino Information
-      if ( genMom.isNonnull() && genMom.isAvailable() && (genMom == genMom2) ) {
-        TLorentzVector nuMuNuP4 = TLorentzVector();
-        nuMuNuP4.SetPtEtaPhiM( genMom->pt() , genMom->eta() , genMom->phi() , genMom->mass() ); 
-        Char_t charge = genMom->charge();
-        UInt_t pdgId = abs(genMom->pdgId());
-        new ((*this->Gen_NeuMuonNeu_P4)[inumunu]) TLorentzVector( nuMuNuP4 );
-        this->Gen_NeuMuonNeu_Charge.push_back        ( charge );
-        this->Gen_NeuMuonNeu_PdgId.push_back         ( pdgId  );
-        this->Gen_NeuMuonNeu_MuonNeu_Index.push_back ( imunu  );
-        this->Gen_NeuMuonNeu_Neu_Index.push_back     ( ineu   );
-        inumunu++;
-      }
-    }
-  }  
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -884,18 +827,14 @@ HiMuonEvent::IniArrays()
   this->Reco_Muon_GlobalTrack_P3   = new TClonesArray("TVector3",       100);
   this->Reco_Muon_BestTrack_P3     = new TClonesArray("TVector3",       100);
   this->Reco_Muon_BestTrack_Vertex = new TClonesArray("TVector3",       100);
-  this->Reco_DiMuon_P4             = new TClonesArray("TLorentzVector", 100);
-  this->Reco_DiMuon_Vertex         = new TClonesArray("TVector3",       100);
+  this->Reco_DiMuon_P4             = new TClonesArray("TLorentzVector", 1000);
+  this->Reco_DiMuon_Vertex         = new TClonesArray("TVector3",       1000);
   this->PF_Muon_P4                 = new TClonesArray("TLorentzVector", 100);
-  this->PF_DiMuon_P4               = new TClonesArray("TLorentzVector", 100);
-  this->PF_DiMuon_Vertex           = new TClonesArray("TVector3",       100);
+  this->PF_DiMuon_P4               = new TClonesArray("TLorentzVector", 1000);
+  this->PF_DiMuon_Vertex           = new TClonesArray("TVector3",       1000);
   this->PF_MuonMET_P4T             = new TClonesArray("TLorentzVector", 100);
+  this->Gen_Particle_P4            = new TClonesArray("TLorentzVector", 5000);
   this->Gen_Muon_P4                = new TClonesArray("TLorentzVector", 100);
-  this->Gen_Muon_PreFSR_P4         = new TClonesArray("TLorentzVector", 100);
-  this->Gen_DiMuon_P4              = new TClonesArray("TLorentzVector", 100);
-  this->Gen_Neu_P4                 = new TClonesArray("TLorentzVector", 100);
-  this->Gen_MuonNeu_P4             = new TClonesArray("TLorentzVector", 100);
-  this->Gen_NeuMuonNeu_P4          = new TClonesArray("TLorentzVector", 100);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -919,6 +858,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
   }
   if ( doMuon.at("Reco") && (name == "Reco" || name == "All") ) {
     // Reco Muon Kinematic
+    tree_->Branch("Reco_Muon_N",                      &(this->Reco_Muon_N),          "Reco_Muon_N/s"   );
     tree_->Branch("Reco_Muon_Mom",                    "TClonesArray",   &(this->Reco_Muon_P4), 32000, 0 );
     tree_->Branch("Reco_Muon_Charge",                 &(this->Reco_Muon_Charge)                       );
     // Reco Muon Matched Index
@@ -1011,6 +951,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("Reco_Muon_Trk_sumR03Pt",           &(this->Reco_Muon_IsoR03_SumPt)                 );
     tree_->Branch("Reco_Muon_Trk_sumR05Pt",           &(this->Reco_Muon_IsoR05_SumPt)                 );
     // Reco DiMuon
+    tree_->Branch("Reco_DiMuon_N",                    &(this->Reco_DiMuon_N),       "Reco_DiMuon_N/s" );
     tree_->Branch("Reco_DiMuon_Mom",                  "TClonesArray", &(this->Reco_DiMuon_P4), 32000, 0 );
     tree_->Branch("Reco_DiMuon_Charge",               &(this->Reco_DiMuon_Charge)                     );
     tree_->Branch("Reco_DiMuon_Muon1_Idx",            &(this->Reco_DiMuon_Muon1_Index)                );
@@ -1029,6 +970,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("PF_Candidate_Phi",                 &(this->PF_Candidate_Phi)                       );
     tree_->Branch("PF_Candidate_Pt",                  &(this->PF_Candidate_Pt)                        );
     // PF Muon
+    tree_->Branch("PF_Muon_N",                        &(this->PF_Muon_N),           "PF_Muon_N/s"     );
     tree_->Branch("PF_Muon_Mom",                      "TClonesArray", &(this->PF_Muon_P4), 32000, 0   );
     tree_->Branch("PF_Muon_Charge",                   &(this->PF_Muon_Charge)                         );
     if (doMuon.at("Gen") ) tree_->Branch("PF_Muon_Gen_Idx",               &(this->PF_Muon_Gen_Index)  );
@@ -1049,6 +991,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("PF_Muon_Had_PU_sumR03Pt",          &(this->PF_Muon_PFIsoR03_ChargedHadPU_SumPt)    );
     tree_->Branch("PF_Muon_Had_PU_sumR04Pt",          &(this->PF_Muon_PFIsoR04_ChargedHadPU_SumPt)    );
     // PF DiMuon
+    tree_->Branch("PF_DiMuon_N",                      &(this->PF_DiMuon_N),         "PF_DiMuon_N/s"   );
     tree_->Branch("PF_DiMuon_Mom",                    "TClonesArray", &(this->PF_DiMuon_P4), 32000, 0 );
     tree_->Branch("PF_DiMuon_Charge",                 &(this->PF_DiMuon_Charge)                       );
     tree_->Branch("PF_DiMuon_Muon1_Idx",              &(this->PF_DiMuon_Muon1_Index)                  );
@@ -1063,33 +1006,20 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("PF_MuonMET_TransMom",              "TClonesArray", &(this->PF_MuonMET_P4T), 32000, 0 );
   }
   if ( doMuon.at("Gen") && (name == "Gen" || name == "All") ) {
+    // Gen Particle
+    tree_->Branch("Gen_Particle_Mom",                 "TClonesArray", &(this->Gen_Particle_P4), 32000, 0 );
+    tree_->Branch("Gen_Particle_Charge",              &(this->Gen_Particle_Charge)                    );
+    tree_->Branch("Gen_Particle_PdgId",               &(this->Gen_Particle_PdgId)                     );
+    tree_->Branch("Gen_Particle_Status",              &(this->Gen_Particle_Status)                    );
+    tree_->Branch("Gen_Particle_Mother_Idx",          &(this->Gen_Particle_Mother_Index)              );
+    tree_->Branch("Gen_Particle_Daughter_Idx",        &(this->Gen_Particle_Daughter_Index)            );
     // Gen Muon
+    tree_->Branch("Gen_Muon_N",                       &(this->Gen_Muon_N),          "Gen_Muon_N/s"    );
     tree_->Branch("Gen_Muon_Mom",                     "TClonesArray", &(this->Gen_Muon_P4), 32000, 0  );
-    tree_->Branch("Gen_Muon_PreFSR_Mom",              "TClonesArray", &(this->Gen_Muon_PreFSR_P4), 32000, 0 );
     tree_->Branch("Gen_Muon_Charge",                  &(this->Gen_Muon_Charge)                        );
+    tree_->Branch("Gen_Muon_Particle_Idx",            &(this->Gen_Muon_Particle_Index)                );
     if (doMuon.at("Reco")) tree_->Branch("Gen_Muon_Reco_Idx",         &(this->Gen_Muon_Reco_Index)    );
     if (doMuon.at("PF")  ) tree_->Branch("Gen_Muon_PF_Idx",           &(this->Gen_Muon_PF_Index)      );
-    // Gen DiMuon
-    tree_->Branch("Gen_DiMuon_Mom",                   "TClonesArray", &(this->Gen_DiMuon_P4), 32000, 0 );
-    tree_->Branch("Gen_DiMuon_Charge",                &(this->Gen_DiMuon_Charge)                      );
-    tree_->Branch("Gen_DiMuon_PdgId",                 &(this->Gen_DiMuon_PdgId)                       );
-    tree_->Branch("Gen_DiMuon_Muon1_Idx",             &(this->Gen_DiMuon_Muon1_Index)                 );
-    tree_->Branch("Gen_DiMuon_Muon2_Idx",             &(this->Gen_DiMuon_Muon2_Index)                 );
-    // Gen Neutrino
-    tree_->Branch("Gen_Neutrino_Mom",                 "TClonesArray", &(this->Gen_Neu_P4), 32000, 0   );
-    tree_->Branch("Gen_Neutrino_PdgId",               &(this->Gen_Neu_PdgId)                          );
-    // Gen Muon-Neutrino
-    tree_->Branch("Gen_MuonNeu_Mom",                "TClonesArray", &(this->Gen_MuonNeu_P4), 32000, 0 );
-    tree_->Branch("Gen_MuonNeu_Charge",               &(this->Gen_MuonNeu_Charge)                     );
-    tree_->Branch("Gen_MuonNeu_PdgId",                &(this->Gen_MuonNeu_PdgId)                      );
-    tree_->Branch("Gen_MuonNeu_Muon_Idx",             &(this->Gen_MuonNeu_Muon_Index)                 );
-    tree_->Branch("Gen_MuonNeu_Neu_Idx",              &(this->Gen_MuonNeu_Neu_Index)                  );
-    // Gen W-Neutrino
-    tree_->Branch("Gen_NeuMuonNeu_Mom",          "TClonesArray", &(this->Gen_NeuMuonNeu_P4), 32000, 0 );
-    tree_->Branch("Gen_NeuMuonNeu_Charge",            &(this->Gen_NeuMuonNeu_Charge)                  );
-    tree_->Branch("Gen_NeuMuonNeu_PdgId",             &(this->Gen_NeuMuonNeu_PdgId)                   );
-    tree_->Branch("Gen_NeuMuonNeu_MuonNeu_Idx",       &(this->Gen_NeuMuonNeu_MuonNeu_Index)           );
-    tree_->Branch("Gen_NeuMuonNeu_Neu_Idx",           &(this->Gen_NeuMuonNeu_Neu_Index)               );
   }
 }
 
@@ -1114,6 +1044,7 @@ HiMuonEvent::Clear(void)
   this->Pat_Muon_dB.clear();
   this->Pat_Muon_dBErr.clear();
   // Reco Muon Kinematic
+  this->Reco_Muon_N = 0;
   this->Reco_Muon_P4->Clear();
   this->Reco_Muon_Charge.clear();
   // Reco Muon Matched Index
@@ -1200,6 +1131,7 @@ HiMuonEvent::Clear(void)
   this->Reco_Muon_IsoR05_SumPt.clear();
   this->Reco_Muon_IsoR05_Iso.clear();
   // Reco DiMuon
+  this->Reco_DiMuon_N = 0;
   this->Reco_DiMuon_P4->Clear();
   this->Reco_DiMuon_Charge.clear();
   this->Reco_DiMuon_Muon1_Index.clear();
@@ -1216,6 +1148,7 @@ HiMuonEvent::Clear(void)
   this->PF_Candidate_Phi.clear();
   this->PF_Candidate_Pt.clear();
   // PF Muon
+  this->PF_Muon_N = 0;
   this->PF_Muon_P4->Clear();
   this->PF_Muon_Charge.clear();
   this->PF_Muon_Gen_Index.clear();
@@ -1236,6 +1169,7 @@ HiMuonEvent::Clear(void)
   this->PF_Muon_PFIsoR04_IsoPUCorr.clear();
   this->PF_Muon_PFIsoR04_IsoNoPUCorr.clear();
   // PF DiMuon
+  this->PF_DiMuon_N = 0;
   this->PF_DiMuon_P4->Clear();
   this->PF_DiMuon_Charge.clear();
   this->PF_DiMuon_Muon1_Index.clear();
@@ -1248,33 +1182,20 @@ HiMuonEvent::Clear(void)
   this->PF_MET_P2 = TVector2();
   // PF Muon-MET
   this->PF_MuonMET_P4T->Clear();
+  // Gen Particle
+  this->Gen_Particle_P4->Clear();
+  this->Gen_Particle_Charge.clear();
+  this->Gen_Particle_PdgId.clear();
+  this->Gen_Particle_Status.clear();
+  this->Gen_Particle_Mother_Index.clear();
+  this->Gen_Particle_Daughter_Index.clear();
   // Gen Muon
+  this->Gen_Muon_N = 0;
   this->Gen_Muon_P4->Clear();
-  this->Gen_Muon_PreFSR_P4->Clear();
   this->Gen_Muon_Charge.clear();
+  this->Gen_Muon_Particle_Index.clear();
   this->Gen_Muon_Reco_Index.clear();
   this->Gen_Muon_PF_Index.clear();
-  // Gen DiMuon
-  this->Gen_DiMuon_P4->Clear();
-  this->Gen_DiMuon_Charge.clear();
-  this->Gen_DiMuon_PdgId.clear();
-  this->Gen_DiMuon_Muon1_Index.clear();
-  this->Gen_DiMuon_Muon2_Index.clear();
-  // Gen Neutrino
-  this->Gen_Neu_P4->Clear();
-  this->Gen_Neu_PdgId.clear();
-  // Gen Muon-Neutrino
-  this->Gen_MuonNeu_P4->Clear();
-  this->Gen_MuonNeu_Charge.clear();
-  this->Gen_MuonNeu_PdgId.clear();
-  this->Gen_MuonNeu_Muon_Index.clear();
-  this->Gen_MuonNeu_Neu_Index.clear();
-  // Gen W-Neutrino
-  this->Gen_NeuMuonNeu_P4->Clear();
-  this->Gen_NeuMuonNeu_Charge.clear();
-  this->Gen_NeuMuonNeu_PdgId.clear();
-  this->Gen_NeuMuonNeu_MuonNeu_Index.clear();
-  this->Gen_NeuMuonNeu_Neu_Index.clear();
 }
 
 

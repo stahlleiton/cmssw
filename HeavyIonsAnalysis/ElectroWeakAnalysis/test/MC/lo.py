@@ -22,7 +22,7 @@ options = VarParsing.VarParsing ('analysis')
 # Input and Output File Names
 options.outputFile = "HiEWQForest.root"
 options.inputFiles =  "file:step3_Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_RECO_20170206_1.root"
-options.maxEvents = 10 # -1 means all events
+options.maxEvents = -1 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()

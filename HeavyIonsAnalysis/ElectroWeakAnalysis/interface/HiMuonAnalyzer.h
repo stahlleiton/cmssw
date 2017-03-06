@@ -21,7 +21,6 @@
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
-#include "DataFormats/HepMCCandidate/interface/GenStatusFlags.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Math/interface/deltaR.h"
@@ -39,6 +38,7 @@
 #include <TVector3.h>
 #include <TLorentzVector.h>
 #include <TClonesArray.h>
+#include <TH1F.h>
 #include <utility>
 #include <vector>
 #include <string>
@@ -51,6 +51,8 @@ typedef std::map< std::string , bool >                   StringBoolMap;
 typedef edm::Handle< edm::TriggerResults >               TriggerResultHandle;
 typedef edm::ESHandle<TransientTrackBuilder>             ESTransientTrackBuilder;
 
+// Histograms
+TH1F*                 hStats_;
 
 class HiMuonEvent
 {
@@ -73,16 +75,15 @@ class HiMuonEvent
 
   void   Fill                   ( const pat::MuonCollection&,         const IndexMap& );
   void   Fill                   ( const reco::GenParticleCollection&, const IndexMap& );
-  void   Fill                   ( const reco::MuonCollection&,        const IndexMap&,        const short muonIndex = -1   );
+  void   Fill                   ( const reco::MuonCollection&,        const IndexMap&,        const short muonIndex = -1    );
   void   Fill                   ( const reco::PFCandidateCollection&, const IndexMap&,        const reco::VertexCollection& );
   void   Fill                   ( const edm::Event&,                  const edm::EventSetup&, const reco::VertexCollection& );
 
  private:
 
-  bool                  isMatched     ( const reco::Candidate&,    const reco::Candidate&,             double, double );
-  double                pfIsolation   ( const reco::Candidate&,    const reco::PFCandidateCollection&, double, double );
-  reco::GenParticle     findPrevious  ( const reco::GenParticle& , const std::bitset< 15 >& );
-  reco::GenParticleRef  findMotherRef ( const reco::GenParticle& );
+  bool   isMatched              ( const reco::Candidate&,             const reco::Candidate&,             double, double    );
+  double pfIsolation            ( const reco::Candidate&,             const reco::PFCandidateCollection&, double, double    );
+  int    findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleCollection&                    );
 
   ESTransientTrackBuilder         _theTTBuilder;
   const std::vector < double >    _muMasses = { 0.1056583715 , 0.1056583715 };
@@ -109,12 +110,13 @@ class HiMuonEvent
   std::vector < Int_t          >  Event_Trigger_Prescale;
 
   // PAT Muon Info
-  std::vector < ULong_t        >  Pat_Muon_TriggerMatched;
+  std::vector < std::vector < UChar_t > >  Pat_Muon_TriggerMatched;
   std::vector < Float_t        >  Pat_Muon_dB;
   std::vector < Float_t        >  Pat_Muon_dBErr;
   
   // Reco Muon Kinematic
-  TClonesArray*                   Reco_Muon_P4 ;
+  UShort_t                        Reco_Muon_N;
+  TClonesArray*                   Reco_Muon_P4;
   std::vector < Char_t         >  Reco_Muon_Charge;
   // Reco Muon Matched Index
   std::vector < Short_t        >  Reco_Muon_Gen_Index;
@@ -200,6 +202,7 @@ class HiMuonEvent
   std::vector < Float_t        >  Reco_Muon_IsoR05_SumPt;
   std::vector < Float_t        >  Reco_Muon_IsoR05_Iso;
   // Reco DiMuon
+  UShort_t                        Reco_DiMuon_N;
   TClonesArray*                   Reco_DiMuon_P4;
   std::vector < Char_t         >  Reco_DiMuon_Charge;
   std::vector < UShort_t       >  Reco_DiMuon_Muon1_Index;
@@ -217,6 +220,7 @@ class HiMuonEvent
   std::vector < Float_t        >  PF_Candidate_Phi;
   std::vector < Float_t        >  PF_Candidate_Pt;
   // PF Muon
+  UShort_t                        PF_Muon_N;
   TClonesArray*                   PF_Muon_P4;
   std::vector < Char_t         >  PF_Muon_Charge;
   std::vector < Short_t        >  PF_Muon_Gen_Index;
@@ -237,6 +241,7 @@ class HiMuonEvent
   std::vector < Float_t        >  PF_Muon_PFIsoR04_IsoPUCorr;
   std::vector < Float_t        >  PF_Muon_PFIsoR04_IsoNoPUCorr;
   // PF DiMuon
+  UShort_t                        PF_DiMuon_N;
   TClonesArray*                   PF_DiMuon_P4;
   std::vector < Char_t         >  PF_DiMuon_Charge;
   std::vector < UShort_t       >  PF_DiMuon_Muon1_Index;
@@ -249,34 +254,20 @@ class HiMuonEvent
   TVector2                        PF_MET_P2;
   // PF Muon-MET
   TClonesArray*                   PF_MuonMET_P4T;
-
+  // Gen Particle
+  TClonesArray*                   Gen_Particle_P4;
+  std::vector < Char_t         >  Gen_Particle_Charge;
+  std::vector < UInt_t         >  Gen_Particle_PdgId;
+  std::vector < UShort_t       >  Gen_Particle_Status;
+  std::vector < std::vector < UShort_t > >  Gen_Particle_Mother_Index;
+  std::vector < std::vector < UShort_t > >  Gen_Particle_Daughter_Index;
   // Gen Muon
+  UShort_t                        Gen_Muon_N;
   TClonesArray*                   Gen_Muon_P4;
-  TClonesArray*                   Gen_Muon_PreFSR_P4;
   std::vector < Char_t         >  Gen_Muon_Charge;
+  std::vector < UShort_t       >  Gen_Muon_Particle_Index;
   std::vector < Short_t        >  Gen_Muon_Reco_Index;
   std::vector < Short_t        >  Gen_Muon_PF_Index;
-  // Gen DiMuon
-  TClonesArray*                   Gen_DiMuon_P4;
-  std::vector < Char_t         >  Gen_DiMuon_Charge;
-  std::vector < UInt_t         >  Gen_DiMuon_PdgId;
-  std::vector < UShort_t       >  Gen_DiMuon_Muon1_Index;
-  std::vector < UShort_t       >  Gen_DiMuon_Muon2_Index;
-  // Gen Neutrino
-  TClonesArray*                   Gen_Neu_P4;
-  std::vector < UInt_t         >  Gen_Neu_PdgId;
-  // Gen Muon-Neutrino
-  TClonesArray*                   Gen_MuonNeu_P4;
-  std::vector < Char_t         >  Gen_MuonNeu_Charge;
-  std::vector < UInt_t         >  Gen_MuonNeu_PdgId;
-  std::vector < UShort_t       >  Gen_MuonNeu_Muon_Index;
-  std::vector < UShort_t       >  Gen_MuonNeu_Neu_Index;
-  // Gen W-Neutrino
-  TClonesArray*                   Gen_NeuMuonNeu_P4;
-  std::vector < Char_t         >  Gen_NeuMuonNeu_Charge;
-  std::vector < UInt_t         >  Gen_NeuMuonNeu_PdgId;
-  std::vector < UShort_t       >  Gen_NeuMuonNeu_MuonNeu_Index;
-  std::vector < UShort_t       >  Gen_NeuMuonNeu_Neu_Index;
 };
 
 
