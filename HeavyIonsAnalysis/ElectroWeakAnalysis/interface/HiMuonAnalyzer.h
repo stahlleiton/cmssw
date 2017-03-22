@@ -83,7 +83,7 @@ class HiMuonEvent
 
   bool   isMatched              ( const reco::Candidate&,             const reco::Candidate&,             double, double    );
   double pfIsolation            ( const reco::Candidate&,             const reco::PFCandidateCollection&, double, double    );
-  int    findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleCollection&                    );
+  short  findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleCollection&                    );
 
   ESTransientTrackBuilder         _theTTBuilder;
   const std::vector < double >    _muMasses = { 0.1056583715 , 0.1056583715 };
@@ -99,8 +99,8 @@ class HiMuonEvent
   UInt_t                          Event_nRun;
   UShort_t                        Event_nLumi;
   UInt_t                          Event_nBX;
-  ULong_t                         Event_nOrbit;
-  ULong_t                         Event_nEvent;
+  ULong64_t                       Event_nOrbit;
+  ULong64_t                       Event_nEvent;
   // Primary Vertex Information
   TVector3                        Event_PriVtx_Position;
   TVector3                        Event_PriVtx_Error;

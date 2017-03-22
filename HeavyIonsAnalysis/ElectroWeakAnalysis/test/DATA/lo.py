@@ -30,19 +30,19 @@ options.parseArguments()
 # Global Tag:
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '80X_dataRun2_Prompt_v15', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '80X_dataRun2_v19', '') #80X_dataRun2_Prompt_v15
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 
 
 process.GlobalTag.toGet = cms.VPSet(
   cms.PSet(
-    record = cms.string('L1TUtmTriggerMenuRcd'),
-    tag = cms.string("L1Menu_HeavyIons2016_v2_m2_xml"),
+    record = cms.string('EcalLaserAlphasRcd'),
+    tag = cms.string("EcalLaserAlphas_v2_prompt"),
     connect = cms.string('frontier://FrontierProd/CMS_CONDITIONS')
     ),
   cms.PSet(
-    record = cms.string('L1TGlobalPrescalesVetosRcd'),
-    tag = cms.string("L1TGlobalPrescalesVetos_Stage2v0_hlt"),
+    record = cms.string('EcalLaserAPDPNRatiosRcd'),
+    tag = cms.string("EcalLaserAPDPNRatios_prompt_v2"),
     connect = cms.string('frontier://FrontierProd/CMS_CONDITIONS')
     )
 )
@@ -73,7 +73,14 @@ process.selectMuonEvts = cms.EDFilter("PATMuonSelector", src = cms.InputTag( 'pa
 process.selectMuonFilter = cms.EDFilter("PATCandViewCountFilter", minNumber = cms.uint32(1), maxNumber = cms.uint32(9999999), src = cms.InputTag("selectMuonEvts") )
 process.muonSelection = cms.Sequence( process.selectMuonEvts + process.selectMuonFilter )
 
-process.anaMET  = cms.EndPath( process.metAnaSeq )
+process.metAnaNoHF = process.metAna.clone(
+    patMETTag      = cms.InputTag("slimmedMETsNoHF"),
+    pfMETTag       = cms.InputTag("pfMetNoHF"),
+    caloMETTag     = cms.InputTag(""),
+    )
+process.metAnaSeqNoHF = cms.Sequence( process.metAnaNoHF )
+
+process.anaMET  = cms.EndPath( process.metAnaSeq * process.metAnaSeqNoHF )
 #process.anaPath = cms.Path(process.triggerSelection + process.muonSelection + process.pfcandAnalyzer )
 process.anaPath = cms.Path( process.muonAnaSeq )
 

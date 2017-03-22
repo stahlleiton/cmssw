@@ -763,14 +763,16 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
 }
 
 //--------------------------------------------------------------------------------------------------
-int 
+short 
 HiMuonEvent::findGenIndex(const reco::GenParticleRef& genMatchRef, const reco::GenParticleCollection& genCollection)
 {
   if ( genMatchRef.isNonnull() && genMatchRef.isAvailable() ) {
     const reco::GenParticle& genMatch = *genMatchRef;
-    for (uint ipar = 0; ipar < genCollection.size(); ipar++ ) {
+    for (ushort ipar = 0; ipar < genCollection.size(); ipar++ ) {
       const reco::GenParticle& genParticle = genCollection.at(ipar);
-      if ( isMatched(genParticle, genMatch, 0.0000001, 0.0000001) && (genParticle.pdgId() == genMatch.pdgId()) && (genParticle.status() == genMatch.status()) ) return ipar;
+      if ( isMatched(genParticle, genMatch, 0.0000001, 0.0000001) && (genParticle.pdgId() == genMatch.pdgId()) && (genParticle.status() == genMatch.status()) && 
+           (genParticle.numberOfMothers() == genMatch.numberOfMothers()) && (genParticle.numberOfDaughters() == genMatch.numberOfDaughters()) && 
+           (genParticle.statusFlags().flags_ == genMatch.statusFlags().flags_) && (genParticle.collisionId() == genMatch.collisionId()) ) return ipar;
     }
   }
   return -1;
@@ -806,22 +808,22 @@ HiMuonEvent::Fill(const reco::GenParticleCollection& genCollection, const IndexM
     this->Gen_Particle_Status.push_back ( genParticle.status() );
     this->Gen_Particle_PdgId.push_back  ( genParticle.pdgId()  );
     std::vector< ushort > motherIndex;
-    for (uint imom = 0; imom < genParticle.numberOfMothers(); imom++ ) {
+    for (ushort imom = 0; imom < genParticle.numberOfMothers(); imom++ ) {
       short index = findGenIndex(genParticle.motherRef(imom), genParticleCollection);
       if (index >= 0) motherIndex.push_back( index ); 
     }
     this->Gen_Particle_Mother_Index.push_back( motherIndex );
     std::vector< ushort > daughterIndex;
-    for (uint idau = 0; idau < genParticle.numberOfDaughters(); idau++ ) {
+    for (ushort idau = 0; idau < genParticle.numberOfDaughters(); idau++ ) {
       short index = findGenIndex(genParticle.daughterRef(idau), genParticleCollection);
       if (index >= 0) daughterIndex.push_back( index );
-      if (index == -1)  std::cout << "[Error] Daughter not found: " << genParticle.daughterRef(idau)->pdgId() << " pt: " << genParticle.daughterRef(idau)->pt() << std::endl;
+      if (index <  0)  std::cout << "[Error] Daughter not found: " << genParticle.daughterRef(idau)->pdgId() << " pt: " << genParticle.daughterRef(idau)->pt() << std::endl;
     }
     this->Gen_Particle_Daughter_Index.push_back( daughterIndex );
   }
   // Gen Muon
   this->Gen_Muon_N = genMuonCollection.size();
-  for (uint  imuon = 0; imuon < genMuonCollection.size(); imuon++ ) {
+  for (ushort imuon = 0; imuon < genMuonCollection.size(); imuon++ ) {
     const reco::GenParticle& genMuon = genMuonCollection.at(imuon);
     // Gen Muon Information
     TLorentzVector muP4 = TLorentzVector();
@@ -864,8 +866,8 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("Event_Run",                        &(this->Event_nRun),           "Event_Run/i"    );
     tree_->Branch("Event_Lumi",                       &(this->Event_nLumi),          "Event_Lumi/s"   );
     tree_->Branch("Event_Bx",                         &(this->Event_nBX),            "Event_Bx/i"     );
-    tree_->Branch("Event_Orbit",                      &(this->Event_nOrbit),         "Event_Orbit/i"  );
-    tree_->Branch("Event_Number",                     &(this->Event_nEvent),         "Event_Number/i" );
+    tree_->Branch("Event_Orbit",                      &(this->Event_nOrbit),         "Event_Orbit/l"  );
+    tree_->Branch("Event_Number",                     &(this->Event_nEvent),         "Event_Number/l" );
     tree_->Branch("Event_nPV",                        &(this->Event_nPV),            "Event_nPV/b"    );
     tree_->Branch("Event_PriVtx_Pos",                 "TVector3",      &(this->Event_PriVtx_Position) );
     tree_->Branch("Event_PriVtx_Err",                 "TVector3",      &(this->Event_PriVtx_Error   ) );
@@ -875,7 +877,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
   }
   if ( doMuon.at("Reco") && (name == "Reco" || name == "All") ) {
     // Reco Muon Kinematic
-    tree_->Branch("Reco_Muon_N",                      &(this->Reco_Muon_N),          "Reco_Muon_N/s"   );
+    tree_->Branch("Reco_Muon_N",                      &(this->Reco_Muon_N),          "Reco_Muon_N/b"   );
     tree_->Branch("Reco_Muon_Mom",                    "TClonesArray",   &(this->Reco_Muon_P4), 32000, 0 );
     tree_->Branch("Reco_Muon_Charge",                 &(this->Reco_Muon_Charge)                       );
     // Reco Muon Matched Index
@@ -987,7 +989,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("PF_Candidate_Phi",                 &(this->PF_Candidate_Phi)                       );
     tree_->Branch("PF_Candidate_Pt",                  &(this->PF_Candidate_Pt)                        );
     // PF Muon
-    tree_->Branch("PF_Muon_N",                        &(this->PF_Muon_N),           "PF_Muon_N/s"     );
+    tree_->Branch("PF_Muon_N",                        &(this->PF_Muon_N),           "PF_Muon_N/b"     );
     tree_->Branch("PF_Muon_Mom",                      "TClonesArray", &(this->PF_Muon_P4), 32000, 0   );
     tree_->Branch("PF_Muon_Charge",                   &(this->PF_Muon_Charge)                         );
     if (doMuon.at("Gen") ) tree_->Branch("PF_Muon_Gen_Idx",               &(this->PF_Muon_Gen_Index)  );
@@ -1030,7 +1032,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("Gen_Particle_Mother_Idx",          &(this->Gen_Particle_Mother_Index)              );
     tree_->Branch("Gen_Particle_Daughter_Idx",        &(this->Gen_Particle_Daughter_Index)            );
     // Gen Muon
-    tree_->Branch("Gen_Muon_N",                       &(this->Gen_Muon_N),          "Gen_Muon_N/s"    );
+    tree_->Branch("Gen_Muon_N",                       &(this->Gen_Muon_N),          "Gen_Muon_N/b"    );
     tree_->Branch("Gen_Muon_Mom",                     "TClonesArray", &(this->Gen_Muon_P4), 32000, 0  );
     tree_->Branch("Gen_Muon_Charge",                  &(this->Gen_Muon_Charge)                        );
     tree_->Branch("Gen_Muon_Particle_Idx",            &(this->Gen_Muon_Particle_Index)                );

@@ -99,6 +99,10 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
     process.patTaus.isoDeposits = cms.PSet()
     process.patPhotons.isoDeposits = cms.PSet()
     #
+    process.patMETs.srcJetResPhi = cms.string('AK4PF_phi')
+    process.patMETs.srcJetResPt = cms.string('AK4PF_pt')
+    process.patMETs.srcJetSF = cms.string('AK4PF')
+    #
     process.patMuons.embedTrack         = True  # used for IDs
     process.patMuons.embedCombinedMuon  = True  # used for IDs
     process.patMuons.embedMuonBestTrack = True  # used for IDs
@@ -197,6 +201,35 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
                      )
 
     
+    #noHF pfMET =========
+    process.noHFCands = cms.EDFilter("GenericPFCandidateSelector",
+                                     src=cms.InputTag("particleFlow"),
+                                     cut=cms.string("abs(pdgId)!=1 && abs(pdgId)!=2 && abs(eta)<3.0")
+                                     )
+    runMetCorAndUncForMiniAODProduction(process,
+                                        pfCandColl=cms.InputTag("noHFCands"),
+                                        recoMetFromPFCs=True, #needed for HF removal
+                                        jetCollUnskimmed="ak4PFpatJetsWithBtagging",
+                                        jetFlavor="AK4PF_offline",
+                                        jetSelection="pt>15 && abs(eta)<3.",
+                                        postfix="NoHF"
+                                        )
+    process.corrPfMetType1NoHF.src = cms.InputTag("ak4PFJets")
+
+    process.load('PhysicsTools.PatAlgos.slimming.slimmedMETs_cfi')
+    process.slimmedMETsNoHF = process.slimmedMETs.clone()
+    process.slimmedMETsNoHF.src = cms.InputTag("patMETsNoHF")
+    process.slimmedMETsNoHF.rawVariation =  cms.InputTag("patPFMetNoHF")
+    process.slimmedMETsNoHF.t1Uncertainties = cms.InputTag("patPFMetT1%sNoHF") 
+    process.slimmedMETsNoHF.t01Variation = cms.InputTag("patPFMetT0pcT1NoHF")
+    process.slimmedMETsNoHF.t1SmearedVarsAndUncs = cms.InputTag("patPFMetT1Smear%sNoHF")
+    process.slimmedMETsNoHF.tXYUncForRaw = cms.InputTag("patPFMetTxyNoHF")
+    process.slimmedMETsNoHF.tXYUncForT1 = cms.InputTag("patPFMetT1TxyNoHF")
+    process.slimmedMETsNoHF.tXYUncForT01 = cms.InputTag("patPFMetT0pcT1TxyNoHF")
+    process.slimmedMETsNoHF.tXYUncForT1Smear = cms.InputTag("patPFMetT1SmearTxyNoHF")
+    process.slimmedMETsNoHF.tXYUncForT01Smear = cms.InputTag("patPFMetT0pcT1SmearTxyNoHF")
+    del process.slimmedMETsNoHF.caloMET
+    # ================== NoHF pfMET
     #keep this after all addJetCollections otherwise it will attempt computing them also for stuf with no taginfos
     #Some useful BTAG vars
     if not hasattr( process, 'pfImpactParameterTagInfos' ):
@@ -276,7 +309,7 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
     ## Ignore Legacy tight b-tag track selection
 
     from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag , massSearchReplaceParam
-    listSeq = [cms.Sequence( process.patCaloMet + process.ak4PFL1OffsetCorrector ) , process.pfBTagging , process.patCandidates , process.ak4PFL1FastL2L3ResidualCorrectorChain , process.fullPatMetSequence ]
+    listSeq = [cms.Sequence( process.patCaloMet + process.ak4PFL1OffsetCorrector ) , process.pfBTagging , process.patCandidates , process.ak4PFL1FastL2L3ResidualCorrectorChain, process.patMETCorrections, process.patMETCorrectionsNoHF, process.fullPatMetSequence , process.fullPatMetSequenceNoHF ]
     for seq in listSeq:
         massSearchReplaceAnyInputTag(seq,cms.InputTag("ak4PFJetsCHS"),cms.InputTag("ak4PFJets"), skipLabelTest=True)
         massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PFchs"),cms.InputTag("AK4PF_offline"), skipLabelTest=True)

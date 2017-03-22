@@ -31,7 +31,6 @@ options.parseArguments()
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '80X_mcRun2_pA_v4', '')
-process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 
 process.options = cms.untracked.PSet(
     allowUnscheduled = cms.untracked.bool(True)#,
@@ -44,8 +43,14 @@ process.endjob_step = cms.EndPath(process.endOfProcess)
 process.load('HeavyIonsAnalysis.ElectroWeakAnalysis.metAnalyzer_cfi')
 process.load('HeavyIonsAnalysis.ElectroWeakAnalysis.muonAnalyzer_cfi')
 
+process.metAnaNoHF = process.metAna.clone(
+    patMETTag      = cms.InputTag("slimmedMETsNoHF"),
+    pfMETTag       = cms.InputTag("pfMetNoHF"),
+    caloMETTag     = cms.InputTag(""),
+    )
+process.metAnaSeqNoHF = cms.Sequence( process.metAnaNoHF )
 
-process.anaMET  = cms.EndPath( process.metAnaSeq )
+process.anaMET  = cms.EndPath( process.metAnaSeq * process.metAnaSeqNoHF )
 process.anaPath = cms.Path( process.muonAnaSeq )
 
 #Options:
