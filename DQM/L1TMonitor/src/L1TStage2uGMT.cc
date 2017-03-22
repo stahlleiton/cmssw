@@ -221,7 +221,7 @@ void L1TStage2uGMT::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
   ugmtMuonhwEtaAtVtx = ibooker.book1D("ugmtMuonhwEtaAtVtx", "uGMT Muon #eta at vertex", 461, -230.5, 230.5);
   ugmtMuonhwEtaAtVtx->setAxisTitle("Hardware Eta at Vertex", 1);
 
-  ugmtMuonhwPhiAtVtx = ibooker.book1D("ugmtMuonhwPhi", "uGMT Muon #phi at vertex", 576, -0.5, 575.5);
+  ugmtMuonhwPhiAtVtx = ibooker.book1D("ugmtMuonhwPhiAtVtx", "uGMT Muon #phi at vertex", 576, -0.5, 575.5);
   ugmtMuonhwPhiAtVtx->setAxisTitle("Hardware Phi at Vertex", 1);
 
   ugmtMuonhwCharge = ibooker.book1D("ugmtMuonhwCharge", "uGMT Muon Charge", 2, -0.5, 1.5);
@@ -284,15 +284,15 @@ void L1TStage2uGMT::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
   ugmtMuonPhivsEta->setAxisTitle("#eta", 1);
   ugmtMuonPhivsEta->setAxisTitle("#phi", 2);
 
-  ugmtMuonPtvsEtaAtVtx = ibooker.book2D("ugmtMuonPtvsEta", "uGMT Muon p_{T} vs #eta at vertex", 100, -2.5, 2.5, 256, -0.5, 255.5);
-  ugmtMuonPtvsEtaAtVtx->setAxisTitle("#eta", 1);
+  ugmtMuonPtvsEtaAtVtx = ibooker.book2D("ugmtMuonPtvsEtaAtVtx", "uGMT Muon p_{T} vs #eta at vertex", 100, -2.5, 2.5, 256, -0.5, 255.5);
+  ugmtMuonPtvsEtaAtVtx->setAxisTitle("#eta at vertex", 1);
   ugmtMuonPtvsEtaAtVtx->setAxisTitle("p_{T} [GeV]", 2);
 
-  ugmtMuonPtvsPhiAtVtx = ibooker.book2D("ugmtMuonPtvsPhi", "uGMT Muon p_{T} vs #phi at vertex", 64, -3.2, 3.2, 256, -0.5, 255.5);
-  ugmtMuonPtvsPhiAtVtx->setAxisTitle("#phi", 1);
+  ugmtMuonPtvsPhiAtVtx = ibooker.book2D("ugmtMuonPtvsPhiAtVtx", "uGMT Muon p_{T} vs #phi at vertex", 64, -3.2, 3.2, 256, -0.5, 255.5);
+  ugmtMuonPtvsPhiAtVtx->setAxisTitle("#phi at vertex", 1);
   ugmtMuonPtvsPhiAtVtx->setAxisTitle("p_{T} [GeV]", 2);
 
-  ugmtMuonPhiAtVtxvsEtaAtVtx = ibooker.book2D("ugmtMuonPhiAtVtxvsEtaAtVtx", "uGMT Muon #phi_{vtx} vs #eta_{vtx}", 100, -2.5, 2.5, 64, -3.2, 3.2);
+  ugmtMuonPhiAtVtxvsEtaAtVtx = ibooker.book2D("ugmtMuonPhiAtVtxvsEtaAtVtx", "uGMT Muon #phi at vertex vs #eta at vertex", 100, -2.5, 2.5, 64, -3.2, 3.2);
   ugmtMuonPhiAtVtxvsEtaAtVtx->setAxisTitle("#eta at vertex", 1);
   ugmtMuonPhiAtVtxvsEtaAtVtx->setAxisTitle("#phi at vertex", 2);
 
