@@ -2,8 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 #--------------------------------------------------------------------------------
 # parametrization of MET x/y shift vs. sumEt
-from JetMETCorrections.Type1MET.multPhiCorr_741_50nsDY_cfi import multPhiCorr_741_50nsDY as multPhiCorrParams_Txy_50ns
-from JetMETCorrections.Type1MET.multPhiCorr_741_25nsDY_cfi import multPhiCorr_741_25nsDY as multPhiCorrParams_Txy_25ns
+from JetMETCorrections.Type1MET.multPhiCorr_ReMiniAOD_Data_GH_80X_sumPt_cfi.py import multPhiCorr_Data_GH_80X as multPhiCorrParams_Txy_50ns
+from JetMETCorrections.Type1MET.multPhiCorr_ReMiniAOD_Data_GH_80X_sumPt_cfi.py import multPhiCorr_Data_GH_80X as multPhiCorrParams_Txy_25ns
 
 #so far, only one set of parameter
 # this is ugly, but a direct copy does not work
