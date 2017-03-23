@@ -31,7 +31,6 @@ options.parseArguments()
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '80X_dataRun2_v19', '') #80X_dataRun2_Prompt_v15
-process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 
 
 process.GlobalTag.toGet = cms.VPSet(
