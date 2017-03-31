@@ -44,7 +44,7 @@ Implementation:
 HiMuonAnalyzer::HiMuonAnalyzer(const edm::ParameterSet& iConfig):
   _patMuonsToken       ( consumes< edm::View< pat::Muon          > >( iConfig.getParameter< edm::InputTag >( "patMuonsTag"       ) )),
   _recoMuonsToken      ( consumes< edm::View< reco::Muon         > >( iConfig.getParameter< edm::InputTag >( "recoMuonsTag"      ) )),
-  _genParticlesToken   ( consumes< edm::View< reco::GenParticle  > >( iConfig.getParameter< edm::InputTag >( "genParticlesTag"   ) )),
+  _genParticlesToken   ( consumes< reco::GenParticleCollection     >( iConfig.getParameter< edm::InputTag >( "genParticlesTag"   ) )),
   _pfCandidatesToken   ( consumes< edm::View< reco::PFCandidate  > >( iConfig.getParameter< edm::InputTag >( "pfCandidatesTag"   ) )),
   _primaryVertexToken  ( consumes< edm::View< reco::Vertex       > >( iConfig.getParameter< edm::InputTag >( "primaryVertexTag"  ) )),
   _beamSpotToken       ( consumes< reco::BeamSpot                  >( iConfig.getParameter< edm::InputTag >( "beamSpotTag"       ) )),
@@ -100,25 +100,24 @@ HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const reco::Vertex& priVtx = ( ( primaryVertexCollection.size() > 0 ) ? primaryVertexCollection.at(0) : beamSpot );
 
   // If Gen Particle collection exist, fill the Gen Muon tree
-  edm::Handle< edm::View< reco::GenParticle > > genParticleHandle;
+  edm::Handle< reco::GenParticleCollection > genParticleHandle;
   getCollection(iEvent, _genParticlesToken, genParticleHandle);
-  reco::GenParticleCollection genParticleCollection;
+  reco::GenParticleRefVector genParticleRefCollection;
   if (genParticleHandle.isValid()) {
-    for (uint i = 0; i < genParticleHandle->size(); i++ ) {
-      const reco::GenParticle& genParticle = genParticleHandle->at(i);
+    for (auto it = genParticleHandle->begin(); it != genParticleHandle->end(); ++it) {
+      const reco::GenParticle& genParticle = *it;
       if ( ( (abs(genParticle.pdgId()) >  10) && (abs(genParticle.pdgId()) < 19) ) || // Keep all leptons
            ( (abs(genParticle.pdgId()) >  21) && (abs(genParticle.pdgId()) < 25) )    // Keep all EWK bosons
            ){
-        genParticleCollection.push_back( genParticle );
+        genParticleRefCollection.push_back( reco::GenParticleRef(genParticleHandle, it - genParticleHandle->begin()) );
       }
     }
     doMuon["Gen"] = true;
   }
   else { doMuon["Gen"] = false; }
-  std::sort(genParticleCollection.begin(), genParticleCollection.end(), genParticlePTComparator_);
   reco::GenParticleCollection genMuonCollection;
-  for (uint i = 0; i < genParticleCollection.size(); i++ ) {
-    if ( (abs(genParticleCollection.at(i).pdgId()) == 13) && (genParticleCollection.at(i).status()==1) ) genMuonCollection.push_back( genParticleCollection.at(i) );
+  for (uint i = 0; i < genParticleRefCollection.size(); i++ ) {
+    if ( (abs(genParticleRefCollection.at(i)->pdgId()) == 13) && (genParticleRefCollection.at(i)->status()==1) ) genMuonCollection.push_back( *(genParticleRefCollection.at(i)) );
   }
 
   // If Reco Muon collection exist, fill the Reco Muon tree
@@ -232,7 +231,7 @@ HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       muonEvt_[name].Fill( pfCandidateCollection, indexMap_PF, primaryVertexCollection ); 
     }
     if (doMuon["Gen"]  && (name=="Gen" || name=="All")) { 
-      muonEvt_[name].Fill( genParticleCollection, indexMap_GEN ); 
+      muonEvt_[name].Fill( genParticleRefCollection, indexMap_GEN ); 
     }
     if (firstEvent_) {
       muonTree_[name] = fs_->make<TTree>(Form("Muon_%s", name.c_str()), "");
@@ -764,15 +763,12 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
 
 //--------------------------------------------------------------------------------------------------
 short 
-HiMuonEvent::findGenIndex(const reco::GenParticleRef& genMatchRef, const reco::GenParticleCollection& genCollection)
+HiMuonEvent::findGenIndex(const reco::GenParticleRef& genMatchRef, const reco::GenParticleRefVector& genRefCollection)
 {
   if ( genMatchRef.isNonnull() && genMatchRef.isAvailable() ) {
-    const reco::GenParticle& genMatch = *genMatchRef;
-    for (ushort ipar = 0; ipar < genCollection.size(); ipar++ ) {
-      const reco::GenParticle& genParticle = genCollection.at(ipar);
-      if ( isMatched(genParticle, genMatch, 0.0000001, 0.0000001) && (genParticle.pdgId() == genMatch.pdgId()) && (genParticle.status() == genMatch.status()) && 
-           (genParticle.numberOfMothers() == genMatch.numberOfMothers()) && (genParticle.numberOfDaughters() == genMatch.numberOfDaughters()) && 
-           (genParticle.statusFlags().flags_ == genMatch.statusFlags().flags_) && (genParticle.collisionId() == genMatch.collisionId()) ) return ipar;
+    for (ushort ipar = 0; ipar < genRefCollection.size(); ipar++ ) {
+      const reco::GenParticleRef& genParticleRef = genRefCollection.at(ipar);
+      if (genMatchRef == genParticleRef) return ipar;
     }
   }
   return -1;
@@ -780,25 +776,25 @@ HiMuonEvent::findGenIndex(const reco::GenParticleRef& genMatchRef, const reco::G
 
 //--------------------------------------------------------------------------------------------------
 void
-HiMuonEvent::Fill(const reco::GenParticleCollection& genCollection, const IndexMap& indexMap)
+HiMuonEvent::Fill(const reco::GenParticleRefVector& genRefCollection, const IndexMap& indexMap)
 {
   // Search for missing daughters and add them to the gen collection
-  reco::GenParticleCollection genParticleCollection(genCollection);
-  for (uint ipar = 0; ipar < genParticleCollection.size(); ipar++ ) {
-    const reco::GenParticle& genParticle = genParticleCollection.at(ipar);
-    uint numberOfDaughters = genParticle.numberOfDaughters();
+  reco::GenParticleRefVector genParticleRefCollection(genRefCollection);
+  for (uint ipar = 0; ipar < genParticleRefCollection.size(); ipar++ ) {
+    const reco::GenParticleRef& genParticleRef = genParticleRefCollection.at(ipar);
+    uint numberOfDaughters = genParticleRef->numberOfDaughters();
     for (uint idau = 0; idau < numberOfDaughters; idau++ ) {
-      reco::GenParticleRef genDaughterRef = genParticle.daughterRef(idau);
-      if ( genDaughterRef.isNonnull() && genDaughterRef.isAvailable() && (findGenIndex(genDaughterRef, genParticleCollection) == -1) ) { 
-        genParticleCollection.push_back( *genDaughterRef ); 
+      reco::GenParticleRef genDaughterRef = genParticleRef->daughterRef(idau);
+      if ( genDaughterRef.isNonnull() && genDaughterRef.isAvailable() && (findGenIndex(genDaughterRef, genParticleRefCollection) == -1) ) { 
+        genParticleRefCollection.push_back( genDaughterRef ); 
       }
     }
   }
   // Loop over the Gen Particle Collection
   std::vector< UChar_t > genMuonIndex;
   reco::GenParticleCollection genMuonCollection;
-  for (uint ipar = 0; ipar < genParticleCollection.size(); ipar++ ) {
-    const reco::GenParticle& genParticle = genParticleCollection.at(ipar);
+  for (uint ipar = 0; ipar < genParticleRefCollection.size(); ipar++ ) {
+    const reco::GenParticle& genParticle = *(genParticleRefCollection.at(ipar));
     // Fill the Gen Muon Collection
     if ( (abs(genParticle.pdgId()) == 13) && (genParticle.status() == 1) ) { genMuonCollection.push_back( genParticle ); genMuonIndex.push_back( ipar ); }
     // Fill the Gen Particle Variables
@@ -809,13 +805,13 @@ HiMuonEvent::Fill(const reco::GenParticleCollection& genCollection, const IndexM
     this->Gen_Particle_PdgId.push_back  ( genParticle.pdgId()  );
     std::vector< ushort > motherIndex;
     for (ushort imom = 0; imom < genParticle.numberOfMothers(); imom++ ) {
-      short index = findGenIndex(genParticle.motherRef(imom), genParticleCollection);
+      short index = findGenIndex(genParticle.motherRef(imom), genParticleRefCollection);
       if (index >= 0) motherIndex.push_back( index ); 
     }
     this->Gen_Particle_Mother_Index.push_back( motherIndex );
     std::vector< ushort > daughterIndex;
     for (ushort idau = 0; idau < genParticle.numberOfDaughters(); idau++ ) {
-      short index = findGenIndex(genParticle.daughterRef(idau), genParticleCollection);
+      short index = findGenIndex(genParticle.daughterRef(idau), genParticleRefCollection);
       if (index >= 0) daughterIndex.push_back( index );
       if (index <  0)  std::cout << "[Error] Daughter not found: " << genParticle.daughterRef(idau)->pdgId() << " pt: " << genParticle.daughterRef(idau)->pt() << std::endl;
     }

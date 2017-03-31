@@ -74,7 +74,7 @@ class HiMuonEvent
   void   IniArrays              ( void );
 
   void   Fill                   ( const pat::MuonCollection&,         const IndexMap& );
-  void   Fill                   ( const reco::GenParticleCollection&, const IndexMap& );
+  void   Fill                   ( const reco::GenParticleRefVector&,  const IndexMap& );
   void   Fill                   ( const reco::MuonCollection&,        const IndexMap&,        const short muonIndex = -1    );
   void   Fill                   ( const reco::PFCandidateCollection&, const IndexMap&,        const reco::VertexCollection& );
   void   Fill                   ( const edm::Event&,                  const edm::EventSetup&, const reco::VertexCollection& );
@@ -83,7 +83,7 @@ class HiMuonEvent
 
   bool   isMatched              ( const reco::Candidate&,             const reco::Candidate&,             double, double    );
   double pfIsolation            ( const reco::Candidate&,             const reco::PFCandidateCollection&, double, double    );
-  short  findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleCollection&                    );
+  short  findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleRefVector&                     );
 
   ESTransientTrackBuilder         _theTTBuilder;
   const std::vector < double >    _muMasses = { 0.1056583715 , 0.1056583715 };
@@ -288,7 +288,7 @@ class HiMuonAnalyzer : public edm::EDAnalyzer
   // Input Info
   const edm::EDGetTokenT< edm::View < pat::Muon         > >   _patMuonsToken;
   const edm::EDGetTokenT< edm::View < reco::Muon        > >   _recoMuonsToken;
-  const edm::EDGetTokenT< edm::View < reco::GenParticle > >   _genParticlesToken;
+  const edm::EDGetTokenT< reco::GenParticleCollection     >   _genParticlesToken;
   const edm::EDGetTokenT< edm::View < reco::PFCandidate > >   _pfCandidatesToken;
   const edm::EDGetTokenT< edm::View < reco::Vertex      > >   _primaryVertexToken;
   const edm::EDGetTokenT< reco::BeamSpot                  >   _beamSpotToken;
