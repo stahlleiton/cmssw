@@ -32,6 +32,7 @@ Implementation:
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "RecoVertex/VertexTools/interface/InvariantMassFromVertex.h"
+#include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 #include "CommonTools/ParticleFlow/interface/PFPileUpAlgo.h"
 
 //system include files
@@ -544,8 +545,11 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
       Char_t charge = recoMuon.charge() + recoMuon2.charge();
       Bool_t isCowBoy = ( ( recoMuon.charge() * TVector2::Phi_mpi_pi( recoMuon.phi() - recoMuon2.phi() ) ) > 0. );
       TVector3 diMuonVtx = TVector3();
-      Float_t vProb    = -1. ;
+      Float_t vProb    = -1.;
       Float_t dca      = -1.;
+      Float_t ctau     = -99.;
+      Float_t ctauErr  = -1.;
+      Float_t cosAlpha = -99.;
       Float_t massWErr = -1.;
       if ( ( recoMuon.muonBestTrack().isNonnull()  && recoMuon.muonBestTrack().isAvailable()  ) && 
            ( recoMuon2.muonBestTrack().isNonnull() && recoMuon2.muonBestTrack().isAvailable() ) ) {
@@ -570,6 +574,13 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
         CachingVertex<5> VtxForInvMass = vtxFitter.vertex( t_tks );
         InvariantMassFromVertex massCalculator;
         massWErr = massCalculator.invariantMass( VtxForInvMass, _muMasses ).error();
+        TVector3 vdiff3D = diMuonVtx - TVector3(privtx_.position().x(), privtx_.position().y(), privtx_.position().z());
+        AlgebraicVector3 vpxyz(diMuonP4.Vect().x(), diMuonP4.Vect().y(), diMuonP4.Vect().z());
+        AlgebraicSymMatrix33 vXYe = GlobalError(privtx_.error()).matrix() + GlobalError((reco::Vertex(diMuonVertex)).error()).matrix();
+        Measurement1D distXYZ = VertexDistance3D().distance(reco::Vertex(diMuonVertex), privtx_);
+        cosAlpha = vdiff3D.Dot(diMuonP4.Vect())/(vdiff3D.Mag()*diMuonP4.Vect().Mag());
+        ctau = distXYZ.value()*cosAlpha*diMuonP4.M()/diMuonP4.Vect().Mag();
+        ctauErr = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*diMuonP4.M()/(diMuonP4.Vect().Mag2());
       }
       ushort idimuon = this->Reco_DiMuon_Charge.size();
       this->Reco_DiMuon_N = idimuon + 1;
@@ -579,6 +590,9 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
       new ((*this->Reco_DiMuon_Vertex)[idimuon]) TVector3( diMuonVtx );
       this->Reco_DiMuon_VertexProb.push_back  ( vProb     );
       this->Reco_DiMuon_DCA.push_back         ( dca       );
+      this->Reco_DiMuon_CTau.push_back        ( ctau      );
+      this->Reco_DiMuon_CTauErr.push_back     ( ctauErr   );
+      this->Reco_DiMuon_CosAlpha.push_back    ( cosAlpha  );
       this->Reco_DiMuon_MassError.push_back   ( massWErr  );
       this->Reco_DiMuon_Muon1_Index.push_back ( imuon     );
       this->Reco_DiMuon_Muon2_Index.push_back ( imuon2    );
@@ -975,6 +989,9 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("Reco_DiMuon_Vertex",               "TClonesArray", &(this->Reco_DiMuon_Vertex), 32000, 0 );
     tree_->Branch("Reco_DiMuon_VtxProb",              &(this->Reco_DiMuon_VertexProb)                 );
     tree_->Branch("Reco_DiMuon_DCA",                  &(this->Reco_DiMuon_DCA)                        );
+    tree_->Branch("Reco_DiMuon_CTau",                 &(this->Reco_DiMuon_CTau)                       );
+    tree_->Branch("Reco_DiMuon_CTauErr",              &(this->Reco_DiMuon_CTauErr)                    );
+    tree_->Branch("Reco_DiMuon_CosAlpha",             &(this->Reco_DiMuon_CosAlpha)                   );
     tree_->Branch("Reco_DiMuon_MassErr",              &(this->Reco_DiMuon_MassError)                  );
   }  
   if ( doMuon.at("PF") && (name == "PF" || name == "All") ) {
@@ -1154,6 +1171,9 @@ HiMuonEvent::Clear(void)
   this->Reco_DiMuon_Vertex->Clear();
   this->Reco_DiMuon_VertexProb.clear();
   this->Reco_DiMuon_DCA.clear();
+  this->Reco_DiMuon_CTau.clear();
+  this->Reco_DiMuon_CTauErr.clear();
+  this->Reco_DiMuon_CosAlpha.clear();
   this->Reco_DiMuon_MassError.clear();
   // PF Candidate
   this->PF_Candidate_isPU.clear();

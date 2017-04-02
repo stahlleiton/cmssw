@@ -211,6 +211,9 @@ class HiMuonEvent
   TClonesArray*                   Reco_DiMuon_Vertex;
   std::vector < Float_t        >  Reco_DiMuon_VertexProb;
   std::vector < Float_t        >  Reco_DiMuon_DCA;
+  std::vector < Float_t        >  Reco_DiMuon_CTau;
+  std::vector < Float_t        >  Reco_DiMuon_CTauErr;
+  std::vector < Float_t        >  Reco_DiMuon_CosAlpha;
   std::vector < Float_t        >  Reco_DiMuon_MassError;
 
   // PF Candidate

@@ -327,7 +327,7 @@ HiMETEvent::SetBranches(const std::string name, const StringBoolMap& doMET)
     this->tree->Branch("Event_Run",          &(this->Event_nRun),               "Event_Run/i");
     this->tree->Branch("Event_Lumi",         &(this->Event_nLumi),              "Event_Lumi/s");
     this->tree->Branch("Event_Bx",           &(this->Event_nBX),                "Event_Bx/i");
-    this->tree->Branch("Event_Number",       &(this->Event_nEvent),             "Event_Number/i");
+    this->tree->Branch("Event_Number",       &(this->Event_nEvent),             "Event_Number/l");
   }
   if ( doMET.at("Reco") && (name == "Reco" || name == "All") ) {
     this->tree->Branch("Reco_MET_Mom",       "TVector2",                        &(this->Reco_P2));

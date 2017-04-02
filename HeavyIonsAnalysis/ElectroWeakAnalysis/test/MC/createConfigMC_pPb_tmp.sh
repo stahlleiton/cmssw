@@ -155,7 +155,7 @@ path=$PWD
 step1DATE=20160202
 step2DATE=20170205
 step3DATE=20170206
-step4DATE=20170309
+step4DATE=20170323
 declare -a stepDates=("$step1DATE" "$step2DATE" "$step3DATE" "$step4DATE")
 
 step1Path=$path/GEN
@@ -177,18 +177,20 @@ for stepPath in "${stepPaths[@]}"; do
     done;
 done;
 
-numJobs=3
-numTotJobs=6
+numJobs=4
+numTotJobs=8
 declare -a workJobs=(
     "Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6"
     "Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6"
     "Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola"
+    "Pythia_QCD_PtHat20_MuEnrichedPt15_8160GeV_pythia8"
     "Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse"
     "Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse"
     "Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse"
+    "Pythia_QCD_PtHat20_MuEnrichedPt15_8160GeV_pythia8_reverse"
 )
-declare -a genOutputPDs=("DYtoMuMu" "WToMuNu" "WToTauNu" "DYtoMuMu" "WToMuNu" "WToTauNu")
-declare -ai genNumCrabEvts='([0]="800" [1]="800" [2]="800" [3]="800" [4]="800" [5]="800")'
+declare -a genOutputPDs=("DYtoMuMu" "WToMuNu" "WToTauNu" "QCD" "DYtoMuMu" "WToMuNu" "WToTauNu" "QCD")
+declare -ai genNumCrabEvts='([0]="800" [1]="800" [2]="800" [3]="800" [4]="800" [5]="800" [6]="800" [7]="800" )'
 
 declare -a rawInputPDs=(
     "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_GEN_20160202-df304e47766b2b2d38e4f1efb5cf96f9/USER"
@@ -215,11 +217,13 @@ declare -a anaInputPDs=(
     "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
     "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
     "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
+    "/QCD/miheejo-PtHat20_MuEnrichedPt15_pPb_RECO_v1-af31df56e13449bd40098ffa7c7e1173/USER"
     "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
     "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
     "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
+    "/QCD/miheejo-PtHat20_MuEnrichedPt15_Pbp_reverse_RECO_v1-af31df56e13449bd40098ffa7c7e1173/USER"
 )
-declare -ai anaNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="2" [4]="2" [5]="2")'
+declare -ai anaNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="14" [4]="2" [5]="2" [6]="2" [7]="14")'
 
 for (( i=4; i<5; i++ )); do
     for (( j=1; j<${numTotJobs}+1; j++ )); do
@@ -254,7 +258,7 @@ for (( i=4; i<5; i++ )); do
             if [ ! -f $crabFileName ]; then
                 delete dir "${stepPaths[$i-1]}/$crabPath/crab_projects/crab_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}/"
                 echo 'Step 1: Producing '${workJobs[$j-1]}' '${stepTypes[$i-1]}' CRAB config file'
-                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${genOutputPDs[$j-1]} ${genNumCrabEvts[$i-1]} 2500 >> $crabFileName
+                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${genOutputPDs[$j-1]} ${genNumCrabEvts[$j-1]} 2500 >> $crabFileName
                 cd ${stepPaths[$i-1]}/$crabPath
                 crab submit -c $crabFileName --dryrun >& $crabLogFileName
             fi
@@ -273,7 +277,7 @@ for (( i=4; i<5; i++ )); do
             if [ ! -f $crabFileName ]; then
                 delete dir "${stepPaths[$i-1]}/$crabPath/crab_projects/crab_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}/"
                 echo 'Step 2: Producing '${workJobs[$j-1]}' '${stepTypes[$i-1]}' CRAB config file'
-                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${rawInputPDs[$j-1]} ${rawNumCrabEvts[$i-1]} >> $crabFileName
+                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${rawInputPDs[$j-1]} ${rawNumCrabEvts[$j-1]} >> $crabFileName
                 cd ${stepPaths[$i-1]}/$crabPath
                 crab submit -c $crabFileName --dryrun >& $crabLogFileName
             fi
@@ -293,7 +297,7 @@ for (( i=4; i<5; i++ )); do
             if [ ! -f $crabFileName ]; then
                 delete dir "${stepPaths[$i-1]}/$crabPath/crab_projects/crab_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}/"
                 echo 'Step 3: Producing '${workJobs[$j-1]}' '${stepTypes[$i-1]}' CRAB config file'
-                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${recoInputPDs[$j-1]} ${recoNumCrabEvts[$i-1]} >> $crabFileName
+                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${recoInputPDs[$j-1]} ${recoNumCrabEvts[$j-1]} >> $crabFileName
                 cd ${stepPaths[$i-1]}/$crabPath
                 crab submit -c $crabFileName --dryrun >& $crabLogFileName
             fi
@@ -304,7 +308,7 @@ for (( i=4; i<5; i++ )); do
             if [ ! -f $crabFileName ]; then
                 delete dir "${stepPaths[$i-1]}/$crabPath/crab_projects/crab_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}/"
                 echo 'Step 4: Producing '${workJobs[$j-1]}' '${stepTypes[$i-1]}' CRAB config file'
-                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${anaInputPDs[$j-1]} ${anaNumCrabEvts[$i-1]} >> $crabFileName
+                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${anaInputPDs[$j-1]} ${anaNumCrabEvts[$j-1]} >> $crabFileName
                 cd ${stepPaths[$i-1]}/$crabPath
                 crab submit -c $crabFileName --dryrun >& $crabLogFileName
             fi

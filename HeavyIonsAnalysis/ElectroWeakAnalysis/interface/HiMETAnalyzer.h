@@ -56,7 +56,7 @@ class HiMETEvent
   UInt_t         Event_nRun;
   UShort_t       Event_nLumi;
   UInt_t         Event_nBX;
-  ULong_t        Event_nEvent;
+  ULong64_t      Event_nEvent;
 
   TVector2       Reco_P2;
   TMatrixD       Reco_SigMatrix;
