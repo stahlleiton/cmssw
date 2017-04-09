@@ -10,6 +10,7 @@ def customiseAddConversionsCollection(process):
     process.load("RecoEgamma.EgammaPhotonProducers.conversionTracks_cff")
     process.load("RecoEgamma.EgammaPhotonProducers.conversionTrackSequence_cff")
     process.load("RecoEgamma.EgammaPhotonProducers.allConversions_cfi")
+    process.load("RecoEgamma.EgammaPhotonProducers.conversions_cfi")
     
     process.pixelLessStepClusters.oldClusterRemovalInfo = cms.InputTag("hiMixedTripletClusters")
     process.pixelLessStepClusters.trackClassifier       = cms.InputTag("")
@@ -18,6 +19,7 @@ def customiseAddConversionsCollection(process):
 
     process.photonConvTrajSeedFromSingleLeg.TrackRefitter = cms.InputTag("hiGeneralTracks")
     process.generalConversionTrackProducer.TrackProducer  = cms.string('hiGeneralTracks')
+    process.conversions.generalTracksSrc                  = cms.InputTag("hiGeneralTracks")
 
     process.photonConvTrajSeedFromSingleLeg.primaryVerticesTag = cms.InputTag("hiSelectedVertex")
     process.convStepSelector.vertices                          = cms.InputTag("hiFirstStepGoodPrimaryVertices")
@@ -34,6 +36,7 @@ def customiseAddConversionsCollection(process):
                                                 * process.conversionStepTracks 
                                                 * process.conversionTrackSequence 
                                                 * process.allConversions
+                                                * process.conversions
                                                 )
 
     ###Add conversions in the sequence
