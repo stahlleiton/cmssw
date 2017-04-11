@@ -340,7 +340,7 @@ doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDel
       const reco::Candidate& mCand = mC.at(icand2);
       double deltaR = reco::deltaR( inCand.eta(), inCand.phi(), mCand.eta(), mCand.phi());
       double dPtRel = abs( inCand.pt() - mCand.pt() ) / (mCand.pt()+1E-9);
-      if ( (deltaR < maxDeltaR) && (dPtRel < maxDPtRel) && (inCand.charge() == mCand.charge()) ) { indexPair.push_back( make_pair( deltaR , icand2 ) ); }
+      if ( (deltaR < maxDeltaR) && (dPtRel < maxDPtRel) && (inCand.charge() == mCand.charge()) ) { indexPair.push_back( std::make_pair( deltaR , icand2 ) ); }
     }
     std::sort(indexPair.begin(), indexPair.end());
     inV.push_back( (indexPair.size() > 0) ? indexPair[0].second : -1 );

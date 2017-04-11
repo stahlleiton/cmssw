@@ -487,8 +487,8 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
     }
     // Reco Muon Isolation
     if (recoMuon.isPFIsolationValid()) {
-      Float_t isoR03PUCorr   = recoMuon.pfIsolationR03().sumChargedHadronPt + max(0., recoMuon.pfIsolationR03().sumNeutralHadronEt + recoMuon.pfIsolationR03().sumPhotonEt - 0.5*recoMuon.pfIsolationR03().sumPUPt );
-      Float_t isoR03NoPUCorr = recoMuon.pfIsolationR03().sumChargedHadronPt + max(0.0f, recoMuon.pfIsolationR03().sumNeutralHadronEt + recoMuon.pfIsolationR03().sumPhotonEt );
+      Float_t isoR03PUCorr   = recoMuon.pfIsolationR03().sumChargedHadronPt + std::max(0., recoMuon.pfIsolationR03().sumNeutralHadronEt + recoMuon.pfIsolationR03().sumPhotonEt - 0.5*recoMuon.pfIsolationR03().sumPUPt );
+      Float_t isoR03NoPUCorr = recoMuon.pfIsolationR03().sumChargedHadronPt + std::max(0.0f, recoMuon.pfIsolationR03().sumNeutralHadronEt + recoMuon.pfIsolationR03().sumPhotonEt );
       this->Reco_Muon_PFIsoR03_ChargedEM_SumPt.push_back    ( recoMuon.pfIsolationR03().sumChargedParticlePt - recoMuon.pfIsolationR03().sumChargedHadronPt );
       this->Reco_Muon_PFIsoR03_NeutralEM_SumEt.push_back    ( recoMuon.pfIsolationR03().sumPhotonEt          );
       this->Reco_Muon_PFIsoR03_ChargedHad_SumPt.push_back   ( recoMuon.pfIsolationR03().sumChargedHadronPt   );
@@ -496,8 +496,8 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
       this->Reco_Muon_PFIsoR03_ChargedHadPU_SumPt.push_back ( recoMuon.pfIsolationR03().sumPUPt              );
       this->Reco_Muon_PFIsoR03_IsoPUCorr.push_back          ( isoR03PUCorr   / (recoMuon.pt()+1E-12)         );
       this->Reco_Muon_PFIsoR03_IsoNoPUCorr.push_back        ( isoR03NoPUCorr / (recoMuon.pt()+1E-12)         );
-      Float_t isoR04PUCorr   = recoMuon.pfIsolationR04().sumChargedHadronPt + max(0., recoMuon.pfIsolationR04().sumNeutralHadronEt + recoMuon.pfIsolationR04().sumPhotonEt - 0.5*recoMuon.pfIsolationR04().sumPUPt );
-      Float_t isoR04NoPUCorr = recoMuon.pfIsolationR04().sumChargedHadronPt + max(0.0f, recoMuon.pfIsolationR04().sumNeutralHadronEt + recoMuon.pfIsolationR04().sumPhotonEt );
+      Float_t isoR04PUCorr   = recoMuon.pfIsolationR04().sumChargedHadronPt + std::max(0., recoMuon.pfIsolationR04().sumNeutralHadronEt + recoMuon.pfIsolationR04().sumPhotonEt - 0.5*recoMuon.pfIsolationR04().sumPUPt );
+      Float_t isoR04NoPUCorr = recoMuon.pfIsolationR04().sumChargedHadronPt + std::max(0.0f, recoMuon.pfIsolationR04().sumNeutralHadronEt + recoMuon.pfIsolationR04().sumPhotonEt );
       this->Reco_Muon_PFIsoR04_ChargedEM_SumPt.push_back    ( recoMuon.pfIsolationR04().sumChargedParticlePt - recoMuon.pfIsolationR04().sumChargedHadronPt );
       this->Reco_Muon_PFIsoR04_ChargedHad_SumPt.push_back   ( recoMuon.pfIsolationR04().sumChargedHadronPt   );
       this->Reco_Muon_PFIsoR04_NeutralHad_SumEt.push_back   ( recoMuon.pfIsolationR04().sumNeutralHadronEt   );
@@ -547,9 +547,9 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
       TVector3 diMuonVtx = TVector3();
       Float_t vProb    = -1.;
       Float_t dca      = -1.;
-      Float_t ctau     = -99.;
+      Float_t ctau     = -999.;
       Float_t ctauErr  = -1.;
-      Float_t cosAlpha = -99.;
+      Float_t cosAlpha = -999.;
       Float_t massWErr = -1.;
       if ( ( recoMuon.muonBestTrack().isNonnull()  && recoMuon.muonBestTrack().isAvailable()  ) && 
            ( recoMuon2.muonBestTrack().isNonnull() && recoMuon2.muonBestTrack().isAvailable() ) ) {
@@ -699,8 +699,8 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
     Float_t sumChargedHadronPUPtR03 = pfIsolation ( pfMuon, pfChargedHadronPUCollection, 0.3, 0.01   );
     Float_t sumNeutralEMEtR03       = pfIsolation ( pfMuon, pfNeutralEMCollection,       0.3, 0.01   );
     Float_t sumNeutralHadronEtR03   = pfIsolation ( pfMuon, pfNeutralHadronCollection,   0.3, 0.01   );
-    Float_t isoR03PUCorr   = sumChargedHadronPtR03 + max(0., sumNeutralHadronEtR03 + sumNeutralEMEtR03 - 0.5*sumChargedHadronPUPtR03 );
-    Float_t isoR03NoPUCorr = sumChargedHadronPtR03 + max(0.0f, sumNeutralHadronEtR03 + sumNeutralEMEtR03 );
+    Float_t isoR03PUCorr   = sumChargedHadronPtR03 + std::max(0., sumNeutralHadronEtR03 + sumNeutralEMEtR03 - 0.5*sumChargedHadronPUPtR03 );
+    Float_t isoR03NoPUCorr = sumChargedHadronPtR03 + std::max(0.0f, sumNeutralHadronEtR03 + sumNeutralEMEtR03 );
     this->PF_Muon_PFIsoR03_ChargedEM_SumPt.push_back    ( sumChargedEMPtR03                    );
     this->PF_Muon_PFIsoR03_NeutralEM_SumEt.push_back    ( sumNeutralEMEtR03                    );
     this->PF_Muon_PFIsoR03_ChargedHad_SumPt.push_back   ( sumChargedHadronPtR03                );
@@ -713,8 +713,8 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
     Float_t sumChargedHadronPUPtR04 = pfIsolation ( pfMuon, pfChargedHadronPUCollection, 0.4, 0.01   );
     Float_t sumNeutralEMEtR04       = pfIsolation ( pfMuon, pfNeutralEMCollection,       0.4, 0.01   );
     Float_t sumNeutralHadronEtR04   = pfIsolation ( pfMuon, pfNeutralHadronCollection,   0.4, 0.01   );
-    Float_t isoR04PUCorr   = sumChargedHadronPtR04 + max(0., sumNeutralHadronEtR04 + sumNeutralEMEtR04 - 0.5*sumChargedHadronPUPtR04 );
-    Float_t isoR04NoPUCorr = sumChargedHadronPtR04 + max(0.0f, sumNeutralHadronEtR04 + sumNeutralEMEtR04 );
+    Float_t isoR04PUCorr   = sumChargedHadronPtR04 + std::max(0., sumNeutralHadronEtR04 + sumNeutralEMEtR04 - 0.5*sumChargedHadronPUPtR04 );
+    Float_t isoR04NoPUCorr = sumChargedHadronPtR04 + std::max(0.0f, sumNeutralHadronEtR04 + sumNeutralEMEtR04 );
     this->PF_Muon_PFIsoR04_ChargedEM_SumPt.push_back    ( sumChargedEMPtR04                    );
     this->PF_Muon_PFIsoR04_NeutralEM_SumEt.push_back    ( sumNeutralEMEtR04                    );
     this->PF_Muon_PFIsoR04_ChargedHad_SumPt.push_back   ( sumChargedHadronPtR04                );
