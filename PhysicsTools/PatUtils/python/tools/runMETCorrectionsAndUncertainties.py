@@ -1301,7 +1301,7 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
             patMetModuleSequence += getattr(process, "pfMet"+postfix)
             
             #PAT METs
-            process.load("PhysicsTools.PatAlgos.producersLayer1.metProducer_cff")
+            #process.load("PhysicsTools.PatAlgos.producersLayer1.metProducer_cff")
             configtools.cloneProcessingSnippet(process, getattr(process,"patMETCorrections"), postfix)
                   
             #T1 pfMet for AOD to mAOD only
