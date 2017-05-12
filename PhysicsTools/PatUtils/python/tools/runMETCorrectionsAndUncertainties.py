@@ -941,10 +941,24 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
             "T1SmearTxy_25ns":metCors.patMultPhiCorrParams_T1SmearTxy_25ns,
             "T1T2SmearTxy_25ns":metCors.patMultPhiCorrParams_T1T2SmearTxy_25ns,
             "T0pcT1SmearTxy_25ns":metCors.patMultPhiCorrParams_T0pcT1SmearTxy_25ns,
-            "T0pcT1T2SmearTxy_25ns":metCors.patMultPhiCorrParams_T0pcT1T2SmearTxy_25ns
+            "T0pcT1T2SmearTxy_25ns":metCors.patMultPhiCorrParams_T0pcT1T2SmearTxy_25ns,
+
+            "Txy_MC_25ns":metCors.patMultPhiCorrParams_Txy_MC_25ns,
+            "T1Txy_MC_25ns":metCors.patMultPhiCorrParams_T1Txy_MC_25ns,
+            "T0pcTxy_MC_25ns":metCors.patMultPhiCorrParams_T0pcTxy_MC_25ns,
+            "T0pcT1Txy_MC_25ns":metCors.patMultPhiCorrParams_T0pcT1Txy_MC_25ns,
+            "T1T2Txy_MC_25ns":metCors.patMultPhiCorrParams_T1T2Txy_MC_25ns,
+            "T0pcT1T2Txy_MC_25ns":metCors.patMultPhiCorrParams_T0pcT1T2Txy_MC_25ns,
+            "T1SmearTxy_MC_25ns":metCors.patMultPhiCorrParams_T1SmearTxy_MC_25ns,
+            "T1T2SmearTxy_MC_25ns":metCors.patMultPhiCorrParams_T1T2SmearTxy_MC_25ns,
+            "T0pcT1SmearTxy_MC_25ns":metCors.patMultPhiCorrParams_T0pcT1SmearTxy_MC_25ns,
+            "T0pcT1T2SmearTxy_MC_25ns":metCors.patMultPhiCorrParams_T0pcT1T2SmearTxy_MC_25ns
             }
         
-        getattr(process, "patPFMetTxyCorr"+postfix).parameters = xyTags[corScheme+"_25ns"] 
+        if self._parameters["runOnData"].value:
+            getattr(process, "patPFMetTxyCorr"+postfix).parameters = xyTags[corScheme+"_25ns"] 
+        else:
+            getattr(process, "patPFMetTxyCorr"+postfix).parameters = xyTags[corScheme+"_MC_25ns"] 
         ##for automatic switch to 50ns / 25ns corrections ==> does not work...
         #from Configuration.StandardSequences.Eras import eras
         #eras.run2_50ns_specific.toModify( getattr(process, "patPFMetTxyCorr"+postfix) , parameters=xyTags[corScheme+"_50ns"] )
