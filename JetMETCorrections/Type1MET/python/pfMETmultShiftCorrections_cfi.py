@@ -3,7 +3,8 @@ import FWCore.ParameterSet.Config as cms
 #--------------------------------------------------------------------------------
 # parametrization of MET x/y shift vs. sumEt
 from JetMETCorrections.Type1MET.multPhiCorr_741_50nsDY_cfi import multPhiCorr_741_50nsDY as multPhiCorrParams_Txy_50ns
-from JetMETCorrections.Type1MET.multPhiCorr_741_25nsDY_cfi import multPhiCorr_741_25nsDY as multPhiCorrParams_Txy_25ns
+from JetMETCorrections.Type1MET.multPhiCorr_ReMiniAOD_Data_GH_80X_sumPt_cfi import multPhiCorr_Data_GH_80X as multPhiCorrParams_Txy_25ns
+from JetMETCorrections.Type1MET.multPhiCorr_Summer16_MC_DY_80X_sumPt_cfi import multPhiCorr_MC_DY_sumPT_80X as multPhiCorrParams_Txy_MC_25ns
 
 #so far, only one set of parameter
 # this is ugly, but a direct copy does not work
@@ -26,6 +27,16 @@ multPhiCorrParams_T0pcT1Txy_25ns   = cms.VPSet( pset for pset in multPhiCorrPara
 multPhiCorrParams_T0pcT1T2Txy_25ns = cms.VPSet( pset for pset in multPhiCorrParams_Txy_25ns)
 multPhiCorrParams_T1Txy_25ns       = cms.VPSet( pset for pset in multPhiCorrParams_Txy_25ns)
 multPhiCorrParams_T1T2Txy_25ns     = cms.VPSet( pset for pset in multPhiCorrParams_Txy_25ns)
+
+#MC 25 ns
+multPhiCorrParams_T0rtTxy_MC_25ns     = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T0rtT1Txy_MC_25ns   = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T0rtT1T2Txy_MC_25ns = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T0pcTxy_MC_25ns     = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T0pcT1Txy_MC_25ns   = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T0pcT1T2Txy_MC_25ns = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T1Txy_MC_25ns       = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
+multPhiCorrParams_T1T2Txy_MC_25ns     = cms.VPSet( pset for pset in multPhiCorrParams_Txy_MC_25ns)
 
 pfMEtMultShiftCorr = cms.EDProducer("MultShiftMETcorrInputProducer",
     srcPFlow = cms.InputTag('particleFlow', ''),
