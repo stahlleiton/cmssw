@@ -254,7 +254,7 @@ class HiMuonEvent
   std::vector < Float_t        >  PF_DiMuon_DCA;
   std::vector < Float_t        >  PF_DiMuon_MassError;
   // PF MET
-  TVector2                        PF_MET_P2;
+  TClonesArray*                   PF_MET_P2;
   // PF Muon-MET
   TClonesArray*                   PF_MuonMET_P4T;
   // Gen Particle
@@ -326,6 +326,10 @@ getCollection(const edm::Event & event, const edm::EDGetTokenT<T> token, edm::Ha
   if (!handle.isValid()) { handle.clear(); }
 }
 
+bool checkObject(const reco::Muon& inC        , const reco::PFCandidate& mC ) { return inC.isPFMuon(); }
+bool checkObject(const reco::PFCandidate& inC , const reco::Muon& mC        ) { return mC.isPFMuon();  }
+bool checkObject(const reco::Candidate& inC   , const reco::Candidate& mC   ) { return true;           }
+
 template < class inT , class mT >
 static inline
 std::vector< std::vector< Char_t > >
@@ -338,6 +342,7 @@ doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDel
     std::vector< std::pair< float , Char_t > > indexPair;
     for (ushort icand2 = 0; icand2 < mC.size(); icand2++) {
       const reco::Candidate& mCand = mC.at(icand2);
+      if ( !checkObject(inC.at(icand), mC.at(icand2)) ) continue;
       double deltaR = reco::deltaR( inCand.eta(), inCand.phi(), mCand.eta(), mCand.phi());
       double dPtRel = abs( inCand.pt() - mCand.pt() ) / (mCand.pt()+1E-9);
       if ( (deltaR < maxDeltaR) && (dPtRel < maxDPtRel) && (inCand.charge() == mCand.charge()) ) { indexPair.push_back( std::make_pair( deltaR , icand2 ) ); }

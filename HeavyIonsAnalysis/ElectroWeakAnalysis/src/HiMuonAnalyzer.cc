@@ -189,8 +189,8 @@ HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::vector< std::vector< Char_t > > matchRECOGEN , matchRECOPF , matchPFGEN;
   if (doMuon["Pat"]) matchRECOGEN = doMatching(patGenMuonCollection, genMuonCollection, 0.00001, 0.00001);
   else               matchRECOGEN = doMatching(recoMuonCollection,   genMuonCollection, 0.5,     0.5    );
-  if (doMuon["Pat"]) matchRECOPF  = doMatching(patMuonCollection,    pfMuonCollection,  0.01,    0.01   );
-  else               matchRECOPF  = doMatching(recoMuonCollection,   pfMuonCollection,  0.01,    0.01   );
+  if (doMuon["Pat"]) matchRECOPF  = doMatching(patMuonCollection,    pfMuonCollection,  0.00001, 0.00001);
+  else               matchRECOPF  = doMatching(recoMuonCollection,   pfMuonCollection,  0.00001, 0.00001);
   matchPFGEN   = doMatching(pfMuonCollection,     genMuonCollection, 0.5,     0.5    );
   indexMap_RECO["GEN"] = matchRECOGEN[0];
   indexMap_GEN["RECO"] = matchRECOGEN[1];
@@ -638,19 +638,28 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
   reco::PFCandidateCollection pfChargedHadronPUCollection;
   reco::PFCandidateCollection pfNeutralEMCollection;
   reco::PFCandidateCollection pfNeutralHadronCollection;
-  TLorentzVector pfMETP4 = TLorentzVector();
+  std::vector<TLorentzVector> pfMETP4;
+  for (ushort i = 0; i < 9; i++) { pfMETP4.push_back(TLorentzVector()); }
   for (uint i = 0; i < pfCandidateCollection.size(); i++ ) {
     const reco::PFCandidate pfCandidate = pfCandidateCollection.at(i);
     // Compute PF MET
     TLorentzVector pfP4 = TLorentzVector();
     pfP4.SetPtEtaPhiM( pfCandidate.pt() , pfCandidate.eta(), pfCandidate.phi(), pfCandidate.mass() );
-    pfMETP4 -= pfP4;
+    pfMETP4[0] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::e                  ) pfMETP4[1] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::mu                 ) pfMETP4[2] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::gamma              ) pfMETP4[3] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::egamma_HF          ) pfMETP4[4] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::h0                 ) pfMETP4[5] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::h_HF               ) pfMETP4[6] -= pfP4;
     // Determine if Pile-Up
     bool isPFPU = false;
     PFPileUpAlgo puAlgo;
     puAlgo.setCheckClosestZVertex(true);
     int ivertex = puAlgo.chargedHadronVertex( priVtxCollection, pfCandidate );
     if( ivertex!=-1 && ivertex!=0 ) { isPFPU = true; }
+    if ( pfCandidate.particleId()==reco::PFCandidate::h && isPFPU==false ) pfMETP4[7] -= pfP4;
+    if ( pfCandidate.particleId()==reco::PFCandidate::h && isPFPU==true  ) pfMETP4[8] -= pfP4;
     bool keepPFCandidate = false;
     // Fill PF Charged EM collection
     if ( pfCandidate.particleId()==reco::PFCandidate::e || pfCandidate.particleId()==reco::PFCandidate::mu ) {
@@ -680,8 +689,8 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
       this->PF_Candidate_Pt.push_back   ( (pfCandidate.charge()!=0) ? pfCandidate.pt() : pfCandidate.et() );
     }
   }
-  pfMETP4.SetPtEtaPhiM( pfMETP4.Pt(), 0.0, pfMETP4.Phi(), 0.0 );
-  this->PF_MET_P2.Set( pfMETP4.Px() , pfMETP4.Py() );
+  for (ushort i = 0; i < 9; i++) { pfMETP4[i].SetPtEtaPhiM( pfMETP4[i].Pt(), 0.0, pfMETP4[i].Phi(), 0.0 );    }
+  for (ushort i = 0; i < 9; i++) { new ((*this->PF_MET_P2)[i]) TVector2( pfMETP4[i].Px() , pfMETP4[i].Py() ); }
   // PF Muon
   this->PF_Muon_N = pfMuonCollection.size();
   for (ushort imuon = 0, idimuon = 0; imuon < pfMuonCollection.size(); imuon++) { 
@@ -725,7 +734,7 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
     // Comput Muon-MET transverse momenta
     TLorentzVector pfMuonP4T = TLorentzVector();
     pfMuonP4T.SetPtEtaPhiM(pfMuon.pt(), 0.0, pfMuon.phi(), pfMuon.mass());
-    new ((*this->PF_MuonMET_P4T)[imuon]) TLorentzVector( pfMuonP4T + pfMETP4 );
+    new ((*this->PF_MuonMET_P4T)[imuon]) TLorentzVector( pfMuonP4T + pfMETP4[0] );
     // PF Dimuon
     for (ushort imuon2 = imuon+1; imuon2 < pfMuonCollection.size(); imuon2++) {
       const reco::PFCandidate& pfMuon2 = pfMuonCollection.at(imuon2);
@@ -770,6 +779,7 @@ HiMuonEvent::Fill(const reco::PFCandidateCollection& pfCandidateCollection, cons
       this->PF_DiMuon_MassError.push_back   ( massWErr  );
       this->PF_DiMuon_Muon1_Index.push_back ( imuon     );
       this->PF_DiMuon_Muon2_Index.push_back ( imuon2    );
+      if (((*((TLorentzVector*)this->PF_Muon_P4->At(imuon)))+mu2P4)!=diMuonP4) { std::cout << "ERROR: DIMUON MOMETAN IS FUCK UP" << std::endl; }
       idimuon++;
     }
   }
@@ -861,6 +871,7 @@ HiMuonEvent::IniArrays()
   this->PF_Muon_P4                 = new TClonesArray("TLorentzVector", 100);
   this->PF_DiMuon_P4               = new TClonesArray("TLorentzVector", 1000);
   this->PF_DiMuon_Vertex           = new TClonesArray("TVector3",       1000);
+  this->PF_MET_P2                  = new TClonesArray("TVector2",       9);
   this->PF_MuonMET_P4T             = new TClonesArray("TLorentzVector", 100);
   this->Gen_Particle_P4            = new TClonesArray("TLorentzVector", 1000);
   this->Gen_Muon_P4                = new TClonesArray("TLorentzVector", 100);
@@ -1033,7 +1044,7 @@ HiMuonEvent::SetBranches(const std::string name, const StringBoolMap& doMuon)
     tree_->Branch("PF_DiMuon_DCA",                    &(this->PF_DiMuon_DCA)                          );
     tree_->Branch("PF_DiMuon_MassErr",                &(this->PF_DiMuon_MassError)                    );
     // PF MET
-    tree_->Branch("PF_MET_Mom",                       "TVector2",             &(this->PF_MET_P2)      );
+    tree_->Branch("PF_MET_Mom",                       "TClonesArray", &(this->PF_MET_P2), 32000, 0    );
     // PF Muon-MET
     tree_->Branch("PF_MuonMET_TransMom",              "TClonesArray", &(this->PF_MuonMET_P4T), 32000, 0 );
   }
@@ -1213,7 +1224,7 @@ HiMuonEvent::Clear(void)
   this->PF_DiMuon_DCA.clear();
   this->PF_DiMuon_MassError.clear();
   // PF MET
-  this->PF_MET_P2 = TVector2();
+  this->PF_MET_P2->Clear();
   // PF Muon-MET
   this->PF_MuonMET_P4T->Clear();
   // Gen Particle
