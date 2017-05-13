@@ -1676,6 +1676,7 @@ def runMetCorAndUncForMiniAODProduction(process, metType="PF",
                                         jetFlavor="AK4PFchs",
                                         recoMetFromPFCs=False,
                                         reclusterJets=False,
+                                        isData=True,
                                         postfix=""):
 
     runMETCorrectionsAndUncertainties = RunMETCorrectionsAndUncertainties()
@@ -1698,6 +1699,7 @@ def runMetCorAndUncForMiniAODProduction(process, metType="PF",
                                       jetFlavor=jetFlavor,
                                       recoMetFromPFCs=recoMetFromPFCs,
                                       reclusterJets=reclusterJets,
+                                      runOnData=isData,
                                       postfix=postfix
                                       )
     
@@ -1719,6 +1721,7 @@ def runMetCorAndUncForMiniAODProduction(process, metType="PF",
                                       jetFlavor=jetFlavor,
                                       recoMetFromPFCs=recoMetFromPFCs,
                                       reclusterJets=reclusterJets,
+                                      runOnData=isData,
                                       postfix=postfix
                                       )
     
@@ -1740,6 +1743,7 @@ def runMetCorAndUncForMiniAODProduction(process, metType="PF",
                                       jetFlavor=jetFlavor,
                                       recoMetFromPFCs=recoMetFromPFCs,
                                       reclusterJets=reclusterJets,
+                                      runOnData=isData,
                                       postfix=postfix,
                                       )
 
