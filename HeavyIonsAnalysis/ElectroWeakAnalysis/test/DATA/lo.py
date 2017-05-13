@@ -43,6 +43,12 @@ process.GlobalTag.toGet = cms.VPSet(
     record = cms.string('EcalLaserAPDPNRatiosRcd'),
     tag = cms.string("EcalLaserAPDPNRatios_prompt_v2"),
     connect = cms.string('frontier://FrontierProd/CMS_CONDITIONS')
+    ),
+  cms.PSet(
+    record = cms.string("HeavyIonRcd"),
+    tag = cms.string("CentralityTable_HFtowersPlusTrunc200_EPOS5TeV_v80x01_mc"),
+    connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+    label = cms.untracked.string("HFtowersPlusTruncEpos")
     )
 )
 
@@ -56,7 +62,6 @@ process.endjob_step = cms.EndPath(process.endOfProcess)
 
 process.load('HeavyIonsAnalysis.ElectroWeakAnalysis.metAnalyzer_cfi')
 process.load('HeavyIonsAnalysis.ElectroWeakAnalysis.muonAnalyzer_cfi')
-#process.load('HeavyIonsAnalysis.ElectroWeakAnalysis.pfcandAnalyzer_pA_cfi')
 
 
 # Trigger Filter
@@ -79,9 +84,24 @@ process.metAnaNoHF = process.metAna.clone(
     )
 process.metAnaSeqNoHF = cms.Sequence( process.metAnaNoHF )
 
+### For Centrality
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
+process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi')
+process.centralityBin.Centrality = cms.InputTag("pACentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowersPlusTrunc")
+process.centralityBin.nonDefaultGlauberModel = cms.string("Epos")
+process.hiEvtAna = process.hiEvtAnalyzer.clone(
+   CentralitySrc    = cms.InputTag("pACentrality"),
+   CentralityBinSrc = cms.InputTag("centralityBin","HFtowersPlusTrunc"),
+   Vertex           = cms.InputTag("offlinePrimaryVertices"),
+   doCentrality     = cms.bool(True),
+   doEvtPlane       = cms.bool(False),
+   doVertex         = cms.bool(True)
+)
+process.hiEvtSeq = cms.Sequence( process.centralityBin * process.hiEvtAna )
+
 process.anaMET  = cms.EndPath( process.metAnaSeq * process.metAnaSeqNoHF )
-#process.anaPath = cms.Path(process.triggerSelection + process.muonSelection + process.pfcandAnalyzer )
-process.anaPath = cms.Path( process.muonAnaSeq )
+process.anaPath = cms.Path( process.muonAnaSeq * process.hiEvtSeq )
 
 #Options:
 process.source    = cms.Source("PoolSource", fileNames = cms.untracked.vstring( options.inputFiles ) )
