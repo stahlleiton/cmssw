@@ -42,7 +42,7 @@ config.Data.splitting = '\''EventBased'\''
 config.Data.unitsPerJob = '$4'
 NJOBS = '$5'
 config.Data.totalUnits = config.Data.unitsPerJob * NJOBS
-config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
+config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/Embedded/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
 config.Data.publication = True
 config.Data.outputDatasetTag = config.General.requestName
 
@@ -73,7 +73,7 @@ config.Data.inputDBS = '\''phys03'\''
 config.Data.splitting = '\''FileBased'\''
 config.Data.unitsPerJob = '$4'
 
-config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
+config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/Embedded/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
 config.Data.publication = True
 config.Data.outputDatasetTag = config.General.requestName
 
@@ -106,7 +106,7 @@ config.Data.inputDBS = '\''phys03'\''
 config.Data.splitting = '\''FileBased'\''
 config.Data.unitsPerJob = '$4'
 
-config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
+config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/Embedded/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
 config.Data.publication = True
 config.Data.outputDatasetTag = config.General.requestName
 
@@ -139,13 +139,13 @@ config.Data.inputDBS = '\''phys03'\''
 config.Data.splitting = '\''FileBased'\''
 config.Data.unitsPerJob = '$4'
 
-config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/TTree/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
+config.Data.outLFNDirBase = '\''/store/user/%s/EWQAnalysis2017/MC/Embedded/TTree/%s'\'' % (getUsernameFromSiteDB(), config.General.requestName)
 config.Data.publication = False
 config.Data.outputDatasetTag = config.General.requestName
 
 config.section_('\''Site'\'')
-config.Data.ignoreLocality = True
-config.Site.whitelist = ['\''T2_FR_GRIF_*'\'']
+config.Data.ignoreLocality = False
+config.Site.whitelist = ['\''T2_FR_GRIF_LLR'\'']
 config.Site.storageSite = '\''T2_FR_GRIF_LLR'\'
 
 }
@@ -155,7 +155,7 @@ path=$PWD
 step1DATE=20160202
 step2DATE=20170205
 step3DATE=20170206
-step4DATE=20170430
+step4DATE=20170514
 declare -a stepDates=("$step1DATE" "$step2DATE" "$step3DATE" "$step4DATE")
 
 step1Path=$path/GEN
@@ -228,13 +228,13 @@ declare -ai anaNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="16" [4]="2" [5]="2" [6
 for (( i=4; i<5; i++ )); do
     for (( j=1; j<${numTotJobs}+1; j++ )); do
 
-        logFileName=${stepPaths[$i-1]}/$logPath/step$i\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.log
-        rootFileName=step$i\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.root
-        crabFileName=${stepPaths[$i-1]}/$crabPath/step$i\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.py
-        crabLogFileName=${stepPaths[$i-1]}/$crabPath/step$i\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.log
-        cfgFileName=${stepPaths[$i-1]}/$pyPath/step$i\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.py
+        logFileName=${stepPaths[$i-1]}/$logPath/step$i\_Embedded\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.log
+        rootFileName=step$i\_Embedded\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.root
+        crabFileName=${stepPaths[$i-1]}/$crabPath/step$i\_Embedded\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.py
+        crabLogFileName=${stepPaths[$i-1]}/$crabPath/step$i\_Embedded\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.log
+        cfgFileName=${stepPaths[$i-1]}/$pyPath/step$i\_Embedded\_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}.py
         if [ $i -gt 1 ]; then
-            prevRootFileName=${stepPaths[$i-2]}/$rootPath/step$(expr $i - 1)\_${workJobs[$j-1]}_${stepTypes[$i-2]}_${stepDates[$i-2]}.root
+            prevRootFileName=${stepPaths[$i-2]}/$rootPath/step$(expr $i - 1)\_Embedded\_${workJobs[$j-1]}_${stepTypes[$i-2]}_${stepDates[$i-2]}.root
         fi
         
         if [ $i -eq 1 ]; then
@@ -306,9 +306,9 @@ for (( i=4; i<5; i++ )); do
         if [ $i -eq 4 ]; then
             cfgFileName=$path/lo.py
             if [ ! -f $crabFileName ]; then
-                delete dir "${stepPaths[$i-1]}/$crabPath/crab_projects/crab_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}/"
+                delete dir "${stepPaths[$i-1]}/$crabPath/crab_projects/crab_Embedded_${workJobs[$j-1]}_${stepTypes[$i-1]}_${stepDates[$i-1]}/"
                 echo 'Step 4: Producing '${workJobs[$j-1]}' '${stepTypes[$i-1]}' CRAB config file'
-                crab_${stepTypes[$i-1]} ${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${anaInputPDs[$j-1]} ${anaNumCrabEvts[$j-1]} >> $crabFileName
+                crab_${stepTypes[$i-1]} Embedded\_${workJobs[$j-1]}\_${stepTypes[$i-1]}\_${stepDates[$i-1]} $cfgFileName ${anaInputPDs[$j-1]} ${anaNumCrabEvts[$j-1]} >> $crabFileName
                 cd ${stepPaths[$i-1]}/$crabPath
                 crab submit -c $crabFileName --dryrun >& $crabLogFileName
             fi

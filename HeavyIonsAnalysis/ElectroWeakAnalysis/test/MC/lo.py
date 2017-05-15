@@ -32,6 +32,15 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '80X_mcRun2_pA_v4', '')
 
+process.GlobalTag.toGet = cms.VPSet(
+  cms.PSet(
+    record = cms.string("HeavyIonRcd"),
+    tag = cms.string("CentralityTable_HFtowersPlusTrunc200_EPOS5TeV_v80x01_mc"),
+    connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+    label = cms.untracked.string("HFtowersPlusTruncEpos")
+    )
+)
+
 process.options = cms.untracked.PSet(
     allowUnscheduled = cms.untracked.bool(True)#,
     #wantSummary = cms.untracked.bool(True)
@@ -50,8 +59,28 @@ process.metAnaNoHF = process.metAna.clone(
     )
 process.metAnaSeqNoHF = cms.Sequence( process.metAnaNoHF )
 
+### For Centrality
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
+process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.runanalyzer_cff')
+process.centralityBin.Centrality = cms.InputTag("pACentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowersPlusTrunc")
+process.centralityBin.nonDefaultGlauberModel = cms.string("Epos")
+process.hiEvtAna = process.hiEvtAnalyzer.clone(
+   CentralitySrc    = cms.InputTag("pACentrality"),
+   CentralityBinSrc = cms.InputTag("centralityBin","HFtowersPlusTrunc"),
+   Vertex           = cms.InputTag("offlinePrimaryVertices"),
+   doCentrality     = cms.bool(True),
+   doEvtPlane       = cms.bool(False),
+   doVertex         = cms.bool(True),
+   doMC             = cms.bool(True),
+   doHiMC           = cms.bool(False),
+   useHepMC         = cms.bool(False)
+)
+process.hiEvtSeq = cms.Sequence( process.centralityBin * process.hiEvtAna * process.runAnalyzer)
+
 process.anaMET  = cms.EndPath( process.metAnaSeq * process.metAnaSeqNoHF )
-process.anaPath = cms.Path( process.muonAnaSeq )
+process.anaPath = cms.Path( process.muonAnaSeq * process.hiEvtSeq )
 
 #Options:
 process.source    = cms.Source("PoolSource", fileNames = cms.untracked.vstring( options.inputFiles ) )
