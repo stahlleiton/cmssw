@@ -4,7 +4,7 @@ import FWCore.ParameterSet.Config as cms
 from HeavyIonsAnalysis.Configuration.hfCoincFilter_cff import *
 
 # Selection of at least a two-track fitted vertex
-primaryVertexFilter = cms.EDFilter("VertexSelector",
+primaryVertexFilterHI = cms.EDFilter("VertexSelector",
     src = cms.InputTag("hiSelectedVertex"),
     cut = cms.string("!isFake && abs(z) <= 25 && position.Rho <= 2 && tracksSize >= 2"), 
     filter = cms.bool(True),   # otherwise it won't filter the events
@@ -30,11 +30,11 @@ NoScraping = cms.EDFilter("FilterOutScraping",
 
 
 #Reject events with pile-up, optionally
-from HeavyIonsAnalysis.VertexAnalysis.PAPileUpVertexFilter_cff import *
+from HeavyIonsAnalysis.VertexAnalysis.pileUpFilter_cff import *
 
 
 collisionEventSelection = cms.Sequence(hfCoincFilter3 *
-                                       primaryVertexFilter *
+                                       primaryVertexFilterHI *
                                        clusterCompatibilityFilter)
 
 collisionEventSelectionPA = cms.Sequence(hfCoincFilter *
@@ -43,5 +43,4 @@ collisionEventSelectionPA = cms.Sequence(hfCoincFilter *
                                          )
 
 collisionEventSelectionPA_rejectPU = cms.Sequence(collisionEventSelectionPA *
-                                                  pileupVertexFilterCutGplus)
-
+                                                  pileUpFilter_pPb8TeV_Gplus)
