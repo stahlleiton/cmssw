@@ -217,7 +217,6 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
         self.setParameter('recoMetFromPFCs',recoMetFromPFCs),
         self.setParameter('reclusterJets',reclusterJets),
         self.setParameter('reapplyJEC',reapplyJEC),
-        self.setParameter('CHS',CHS),
         self.setParameter('runOnData',runOnData),
         self.setParameter('onMiniAOD',onMiniAOD),
         self.setParameter('postfix',postfix),
@@ -1428,6 +1427,7 @@ class RunMETCorrectionsAndUncertainties(ConfigToolBase):
                         bottomCollection = cms.InputTag("tmpPFCandCollPtr"+postfix) )
                         )
                 pfCandColl = cms.InputTag("pfNoPileUpJME"+postfix)
+               
 
         jetColName+=postfix
         if not hasattr(process, jetColName):
