@@ -100,7 +100,7 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
     #
     process.patMETs.srcJetResPhi = cms.string('AK4PF_phi')
     process.patMETs.srcJetResPt = cms.string('AK4PF_pt')
-    process.patMETs.srcJetSF = cms.string('AK4PF_offline')
+    process.patMETs.srcJetSF = cms.string('AK4PF')
     #
     process.patMuons.embedTrack         = True  # used for IDs
     process.patMuons.embedCombinedMuon  = True  # used for IDs
@@ -269,13 +269,8 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
         setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection,None,False)
 
     #VID Photon IDs
-    photon_ids = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring16_V2p2_cff',
-                  'RecoEgamma.PhotonIdentification.Identification.mvaPhotonID_Spring16_nonTrig_V1_cff']
-    switchOnVIDPhotonIdProducer(process,DataFormat.AOD)
-    process.egmPhotonIsolation.srcToIsolate = \
-        cms.InputTag("reducedEgamma","reducedGedPhotons")  
-    for iPSet in process.egmPhotonIsolation.isolationConeDefinitions:
-        iPSet.particleBasedIsolation = cms.InputTag("reducedEgamma","reducedPhotonPfCandMap") 
+    photon_ids = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring15_25ns_V1_cff']
+    switchOnVIDPhotonIdProducer(process,DataFormat.MiniAOD) 
  
     process.egmPhotonIDs.physicsObjectSrc = \
         cms.InputTag("reducedEgamma","reducedGedPhotons")
