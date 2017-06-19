@@ -501,7 +501,8 @@ HiConversionEvent::Fill(const reco::ConversionCollection& recoConversionCollecti
         (this->Reco_Conversion_isDuplicate.at(iconv)==false) &&
         (this->Reco_Conversion_hasCompatibleInnerHits.at(iconv)==true)
         ) {
-      for (ushort imuon = 0, idimuon = -1; imuon < recoMuonCollection.size(); imuon++) {
+      short idimuon = -1;
+      for (ushort imuon = 0; imuon < recoMuonCollection.size(); imuon++) {
         const reco::Muon& recoMuon = recoMuonCollection.at(imuon);
         TLorentzVector muP4 = TLorentzVector();
         muP4.SetPtEtaPhiM( recoMuon.pt() , recoMuon.eta() , recoMuon.phi() , recoMuon.mass() );
@@ -531,10 +532,10 @@ HiConversionEvent::Fill(const reco::ConversionCollection& recoConversionCollecti
               ( charge == 0 && vProb > 0.01 ) && // Opposite sign dimuons and Vertex probability larger than 1%
               ( (fabs(muP4.Eta())<2.4 && muP4.Pt()>1.0) && (fabs(mu2P4.Eta())<2.4 && mu2P4.Pt()>1.0) ) && // Muons within CMS acceptance
               ( muon::isSoftMuon(recoMuon , privtx_) && muon::isSoftMuon(recoMuon2 , privtx_) ) &&           // Muons passing ID
-              ( fabs(diMuonP4.M()-3.096916)<0.3 || fabs(diMuonP4.M()-9.46030)<0.3 ) // Jpsi + Upsilon
+              ( fabs(diMuonP4.M()-3.096916)<0.2 || fabs(diMuonP4.M()-9.46030)<0.2 ) // Jpsi + Upsilon
                ) {
-            if ( fabs(diMuonP4.M()-9.46030)<0.3 && !( (fabs(muP4.Eta())<2.4 && muP4.Pt()>4.0) && (fabs(mu2P4.Eta())<2.4 && mu2P4.Pt()>4.0) ) ) continue;
-            if ( fabs(diMuonP4.M()-3.096916)<0.3 && !( (fabs(muP4.Eta())<2.4 && muP4.Pt()>1.3) && (fabs(mu2P4.Eta())<2.4 && mu2P4.Pt()>1.3) ) ) continue;
+            if ( fabs(diMuonP4.M()-9.46030)<0.2 && !( (fabs(muP4.Eta())<2.4 && muP4.Pt()>4.0) && (fabs(mu2P4.Eta())<2.4 && mu2P4.Pt()>4.0) ) ) continue;
+            if ( fabs(diMuonP4.M()-3.096916)<0.2 && !( (fabs(muP4.Eta())<2.4 && muP4.Pt()>1.3) && (fabs(mu2P4.Eta())<2.4 && mu2P4.Pt()>1.3) ) ) continue;
             int idimuonconv = this->Reco_DiMuonConv_DiMuon_Index.size();
             TLorentzVector diMuonConvP4 = TLorentzVector(); diMuonConvP4 = diMuonP4 + convP4;
             this->Reco_DiMuonConv_Conversion_Index.push_back(iconv);
@@ -542,11 +543,11 @@ HiConversionEvent::Fill(const reco::ConversionCollection& recoConversionCollecti
             new ((*this->Reco_DiMuonConv_P4)[idimuonconv]) TLorentzVector( diMuonConvP4 );
             this->Reco_Chi_Mass.push_back(-1.);
             this->Reco_Chi_Type.push_back(0);
-            if (fabs(diMuonP4.M()-3.096916)<0.3) { 
+            if (fabs(diMuonP4.M()-3.096916)<0.2) { 
               this->Reco_Chi_Mass.at(idimuonconv) = ( diMuonConvP4.M() - diMuonP4.M() + 3.096916);
               this->Reco_Chi_Type.at(idimuonconv) = 1;
             }
-            if (fabs(diMuonP4.M()-9.46030)<0.3 ) {
+            if (fabs(diMuonP4.M()-9.46030)<0.2) {
               this->Reco_Chi_Mass.at(idimuonconv) = ( diMuonConvP4.M() - diMuonP4.M() + 9.46030 );
               this->Reco_Chi_Type.at(idimuonconv) = 2;
             }

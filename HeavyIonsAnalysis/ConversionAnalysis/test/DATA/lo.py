@@ -87,7 +87,7 @@ process.primaryVertexFilterForZMM = cms.EDFilter("VertexSelector",
 # selection of dimuons (at least TRK+TRK) with mass in Onia range
 process.muonSelector = cms.EDFilter("MuonSelector",
     src = cms.InputTag("muons"),
-    cut = cms.string("isTrackerMuon && pt > 1.0 && abs(eta) < 2.4"),
+    cut = cms.string("isTrackerMuon && pt > 1.3 && abs(eta) < 2.4 && innerTrack.hitPattern.trackerLayersWithMeasurement > 5 && innerTrack.hitPattern.pixelLayersWithMeasurement > 0 && innerTrack.quality(\"highPurity\")"),
     filter = cms.bool(True)
     )
 
@@ -98,7 +98,7 @@ process.muonFilter = cms.EDFilter("MuonCountFilter",
 
 process.dimuonMassCut = cms.EDProducer("CandViewShallowCloneCombiner",
     checkCharge = cms.bool(True),
-    cut = cms.string('( 2.6 < mass < 3.6 ) || ( 9.0  < mass < 10.0 ) '),
+    cut = cms.string('( 2.9 < mass < 3.3 ) '),
     decay = cms.string("muonSelector@+ muonSelector@-")
     )
 
