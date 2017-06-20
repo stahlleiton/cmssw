@@ -28,6 +28,13 @@ def L1TTurnOffUnpackStage2GtAndGmt(process):
 # Unpack Stage-2 GT and GMT
 def L1TTurnOffUnpackStage2GtGmtAndCalo(process):
     cutlist=['gtStage2Digis','gmtStage2Digis','caloStage2Digis']
+    process.caloStage1Digis.InputLabel = cms.InputTag("rawDataCollector")
+    process.caloStage1Digis.lenSlinkHeader = cms.untracked.int32(8)
+    process.caloStage1Digis.lenSlinkTrailer = cms.untracked.int32(8)
+    process.caloStage1Digis.lenAMCHeader = cms.untracked.int32(8)
+    process.caloStage1Digis.lenAMCTrailer = cms.untracked.int32(0)
+    process.caloStage1Digis.lenAMC13Header = cms.untracked.int32(8)
+    process.caloStage1Digis.lenAMC13Trailer = cms.untracked.int32(8)
     for b in cutlist:
         process.L1TRawToDigi.remove(getattr(process,b))
     return process
