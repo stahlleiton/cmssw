@@ -167,7 +167,7 @@ L1TMuonLegacyConverter::produce( edm::Event& iEvent,
 	      if( !muItr->empty() ){
 		  	// keep x and y components non-zero and protect against roundoff.
 		  	double pt = muPtScale->getPtScale()->getLowEdge( muItr->ptIndex() ) + 1.e-6 ;
-		  	std::cout << "pt from muPtScale = " << pt << std::endl; 
+		  	LogDebug("L1TMuonLegacyConverter") << "pt from muPtScale = " << pt << std::endl; 
 		  	double eta = muScales->getGMTEtaScale()->getCenter( muItr->etaIndex() ) ;
 		  	double phi = muScales->getPhiScale()->getLowEdge( muItr->phiIndex() ) ;
 
