@@ -363,3 +363,153 @@ def L1TReEmulFromRAWLegacyMuon(process):
     print process.schedule
     return process
 
+def L1TReEmulFromRAW2015LegacyMuon(process):
+    L1TReEmulFromRAW2015(process)
+
+# -  RCT (Regional Calorimeter Trigger) emulator
+    import L1Trigger.RegionalCaloTrigger.rctDigis_cfi
+    process.simRctDigis = L1Trigger.RegionalCaloTrigger.rctDigis_cfi.rctDigis.clone()
+    process.simRctDigis.ecalDigis = cms.VInputTag( cms.InputTag( 'simEcalTriggerPrimitiveDigis' ) )
+    process.simRctDigis.hcalDigis = cms.VInputTag( cms.InputTag( 'simHcalTriggerPrimitiveDigis' ) )
+    
+## - Legacy to upgrade format muon converter
+    from L1Trigger.L1TCommon.muonLegacyInStage2FormatDigis_cfi import muonLegacyInStage2FormatDigis 
+    process.simMuonLegacyInStage2FormatDigis = muonLegacyInStage2FormatDigis.clone(
+        muonSource = cms.InputTag('simGmtDigis'),
+        centralBxOnly = cms.untracked.bool(True)
+        )
+
+## - DT TP emulator
+    process.simDtTriggerPrimitiveDigis.digiTag = cms.InputTag('muonDTDigis')
+
+## - CSC TP emulator 
+    process.simCscTriggerPrimitiveDigis.CSCComparatorDigiProducer = cms.InputTag( 'muonCSCDigis', 'MuonCSCComparatorDigi' )
+    process.simCscTriggerPrimitiveDigis.CSCWireDigiProducer       = cms.InputTag( 'muonCSCDigis', 'MuonCSCWireDigi' )
+#
+# - CSC Track Finder emulator
+#
+    from L1Trigger.CSCTrackFinder.csctfTrackDigis_cfi import csctfTrackDigis
+    process.simCsctfTrackDigis = csctfTrackDigis.clone()
+    process.simCsctfTrackDigis.SectorReceiverInput = cms.untracked.InputTag( 'csctfDigis' ) 
+    process.simCsctfTrackDigis.DTproducer = 'simDtTriggerPrimitiveDigis'
+    from L1Trigger.CSCTrackFinder.csctfDigis_cfi import csctfDigis
+    process.simCsctfDigis = csctfDigis.clone()
+    process.simCsctfDigis.CSCTrackProducer = 'simCsctfTrackDigis'
+##
+## - DT Track Finder emulator
+## 
+    from L1Trigger.DTTrackFinder.dttfDigis_cfi import dttfDigis
+    process.simDttfDigis = dttfDigis.clone()
+    process.simDttfDigis.DTDigi_Source  = 'simDtTriggerPrimitiveDigis'
+    process.simDttfDigis.CSCStub_Source = 'simCsctfTrackDigis'
+##
+## - RPC PAC Trigger emulator
+##
+    from L1Trigger.RPCTrigger.rpcTriggerDigis_cff import rpcTriggerDigis
+    process.load('L1Trigger.RPCTrigger.RPCConeConfig_cff')
+    process.simRpcTriggerDigis = rpcTriggerDigis.clone()
+    process.simRpcTriggerDigis.label = 'muonRPCDigis'
+    process.simRpcTechTrigDigis.RPCDigiLabel  = 'muonRPCDigis'
+    process.simRpcTriggerDigis.RPCTriggerDebug = cms.untracked.int32(0)
+
+## 
+## - Legacy Global Muon Trigger emulator
+##
+    from L1Trigger.GlobalMuonTrigger.gmtDigis_cfi import gmtDigis
+    process.simGmtDigis = gmtDigis.clone()
+    process.simGmtDigis.DTCandidates   = cms.InputTag( 'simDttfDigis', 'DT' )
+    process.simGmtDigis.CSCCandidates  = cms.InputTag( 'simCsctfDigis', 'CSC' )
+    process.simGmtDigis.RPCbCandidates = cms.InputTag( 'simRpcTriggerDigis', 'RPCb' )
+    process.simGmtDigis.RPCfCandidates = cms.InputTag( 'simRpcTriggerDigis', 'RPCf' )
+#   Note: GMT requires input from calorimeter emulators, namely MipIsoData from GCT
+    process.simGmtDigis.MipIsoData     = 'simRctDigis'
+
+# - Sequences     
+    process.SimTriggerPrimitves = cms.Sequence(process.simEcalTriggerPrimitiveDigis * process.simHcalTriggerPrimitiveDigis * process.simDtTriggerPrimitiveDigis + process.simCscTriggerPrimitiveDigis)
+    # Legacy L1T Muon
+    process.SimL1TMuonLegacy = cms.Sequence(process.SimTriggerPrimitves + process.simRctDigis + process.simCsctfTrackDigis + process.simCsctfDigis + process.simDttfDigis + process.simRpcTriggerDigis + process.simGmtDigis + process.simMuonLegacyInStage2FormatDigis)
+    # Stage2 L1T Muon
+    process.load('L1Trigger.L1TMuon.simMuonQualityAdjusterDigis_cfi')
+    process.L1TReEmul.replace(process.simGmtStage2Digis, process.simMuonQualityAdjusterDigis + process.simGmtStage2Digis)
+    # Full Re-Emulation Sequence
+    process.L1TReEmulLegacy = cms.Sequence( process.SimL1TMuonLegacy )
+    process.L1TReEmulLegacyPath = cms.Path(process.L1TReEmulLegacy)    
+    process.schedule.append(process.L1TReEmulLegacyPath)
+    print "L1TReEmulLegacy sequence:  "
+    print process.schedule
+    return process   
+
+def L1TReEmulFromMCRAW2015LegacyMuon(process):
+    L1TReEmulFromRAW2015LegacyMuon(process)
+    if stage2L1Trigger.isChosen():
+            process.simEmtfDigis.CSCInput           = cms.InputTag('simCscTriggerPrimitiveDigis','MPCSORTED')
+            process.simOmtfDigis.srcCSC             = cms.InputTag('simCscTriggerPrimitiveDigis','MPCSORTED')
+    return process
+
+def L1TUnpackFromRAW2015LegacyMuon(process):
+    # Unpack gtDigis
+    process.gtDigis = cms.EDProducer( "L1GlobalTriggerRawToDigi",
+                                      DaqGtFedId = cms.untracked.int32( 813 ),
+                                      Verbosity = cms.untracked.int32( 0 ),
+                                      UnpackBxInEvent = cms.int32( 5 ),
+                                      ActiveBoardsMask = cms.uint32( 0xffff ),
+                                      DaqGtInputTag = cms.InputTag( "rawDataRepacker" )
+                                      )
+
+    # Unpack gctDigis
+    process.gctDigis = cms.EDProducer( "GctRawToDigi",
+                                       checkHeaders = cms.untracked.bool( False ),
+                                       unpackSharedRegions = cms.bool( False ),
+                                       numberOfGctSamplesToUnpack = cms.uint32( 5 ),
+                                       verbose = cms.untracked.bool( False ),
+                                       numberOfRctSamplesToUnpack = cms.uint32( 1 ),
+                                       inputLabel = cms.InputTag( "rawDataRepacker" ),
+                                       unpackerVersion = cms.uint32( 0 ),
+                                       gctFedId = cms.untracked.int32( 745 ),
+                                       hltMode = cms.bool( False )
+                                       )
+
+    # Unpack l1extraParticles
+    from L1Trigger.L1ExtraFromDigis.l1extraParticles_cfi import l1extraParticles
+    process.l1extraParticles = l1extraParticles.clone(
+        etTotalSource         = cms.InputTag("gctDigis"),
+        nonIsolatedEmSource   = cms.InputTag("gctDigis","nonIsoEm"),
+        etMissSource          = cms.InputTag("gctDigis"),
+        htMissSource          = cms.InputTag("gctDigis"),
+        forwardJetSource      = cms.InputTag("gctDigis","forJets"),
+        centralJetSource      = cms.InputTag("gctDigis","cenJets"),
+        tauJetSource          = cms.InputTag("gctDigis","tauJets"),
+        isoTauJetSource       = cms.InputTag("gctDigis","isoTauJets"),
+        isolatedEmSource      = cms.InputTag("gctDigis","isoEm"),
+        etHadSource           = cms.InputTag("gctDigis"),
+        hfRingEtSumsSource    = cms.InputTag("gctDigis"),
+        hfRingBitCountsSource = cms.InputTag("gctDigis"),
+        muonSource            = cms.InputTag("gtDigis"),
+        produceMuonParticles  = cms.bool(True),
+        produceCaloParticles  = cms.bool(True),
+        centralBxOnly         = cms.bool(False),
+        ignoreHtMiss          = cms.bool(False)
+        )
+
+## - Legacy to upgrade format muon converter
+    from L1Trigger.L1TCommon.muonLegacyInStage2FormatDigis_cfi import muonLegacyInStage2FormatDigis 
+    process.rawMuonLegacyInStage2FormatDigis = muonLegacyInStage2FormatDigis.clone(
+        muonSource = cms.InputTag('gtDigis'),
+        centralBxOnly = cms.untracked.bool(True)
+        )
+
+# - Sequences     
+    # Legacy L1T Muon
+    process.L1TMuonLegacy = cms.Sequence(process.gtDigis + process.gctDigis + process.l1extraParticles + process.rawMuonLegacyInStage2FormatDigis)
+    # Full Re-Emulation Sequence
+    process.L1TUnpackLegacy = cms.Sequence( process.L1TMuonLegacy )
+    process.L1TUnpackLegacyPath = cms.Path(process.L1TUnpackLegacy)    
+    process.schedule.append(process.L1TUnpackLegacyPath)
+    print "L1TUnpackLegacy sequence:  "
+    print process.schedule
+    return process   
+
+def L1TReEmulAndUnpackFromRAW2015LegacyMuon(process):
+    L1TReEmulFromRAW2015LegacyMuon(process)
+    L1TUnpackFromRAW2015LegacyMuon(process)
+    return process
