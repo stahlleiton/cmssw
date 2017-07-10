@@ -4,7 +4,7 @@ metAna = cms.EDAnalyzer(
     'HiMETAnalyzer',
     patMETTag      = cms.InputTag("slimmedMETs"),
     pfMETTag       = cms.InputTag("pfMet"),
-    caloMETTag     = cms.InputTag("caloMetM"),
+    caloMETTag     = cms.InputTag(""), #cms.InputTag("caloMetM"),
     genMETTag      = cms.InputTag("genMetTrue"),
     doAll          = cms.bool(False),
     eventFilter    = cms.string("anaPath"),

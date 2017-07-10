@@ -815,7 +815,7 @@ HiMuonEvent::Fill(const reco::GenParticleRefVector& genRefCollection, const Inde
     }
   }
   // Loop over the Gen Particle Collection
-  std::vector< UChar_t > genMuonIndex;
+  std::vector< UShort_t > genMuonIndex;
   reco::GenParticleCollection genMuonCollection;
   for (uint ipar = 0; ipar < genParticleRefCollection.size(); ipar++ ) {
     const reco::GenParticle& genParticle = *(genParticleRefCollection.at(ipar));
@@ -873,7 +873,7 @@ HiMuonEvent::IniArrays()
   this->PF_DiMuon_Vertex           = new TClonesArray("TVector3",       1000);
   this->PF_MET_P2                  = new TClonesArray("TVector2",       9);
   this->PF_MuonMET_P4T             = new TClonesArray("TLorentzVector", 100);
-  this->Gen_Particle_P4            = new TClonesArray("TLorentzVector", 1000);
+  this->Gen_Particle_P4            = new TClonesArray("TLorentzVector", 10000);
   this->Gen_Muon_P4                = new TClonesArray("TLorentzVector", 100);
 }
 
