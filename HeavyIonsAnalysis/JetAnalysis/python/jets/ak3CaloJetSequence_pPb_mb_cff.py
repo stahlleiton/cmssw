@@ -9,14 +9,14 @@ from RecoJets.JetProducers.nJettinessAdder_cfi import Njettiness
 
 ak3Calomatch = patJetGenJetMatch.clone(
     src = cms.InputTag("ak3CaloJets"),
-    matched = cms.InputTag("ak3GenJets"),
+    matched = cms.InputTag("ak3HiCleanedGenJets"),
     resolveByMatchQuality = cms.bool(False),
     maxDeltaR = 0.3
     )
 
 ak3CalomatchGroomed = patJetGenJetMatch.clone(
-    src = cms.InputTag("ak3GenJets"),
-    matched = cms.InputTag("ak3GenJets"),
+    src = cms.InputTag("ak3HiGenJets"),
+    matched = cms.InputTag("ak3HiCleanedGenJets"),
     resolveByMatchQuality = cms.bool(False),
     maxDeltaR = 0.3
     )
@@ -35,7 +35,7 @@ ak3Calocorr = patJetCorrFactors.clone(
 
 ak3CaloJetID= cms.EDProducer('JetIDProducer', JetIDParams, src = cms.InputTag('ak3CaloJets'))
 
-#ak3Caloclean   = heavyIonCleanedGenJets.clone(src = cms.InputTag('ak3GenJets'))
+#ak3Caloclean   = heavyIonCleanedGenJets.clone(src = cms.InputTag('ak3HiCleanedGenJets'))
 
 ak3CalobTagger = bTaggers("ak3Calo",0.3)
 
@@ -177,7 +177,7 @@ ak3CaloNjettiness = Njettiness.clone(
 ak3CalopatJetsWithBtagging.userData.userFloats.src += ['ak3CaloNjettiness:tau1','ak3CaloNjettiness:tau2','ak3CaloNjettiness:tau3']
 
 ak3CaloJetAnalyzer = inclusiveJetAnalyzer.clone(jetTag = cms.InputTag("ak3CalopatJetsWithBtagging"),
-                                                             genjetTag = 'ak3GenJets',
+                                                             genjetTag = 'ak3HiGenJets',
                                                              rParam = 0.3,
                                                              matchJets = cms.untracked.bool(False),
                                                              matchTag = 'patJetsWithBtagging',
@@ -199,7 +199,13 @@ ak3CaloJetAnalyzer = inclusiveJetAnalyzer.clone(jetTag = cms.InputTag("ak3Calopa
 							     doSubJets = cms.untracked.bool(False),
                                                              doGenSubJets = cms.untracked.bool(False),     
                                                              subjetGenTag = cms.untracked.InputTag("ak3GenJets"),
-                                                             doGenTaus = True
+                                                             doGenTaus = cms.untracked.bool(False),
+                                                             genTau1 = cms.InputTag("ak3GenNjettiness","tau1"),
+                                                             genTau2 = cms.InputTag("ak3GenNjettiness","tau2"),
+                                                             genTau3 = cms.InputTag("ak3GenNjettiness","tau3"),
+                                                             doGenSym = cms.untracked.bool(False),
+                                                             genSym = cms.InputTag("ak3GenJets","sym"),
+                                                             genDroppedBranches = cms.InputTag("ak3GenJets","droppedBranches")
                                                              )
 
 ak3CaloJetSequence_mc = cms.Sequence(

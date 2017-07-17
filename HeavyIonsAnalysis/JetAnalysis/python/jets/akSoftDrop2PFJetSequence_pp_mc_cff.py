@@ -199,7 +199,13 @@ akSoftDrop2PFJetAnalyzer = inclusiveJetAnalyzer.clone(jetTag = cms.InputTag("akS
 							     doSubJets = cms.untracked.bool(True),
                                                              doGenSubJets = cms.untracked.bool(True),     
                                                              subjetGenTag = cms.untracked.InputTag("akSoftDrop2GenJets"),
-                                                             doGenTaus = True
+                                                             doGenTaus = cms.untracked.bool(True),
+                                                             genTau1 = cms.InputTag("akSoftDrop2GenNjettiness","tau1"),
+                                                             genTau2 = cms.InputTag("akSoftDrop2GenNjettiness","tau2"),
+                                                             genTau3 = cms.InputTag("akSoftDrop2GenNjettiness","tau3"),
+                                                             doGenSym = cms.untracked.bool(True),
+                                                             genSym = cms.InputTag("akSoftDrop2GenJets","sym"),
+                                                             genDroppedBranches = cms.InputTag("akSoftDrop2GenJets","droppedBranches")
                                                              )
 
 akSoftDrop2PFJetSequence_mc = cms.Sequence(
@@ -249,3 +255,5 @@ akSoftDrop2PFJetSequence_jec = cms.Sequence(akSoftDrop2PFJetSequence_mc)
 akSoftDrop2PFJetSequence_mb = cms.Sequence(akSoftDrop2PFJetSequence_mc)
 
 akSoftDrop2PFJetSequence = cms.Sequence(akSoftDrop2PFJetSequence_mc)
+akSoftDrop2PFpatJetsWithBtagging.userData.userFloats.src += ['akSoftDrop2PFJets:sym']
+akSoftDrop2PFpatJetsWithBtagging.userData.userInts.src += ['akSoftDrop2PFJets:droppedBranches']

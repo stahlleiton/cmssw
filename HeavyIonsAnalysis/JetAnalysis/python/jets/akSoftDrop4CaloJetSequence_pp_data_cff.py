@@ -199,7 +199,13 @@ akSoftDrop4CaloJetAnalyzer = inclusiveJetAnalyzer.clone(jetTag = cms.InputTag("a
 							     doSubJets = cms.untracked.bool(True),
                                                              doGenSubJets = cms.untracked.bool(False),     
                                                              subjetGenTag = cms.untracked.InputTag("akSoftDrop4GenJets"),
-                                                             doGenTaus = False
+                                                             doGenTaus = cms.untracked.bool(True),
+                                                             genTau1 = cms.InputTag("akSoftDrop4GenNjettiness","tau1"),
+                                                             genTau2 = cms.InputTag("akSoftDrop4GenNjettiness","tau2"),
+                                                             genTau3 = cms.InputTag("akSoftDrop4GenNjettiness","tau3"),
+                                                             doGenSym = cms.untracked.bool(False),
+                                                             genSym = cms.InputTag("akSoftDrop4GenJets","sym"),
+                                                             genDroppedBranches = cms.InputTag("akSoftDrop4GenJets","droppedBranches")
                                                              )
 
 akSoftDrop4CaloJetSequence_mc = cms.Sequence(
@@ -249,3 +255,5 @@ akSoftDrop4CaloJetSequence_jec = cms.Sequence(akSoftDrop4CaloJetSequence_mc)
 akSoftDrop4CaloJetSequence_mb = cms.Sequence(akSoftDrop4CaloJetSequence_mc)
 
 akSoftDrop4CaloJetSequence = cms.Sequence(akSoftDrop4CaloJetSequence_data)
+akSoftDrop4CalopatJetsWithBtagging.userData.userFloats.src += ['akSoftDrop4CaloJets:sym']
+akSoftDrop4CalopatJetsWithBtagging.userData.userInts.src += ['akSoftDrop4CaloJets:droppedBranches']

@@ -197,9 +197,15 @@ akSoftDrop3CaloJetAnalyzer = inclusiveJetAnalyzer.clone(jetTag = cms.InputTag("a
                                                              hltTrgResults = cms.untracked.string('TriggerResults::'+'HISIGNAL'),
 							     doTower = cms.untracked.bool(False),
 							     doSubJets = cms.untracked.bool(True),
-                                                             doGenSubJets = cms.untracked.bool(False),     
+                                                             doGenSubJets = cms.untracked.bool(True),     
                                                              subjetGenTag = cms.untracked.InputTag("akSoftDrop3GenJets"),
-                                                             doGenTaus = True
+                                                             doGenTaus = cms.untracked.bool(True),
+                                                             genTau1 = cms.InputTag("akSoftDrop3GenNjettiness","tau1"),
+                                                             genTau2 = cms.InputTag("akSoftDrop3GenNjettiness","tau2"),
+                                                             genTau3 = cms.InputTag("akSoftDrop3GenNjettiness","tau3"),
+                                                             doGenSym = cms.untracked.bool(True),
+                                                             genSym = cms.InputTag("akSoftDrop3GenJets","sym"),
+                                                             genDroppedBranches = cms.InputTag("akSoftDrop3GenJets","droppedBranches")
                                                              )
 
 akSoftDrop3CaloJetSequence_mc = cms.Sequence(
@@ -251,3 +257,5 @@ akSoftDrop3CaloJetSequence_mb = cms.Sequence(akSoftDrop3CaloJetSequence_mc)
 akSoftDrop3CaloJetSequence = cms.Sequence(akSoftDrop3CaloJetSequence_jec)
 akSoftDrop3CaloJetAnalyzer.genPtMin = cms.untracked.double(1)
 akSoftDrop3CaloJetAnalyzer.jetPtMin = cms.double(1)
+akSoftDrop3CalopatJetsWithBtagging.userData.userFloats.src += ['akSoftDrop3CaloJets:sym']
+akSoftDrop3CalopatJetsWithBtagging.userData.userInts.src += ['akSoftDrop3CaloJets:droppedBranches']

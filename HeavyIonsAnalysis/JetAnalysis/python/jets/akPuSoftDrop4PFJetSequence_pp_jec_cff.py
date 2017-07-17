@@ -197,9 +197,15 @@ akPuSoftDrop4PFJetAnalyzer = inclusiveJetAnalyzer.clone(jetTag = cms.InputTag("a
                                                              hltTrgResults = cms.untracked.string('TriggerResults::'+'HISIGNAL'),
 							     doTower = cms.untracked.bool(False),
 							     doSubJets = cms.untracked.bool(True),
-                                                             doGenSubJets = cms.untracked.bool(False),     
+                                                             doGenSubJets = cms.untracked.bool(True),     
                                                              subjetGenTag = cms.untracked.InputTag("akSoftDrop4GenJets"),
-                                                             doGenTaus = True
+                                                             doGenTaus = cms.untracked.bool(True),
+                                                             genTau1 = cms.InputTag("akSoftDrop4GenNjettiness","tau1"),
+                                                             genTau2 = cms.InputTag("akSoftDrop4GenNjettiness","tau2"),
+                                                             genTau3 = cms.InputTag("akSoftDrop4GenNjettiness","tau3"),
+                                                             doGenSym = cms.untracked.bool(True),
+                                                             genSym = cms.InputTag("akSoftDrop4GenJets","sym"),
+                                                             genDroppedBranches = cms.InputTag("akSoftDrop4GenJets","droppedBranches")
                                                              )
 
 akPuSoftDrop4PFJetSequence_mc = cms.Sequence(
@@ -251,3 +257,5 @@ akPuSoftDrop4PFJetSequence_mb = cms.Sequence(akPuSoftDrop4PFJetSequence_mc)
 akPuSoftDrop4PFJetSequence = cms.Sequence(akPuSoftDrop4PFJetSequence_jec)
 akPuSoftDrop4PFJetAnalyzer.genPtMin = cms.untracked.double(1)
 akPuSoftDrop4PFJetAnalyzer.jetPtMin = cms.double(1)
+akPuSoftDrop4PFpatJetsWithBtagging.userData.userFloats.src += ['akPuSoftDrop4PFJets:sym']
+akPuSoftDrop4PFpatJetsWithBtagging.userData.userInts.src += ['akPuSoftDrop4PFJets:droppedBranches']
