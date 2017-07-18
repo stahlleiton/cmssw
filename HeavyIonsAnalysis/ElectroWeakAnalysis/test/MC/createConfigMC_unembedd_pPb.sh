@@ -144,8 +144,8 @@ config.Data.publication = False
 config.Data.outputDatasetTag = config.General.requestName
 
 config.section_('\''Site'\'')
-config.Data.ignoreLocality = False
-config.Site.whitelist = ['\''T2_FR_GRIF_LLR'\'']
+config.Data.ignoreLocality = True
+config.Site.whitelist = ['\''T2_FR_GRIF_*'\'']
 config.Site.storageSite = '\''T2_FR_GRIF_LLR'\'
 
 }
@@ -155,7 +155,7 @@ path=$PWD
 step1DATE=20160202
 step2DATE=20170205
 step3DATE=20170206
-step4DATE=20170514
+step4DATE=20170717
 declare -a stepDates=("$step1DATE" "$step2DATE" "$step3DATE" "$step4DATE")
 
 step1Path=$path/GEN
@@ -213,15 +213,32 @@ declare -a recoInputPDs=(
 declare -ai recoNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="2" [4]="2" [5]="2")'
 
 
+declare -a anaInputPDs=(    "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse_GEN_20160202-232d1ce10bd15274bed0faf4e6e9f45b/USER"
+    "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse_GEN_20160202-d6fa70ff3d3710f4498eacd4411fcffa/USER"
+    "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse_GEN_20160202-30b6803042a18773b865d31a6be1313e/USER"
+)
+declare -ai rawNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="2" [4]="2" [5]="2")'
+
+declare -a recoInputPDs=(
+    "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_RAW_20170205-a29fe75007ca498b0c4693f898031040/USER"
+    "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_RAW_20170205-f8522175fd15740b7e91ce3907c2d7c0/USER"
+    "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_RAW_20170205-a29fe75007ca498b0c4693f898031040/USER"
+    "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse_RAW_20170205-f8522175fd15740b7e91ce3907c2d7c0/USER"
+    "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse_RAW_20170205-f8522175fd15740b7e91ce3907c2d7c0/USER"
+    "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse_RAW_20170205-a29fe75007ca498b0c4693f898031040/USER"
+)
+declare -ai recoNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="2" [4]="2" [5]="2")'
+
+
 declare -a anaInputPDs=(
-    "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/QCD/miheejo-PtHat20_MuEnrichedPt15_pPb_RECO_v1-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/DYtoMuMu/anstahll-Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/WToMuNu/anstahll-Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/WToTauNu/anstahll-Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse_RECO_20170206-af31df56e13449bd40098ffa7c7e1173/USER"
-    "/QCD/miheejo-PtHat20_MuEnrichedPt15_Pbp_reverse_RECO_v1-af31df56e13449bd40098ffa7c7e1173/USER"
+    "/DYtoMuMu/anstahll-NonEmbedded_Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/WToMuNu/anstahll-NonEmbedded_Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/WToTauNu/anstahll-NonEmbedded_Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/QCD/anstahll-NonEmbedded_Pythia_QCD_PtHat20_MuEnrichedPt15_8160GeV_pythia8_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/DYtoMuMu/anstahll-NonEmbedded_Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/WToMuNu/anstahll-NonEmbedded_Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/WToTauNu/anstahll-NonEmbedded_Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
+    "/QCD/anstahll-NonEmbedded_Pythia_QCD_PtHat20_MuEnrichedPt15_8160GeV_pythia8_reverse_RECO_20170517-441ce67df20487bd4a04bbf23d94082d/USER"
 )
 declare -ai anaNumCrabEvts='([0]="2" [1]="2" [2]="2" [3]="16" [4]="2" [5]="2" [6]="2" [7]="16")'
 
