@@ -196,7 +196,9 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
                          )
                 ])
         process.load("HeavyIonsAnalysis.JetAnalysis.FullJetSequence_JECPPb")
-
+        process.ak4PFmatch.matched = cms.InputTag("ak4GenJets")
+        process.ak4PFmatchGroomed.src = cms.InputTag("ak4GenJets")
+        process.ak4PFmatchGroomed.matched = cms.InputTag("ak4GenJets")
         
     # make ak4PF jets the baseline jets
     process.patJets = process.ak4PFpatJetsWithBtagging.clone()
@@ -322,9 +324,8 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
         massSearchReplaceParam(seq,"algorithm", cms.string('AK4PF'), cms.string('AK4PF_offline'))
         massSearchReplaceParam(seq,"algorithm", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
         massSearchReplaceParam(seq,"algo", cms.string('AK4PF'), cms.string('AK4PF_offline'))
-        massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
-        #if isData: massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
-        #else:      massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF'))
+        if isData: massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
+        else:      massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF'))
         massSearchReplaceParam(seq,"algopt",cms.string('AK4PFchs_pt'),cms.string('AK4PF_pt'))
         # Jet Payloads 
         massSearchReplaceParam(seq,"payload", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
