@@ -219,15 +219,11 @@ HiMETEvent::Fill(const pat::MET& patMET, std::string corrLevel)
   std::map< std::string, pat::MET::METUncertainty>::iterator    iUncertainty;
   for ( iCorrection = METCorrectionLevelMap.begin(); iCorrection != METCorrectionLevelMap.end(); iCorrection++ ) {
     if ( (corrLevel == iCorrection->first) || (corrLevel == "All") ) {
-      std::map< std::string , float > tmpSumEt;
-      std::map< std::string , TVector2 > tmpP2;
       for ( iUncertainty = METUncertaintyMap.begin(); iUncertainty != METUncertaintyMap.end(); iUncertainty++ ) {
-        tmpSumEt[iUncertainty->first] = patMET.shiftedSumEt(iUncertainty->second, iCorrection->second);
+        this->shiftedSumEt[iCorrection->first][iUncertainty->first] = patMET.shiftedSumEt(iUncertainty->second, iCorrection->second);
         reco::Candidate::LorentzVector p4 = patMET.shiftedP4(iUncertainty->second, iCorrection->second);
-        tmpP2[iUncertainty->first].Set(p4.px(), p4.py());
+        this->shiftedP2[iCorrection->first][iUncertainty->first].Set(p4.px(), p4.py());
       }
-      this->shiftedSumEt[iCorrection->first] = tmpSumEt;
-      this->shiftedP2[iCorrection->first] = tmpP2;
     }
   }
 }
@@ -380,12 +376,12 @@ HiMETEvent::SetBranches(const std::string name, const StringBoolMap& doMET)
     for ( iCorrection = METCorrectionLevelMap.begin(); iCorrection != METCorrectionLevelMap.end(); iCorrection++ ) {
       std::string nameC = iCorrection->first;
       if ( (name == nameC) || (name == "All") ) {
-        this->tree->Branch(Form("%s_MET_NoShift_Mom", nameC.c_str()),   "TVector2",                              &(this->shiftedP2[nameC]["NoShift"]));
-        this->tree->Branch(Form("%s_MET_NoShift_sumEt", nameC.c_str()), &(this->shiftedSumEt[nameC]["NoShift"]), Form("%s_MET_NoShift_sumEt/F", nameC.c_str()));
+        this->tree->Branch(Form("%s_MET_NoShift_Mom", nameC.c_str()),   "TVector2",                              &(this->shiftedP2.at(nameC).at("NoShift")));
+        this->tree->Branch(Form("%s_MET_NoShift_sumEt", nameC.c_str()), &(this->shiftedSumEt.at(nameC).at("NoShift")), Form("%s_MET_NoShift_sumEt/F", nameC.c_str()));
         for ( iUncertainty = METUncertaintyMap.begin(); iUncertainty != METUncertaintyMap.end(); iUncertainty++ ) {
           if (iUncertainty->first == "NoShift") continue;
-          this->tree->Branch(Form("%s_MET_%s_Mom", nameC.c_str(), (iUncertainty->first).c_str()),   "TVector2",                                        &(this->shiftedP2[nameC][iUncertainty->first]));
-          this->tree->Branch(Form("%s_MET_%s_sumEt", nameC.c_str(), (iUncertainty->first).c_str()), &(this->shiftedSumEt[nameC][iUncertainty->first]), Form("%s_MET_%s_sumEt/F", nameC.c_str(), (iUncertainty->first).c_str()));
+          this->tree->Branch(Form("%s_MET_%s_Mom", nameC.c_str(), (iUncertainty->first).c_str()),   "TVector2",                                &(this->shiftedP2.at(nameC).at(iUncertainty->first)));
+          this->tree->Branch(Form("%s_MET_%s_sumEt", nameC.c_str(), (iUncertainty->first).c_str()), &(this->shiftedSumEt.at(nameC).at(iUncertainty->first)), Form("%s_MET_%s_sumEt/F", nameC.c_str(), (iUncertainty->first).c_str()));
         }
       }
     }
@@ -474,10 +470,9 @@ HiMETEvent::Clear(void)
   this->Gen_ChargedHadEtFraction = -1.;
   this->Gen_NeutralHadEt         = -1.;
   this->Gen_NeutralHadEtFraction = -1.;
-  std::map< std::string, Bool_t >::iterator iFilter;
-  for ( iFilter = this->Filter.begin(); iFilter != this->Filter.end(); iFilter++ ) {
-    iFilter->second = false;
-  }
+  for ( auto& iFilter : this->Filter       ) { iFilter.second = false; }
+  for ( auto& iCorr   : this->shiftedP2    ) { for ( auto& iUnc : iCorr.second ) { iUnc.second = TVector2(); } }
+  for ( auto& iCorr   : this->shiftedSumEt ) { for ( auto& iUnc : iCorr.second ) { iUnc.second = -1.; } }
 }
 
 

@@ -86,8 +86,6 @@ def applyTriggerMatching(process):
 
 
 def miniAOD_ForHiEWQ_customizeCommon(process, isData):
-    # Add JEC for pPb 8 TeV
-    overrideJEC_pPb8TeV(process)
     # Add MET Filters 
     includeMETFilters(process)
     # Apply trigger matching
@@ -165,8 +163,38 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
     #
 
     if isData:
+        # Add JEC for pPb 8 TeV
+        overrideJEC_pPb8TeV(process)
+        # Add latest pp JEC using Run H 2016 which is similar to pPb 2018
+        process.GlobalTag.toGet.extend([
+                cms.PSet(record = cms.string("JetCorrectionsRecord"),
+                         tag = cms.string("JetCorrectorParametersCollection_Summer16_23Sep2016AllV4_DATA_AK4Calo"),
+                         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+                         label = cms.untracked.string("AK4Calo")
+                         ),
+                cms.PSet(record = cms.string("JetCorrectionsRecord"),
+                         tag = cms.string("JetCorrectorParametersCollection_Summer16_23Sep2016AllV4_DATA_AK4PF"),
+                         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+                         label = cms.untracked.string("AK4PF")
+                         )
+                ])
         process.load("HeavyIonsAnalysis.JetAnalysis.FullJetSequence_DataPPb")
     else:
+        # Add JEC for pPb 8 TeV
+        overrideJEC_pPb8TeV(process)
+        # Add latest pp JEC using Run H 2016 which is similar to pPb 2018
+        process.GlobalTag.toGet.extend([
+                cms.PSet(record = cms.string("JetCorrectionsRecord"),
+                         tag = cms.string("JetCorrectorParametersCollection_Summer16_23Sep2016V4_MC_AK4Calo"),
+                         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+                         label = cms.untracked.string("AK4Calo")
+                         ),
+                cms.PSet(record = cms.string("JetCorrectionsRecord"),
+                         tag = cms.string("JetCorrectorParametersCollection_Summer16_23Sep2016V4_MC_AK4PF"),
+                         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+                         label = cms.untracked.string("AK4PF")
+                         )
+                ])
         process.load("HeavyIonsAnalysis.JetAnalysis.FullJetSequence_JECPPb")
 
         
@@ -198,22 +226,26 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
                      labelName = "patCaloMet",
                      metSource = "caloMetM"
                      )
-
     
     #noHF pfMET =========
     process.noHFCands = cms.EDFilter("GenericPFCandidateSelector",
                                      src=cms.InputTag("particleFlow"),
                                      cut=cms.string("abs(pdgId)!=1 && abs(pdgId)!=2 && abs(eta)<3.0")
                                      )
+
+    # Recluster the Jets using the noHF particle flow candidates
+    from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag, cloneProcessingSnippet
+    cloneProcessingSnippet(process, process.jetSequences, "NoHF")
+    massSearchReplaceAnyInputTag(process.jetSequencesNoHF,"particleFlow","noHFCands")
+
     runMetCorAndUncForMiniAODProduction(process,
                                         pfCandColl=cms.InputTag("noHFCands"),
                                         recoMetFromPFCs=True, #needed for HF removal
-                                        jetCollUnskimmed="ak4PFpatJetsWithBtagging",
+                                        jetCollUnskimmed="ak4PFpatJetsWithBtaggingNoHF",
                                         jetFlavor="AK4PF_offline",
                                         jetSelection="pt>15 && abs(eta)<3.",
                                         postfix="NoHF"
                                         )
-    process.corrPfMetType1NoHF.src = cms.InputTag("ak4PFJets")
 
     process.load('PhysicsTools.PatAlgos.slimming.slimmedMETs_cfi')
     process.slimmedMETsNoHF = process.slimmedMETs.clone()
@@ -229,27 +261,6 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
     process.slimmedMETsNoHF.tXYUncForT01Smear = cms.InputTag("patPFMetT0pcT1SmearTxyNoHF")
     del process.slimmedMETsNoHF.caloMET
     # ================== NoHF pfMET
-    #keep this after all addJetCollections otherwise it will attempt computing them also for stuf with no taginfos
-    #Some useful BTAG vars
-    if not hasattr( process, 'pfImpactParameterTagInfos' ):
-        process.load('RecoBTag.ImpactParameter.pfImpactParameterTagInfos_cfi')
-    if not hasattr( process, 'pfSecondaryVertexTagInfos' ):
-        process.load('RecoBTag.SecondaryVertex.pfSecondaryVertexTagInfos_cfi')
-    process.patJets.userData.userFunctions = cms.vstring(
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).p4.M):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).numberOfSourceCandidatePtrs):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").flightDistance(0).value):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").flightDistance(0).significance):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).p4.x):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).p4.y):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).p4.z):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).vertex.x):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).vertex.y):(0)',
-    '?(tagInfoCandSecondaryVertex("pfSecondaryVertex").nVertices()>0)?(tagInfoCandSecondaryVertex("pfSecondaryVertex").secondaryVertex(0).vertex.z):(0)',
-    )
-    process.patJets.userData.userFunctionLabels = cms.vstring('vtxMass','vtxNtracks','vtx3DVal','vtx3DSig','vtxPx','vtxPy','vtxPz','vtxPosX','vtxPosY','vtxPosZ')
-    process.patJets.tagInfoSources = cms.VInputTag(cms.InputTag("pfSecondaryVertexTagInfos"))
-    process.patJets.addTagInfos = cms.bool(True)
     
     #EGM object modifications
     from RecoEgamma.EgammaTools.egammaObjectModificationsInMiniAOD_cff import egamma_modifications
@@ -290,41 +301,47 @@ def miniAOD_ForHiEWQ_customizeCommon(process, isData):
     process.packedPFCandidates.PuppiSrc = ''
     process.packedPFCandidates.PuppiNoLepSrc = ''
     # REMOVE AK8 JETS !!!!!!!!!!!!
-    del process.slimmedJetsAK8
+    if hasattr( process, 'slimmedJetsAK8' ) : del process.slimmedJetsAK8
     #---------------------------------------------------------------------------
     #Ignore  Boosted Subjets taus
     #from RecoTauTag.Configuration.boostedHPSPFTaus_cfi import addBoostedTaus
     #addBoostedTaus(process)
     #---------------------------------------------------------------------------
-    #Ignore noHF pfMET =========
     ## Ignore Legacy tight b-tag track selection
 
     from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag , massSearchReplaceParam
-    listSeq = [cms.Sequence( process.patCaloMet + process.ak4PFL1OffsetCorrector ) , process.pfBTagging , process.patCandidates , process.ak4PFL1FastL2L3ResidualCorrectorChain, process.patMETCorrections, process.patMETCorrectionsNoHF, process.fullPatMetSequence , process.fullPatMetSequenceNoHF ]
+    listSeq = [cms.Sequence( process.patCaloMet + process.ak4PFL1OffsetCorrector ) , process.pfBTagging , process.patCandidates , process.ak4PFL1FastL2L3CorrectorChain , process.patMETCorrections , process.patMETCorrectionsNoHF , process.fullPatMetSequence , process.fullPatMetSequenceNoHF ]
     for seq in listSeq:
+        # Jet Corrections
         massSearchReplaceAnyInputTag(seq,cms.InputTag("ak4PFJetsCHS"),cms.InputTag("ak4PFJets"), skipLabelTest=True)
         massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PFchs"),cms.InputTag("AK4PF_offline"), skipLabelTest=True)
         massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PF"),cms.InputTag("AK4PF_offline"), skipLabelTest=True)
+        massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PFchs_pt"),cms.InputTag("AK4PF_pt"), skipLabelTest=True)
+        massSearchReplaceAnyInputTag(seq,cms.InputTag("L1FastJet"),cms.InputTag(''), skipLabelTest=True)
+        # Jet Algorithms
         massSearchReplaceParam(seq,"algorithm", cms.string('AK4PF'), cms.string('AK4PF_offline'))
         massSearchReplaceParam(seq,"algorithm", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
+        massSearchReplaceParam(seq,"algo", cms.string('AK4PF'), cms.string('AK4PF_offline'))
+        massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
+        #if isData: massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
+        #else:      massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF'))
+        massSearchReplaceParam(seq,"algopt",cms.string('AK4PFchs_pt'),cms.string('AK4PF_pt'))
+        # Jet Payloads 
         massSearchReplaceParam(seq,"payload", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
         massSearchReplaceParam(seq,"payload", cms.string('AK4PF'), cms.string('AK4PF_offline'))
-        massSearchReplaceAnyInputTag(seq,cms.InputTag("L2L3Residual"),cms.InputTag("L3Absolute"), skipLabelTest=True)
-        massSearchReplaceAnyInputTag(seq,cms.InputTag("L1FastJet"),cms.InputTag(''), skipLabelTest=True)
-        massSearchReplaceAnyInputTag(seq,cms.InputTag("ak4PFL1FastL2L3ResidualCorrector"),cms.InputTag('ak4PFL1FastL2L3Corrector'), skipLabelTest=True)
-        massSearchReplaceParam(seq,"addResidualJES", cms.bool(True), cms.bool(False))
-        massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PFchs_pt"),cms.InputTag("AK4PF_pt"), skipLabelTest=True)
-        massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PFchs_phi"),cms.InputTag("AK4PF_phi"), skipLabelTest=True)
-        massSearchReplaceParam(seq,"srcJetResPt",cms.string('AK4PFchs_pt'),cms.string('AK4PF_pt'))
-        massSearchReplaceParam(seq,"algopt",cms.string('AK4PFchs_pt'),cms.string('AK4PF_pt'))
-        massSearchReplaceParam(seq,"srcJetResPhi",cms.string('AK4PFchs_phi'),cms.string('AK4PF_phi'))
-        massSearchReplaceParam(seq,"jetCorrPayloadName", cms.string('AK4PF_offline'), cms.string("AK4PF"))
+        massSearchReplaceParam(seq,"jetCorrPayloadName", cms.string('AK4PF_offline'), cms.string("AK4PF")) # Fix bug "cannot find key 9 in the JEC payload" in shiftedPatJetEnUpNoHF
+        # Jet Scale Factors
         massSearchReplaceParam(seq,"srcJetSF", cms.string('AK4PFchs'), cms.string('AK4PF'))
-        massSearchReplaceParam(seq,"algo", cms.string('AK4PF'), cms.string('AK4PF_offline'))
-        if isData: massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF_offline'))
-        else:      massSearchReplaceParam(seq,"algo", cms.string('AK4PFchs'), cms.string('AK4PF'))
+        # Jet Resolution
+        massSearchReplaceParam(seq,"srcJetResPt",cms.string('AK4PFchs_pt'),cms.string('AK4PF_pt'))
+        massSearchReplaceParam(seq,"srcJetResPhi",cms.string('AK4PFchs_phi'),cms.string('AK4PF_phi'))
+        massSearchReplaceAnyInputTag(seq,cms.InputTag("AK4PFchs_phi"),cms.InputTag("AK4PF_phi"), skipLabelTest=True)
+        # Jet Residuals
+        massSearchReplaceAnyInputTag(seq,cms.InputTag("ak4PFL1FastL2L3ResidualCorrector"),cms.InputTag('ak4PFL1FastL2L3Corrector'), skipLabelTest=True) # Fix Bug "cannot find key 8 in the JEC payload"
+        massSearchReplaceAnyInputTag(seq,cms.InputTag("L2L3Residual"),cms.InputTag("L3Absolute"), skipLabelTest=True)
+        massSearchReplaceParam(seq,"addResidualJES", cms.bool(True), cms.bool(False))
 
-    del process.towerMaker
+    if hasattr( process, 'towerMaker' ) : del process.towerMaker
 
 def miniAOD_ForHiEWQ_customizeMC(process):
     process.load('PhysicsTools.PatAlgos.slimming.slimmedAddPileupInfo_cfi')
