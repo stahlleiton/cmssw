@@ -335,8 +335,9 @@ static inline
 std::vector< std::vector< Char_t > >
 doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDeltaR, double maxDPtRel)
 {
+  // Associate to each input object the nearest match object
   std::vector< Char_t > inV;
-  std::map< Char_t, Char_t > mMap;
+  std::map< Char_t, std::vector< Char_t > > mVecMap;
   for (ushort icand = 0; icand < inC.size(); icand++) {
     const reco::Candidate& inCand = inC.at(icand);
     std::vector< std::pair< float , Char_t > > indexPair;
@@ -349,7 +350,21 @@ doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDel
     }
     std::sort(indexPair.begin(), indexPair.end());
     inV.push_back( (indexPair.size() > 0) ? indexPair[0].second : -1 );
-    if (indexPair.size() > 0) mMap[indexPair[0].second] = icand;
+    if (indexPair.size() > 0) mVecMap[indexPair[0].second].push_back(icand);
+  }
+  // Check that each match object is associated to a unique input object
+  // Choose the nearest input object and exclude the other repeated ones
+  std::map< Char_t, Char_t > mMap;
+  for (const auto& mVec : mVecMap) {
+    const char mIdx = mVec.first;
+    TVector3 m_P3; m_P3.SetPtEtaPhi(mC.at(mIdx).pt(), mC.at(mIdx).eta(), mC.at(mIdx).phi());
+    double minDist = 999999999.; char minIdx = -1;
+    for (const auto& inIdx : mVec.second) {
+      TVector3 in_P3; in_P3.SetPtEtaPhi(inC.at(inIdx).pt(), inC.at(inIdx).eta(), inC.at(inIdx).phi());
+      if ( (in_P3 - m_P3).Mag() < minDist ) { minDist = (in_P3 - m_P3).Mag();  minIdx = inIdx; }
+    }
+    for (const auto& inIdx : mVec.second) { if (inIdx != minIdx) { inV[inIdx] = -1; } }
+    mMap[mIdx] = minIdx;
   }
   std::vector< Char_t > mV;
   for (ushort icand = 0; icand < mC.size(); icand++) {
