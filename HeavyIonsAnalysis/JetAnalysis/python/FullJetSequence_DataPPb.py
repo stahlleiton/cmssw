@@ -2,15 +2,11 @@ import FWCore.ParameterSet.Config as cms
 
 from HeavyIonsAnalysis.JetAnalysis.jets.HiReRecoJets_pPb_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.ak5PFJetSequence_pp_data_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.ak4PFJetSequence_pPb_data_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.ak3PFJetSequence_pPb_data_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.akPu4PFJetSequence_pPb_data_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.ak4CaloJetSequence_pPb_data_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.akPu4CaloJetSequence_pPb_data_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu5CaloJetSequence_pp_data_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu5PFJetSequence_pp_data_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.ak5CaloJetSequence_pp_data_cff import *
 
 ## put this back in if you need to rebuild the rho analyzer eta maps...
 #from RecoJets.JetProducers.kt4PFJets_cfi import kt4PFJets
@@ -42,10 +38,5 @@ jetSequences = cms.Sequence(
     ak3PFJetSequence +
     ak4PFJetSequence +
     akPu4PFJetSequence +
-    ak4CaloJetSequence +
-    akPu4CaloJetSequence +
-    ak5PFJetSequence +
-    akPu5PFJetSequence +
-    ak5CaloJetSequence +
-    akPu5CaloJetSequence 
+    ak4CaloJetSequence 
     )
