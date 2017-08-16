@@ -110,7 +110,7 @@ void L1Analysis::L1AnalysisL1Upgrade::SetMuon(const edm::Handle<l1t::MuonBxColle
 	l1upgrade_.muonIPhiAtVtx.push_back(it->hwPhiAtVtx());
 	l1upgrade_.muonIDEta.push_back(it->hwDEtaExtra());
 	l1upgrade_.muonIDPhi.push_back(it->hwDPhiExtra());
-	l1upgrade_.muonChg.push_back(it->charge());
+	l1upgrade_.muonChg.push_back(it->hwCharge());
 	l1upgrade_.muonIso.push_back(it->hwIso());
 	l1upgrade_.muonQual.push_back(it->hwQual());
 	l1upgrade_.muonTfMuonIdx.push_back(it->tfMuonIndex());

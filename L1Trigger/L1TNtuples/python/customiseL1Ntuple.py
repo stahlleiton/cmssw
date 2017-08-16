@@ -68,6 +68,18 @@ def L1NtupleRAW(process):
 
     return process
 
+def L1NtupleRAWLegacy(process):
+
+    L1NtupleTFileOut(process)
+
+    process.load('L1Trigger.L1TNtuples.L1NtupleRAWLegacy_cff')
+    process.l1ntupleraw = cms.Path(
+        process.L1NtupleRAWLegacy
+    )
+
+    process.schedule.append(process.l1ntupleraw)
+
+    return process
 
 
 def L1NtupleEMU(process):
@@ -121,6 +133,14 @@ def L1NtupleRAWEMU(process):
 def L1NtupleRAWEMULegacy(process):
 
     L1NtupleRAW(process)
+    L1NtupleEMU(process)
+    L1NtupleEMULegacy(process)
+
+    return process
+
+def L1NtupleRAWEMU2015Legacy(process):
+
+    L1NtupleRAWLegacy(process)
     L1NtupleEMU(process)
     L1NtupleEMULegacy(process)
 
