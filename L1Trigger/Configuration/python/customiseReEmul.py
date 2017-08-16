@@ -426,8 +426,6 @@ def L1TReEmulFromRAW2015LegacyMuon(process):
     # Legacy L1T Muon
     process.SimL1TMuonLegacy = cms.Sequence(process.SimTriggerPrimitves + process.simRctDigis + process.simCsctfTrackDigis + process.simCsctfDigis + process.simDttfDigis + process.simRpcTriggerDigis + process.simGmtDigis + process.simMuonLegacyInStage2FormatDigis)
     # Stage2 L1T Muon
-    process.load('L1Trigger.L1TMuon.simMuonQualityAdjusterDigis_cfi')
-    process.L1TReEmul.replace(process.simGmtStage2Digis, process.simMuonQualityAdjusterDigis + process.simGmtStage2Digis)
     # Full Re-Emulation Sequence
     process.L1TReEmulLegacy = cms.Sequence( process.SimL1TMuonLegacy )
     process.L1TReEmulLegacyPath = cms.Path(process.L1TReEmulLegacy)    
