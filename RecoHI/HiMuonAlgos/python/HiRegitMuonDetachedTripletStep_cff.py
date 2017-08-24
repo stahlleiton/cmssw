@@ -5,19 +5,8 @@ import FWCore.ParameterSet.Config as cms
 ################################### 3rd step: low-pT and displaced tracks from pixel triplets
 
 from RecoHI.HiTracking.HITrackingRegionProducer_cfi import *
-# Are the following values set to the same in every iteration? If yes,
-# why not making the change in HITrackingRegionProducer_cfi directly
-# once for all?
 hiRegitMuDetachedTripletStepTrackingRegions = HiTrackingRegionFactoryFromSTAMuonsEDProducer.clone(
-    MuonSrc = "standAloneMuons:UpdatedAtVtx", # this is the same as default, why repeat?
     MuonTrackingRegionBuilder = dict(
-        vertexCollection = "hiSelectedPixelVertex",
-        UseVertex     = True,
-        Phi_fixed     = True,
-        Eta_fixed     = True,
-        DeltaPhi      = 0.3,
-        DeltaEta      = 0.2,
-        # Ok, the following ones are specific to DetachedTripletStep
         Pt_min        = 0.9,
         DeltaR        = 2.0, # default = 0.2
         DeltaZ        = 2.0, # this give you the length

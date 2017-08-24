@@ -4,17 +4,8 @@ import FWCore.ParameterSet.Config as cms
 ################################### 5th step: large impact parameter tracking using TIB/TID/TEC stereo layer seeding
 
 from RecoHI.HiTracking.HITrackingRegionProducer_cfi import *
-# Are the following values set to the same in every iteration? If yes,
-# why not making the change in HITrackingRegionProducer_cfi directly
-# once for all?
 hiRegitMuPixelLessStepTrackingRegions = HiTrackingRegionFactoryFromSTAMuonsEDProducer.clone(
-    MuonSrc = "standAloneMuons:UpdatedAtVtx", # this is the same as default, why repeat?
     MuonTrackingRegionBuilder = dict(
-        vertexCollection = "hiSelectedPixelVertex",
-        UseVertex     = True,
-        Phi_fixed     = True,
-        Eta_fixed     = True,
-        # Ok, the following ones are specific to PixelLessStep
         DeltaPhi      = 0.2,
         DeltaEta      = 0.1,
         Pt_min        = 2.0,

@@ -5,19 +5,8 @@ import FWCore.ParameterSet.Config as cms
 ################################### 4th step: large impact parameter tracking using mixed-triplet seeding
 
 from RecoHI.HiTracking.HITrackingRegionProducer_cfi import *
-# Are the following values set to the same in every iteration? If yes,
-# why not making the change in HITrackingRegionProducer_cfi directly
-# once for all?
 hiRegitMuMixedTripletStepTrackingRegionsA = HiTrackingRegionFactoryFromSTAMuonsEDProducer.clone(
-    MuonSrc = "standAloneMuons:UpdatedAtVtx", # this is the same as default, why repeat?
     MuonTrackingRegionBuilder = dict(
-        vertexCollection = "hiSelectedPixelVertex",
-        UseVertex     = True,
-        Phi_fixed     = True,
-        Eta_fixed     = True,
-        DeltaPhi      = 0.3,
-        DeltaEta      = 0.2,
-        # Ok, the following ones are specific to MixedTripletStep
         Pt_min        = 1.3,
         DeltaR        = 0.5, # default = 0.2
         DeltaZ        = 0.5, # this give you the length

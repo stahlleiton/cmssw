@@ -67,7 +67,11 @@ HiTrackingRegionFactoryFromSTAMuonsEDProducer = _HiTrackingRegionEDProducer.clon
     MuonSrc = "standAloneMuons:UpdatedAtVtx",
     MuonTrackingRegionBuilder = MuonTrackingRegionCommon.MuonTrackingRegionBuilder.clone(
         vertexCollection = "hiSelectedPixelVertex",
-        UseVertex = True,
+        UseVertex  = True,
+        Phi_fixed  = True,
+        Eta_fixed  = True,
+        DeltaPhi   = 0.3,
+        DeltaEta   = 0.2,
         Rescale_Dz = 5.0,
     ),
     ServiceParameters = MuonServiceProxy.ServiceParameters,
