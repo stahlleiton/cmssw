@@ -76,7 +76,7 @@ hiRegitMuDetachedQuadStepTrajectoryBuilder = RecoTracker.IterativeTracking.Detac
 
 hiRegitMuDetachedQuadStepTrackCandidates = RecoTracker.IterativeTracking.DetachedQuadStep_cff.detachedQuadStepTrackCandidates.clone(
     src = 'hiRegitMuDetachedQuadStepSeeds',
-    clustersToSkip = cms.InputTag("hiRegitMuDetachedQuadStepClusters")
+    clustersToSkip = cms.InputTag("hiRegitMuDetachedQuadStepClusters"),
     TrajectoryBuilderPSet = dict(refToPSet_ = 'hiRegitMuDetachedQuadStepTrajectoryBuilder'),
     )
 

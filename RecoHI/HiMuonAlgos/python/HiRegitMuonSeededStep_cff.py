@@ -48,7 +48,7 @@ _forPhase1 = dict(
                       cms.InputTag('hiRegitMuPixelPairStepTracks'),
                       cms.InputTag('hiRegitMuMixedTripletStepTracks'),
                       cms.InputTag('hiRegitMuPixelLessStepTracks'),
-                      cms.InputTag('hiRegitMuDetachedQuadStepTracks')
+                      cms.InputTag('hiRegitMuDetachedQuadStepTracks'),
                       cms.InputTag('hiRegitMuDetachedTripletStepTracks')
                      ),
     hasSelector=cms.vint32(1,1,1,1,1,1,1,1,1,1,1,1,1),
@@ -64,11 +64,11 @@ _forPhase1 = dict(
         cms.InputTag("hiRegitMuPixelPairStepSelector","hiRegitMuPixelPairStep"),
         cms.InputTag("hiRegitMuMixedTripletStepSelector","hiRegitMuMixedTripletStep"),
         cms.InputTag("hiRegitMuPixelLessStepSelector","hiRegitMuPixelLessStep"),
-        cms.InputTag("hiRegitMuDetachedQuadStepSelector","hiRegitMuDetachedQuadStep")
+        cms.InputTag("hiRegitMuDetachedQuadStepSelector","hiRegitMuDetachedQuadStep"),
         cms.InputTag("hiRegitMuDetachedTripletStepSelector","hiRegitMuDetachedTripletStep")
         ),                    
-    setsToMerge = cms.VPSet( cms.PSet( tLists=cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11,12), pQual=cms.bool(True)),  # should this be False?
-    )
+    setsToMerge = cms.VPSet( cms.PSet( tLists=cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11,12), pQual=cms.bool(True)))  # should this be False?
+)
 trackingPhase1.toModify(hiEarlyGeneralTracks, **_forPhase1)
 trackingPhase1QuadProp.toModify(hiEarlyGeneralTracks, **_forPhase1)
 
