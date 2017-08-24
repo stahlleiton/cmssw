@@ -3,19 +3,8 @@ import FWCore.ParameterSet.Config as cms
 # pp iterative tracking modified for hiOffline reco (the vertex is the one reconstructed in HI)
 ################################### 0st step:pixel-triplet seeding, high-pT;
 from RecoHI.HiTracking.HITrackingRegionProducer_cfi import *
-# Are the following values set to the same in every iteration? If yes,
-# why not making the change in HITrackingRegionProducer_cfi directly
-# once for all?
 hiRegitMuInitialStepTrackingRegions = HiTrackingRegionFactoryFromSTAMuonsEDProducer.clone(
-    MuonSrc = "standAloneMuons:UpdatedAtVtx", # this is the same as default, why repeat?
     MuonTrackingRegionBuilder = dict(
-        vertexCollection = "hiSelectedPixelVertex",
-        UseVertex     = True,
-        Phi_fixed     = True,
-        Eta_fixed     = True,
-        DeltaPhi      = 0.3,
-        DeltaEta      = 0.2,
-        # Ok, the following ones are specific to InitialStep
         Pt_min          = 3.0,
         DeltaR          = 1, # default = 0.2
         DeltaZ          = 1, # this give you the length
@@ -35,15 +24,20 @@ hiRegitMuInitialStepHitDoublets = RecoTracker.IterativeTracking.InitialStep_cff.
     trackingRegions = "hiRegitMuInitialStepTrackingRegions",
     clusterCheck = "hiRegitMuClusterCheck"
 )
-from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
-trackingPhase1.toModify(hiRegitMuInitialStepHitDoublets, layerPairs = [0])
 
 hiRegitMuInitialStepHitTriplets = RecoTracker.IterativeTracking.InitialStep_cff.initialStepHitTriplets.clone(
     doublets = "hiRegitMuInitialStepHitDoublets"
 )
-hiRegitMuInitialStepSeeds     = RecoTracker.IterativeTracking.InitialStep_cff.initialStepSeeds.clone(
+
+hiRegitMuInitialStepSeeds = RecoTracker.IterativeTracking.InitialStep_cff.initialStepSeeds.clone(
     seedingHitSets = "hiRegitMuInitialStepHitTriplets"
 )
+
+hiRegitMuInitialStepHitQuadruplets = RecoTracker.IterativeTracking.InitialStep_cff.initialStepHitQuadruplets.clone(
+    triplets = "hiRegitMuInitialStepHitTriplets"
+)
+from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
+trackingPhase1.Modify(hiRegitMuInitialStepSeeds, seedingHitSets = "hiRegitMuInitialStepHitQuadruplets")
 
 
 # building: feed the new-named seeds
@@ -53,8 +47,8 @@ hiRegitMuInitialStepTrajectoryFilterBase.minPt = 2.5 # after each new hit, apply
 hiRegitMuInitialStepTrajectoryFilter = RecoTracker.IterativeTracking.InitialStep_cff.initialStepTrajectoryFilter.clone()
 hiRegitMuInitialStepTrajectoryFilter.filters = cms.VPSet(
       cms.PSet( refToPSet_ = cms.string('hiRegitMuInitialStepTrajectoryFilterBase')),
-      cms.PSet( refToPSet_ = cms.string('initialStepTrajectoryFilterShape')))
-
+      #cms.PSet( refToPSet_ = cms.string('initialStepTrajectoryFilterShape'))
+)
 
 hiRegitMuInitialStepTrajectoryBuilder = RecoTracker.IterativeTracking.InitialStep_cff.initialStepTrajectoryBuilder.clone(
     trajectoryFilter = cms.PSet(
@@ -62,19 +56,23 @@ hiRegitMuInitialStepTrajectoryBuilder = RecoTracker.IterativeTracking.InitialSte
        ),
 )
 
+hiRegitMuInitialStepTrajectoryFilterInOut = RecoTracker.IterativeTracking.InitialStep_cff.initialStepTrajectoryFilterInOut.clone()
+from Configuration.Eras.Modifier_trackingPhase1QuadProp_cff import trackingPhase1QuadProp
+trackingPhase1QuadProp.toModify(hiRegitMuInitialStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuInitialStepTrajectoryFilterInOut"))
+
 # track candidates
-hiRegitMuInitialStepTrackCandidates        =  RecoTracker.IterativeTracking.InitialStep_cff.initialStepTrackCandidates.clone(
-    src               = cms.InputTag('hiRegitMuInitialStepSeeds'),
+hiRegitMuInitialStepTrackCandidates =  RecoTracker.IterativeTracking.InitialStep_cff.initialStepTrackCandidates.clone(
+    src = cms.InputTag('hiRegitMuInitialStepSeeds'),
     TrajectoryBuilderPSet = cms.PSet(
        refToPSet_ = cms.string('hiRegitMuInitialStepTrajectoryBuilder')
        ),
-    maxNSeeds         = cms.uint32(1000000)
+    maxNSeeds = cms.uint32(1000000)
     )
 
 # fitting: feed new-names
-hiRegitMuInitialStepTracks                 = RecoTracker.IterativeTracking.InitialStep_cff.initialStepTracks.clone(
-    AlgorithmName = cms.string('hiRegitMuInitialStep'),
-    src                 = 'hiRegitMuInitialStepTrackCandidates'
+hiRegitMuInitialStepTracks = RecoTracker.IterativeTracking.InitialStep_cff.initialStepTracks.clone(
+    src = 'hiRegitMuInitialStepTrackCandidates',
+    AlgorithmName = cms.string('hiRegitMuInitialStep')
 )
 
 
@@ -140,3 +138,8 @@ hiRegitMuonInitialStep = cms.Sequence(hiRegitMuInitialStepSeedLayers*
                                       hiRegitMuInitialStepTracks*
                                       hiRegitMuInitialStepSelector)
 
+_hiRegitMuonInitialStep_Phase1QuadProp = hiRegitMuonInitialStep.copy()
+_hiRegitMuonInitialStep_Phase1QuadProp.replace(hiRegitMuInitialStepHitTriplets, hiRegitMuInitialStepHitTriplets+hiRegitMuInitialStepHitQuadruplets)
+trackingPhase1QuadProp.toReplaceWith(hiRegitMuonInitialStep, _hiRegitMuonInitialStep_Phase1QuadProp)
+_hiRegitMuonInitialStep_Phase1 = _hiRegitMuonInitialStep_Phase1QuadProp.copyAndExclude([hiRegitMuInitialStepHitTriplets])
+trackingPhase1.toReplaceWith(hiRegitMuonInitialStep, _hiRegitMuonInitialStep_Phase1)

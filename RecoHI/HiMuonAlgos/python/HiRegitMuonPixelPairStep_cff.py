@@ -5,19 +5,8 @@ import FWCore.ParameterSet.Config as cms
 ################################### 2nd step: pixel pairs
 
 from RecoHI.HiTracking.HITrackingRegionProducer_cfi import *
-# Are the following values set to the same in every iteration? If yes,
-# why not making the change in HITrackingRegionProducer_cfi directly
-# once for all?
 hiRegitMuPixelPairStepTrackingRegions = HiTrackingRegionFactoryFromSTAMuonsEDProducer.clone(
-    MuonSrc = "standAloneMuons:UpdatedAtVtx", # this is the same as default, why repeat?
     MuonTrackingRegionBuilder = dict(
-        vertexCollection = "hiSelectedPixelVertex",
-        UseVertex     = True,
-        Phi_fixed     = True,
-        Eta_fixed     = True,
-        DeltaPhi      = 0.3,
-        DeltaEta      = 0.2,
-        # Ok, the following ones are specific to PixelPairStep
         Pt_min          = 1.0,
         DeltaR          = 0.01, # default = 0.2
         DeltaZ          = 0.09, # this give you the length
@@ -31,10 +20,10 @@ from RecoTracker.IterativeTracking.PixelPairStep_cff import *
 # NEW CLUSTERS (remove previously used clusters)
 hiRegitMuPixelPairStepClusters = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepClusters.clone(
     trajectories          = cms.InputTag("hiRegitMuInitialStepTracks"),
-		overrideTrkQuals      = cms.InputTag('hiRegitMuInitialStepSelector','hiRegitMuInitialStep'),
-                trackClassifier       = cms.InputTag(''),
-		oldClusterRemovalInfo = cms.InputTag(""),
-		TrackQuality          = cms.string('tight')
+    overrideTrkQuals      = cms.InputTag('hiRegitMuInitialStepSelector','hiRegitMuInitialStep'),
+    trackClassifier       = cms.InputTag(''),
+    oldClusterRemovalInfo = cms.InputTag(""),
+    TrackQuality          = cms.string('tight')
 )
 
 
@@ -66,7 +55,8 @@ hiRegitMuPixelPairStepTrajectoryFilterBase.minHitsMinPt         = 4
 hiRegitMuPixelPairStepTrajectoryFilter = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTrajectoryFilter.clone()
 hiRegitMuPixelPairStepTrajectoryFilter.filters = cms.VPSet(
       cms.PSet( refToPSet_ = cms.string('hiRegitMuPixelPairStepTrajectoryFilterBase')),
-      cms.PSet( refToPSet_ = cms.string('pixelPairStepTrajectoryFilterShape')))
+      #cms.PSet( refToPSet_ = cms.string('pixelPairStepTrajectoryFilterShape'))
+)
 
 
 hiRegitMuPixelPairStepTrajectoryBuilder = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTrajectoryBuilder.clone(
@@ -76,19 +66,26 @@ hiRegitMuPixelPairStepTrajectoryBuilder = RecoTracker.IterativeTracking.PixelPai
     minNrOfHitsForRebuild = 6 #change from default 4
 )
 
+hiRegitMuPixelPairStepTrajectoryFilterInOut = RecoTracker.IterativeTracking.InitialStep_cff.pixelPairStepTrajectoryFilterInOut.clone()
+from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
+trackingPhase1.toModify(hiRegitMuPixelPairStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuPixelPairStepTrajectoryFilterInOut"))
+from Configuration.Eras.Modifier_trackingPhase1QuadProp_cff import trackingPhase1QuadProp
+trackingPhase1QuadProp.toModify(hiRegitMuInitialStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuPixelPairStepTrajectoryFilterInOut"))
+
+
 # trackign candidate
-hiRegitMuPixelPairStepTrackCandidates        =  RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTrackCandidates.clone(
+hiRegitMuPixelPairStepTrackCandidates = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTrackCandidates.clone(
     src               = cms.InputTag('hiRegitMuPixelPairStepSeeds'),
     TrajectoryBuilder = 'hiRegitMuPixelPairStepTrajectoryBuilder',
-    clustersToSkip = cms.InputTag("hiRegitMuPixelPairStepClusters"),
+    clustersToSkip    = cms.InputTag("hiRegitMuPixelPairStepClusters"),
     maxNSeeds         = cms.uint32(1000000)
     )
 
 # fitting: feed new-names
-hiRegitMuPixelPairStepTracks                 = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTracks.clone(
-    AlgorithmName = cms.string('hiRegitMuPixelPairStep'),
-    src                 = 'hiRegitMuPixelPairStepTrackCandidates',
-    clustersToSkip       = cms.InputTag('hiRegitMuPixelPairStepClusters'),
+hiRegitMuPixelPairStepTracks = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTracks.clone(
+    AlgorithmName  = cms.string('hiRegitMuPixelPairStep'),
+    src            = 'hiRegitMuPixelPairStepTrackCandidates',
+    clustersToSkip = cms.InputTag('hiRegitMuPixelPairStepClusters'),
 )
 
 

@@ -34,6 +34,43 @@ hiEarlyGeneralTracks = RecoTracker.FinalTrackSelectors.trackListMerger_cfi.track
     copyExtras = True,
     makeReKeyedSeeds = cms.untracked.bool(False)
     )
+from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
+from Configuration.Eras.Modifier_trackingPhase1QuadProp_cff import trackingPhase1QuadProp
+_forPhase1 = dict(
+    TrackProducers = (cms.InputTag('hiGlobalPrimTracks'),
+                      cms.InputTag('hiDetachedQuadStepTracks'),
+                      cms.InputTag('hiDetachedTripletStepTracks'),
+                      cms.InputTag('hiLowPtQuadStepTracks'),
+                      cms.InputTag('hiLowPtTripletStepTracks'),
+                      cms.InputTag('hiPixelPairGlobalPrimTracks'),
+                      cms.InputTag('hiJetCoreRegionalStepTracks'),
+                      cms.InputTag('hiRegitMuInitialStepTracks'),
+                      cms.InputTag('hiRegitMuPixelPairStepTracks'),
+                      cms.InputTag('hiRegitMuMixedTripletStepTracks'),
+                      cms.InputTag('hiRegitMuPixelLessStepTracks'),
+                      cms.InputTag('hiRegitMuDetachedQuadStepTracks')
+                      cms.InputTag('hiRegitMuDetachedTripletStepTracks')
+                     ),
+    hasSelector=cms.vint32(1,1,1,1,1,1,1,1,1,1,1,1,1),
+    selectedTrackQuals = cms.VInputTag(
+        cms.InputTag("hiInitialStepSelector","hiInitialStep"),
+        cms.InputTag("hiDetachedQuadStepSelector","hiDetachedQuadStep"),
+        cms.InputTag("hiDetachedTripletStepSelector","hiDetachedTripletStep"),
+        cms.InputTag("hiLowPtQuadStepSelector","hiLowPtQuadStep"),
+        cms.InputTag("hiLowPtTripletStepSelector","hiLowPtTripletStep"),
+        cms.InputTag("hiPixelPairStepSelector","hiPixelPairStep"),
+        cms.InputTag("hiJetCoreRegionalStepSelector","hiJetCoreRegionalStep"),
+        cms.InputTag("hiRegitMuInitialStepSelector","hiRegitMuInitialStepLoose"),
+        cms.InputTag("hiRegitMuPixelPairStepSelector","hiRegitMuPixelPairStep"),
+        cms.InputTag("hiRegitMuMixedTripletStepSelector","hiRegitMuMixedTripletStep"),
+        cms.InputTag("hiRegitMuPixelLessStepSelector","hiRegitMuPixelLessStep"),
+        cms.InputTag("hiRegitMuDetachedQuadStepSelector","hiRegitMuDetachedQuadStep")
+        cms.InputTag("hiRegitMuDetachedTripletStepSelector","hiRegitMuDetachedTripletStep")
+        ),                    
+    setsToMerge = cms.VPSet( cms.PSet( tLists=cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11,12), pQual=cms.bool(True)),  # should this be False?
+    )
+trackingPhase1.toModify(hiEarlyGeneralTracks, **_forPhase1)
+trackingPhase1QuadProp.toModify(hiEarlyGeneralTracks, **_forPhase1)
 
 hiEarlyMuons = earlyMuons.clone(
       inputCollectionLabels = cms.VInputTag(cms.InputTag("hiEarlyGeneralTracks"),cms.InputTag("standAloneMuons","UpdatedAtVtx"))
