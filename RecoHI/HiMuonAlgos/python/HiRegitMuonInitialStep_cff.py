@@ -29,15 +29,17 @@ hiRegitMuInitialStepHitTriplets = RecoTracker.IterativeTracking.InitialStep_cff.
     doublets = "hiRegitMuInitialStepHitDoublets"
 )
 
+hiRegitMuInitialStepHitQuadruplets = RecoTracker.IterativeTracking.InitialStep_cff.initialStepHitQuadruplets.clone(
+    doublets = "hiRegitMuInitialStepHitDoublets"
+)
+from Configuration.Eras.Modifier_trackingPhase1QuadProp_cff import trackingPhase1QuadProp
+trackingPhase1QuadProp.toModify(hiRegitMuInitialStepHitQuadruplets, triplets = "hiRegitMuInitialStepHitTriplets")
+
 hiRegitMuInitialStepSeeds = RecoTracker.IterativeTracking.InitialStep_cff.initialStepSeeds.clone(
     seedingHitSets = "hiRegitMuInitialStepHitTriplets"
 )
-
-hiRegitMuInitialStepHitQuadruplets = RecoTracker.IterativeTracking.InitialStep_cff.initialStepHitQuadruplets.clone(
-    triplets = "hiRegitMuInitialStepHitTriplets"
-)
 from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
-trackingPhase1.Modify(hiRegitMuInitialStepSeeds, seedingHitSets = "hiRegitMuInitialStepHitQuadruplets")
+trackingPhase1.toModify(hiRegitMuInitialStepSeeds, seedingHitSets = "hiRegitMuInitialStepHitQuadruplets")
 
 
 # building: feed the new-named seeds
@@ -57,7 +59,6 @@ hiRegitMuInitialStepTrajectoryBuilder = RecoTracker.IterativeTracking.InitialSte
 )
 
 hiRegitMuInitialStepTrajectoryFilterInOut = RecoTracker.IterativeTracking.InitialStep_cff.initialStepTrajectoryFilterInOut.clone()
-from Configuration.Eras.Modifier_trackingPhase1QuadProp_cff import trackingPhase1QuadProp
 trackingPhase1QuadProp.toModify(hiRegitMuInitialStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuInitialStepTrajectoryFilterInOut"))
 
 # track candidates
@@ -105,7 +106,6 @@ hiRegitMuInitialStepSelector = RecoHI.HiTracking.hiMultiTrackSelector_cfi.hiMult
             ),
         ) #end of vpset
     )
-from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
 trackingPhase1.toModify(hiRegitMuInitialStepSelector, useAnyMVA = cms.bool(False))
 trackingPhase1.toModify(hiRegitMuInitialStepSelector, trackSelectors= cms.VPSet(
         RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi.looseMTS.clone(

@@ -131,7 +131,6 @@ hiRegitMuonSeededTracksInOutSelector = RecoHI.HiTracking.hiMultiTrackSelector_cf
             ),
          ) #end of vpset
       ) #end of clone
-from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
 trackingPhase1.toModify(hiRegitMuonSeededTracksInOutSelector, useAnyMVA = cms.bool(False))
 trackingPhase1.toModify(hiRegitMuonSeededTracksInOutSelector, trackSelectors= cms.VPSet(
          RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi.looseMTS.clone(
@@ -182,7 +181,6 @@ hiRegitMuonSeededTracksOutInSelector = RecoHI.HiTracking.hiMultiTrackSelector_cf
             ),
          ) #end of vpset
       ) #end of clone
-from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
 trackingPhase1.toModify(hiRegitMuonSeededTracksOutInSelector, useAnyMVA = cms.bool(False))
 trackingPhase1.toModify(hiRegitMuonSeededTracksOutInSelector, trackSelectors= cms.VPSet(
          RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi.looseMTS.clone(

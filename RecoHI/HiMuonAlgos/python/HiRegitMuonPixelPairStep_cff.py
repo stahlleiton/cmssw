@@ -66,11 +66,11 @@ hiRegitMuPixelPairStepTrajectoryBuilder = RecoTracker.IterativeTracking.PixelPai
     minNrOfHitsForRebuild = 6 #change from default 4
 )
 
-hiRegitMuPixelPairStepTrajectoryFilterInOut = RecoTracker.IterativeTracking.InitialStep_cff.pixelPairStepTrajectoryFilterInOut.clone()
+hiRegitMuPixelPairStepTrajectoryFilterInOut = RecoTracker.IterativeTracking.PixelPairStep_cff.pixelPairStepTrajectoryFilterInOut.clone()
 from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
 trackingPhase1.toModify(hiRegitMuPixelPairStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuPixelPairStepTrajectoryFilterInOut"))
 from Configuration.Eras.Modifier_trackingPhase1QuadProp_cff import trackingPhase1QuadProp
-trackingPhase1QuadProp.toModify(hiRegitMuInitialStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuPixelPairStepTrajectoryFilterInOut"))
+trackingPhase1QuadProp.toModify(hiRegitMuPixelPairStepTrajectoryBuilder, inOutTrajectoryFilter = dict(refToPSet_ = "hiRegitMuPixelPairStepTrajectoryFilterInOut"))
 
 
 # trackign candidate
@@ -118,7 +118,6 @@ hiRegitMuPixelPairStepSelector = RecoHI.HiTracking.hiMultiTrackSelector_cfi.hiMu
             ),
         ) #end of vpset
 )
-from Configuration.Eras.Modifier_trackingPhase1_cff import trackingPhase1
 trackingPhase1.toModify(hiRegitMuPixelPairStepSelector, useAnyMVA = cms.bool(False))
 trackingPhase1.toModify(hiRegitMuPixelPairStepSelector, trackSelectors= cms.VPSet(
         RecoTracker.FinalTrackSelectors.multiTrackSelector_cfi.looseMTS.clone(
