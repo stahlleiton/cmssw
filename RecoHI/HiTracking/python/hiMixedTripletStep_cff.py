@@ -87,6 +87,7 @@ hiMixedTripletSeedLayersB = cms.EDProducer("SeedingLayersEDProducer",
     matchedRecHits = cms.InputTag("siStripMatchedRecHits","matchedRecHit"),
     TTRHBuilder = cms.string('WithTrackAngle'),
     skipClusters = cms.InputTag('hiMixedTripletClusters')
+    ,clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutNone'))
     )
                                    )
 
@@ -149,7 +150,7 @@ hiMixedTripletTrajectoryBuilder = RecoTracker.CkfPattern.GroupedCkfTrajectoryBui
     trajectoryFilter = cms.PSet(refToPSet_ = cms.string('hiMixedTripletTrajectoryFilter')),
     propagatorAlong = cms.string('hiMixedTripletPropagator'),
     propagatorOpposite = cms.string('hiMixedTripletPropagatorOpposite'),
-    clustersToSkip = cms.InputTag('hiMixedTripletClusters'),
+    #clustersToSkip = cms.InputTag('hiMixedTripletClusters'), ERROR: 24BaseCkfTrajectoryBuilder has a clustersToSkip parameter set
     maxCand = 2,
     estimator = cms.string('hiMixedTripletChi2Est')
     )
