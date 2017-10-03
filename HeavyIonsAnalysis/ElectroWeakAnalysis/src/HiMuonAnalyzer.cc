@@ -198,6 +198,13 @@ HiMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   indexMap_PF["RECO"]  = matchRECOPF[1];
   indexMap_PF["GEN"]   = matchPFGEN[0];
   indexMap_GEN["PF"]   = matchPFGEN[1];
+  // Clean the RECO-GEN matching using the PF maps
+  for (ushort imuPF = 0; imuPF < indexMap_PF.at("RECO").size(); imuPF++) {
+    const short imuRECO = indexMap_PF.at("RECO")[imuPF];
+    const short imuGEN  = indexMap_PF.at("GEN")[imuPF];
+    if (imuRECO > -1) { indexMap_RECO.at("GEN")[imuRECO] = imuGEN; }
+    if (imuGEN  > -1) { indexMap_GEN.at("RECO")[imuGEN] = imuRECO; }
+  }
 
   std::vector< std::string > treeNames;
   if (_doAll) { treeNames.push_back("All"); }
@@ -602,7 +609,7 @@ HiMuonEvent::Fill(const reco::MuonCollection& recoMuonCollection, const IndexMap
 
 //--------------------------------------------------------------------------------------------------
 bool 
-HiMuonEvent::isMatched(const reco::Candidate& cand1, const reco::Candidate& cand2, double maxDeltaR, double maxDPtRel)
+HiMuonEvent::isMatched(const reco::Candidate& cand1, const reco::Candidate& cand2, const double maxDeltaR, const double maxDPtRel)
 {
   double deltaR = reco::deltaR( cand1.eta(), cand2.phi(), cand1.eta(), cand2.phi());
   double dPtRel = abs( cand1.pt() - cand2.pt() ) / ( cand2.pt() + 1E-12 );
@@ -611,7 +618,7 @@ HiMuonEvent::isMatched(const reco::Candidate& cand1, const reco::Candidate& cand
 
 //--------------------------------------------------------------------------------------------------
 double 
-HiMuonEvent::pfIsolation(const reco::Candidate& muon, const reco::PFCandidateCollection& pfCandColl, double coneSize, double vetoArea)
+HiMuonEvent::pfIsolation(const reco::Candidate& muon, const reco::PFCandidateCollection& pfCandColl, const double coneSize, const double vetoArea)
 {
   double sumPt = 0.0;
   for (uint icand = 0; icand < pfCandColl.size(); icand++) {
@@ -814,6 +821,23 @@ HiMuonEvent::Fill(const reco::GenParticleRefVector& genRefCollection, const Inde
       }
     }
   }
+  // Search for missing mothers and add them to the gen collection
+  std::vector< uint > newMothers;
+  for (uint ipar = 0; ipar < genParticleRefCollection.size(); ipar++ ) {
+    const reco::GenParticleRef& genParticleRef = genParticleRefCollection.at(ipar);
+    if ( ( (abs(genParticleRef->pdgId()) >  10) && (abs(genParticleRef->pdgId()) < 19) ) || // Keep mothers of Leptons
+         ( (abs(genParticleRef->pdgId()) >  22) && (abs(genParticleRef->pdgId()) < 25) )    // Keep mothers of Z and W Bosons
+         ){
+      uint numberOfMothers = genParticleRef->numberOfMothers();
+      for (uint imom = 0; imom < numberOfMothers; imom++ ) {
+        reco::GenParticleRef genMotherRef = genParticleRef->motherRef(imom);
+        if ( genMotherRef.isNonnull() && genMotherRef.isAvailable() && (findGenIndex(genMotherRef, genParticleRefCollection) == -1) ) { 
+          genParticleRefCollection.push_back( genMotherRef ); 
+          newMothers.push_back(genParticleRefCollection.size()-1);
+        }
+      }
+    }
+  }
   // Loop over the Gen Particle Collection
   std::vector< UShort_t > genMuonIndex;
   reco::GenParticleCollection genMuonCollection;
@@ -837,7 +861,10 @@ HiMuonEvent::Fill(const reco::GenParticleRefVector& genRefCollection, const Inde
     for (ushort idau = 0; idau < genParticle.numberOfDaughters(); idau++ ) {
       short index = findGenIndex(genParticle.daughterRef(idau), genParticleRefCollection);
       if (index >= 0) daughterIndex.push_back( index );
-      if (index <  0)  std::cout << "[Error] Daughter not found: " << genParticle.daughterRef(idau)->pdgId() << " pt: " << genParticle.daughterRef(idau)->pt() << std::endl;
+      if (index <  0) {
+        bool ignoreError = false; for (const uint iMom : newMothers) { if (ipar==iMom) { ignoreError = true; break; } }
+        if (ignoreError == false) { edm::LogError("DaugtherNotFound") << "Daughter not found: " << genParticle.daughterRef(idau)->pdgId() << " pt: " << genParticle.daughterRef(idau)->pt() << std::endl; }
+      }
     }
     this->Gen_Particle_Daughter_Index.push_back( daughterIndex );
   }

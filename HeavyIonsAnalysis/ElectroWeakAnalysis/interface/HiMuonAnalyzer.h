@@ -81,9 +81,9 @@ class HiMuonEvent
 
  private:
 
-  bool   isMatched              ( const reco::Candidate&,             const reco::Candidate&,             double, double    );
-  double pfIsolation            ( const reco::Candidate&,             const reco::PFCandidateCollection&, double, double    );
-  short  findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleRefVector&                     );
+  bool   isMatched              ( const reco::Candidate&,             const reco::Candidate&,             const double, const double );
+  double pfIsolation            ( const reco::Candidate&,             const reco::PFCandidateCollection&, const double, const double );
+  short  findGenIndex           ( const reco::GenParticleRef&,        const reco::GenParticleRefVector& );
 
   ESTransientTrackBuilder         _theTTBuilder;
   const std::vector < double >    _muMasses = { 0.1056583715 , 0.1056583715 };
@@ -320,7 +320,7 @@ class HiMuonAnalyzer : public edm::EDAnalyzer
 template <class T>
 static inline
 void 
-getCollection(const edm::Event & event, const edm::EDGetTokenT<T> token, edm::Handle<T> & handle) 
+getCollection(const edm::Event & event, const edm::EDGetTokenT<T> & token, edm::Handle<T> & handle) 
 {
   event.getByToken(token, handle);
   if (!handle.isValid()) { handle.clear(); }
@@ -333,7 +333,7 @@ bool checkObject(const reco::Candidate& inC   , const reco::Candidate& mC   ) { 
 template < class inT , class mT >
 static inline
 std::vector< std::vector< Char_t > >
-doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, double maxDeltaR, double maxDPtRel)
+doMatching(const std::vector<inT>& inC, const std::vector<mT>& mC, const double maxDeltaR, const double maxDPtRel )
 {
   // Associate to each input object the nearest match object
   std::vector< Char_t > inV;
