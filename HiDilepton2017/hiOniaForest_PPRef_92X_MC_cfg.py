@@ -12,23 +12,19 @@ muonSelection  = "Trk"    # Single muon selection: Glb(isGlobal), GlbTrk(isGloba
 
 triggerList    = {
     # Double Muon Trigger List
-    'DoubleMuonTrigger' : cms.vstring("HLT_PAL1DoubleMuOpen_v1",
-                                      "HLT_PAL1DoubleMuOpen_OS_v1"),
+    'DoubleMuonTrigger' : cms.vstring(),
     # Double Muon Filter List
-    'DoubleMuonFilter'  : cms.vstring("hltL1fL1sDoubleMuOpenBptxANDL1Filtered0",
-                                      "hltL1fL1sDoubleMuOpenOSBptxANDL1Filtered0"),
+    'DoubleMuonFilter'  : cms.vstring(),
     # Double Muon Trigger List
-    'SingleMuonTrigger' : cms.vstring("HLT_PAL1SingleMuOpen_v1",
-                                      "HLT_PAL1SingleMuOpen_OS_v1"),
+    'SingleMuonTrigger' : cms.vstring(),
     # Single Muon Filter List
-    'SingleMuonFilter'  : cms.vstring("hltL1fL1sSingleMuOpenBptxANDL1Filtered0",
-                                      "hltL1fL1sSingleMuOpenOSBptxANDL1Filtered0")
+    'SingleMuonFilter'  : cms.vstring()
     }
 
 if isMC:
-    globalTag = 'auto:run2_mc'
+    globalTag = '92X_upgrade2017_realistic_v11'
 else:
-    globalTag = 'auto:run2_hlt'
+    globalTag = '92X_dataRun2_PromptLike_v5'
 
 #----------------------------------------------------------------------------
 
@@ -42,7 +38,8 @@ options = VarParsing.VarParsing ('analysis')
 # Input and Output File Names
 options.outputFile = "OniaForest.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
-options.inputFiles =  'file:/afs/cern.ch/work/e/echapon/public/RunPrep2017/step3_gunJpsi_RAW2DIGI_L1Reco_RECO.root'
+options.inputFiles = '/store/user/gsfs/Pythia8_JPsiGun_pp_5020GeV/RECO__201711010/171011_011033/0000/step3_pp_RAW2DIGI_L1Reco_RECO_1.root'
+options.secondaryInputFiles = '/store/user/gsfs/Pythia8_JPsiGun_pp_5020GeV/RAW_20171010/171010_124128/0000/step2_pp_DIGI_L1_DIGI2RAW_HLT_1.root'
 options.maxEvents = -1 # -1 means all events
 
 # Get and parse the command line arguments
@@ -104,7 +101,8 @@ process.hltObjectAna = cms.EndPath(process.hltobject)
 
 #Options:
 process.source    = cms.Source("PoolSource",
-                               fileNames = cms.untracked.vstring( options.inputFiles )
+                               fileNames = cms.untracked.vstring( options.inputFiles ),
+                               secondaryFileNames = cms.untracked.vstring( options.secondaryInputFiles )
                                )
 process.TFileService = cms.Service("TFileService", 
                                    fileName = cms.string( options.outputFile )
