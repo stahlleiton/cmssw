@@ -44,10 +44,14 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     
     if useL1Stage2:
         useL1Stage2Candidates(process)
-        process.muonMatchHLTL1.matchedCuts = cms.string('coll("hltGmtStage2Digis:Muon")')
+        process.patTrigger.collections.append("hltGtStage2Digis:Muon") 
+        process.muonMatchHLTL1.matchedCuts = cms.string('coll("hltGtStage2Digis:Muon")')
         process.muonMatchHLTL1.useMB2InOverlap = cms.bool(True)
         process.muonMatchHLTL1.useStage2L1 = cms.bool(True)
         process.muonMatchHLTL1.preselection = cms.string("")
+
+    process.patTrigger.collections.append("hltIterL3MuonCandidates") 
+    process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltIterL3MuonCandidates")') 
 
     process.muonL1Info.maxDeltaR = 0.3
     process.muonL1Info.maxDeltaEta   = 0.2
@@ -63,12 +67,6 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     process.muonMatchHLTCtfTrack.maxDPtRel = 10.0
     process.muonMatchHLTTrackMu.maxDeltaR = 0.1
     process.muonMatchHLTTrackMu.maxDPtRel = 10.0
-    
-    process.patTrigger.collections.append("hltHIL3MuonCandidates") 
-    process.muonMatchHLTL3T.maxDeltaR = 0.1
-    process.muonMatchHLTL3T.maxDPtRel = 10.0
-    process.muonMatchHLTL3T.matchedCuts = cms.string('coll("hltHIL3MuonCandidates")') 
-    process.muonMatchHLTL3T.resolveAmbiguities = False
       
     # Make a sequence
     process.patMuonSequence = cms.Sequence(
