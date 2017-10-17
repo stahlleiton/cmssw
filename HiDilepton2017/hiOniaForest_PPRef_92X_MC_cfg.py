@@ -6,19 +6,77 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 # Setup Settings for ONIA FOREST:
 
-HLTProcess     = "HLT"    # Name of HLT process 
+HLTProcess     = "MYHLT"    # Name of HLT process 
 isMC           = True     # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "Trk"    # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker) are availale
 
 triggerList    = {
     # Double Muon Trigger List
-    'DoubleMuonTrigger' : cms.vstring(),
+    'DoubleMuonTrigger' : cms.vstring(
+        "HLT_HIL1DoubleMuOpen_v1",
+        "HLT_HIL1DoubleMuOpen_OS_v1",
+        "HLT_HIL1DoubleMuOpen_SS_v1",
+        "HLT_HIL1DoubleMu0_v1",
+        "HLT_HIL1DoubleMu0_HighQ_v1",
+        "HLT_HIL1DoubleMu10_v1",
+        "HLT_HIL2DoubleMu0_v1",
+        "HLT_HIL2DoubleMu10_v1",
+        "HLT_HIL3DoubleMu0_v1",
+        "HLT_HIL3DoubleMu10_v1",
+        ),
     # Double Muon Filter List
-    'DoubleMuonFilter'  : cms.vstring(),
+    'DoubleMuonFilter'  : cms.vstring(
+        "hltL1fL1sDoubleMuOpenBptxANDL1Filtered0",
+        "hltL1fL1sDoubleMuOpenOSBptxANDL1Filtered0",
+        "hltL1fL1sDoubleMuOpenSSBptxANDL1Filtered0",
+        "hltL1fL1sDoubleMu0BptxANDL1Filtered0",
+        "hltL1fL1sDoubleMu0BptxANDL1HighQFiltered0",
+        "hltL1fL1sDoubleMu10BptxANDL1Filtered0",
+        "hltL2fL1sDoubleMu0BptxANDL1f0L2Filtered0",
+        "hltL2fL1sDoubleMu10BptxANDL1f0L2Filtered10",
+        "hltL3fL1sDoubleMu0BptxANDL1f0L2f0L3Filtered0",
+        "hltL3fL1sDoubleMu10BptxANDL1f0L2f0L3Filtered10",
+        ),
     # Double Muon Trigger List
-    'SingleMuonTrigger' : cms.vstring(),
+    'SingleMuonTrigger' : cms.vstring(
+        "HLT_HIL1Mu3_v1",
+        "HLT_HIL1Mu5_v1",
+        "HLT_HIL1Mu7_v1",
+        "HLT_HIL1Mu12_v1",
+        "HLT_HIL1Mu16_v1",
+        "HLT_HIL2Mu3_v1",
+        "HLT_HIL2Mu5_v1",
+        "HLT_HIL2Mu7_v1",
+        "HLT_HIL2Mu12_v1",
+        "HLT_HIL2Mu15_v1",
+        "HLT_HIL2Mu20_v1",
+        "HLT_HIL3Mu3_v1",
+        "HLT_HIL3Mu5_v1",
+        "HLT_HIL3Mu7_v1",
+        "HLT_HIL3Mu12_v1",
+        "HLT_HIL3Mu15_v1",
+        "HLT_HIL3Mu20_v1",
+        ),
     # Single Muon Filter List
-    'SingleMuonFilter'  : cms.vstring()
+    'SingleMuonFilter'  : cms.vstring(
+        "hltL1fL1sSingleMu3BptxANDL1Filtered0",
+        "hltL1fL1sSingleMu5BptxANDL1Filtered0",
+        "hltL1fL1sSingleMu7BptxANDL1Filtered0",
+        "hltL1fL1sSingleMu12BptxANDL1Filtered0",
+        "hltL1fL1sSingleMu16BptxANDL1Filtered0",
+        "hltL2fL1sSingleMu3BptxANDL1f0L2Filtered3",
+        "hltL2fL1sSingleMu3OR5BptxANDL1f0L2Filtered5",
+        "hltL2fL1sSingleMu3OR5BptxANDL1f0L2Filtered7",
+        "hltL2fL1sSingleMu7BptxANDL1f0L2Filtered12",
+        "hltL2fL1sSingleMu7BptxANDL1f0L2Filtered15",
+        "hltL2fL1sSingleMu7BptxANDL1f0L2Filtered20",
+        "hltL3fL1sSingleMu3BptxANDL1f0L2f0L3Filtered3",
+        "hltL3fL1sSingleMu3OR5BptxANDL1f0L2f0L3Filtered5",
+        "hltL3fL1sSingleMu3OR5BptxANDL1f0L2f0L3Filtered7",
+        "hltL3fL1sSingleMu7BptxANDL1f0L2f0L3Filtered12",
+        "hltL3fL1sSingleMu7BptxANDL1f0L2f0L3Filtered15",
+        "hltL3fL1sSingleMu7BptxANDL1f0L2f0L3Filtered20",
+        )
     }
 
 if isMC:
@@ -38,8 +96,7 @@ options = VarParsing.VarParsing ('analysis')
 # Input and Output File Names
 options.outputFile = "OniaForest.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
-options.inputFiles = '/store/user/gsfs/Pythia8_JPsiGun_pp_5020GeV/RECO__201711010/171011_011033/0000/step3_pp_RAW2DIGI_L1Reco_RECO_1.root'
-options.secondaryInputFiles = '/store/user/gsfs/Pythia8_JPsiGun_pp_5020GeV/RAW_20171010/171010_124128/0000/step2_pp_DIGI_L1_DIGI2RAW_HLT_1.root'
+options.inputFiles = 'file:step3_PAHLT.root'
 options.maxEvents = -1 # -1 means all events
 
 # Get and parse the command line arguments
@@ -66,24 +123,27 @@ oniaTreeAnalyzer(process, muonTriggerList=triggerList, HLTProName=HLTProcess, mu
 
 # For HLTBitAnalyzer
 process.load("HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi")
-process.hltbitanalysis.HLTProcessName = HLTProcess
-process.hltbitanalysis.hltresults = cms.InputTag("TriggerResults","",HLTProcess)
-process.hltbitanalysis.l1tAlgBlkInputTag = cms.InputTag("hltGtStage2Digis","",HLTProcess)
-process.hltbitanalysis.l1tExtBlkInputTag = cms.InputTag("hltGtStage2Digis","",HLTProcess)
-process.hltbitanalysis.gObjectMapRecord  = cms.InputTag("hltGtStage2ObjectMap","",HLTProcess)
+process.hltbitanalysis.HLTProcessName              = HLTProcess
+process.hltbitanalysis.hltresults                  = cms.InputTag("TriggerResults","",HLTProcess)
+process.hltbitanalysis.l1tAlgBlkInputTag           = cms.InputTag("hltGtStage2Digis","",HLTProcess)
+process.hltbitanalysis.l1tExtBlkInputTag           = cms.InputTag("hltGtStage2Digis","",HLTProcess)
+process.hltbitanalysis.gObjectMapRecord            = cms.InputTag("hltGtStage2ObjectMap","",HLTProcess)
+process.hltbitanalysis.gmtStage2Digis              = cms.string("hltGtStage2Digis")
+process.hltbitanalysis.caloStage2Digis             = cms.string("hltGtStage2Digis")
+process.hltbitanalysis.UseL1Stage2                 = cms.untracked.bool(True)
+process.hltbitanalysis.getPrescales                = cms.untracked.bool(False)
+process.hltbitanalysis.getL1InfoFromEventSetup     = cms.untracked.bool(False)
+process.hltbitanalysis.UseTFileService             = cms.untracked.bool(True)
 process.hltbitanalysis.RunParameters.HistogramFile = cms.untracked.string(options.outputFile)
-process.hltbitanalysis.RunParameters.isData = cms.untracked.bool(not isMC)
-process.hltbitanalysis.RunParameters.Monte = cms.bool(isMC)
-process.hltbitanalysis.RunParameters.GenTracks = cms.bool(False)
-process.hltbitanalysis.RunParameters.UseL1Stage2 = cms.bool(True)
-process.hltbitanalysis.UseTFileService = cms.untracked.bool(True)
+process.hltbitanalysis.RunParameters.isData        = cms.untracked.bool(not isMC)
+process.hltbitanalysis.RunParameters.Monte         = cms.bool(isMC)
+process.hltbitanalysis.RunParameters.GenTracks     = cms.bool(False)
 process.hltBitAna = cms.EndPath(process.hltbitanalysis)
 if (HLTProcess == "HLT") :
     process.hltbitanalysis.l1tAlgBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
     process.hltbitanalysis.l1tExtBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
-    process.hltbitanalysis.gObjectMapRecord  = cms.InputTag("gtStage2ObjectMap","","RECO")
-    process.hltbitanalysis.gmtStage2Digis    = cms.string("gmtStage2Digis")
-    process.hltbitanalysis.caloStage2Digis   = cms.string("caloStage2Digis")
+    process.hltbitanalysis.gmtStage2Digis    = cms.string("gtStage2Digis")
+    process.hltbitanalysis.caloStage2Digis   = cms.string("gtStage2Digis")
 
 #----------------------------------------------------------------------------
 
@@ -100,10 +160,9 @@ process.hltObjectAna = cms.EndPath(process.hltobject)
 #----------------------------------------------------------------------------
 
 #Options:
-process.source    = cms.Source("PoolSource",
-                               fileNames = cms.untracked.vstring( options.inputFiles ),
-                               secondaryFileNames = cms.untracked.vstring( options.secondaryInputFiles )
-                               )
+process.source = cms.Source("PoolSource",
+                            fileNames = cms.untracked.vstring( options.inputFiles ),
+                            )
 process.TFileService = cms.Service("TFileService", 
                                    fileName = cms.string( options.outputFile )
                                    )
