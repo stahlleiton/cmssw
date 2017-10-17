@@ -1,6 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
 hltbitanalysis = cms.EDAnalyzer("HLTBitAnalyzer",
+    ### General Settings
+    UseL1Stage2                     = cms.untracked.bool(True),
+    getPrescales                    = cms.untracked.bool(False),
+    getL1InfoFromEventSetup         = cms.untracked.bool(False),
+
     ### L1 Legacy and Stage 1 objects
     l1GctHFBitCounts                = cms.InputTag("hltGctDigis"),
     l1GctHFRingSums                 = cms.InputTag("hltGctDigis"),
@@ -12,8 +17,8 @@ hltbitanalysis = cms.EDAnalyzer("HLTBitAnalyzer",
     l1tAlgBlkInputTag               = cms.InputTag("hltGtStage2Digis"),  # Needed, fix bug of GlobalAlgBlk uninitialized token
     l1tExtBlkInputTag               = cms.InputTag("hltGtStage2Digis"),
     gObjectMapRecord                = cms.InputTag("hltGtStage2ObjectMap"),
-    gmtStage2Digis                  = cms.string("hltGmtStage2Digis"),
-    caloStage2Digis                 = cms.string("hltCaloStage2Digis"),
+    gmtStage2Digis                  = cms.string("hltGtStage2Digis"),
+    caloStage2Digis                 = cms.string("hltGtStage2Digis"),
 
     ### HLT
     hltresults                      = cms.InputTag("TriggerResults::HLT"),
@@ -34,8 +39,7 @@ hltbitanalysis = cms.EDAnalyzer("HLTBitAnalyzer",
         HistogramFile = cms.untracked.string('hltbitanalysis.root'),
         isData         = cms.untracked.bool(False),
         Monte          = cms.bool(True),
-        GenTracks      = cms.bool(True),
-        UseL1Stage2    = cms.bool(True)
+        GenTracks      = cms.bool(False),
     )
                                 
 )

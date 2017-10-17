@@ -12,6 +12,7 @@
 
 #include "HLTrigger/HLTanalyzers/interface/HLTStage2Info.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 // L1 related
 #include "CondFormats/L1TObjects/interface/L1TUtmTriggerMenu.h"
@@ -31,12 +32,12 @@ void HLTStage2Info::beginRun(const edm::Run& run, const edm::EventSetup& c){
     if (changed) {
       // The HLT config has actually changed wrt the previous Run, hence rebook your
       // histograms or do anything else dependent on the revised HLT config
-      std::cout << "Initalizing HLTConfigProvider"  << std::endl;
+      edm::LogInfo("HLTStage2Info") << "Initalizing HLTConfigProvider"  << std::endl;
     }
   } else {
     // if init returns FALSE, initialisation has NOT succeeded, which indicates a problem
     // with the file and/or code and needs to be investigated!
-    std::cout << " HLT config extraction failure with process name " << processName_ << std::endl;
+    edm::LogError("HLTStage2Info") << "HLT config extraction failure with process name " << processName_ << std::endl;
     // In this case, all access methods will return empty values!
   }
   l1tGlobalUtil_->setUnprescaledUnmasked(!getPrescales_, true);
@@ -52,9 +53,8 @@ void HLTStage2Info::setup(const edm::ParameterSet& pSet, TTree* HltTree) {
   edm::ParameterSet myHltParams = pSet.getParameter<edm::ParameterSet>("RunParameters") ;
   std::vector<std::string> parameterNames = myHltParams.getParameterNames() ;
   
-  for ( std::vector<std::string>::iterator iParam = parameterNames.begin();
-        iParam != parameterNames.end(); iParam++ ){
-    if ( (*iParam) == "Debug" ) _Debug =  myHltParams.getParameter<bool>( *iParam );
+  for (const auto& iParam : parameterNames) {
+    if (iParam == "Debug") { _Debug =  myHltParams.getParameter<bool>( iParam ); }
   }
 
   getPrescales_ = pSet.getUntrackedParameter<bool>("getPrescales", false);
@@ -195,15 +195,13 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
                             edm::EventSetup const& eventSetup,
                             edm::Event const& iEvent,
                             TTree* HltTree) {
-  
-  //   std::cout << " Beginning HLTStage2Info " << std::endl;
 
   l1tGlobalUtil_->retrieveL1Event(iEvent,eventSetup);
 
   /////////// Analyzing HLT Trigger Results (TriggerResults) //////////
   if (hltresults.isValid() && !hltresults.failedToGet()) {
     int ntrigs = hltresults->size();
-    if (ntrigs==0){std::cout << "%HLTStage2Info -- No trigger name given in TriggerResults of the input " << std::endl;}
+    if (ntrigs==0) { edm::LogWarning("HLTStage2Info") << "No trigger name given in TriggerResults of the input " << std::endl;}
 
     edm::TriggerNames const& triggerNames = iEvent.triggerNames(*hltresults);
 
@@ -248,12 +246,12 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
       else {trigflag[itrig] = 0;}
 
       if (_Debug){
-        if (_Debug) std::cout << "%HLTStage2Info --  Number of HLT Triggers: " << ntrigs << std::endl;
-        std::cout << "%HLTStage2Info --  HLTTrigger(" << itrig << "): " << trigName << " = " << accept << std::endl;
+        edm::LogInfo("HLTStage2Info") << "Number of HLT Triggers: " << ntrigs << std::endl;
+        edm::LogInfo("HLTStage2Info") << "HLTTrigger(" << itrig << "): " << trigName << " = " << accept << std::endl;
       }
     }
   }
-  else { if (_Debug) std::cout << "%HLTStage2Info -- No Trigger Result" << std::endl;}
+  else { if (_Debug) edm::LogInfo("HLTStage2Info") << "No Trigger Result" << std::endl;}
 
   /////////// Analyzing L1 Stage2 objects //////////
 
@@ -275,7 +273,7 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
   }
   else {
     nl1stage2eg = 0;
-    if (_Debug) std::cout << "%HLTStage2Info -- No L1 Stage2 EGamma object" << std::endl;
+    if (_Debug) edm::LogInfo("HLTStage2Info") << "No L1 Stage2 EGamma object" << std::endl;
   }
 
   if (L1Stage2Muon.isValid() && !L1Stage2Muon.failedToGet()) {
@@ -340,7 +338,7 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
   else {
     nl1stage2mu = 0;
     nl1stage2dimu = 0;
-    if (_Debug) std::cout << "%HLTStage2Info -- No L1 Stage2 Muon object" << std::endl;
+    if (_Debug) edm::LogInfo("HLTStage2Info") << "No L1 Stage2 Muon object" << std::endl;
   }
 
   if (L1Stage2Jet.isValid() && !L1Stage2Jet.failedToGet()) {
@@ -360,7 +358,7 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
   }
   else {
     nl1stage2jet = 0;
-    if (_Debug) std::cout << "%HLTStage2Info -- No L1 Stage2 Jet object" << std::endl;
+    if (_Debug) edm::LogInfo("HLTStage2Info") << "No L1 Stage2 Jet object" << std::endl;
   }
 
   if (L1Stage2Tau.isValid() && !L1Stage2Tau.failedToGet()) {
@@ -380,7 +378,7 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
   }
   else {
     nl1stage2tau = 0;
-    if (_Debug) std::cout << "%HLTStage2Info -- No L1 Stage2 Tau object" << std::endl;
+    if (_Debug) edm::LogInfo("HLTStage2Info") << "No L1 Stage2 Tau object" << std::endl;
   }
 
   if (L1Stage2EtSum.isValid() && !L1Stage2EtSum.failedToGet()) {
@@ -401,7 +399,7 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
   }
   else {
     nl1stage2ets = 0;
-    if (_Debug) std::cout << "%HLTStage2Info -- No L1 Stage2 EtSum object" << std::endl;
+    if (_Debug) edm::LogInfo("HLTStage2Info") << "No L1 Stage2 EtSum object" << std::endl;
   }
 
   //==============L1 Stage2 information=======================================
@@ -411,28 +409,26 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
     // Get the stage2 menu from GlobalObjectMapRecord collection
     if (L1TEvtCnt==0){
       // 1st event : Book as many branches as trigger paths provided in the input...
-      const std::vector<GlobalObjectMap> gObjectMapRecord = L1GOMR->gtObjectMap();
-      std::vector<GlobalObjectMap>::const_iterator gObjectMap = gObjectMapRecord.begin();
+      const std::vector<GlobalObjectMap>& gObjectMapRecord = L1GOMR->gtObjectMap();
       // Book branches for algo bits
-      for (; gObjectMap!=gObjectMapRecord.end(); ++gObjectMap) {
-        int itrig = gObjectMap->algoBitNumber();
-        algoBitToName[itrig] = TString( gObjectMap->algoName() );
+      for (const auto& gObjectMap : gObjectMapRecord) {
+        const int itrig = gObjectMap.algoBitNumber();
+        algoBitToName[itrig] = TString( gObjectMap.algoName() );
         HltTree->Branch(algoBitToName[itrig]+"_Final",l1TFinalFlag+itrig,algoBitToName[itrig]+"_Final/I");
         HltTree->Branch(algoBitToName[itrig]+"_Prescl",l1TPrescl+itrig,algoBitToName[itrig]+"_Prescl/I");
       }
     }
     // ...Fill the corresponding accepts in branch-variables
-    std::map< int, TString >::iterator iL1Trig = algoBitToName.begin();
-    for (; iL1Trig!=algoBitToName.end(); ++iL1Trig) {
-      std::string name = iL1Trig->second.Data();
-      int iBit = iL1Trig->first;
+    for (const auto& iL1Trig : algoBitToName) {
+      const std::string name = iL1Trig.second.Data();
+      const int iBit = iL1Trig.first;
       l1TInitialFlag[iBit] = false; // The Global Object Collection doesn't have initial L1 decisions
       l1TFinalFlag[iBit] = L1GOMR->getObjectMap(name)->algoGtlResult();
       if(!(l1tGlobalUtil_->getPrescaleByName(name, l1TPrescl[iBit]))) l1TPrescl[iBit] = -1;
     }
     L1TEvtCnt++;
   }
-  else {
+  else if (getL1InfoFromEventSetup_) {
     // Get the stage2 menu from Event Setup
     if (L1TEvtCnt==0){
       // 1st event : Book as many branches as trigger paths provided in the input...
@@ -451,10 +447,9 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
       }
     }
     // ...Fill the corresponding accepts in branch-variables
-    std::map< int, TString >::iterator iL1Trig = algoBitToName.begin();
-    for (; iL1Trig!=algoBitToName.end(); ++iL1Trig) {
-      std::string name = iL1Trig->second.Data();
-      int iBit = iL1Trig->first;
+    for (const auto& iL1Trig : algoBitToName) {
+      const std::string name = iL1Trig.second.Data();
+      const int iBit = iL1Trig.first;
       bool des = false;
       if (!(l1tGlobalUtil_->getFinalDecisionByName(name, des))) l1TFinalFlag[iBit] = false;
       else l1TFinalFlag[iBit] = des;
@@ -464,6 +459,9 @@ void HLTStage2Info::analyze(const edm::Handle<edm::TriggerResults>              
     }
     L1TEvtCnt++;
   }
+  else {
+    edm::LogError("HLTStage2Info") << "Global Object Collection was not found, either fix the name of the collection or set getL1InfoFromEventSetup to False";
+  }
 
-  if (_Debug) std::cout << "%HLTStage2Info -- Done with routine" << std::endl;
+  if (_Debug) edm::LogInfo("HLTStage2Info") << "Done with routine" << std::endl;
 }
