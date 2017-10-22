@@ -18,6 +18,6 @@ l1tStage2uGMTOutVsuGTIn = cms.EDAnalyzer(
 
 # sequences
 l1tStage2uGTOnlineDQMSeq = cms.Sequence(
-    l1tStage2uGT +
+    l1tStage2uGt +
     l1tStage2uGMTOutVsuGTIn
 )

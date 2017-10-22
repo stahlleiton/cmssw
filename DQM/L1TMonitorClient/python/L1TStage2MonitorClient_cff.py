@@ -22,6 +22,9 @@ from DQM.L1TMonitorClient.L1TStage2EventInfoClient_cfi import *
 # uGMT client
 from DQM.L1TMonitorClient.L1TStage2uGMTClient_cff import *
 
+# uGT client
+from DQM.L1TMonitorClient.L1TStage2uGTClient_cff import *
+
 #
 # define sequences 
 #
@@ -30,6 +33,7 @@ from DQM.L1TMonitorClient.L1TStage2uGMTClient_cff import *
 l1TStage2Clients = cms.Sequence(
                         l1tStage2EventInfoClient
                       + l1tStage2uGMTClient
+                      + l1tStage2uGTClient
                         )
 
 l1tStage2MonitorClient = cms.Sequence(
