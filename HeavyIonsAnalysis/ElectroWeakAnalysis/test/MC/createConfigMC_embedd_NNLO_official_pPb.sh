@@ -153,7 +153,7 @@ path=$PWD
 step1DATE=20160202
 step2DATE=20170205
 step3DATE=20170206
-step4DATE=20170813
+step4DATE=20171003
 declare -a stepDates=("$step1DATE" "$step2DATE" "$step3DATE" "$step4DATE")
 
 step1Path=$path/GEN
@@ -210,15 +210,15 @@ declare -a anaInputPDs=(
     "/DYtoMuMu_M-30_pPb-EmbEPOS_8p16_Powheg/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v2/AODSIM"
     "/WpToMuNu_pPb-EmbEPOS_8p16_Powheg/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v2/AODSIM"
     "/WmToMuNu_pPb-EmbEPOS_8p16_Powheg/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v2/AODSIM"
-    "/WpToTauNu_pPb-EmbEPOS_8p16_Powheg/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v2/AODSIM"
-    "/WmToTauNu_pPb-EmbEPOS_8p16_Powheg/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v2/AODSIM"
+    "/WpToTauNu_pPb-EmbEPOS_8p16_PowhegTauola/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v1/AODSIM"
+    "/WmToTauNu_pPb-EmbEPOS_8p16_PowhegTauola/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v1/AODSIM"
     "/Ttbar_pPb-EmbEPOS_8p16_Powheg/pPb816Summer16DR-pPbEmb_80X_mcRun2_pA_v4-v2/AODSIM"
     "/DYtoMuMu_M-10to30_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
     "/DYtoMuMu_M-30_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
     "/WpToMuNu_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v2/AODSIM"
     "/WmToMuNu_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
-    "/WpToTauNu_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
-    "/WmToTauNu_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
+    "/WpToTauNu_PbP-EmbEPOS_8p16_PowhegTauola/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
+    "/WmToTauNu_PbP-EmbEPOS_8p16_PowhegTauola/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
     "/Ttbar_PbP-EmbEPOS_8p16_Powheg/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM"
 )
 declare -ai anaNumCrabEvts='([0]="1" [1]="1" [2]="1" [3]="1" [4]="1" [5]="1" [6]="1" [7]="1" [8]="1" [9]="1" [10]="1" [11]="1" [12]="1" [13]="1" )'

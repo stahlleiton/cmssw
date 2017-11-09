@@ -153,7 +153,7 @@ path=$PWD
 step1DATE=20160202
 step2DATE=20170205
 step3DATE=20170206
-step4DATE=20170813
+step4DATE=20171003
 declare -a stepDates=("$step1DATE" "$step2DATE" "$step3DATE" "$step4DATE")
 
 step1Path=$path/GEN
@@ -182,12 +182,12 @@ declare -a workJobs=(
     "Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6"
     "Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola"
     "Pythia_QCD_PtHat20_MuEnrichedPt15_8160GeV_pythia8"
-    "Pythia_TTall_8TeV16_pythia6"
+    "Pyquen_TTall_8TeV16_pythia6"
     "Pyquen_DYtoMuMu_M_30_TuneZ2_8TeV16_pythia6_reverse"
     "Pyquen_WToMuNu_TuneZ2_8160GeV_pythia6_reverse"
     "Pyquen_WToTauNu_TuneZ2_8160GeV_pythia6_tauola_reverse"
     "Pythia_QCD_PtHat20_MuEnrichedPt15_8160GeV_pythia8_reverse"
-    "Pythia_TTall_8TeV16_pythia6_reverse"
+    "Pyquen_TTall_8TeV16_pythia6_reverse"
 )
 declare -a genOutputPDs=("DYtoMuMu" "WToMuNu" "WToTauNu" "QCD" "DYtoMuMu" "WToMuNu" "WToTauNu" "QCD")
 declare -ai genNumCrabEvts='([0]="800" [1]="800" [2]="800" [3]="800" [4]="800" [5]="800" [6]="800" [7]="800" )'

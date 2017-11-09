@@ -2,7 +2,7 @@ from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 config = config()
 
 config.section_('General')
-config.General.requestName = 'PARun2016C-v1_Run_285479_286504_EWQANA_pA_20170813'
+config.General.requestName = 'PARun2016C-v1_Run_285479_286504_EWQANA_pA_20171003'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 config.General.transferLogs = False
@@ -13,7 +13,7 @@ config.JobType.psetName = 'lo.py'
 config.JobType.maxMemoryMB = 2400
 
 config.section_('Data')
-config.Data.inputDataset ='/PASingleMuon/anstahll-HIEWQ_pPb8TeV_AOD_20170207-ea47420fa7d4dfad582bb824ce988a1b/USER'
+config.Data.inputDataset ='/PASingleMuon/anstahll-HIEWQ_pPb8TeV_AOD_20170913-a3fb128dcd147da373b6657392f54dca/USER'
 config.Data.inputDBS = 'phys03'
 config.Data.unitsPerJob = 15
 config.Data.splitting = 'FileBased'
