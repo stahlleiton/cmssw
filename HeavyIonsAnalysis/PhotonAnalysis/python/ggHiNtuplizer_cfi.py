@@ -2,8 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from HeavyIonsAnalysis.PhotonAnalysis.ElectronVID_cff import *
 
-ggHiNtuplizer = cms.EDAnalyzer(
-    "ggHiNtuplizer",
+ggHiNtuplizer = cms.EDAnalyzer("ggHiNtuplizer",
     doGenParticles     = cms.bool(True),
     runOnParticleGun   = cms.bool(False),
     useValMapIso       = cms.bool(True),
@@ -26,7 +25,7 @@ ggHiNtuplizer = cms.EDAnalyzer(
     rho                = cms.InputTag("fixedGridRhoFastjetAll"),
     beamSpot           = cms.InputTag('offlineBeamSpot'),
     conversions        = cms.InputTag('allConversions'),
-    effAreasConfigFile = effAreasConfigFile25ns,
+    effAreasConfigFile = cms.FileInPath('HeavyIonsAnalysis/PhotonAnalysis/data/EffectiveAreas_94X_v0'),
     doPfIso            = cms.bool(True),
     particleFlowCollection = cms.InputTag("particleFlow"),
 )
