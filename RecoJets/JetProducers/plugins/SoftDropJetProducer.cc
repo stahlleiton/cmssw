@@ -369,16 +369,14 @@ void SoftDropJetProducer::runAlgorithm( edm::Event & iEvent, edm::EventSetup con
 template< class T>
 void SoftDropJetProducer::writeSoftDropJets(  edm::Event & iEvent, edm::EventSetup const& iSetup)
 {
-  //VirtualJetProducer::writeJetsWithConstituents(iEvent,iSetup);
   if ( verbosity_ >= 1 ) {
     std::cout << "<SoftDropJetProducer::writeSoftDropJets (moduleLabel = " << moduleLabel_ << ")>:" << std::endl;
   }
-  //  std::cout << "<SoftDropJetProducer::writeSoftDropJets (moduleLabel = " << moduleLabel_ << ")>:" << std::endl;
 
   // get a list of output jets
-  std::auto_ptr<reco::BasicJetCollection>  jetCollection( new reco::BasicJetCollection() );
+  auto jetCollection = std::make_unique<reco::BasicJetCollection>();
   // get a list of output subjets
-  std::auto_ptr<std::vector<T> >  subjetCollection( new std::vector<T>() );
+  auto subjetCollection = std::make_unique<std::vector<T>>();
 
   // This will store the handle for the subjets after we write them
   edm::OrphanHandle< std::vector<T> > subjetHandleAfterPut;
@@ -390,16 +388,12 @@ void SoftDropJetProducer::writeSoftDropJets(  edm::Event & iEvent, edm::EventSet
   std::vector<double> area_hardJets;
 
   // Loop over the hard jets
-  //std::cout << "N hard jets: " << fjJets_.size() << std::endl;
-  std::vector<fastjet::PseudoJet>::const_iterator it = fjJets_.begin(),
-    iEnd = fjJets_.end(),
-    iBegin = fjJets_.begin();
   indices.resize( fjJets_.size() );
-  for ( ; it != iEnd; ++it ) {
+  for (auto it = fjJets_.begin(); it != fjJets_.end(); ++it) {
     fastjet::PseudoJet const & localJet = *it;
-    unsigned int jetIndex = it - iBegin;
+    unsigned int jetIndex = it - fjJets_.begin();
     // Get the 4-vector for the hard jet
-    p4_hardJets.push_back( math::XYZTLorentzVector(localJet.px(), localJet.py(), localJet.pz(), localJet.e() ));
+    p4_hardJets.emplace_back(localJet.px(), localJet.py(), localJet.pz(), localJet.e());
     double localJetArea = 0.0;
     if ( doAreaFastjet_ && localJet.has_area() ) {
       localJetArea = localJet.area();
@@ -411,19 +405,16 @@ void SoftDropJetProducer::writeSoftDropJets(  edm::Event & iEvent, edm::EventSet
     if ( it->has_pieces() ) {
       constituents = it->pieces();
     } else if ( it->has_constituents() ) {
-      //constituents = it->constituents();
       fastjet::SelectorIsPureGhost().sift(it->constituents(), ghosts, constituents); //filter out ghosts
     }
 
     //loop over constituents of jet (can be subjets or normal constituents)
     //std::cout << "N subjets: " << constituents.size() << std::endl;
-    std::vector<fastjet::PseudoJet>::const_iterator itSubJetBegin = constituents.begin(),
-      itSubJet = itSubJetBegin, itSubJetEnd = constituents.end();
-    for (; itSubJet != itSubJetEnd; ++itSubJet ){
+    for (auto itSubJet = constituents.begin(); itSubJet != constituents.end(); ++itSubJet ){
 
       fastjet::PseudoJet const & subjet = *itSubJet;
       if ( verbosity_ >= 1 ) {
-        std::cout << "subjet #" << (itSubJet - itSubJetBegin) << ": Pt = " << subjet.pt() << ", eta = " << subjet.eta() << ", phi = " << subjet.phi() << ", mass = " << subjet.m()
+        std::cout << "subjet #" << (itSubJet - constituents.begin()) << ": Pt = " << subjet.pt() << ", eta = " << subjet.eta() << ", phi = " << subjet.phi() << ", mass = " << subjet.m()
                   << " (#constituents = " << subjet.constituents().size() << ")" << std::endl;
         std::vector<fastjet::PseudoJet> subjet_constituents = subjet.constituents();
         int idx_constituent = 0;
@@ -462,15 +453,11 @@ void SoftDropJetProducer::writeSoftDropJets(  edm::Event & iEvent, edm::EventSet
     }
   }
   // put subjets into event record
-  subjetHandleAfterPut = iEvent.put( subjetCollection, jetCollInstanceName_ );
+  subjetHandleAfterPut = iEvent.put( std::move(subjetCollection), jetCollInstanceName_ );
   
   // Now create the hard jets with ptr's to the subjets as constituents
-  std::vector<math::XYZTLorentzVector>::const_iterator ip4 = p4_hardJets.begin(),
-    ip4Begin = p4_hardJets.begin(),
-    ip4End = p4_hardJets.end();
-
-  for ( ; ip4 != ip4End; ++ip4 ) {
-    int p4_index = ip4 - ip4Begin;
+  for ( auto ip4 = p4_hardJets.begin(); ip4 != p4_hardJets.end(); ++ip4 ) {
+    int p4_index = ip4 - p4_hardJets.begin();
     std::vector<int> & ind = indices[p4_index];
     std::vector<reco::CandidatePtr> i_hardJetConstituents;
     // Add the subjets to the hard jet
@@ -481,41 +468,25 @@ void SoftDropJetProducer::writeSoftDropJets(  edm::Event & iEvent, edm::EventSet
     }
     reco::Particle::Point point(0,0,0);
     reco::BasicJet toput( *ip4, point, i_hardJetConstituents);
-    toput.setJetArea( area_hardJets[ip4 - ip4Begin] );
+    toput.setJetArea( area_hardJets[p4_index] );
     jetCollection->push_back( toput );
   }
 
   // put hard jets into event record
-  edm::OrphanHandle<std::vector<reco::BasicJet> > jetHandleAfterPut = iEvent.put( jetCollection);
+  edm::OrphanHandle<std::vector<reco::BasicJet> > jetHandleAfterPut = iEvent.put(std::move(jetCollection));
 
   //Fill it into the event
-  std::auto_ptr<edm::ValueMap<float> > lSymOut(new edm::ValueMap<float>());
+  auto lSymOut = std::make_unique<edm::ValueMap<float> >();
   edm::ValueMap<float>::Filler  lSymFiller(*lSymOut);
   lSymFiller.insert(jetHandleAfterPut,lSym.begin(),lSym.end());
   lSymFiller.fill();
-  iEvent.put(lSymOut,"sym");
+  iEvent.put(std::move(lSymOut),"sym");
 
-  std::auto_ptr<edm::ValueMap<int> > lDroppedBranchesOut(new edm::ValueMap<int>());
+  auto lDroppedBranchesOut = std::make_unique<edm::ValueMap<int> >();
   edm::ValueMap<int>::Filler  lDroppedBranchesFiller(*lDroppedBranchesOut);
   lDroppedBranchesFiller.insert(jetHandleAfterPut,lDroppedBranches.begin(),lDroppedBranches.end());
   lDroppedBranchesFiller.fill();
-  iEvent.put(lDroppedBranchesOut,"droppedBranches");
-
-  //edm::AssociationVector<reco::JetRefBaseProd,std::vector<double>> >
-  //edm::Association<std::vector<double>> lDroppedSymOut(new edm::Association<std::vector<double>>());
-  //edm::Association<std::vector<double>>::Filler lDroppedSymFiller(*lDroppedSymOut);
-  //lDroppedSymFiller.insert(jetHandleAfterPut,lDroppedSym.begin(),lDroppedSym.end());
-  //lDroppedSymFiller.fill();
-  //iEvent.put(lDroppedSymOut,"droppedSym");
-
-
-  // std::auto_ptr<edm::ValueMap<std::vector<double>> > lDroppedSymOut(new edm::ValueMap<std::vector<double>>());
-  // edm::ValueMap<std::vector<double>>::Filler  lDroppedSymFiller(*lDroppedSymOut);
-  // lDroppedSymFiller.insert(jetHandleAfterPut,lDroppedSym.begin(),lDroppedSym.end());
-  // lDroppedSymFiller.fill();
-  // iEvent.put(lDroppedSymOut,"droppedSym");
-  
-  
+  iEvent.put(std::move(lDroppedBranchesOut),"droppedBranches");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
