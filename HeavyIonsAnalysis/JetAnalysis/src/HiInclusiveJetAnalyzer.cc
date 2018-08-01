@@ -1140,7 +1140,8 @@ HiInclusiveJetAnalyzer::analyze(const Event& iEvent,
 	    jets_.ipNHit[jets_.nIP + it] = selTracks[it]->numberOfValidHits();
 	    jets_.ipNHitPixel[jets_.nIP + it] = selTracks[it]->hitPattern().numberOfValidPixelHits();
 	    jets_.ipNHitStrip[jets_.nIP + it] = selTracks[it]->hitPattern().numberOfValidStripHits();
-	    jets_.ipIsHitL1[jets_.nIP + it]  = selTracks[it]->hitPattern().hasValidHitInFirstPixelBarrel();
+	    jets_.ipIsHitL1[jets_.nIP + it]  = selTracks[it]->hitPattern().hasValidHitInPixelLayer(
+		PixelSubdetector::SubDetector::PixelBarrel, 1);
 	    jets_.ipProb0[jets_.nIP + it] = tagInfoIP.probabilities(0)[it];
 	    jets_.ip2d[jets_.nIP + it] = data.ip2d.value();
 	    jets_.ip2dSig[jets_.nIP + it] = data.ip2d.significance();

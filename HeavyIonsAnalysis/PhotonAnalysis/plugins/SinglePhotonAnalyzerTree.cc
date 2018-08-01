@@ -60,7 +60,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 #include "DataFormats/CaloTowers/interface/CaloTower.h"
-#include "DataFormats/CaloTowers/interface/CaloTowerFwd.h"
+#include "DataFormats/CaloTowers/interface/CaloTowerDefs.h"
 
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
