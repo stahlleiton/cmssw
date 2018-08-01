@@ -97,8 +97,7 @@ HiSignalParticleProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   using namespace edm;
   using namespace reco;
 
-  auto_ptr<GenParticleCollection> signalGenParticles;
-  signalGenParticles = auto_ptr<GenParticleCollection>(new GenParticleCollection);
+  auto signalGenParticles = std::make_unique<GenParticleCollection>();
 
   edm::Handle<edm::View<GenParticle> > genParticles;
   iEvent.getByToken(genParticleSrc_,genParticles);
@@ -125,7 +124,7 @@ HiSignalParticleProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
     }
   }
 
-  iEvent.put(signalGenParticles);
+  iEvent.put(std::move(signalGenParticles));
 
 }
 

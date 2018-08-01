@@ -98,8 +98,7 @@ HiSignalGenJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
    using namespace edm;
    using namespace reco;
 
-   auto_ptr<GenJetCollection> jets;
-   jets = auto_ptr<GenJetCollection>(new GenJetCollection);
+   auto jets = std::make_unique<GenJetCollection>();
 
    edm::Handle<edm::View<GenJet> > genjets;
    iEvent.getByToken(jetSrc_,genjets);
@@ -130,7 +129,7 @@ HiSignalGenJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
      }
    }
 
-   iEvent.put(jets);
+   iEvent.put(std::move(jets));
 
 }
 
