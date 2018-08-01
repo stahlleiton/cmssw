@@ -137,7 +137,7 @@ HiRecHitSpikeCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   const EcalRecHitCollection *ebRecHits = pRecHitsB.product();
 
   // Define a collection of corrected SuperClusters to put back into the event
-  std::auto_ptr<EcalRecHitCollection> corRecHitsEB(new EcalRecHitCollection);
+  auto corRecHitsEB = std::make_unique<EcalRecHitCollection>();
 
   //get the rechit geometry
   edm::ESHandle<CaloGeometry> theCaloGeom;
@@ -182,7 +182,7 @@ HiRecHitSpikeCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
 
   // Put collection of corrected SuperClusters into the event
-  iEvent.put(corRecHitsEB, ebOutputCollection_);
+  iEvent.put(std::move(corRecHitsEB), ebOutputCollection_);
 }
 
 // ------------ method called once each job just before starting event loop  ------------

@@ -173,7 +173,7 @@ void FullConeProducer::writeBkgJets( edm::Event & iEvent, edm::EventSetup const&
   std::vector<std::vector<reco::CandidatePtr> > constituents_;
   vector<double> et;
   vector<double> pileUp;
-  std::auto_ptr<std::vector<bool> > directions(new std::vector<bool>());
+  auto directions = std::make_unique<std::vector<bool> >();
 
   nFill_ = fjJets_.size();
   directions->reserve(nFill_);
@@ -236,16 +236,12 @@ void FullConeProducer::writeBkgJets( edm::Event & iEvent, edm::EventSetup const&
     //cout<<"Lorentz"<<endl;
 
     math::PtEtaPhiMLorentzVector p(et[ir],fjJets_[ir].eta(),fjJets_[ir].phi(),0);
-    fastjet::PseudoJet jet(p.px(),p.py(),p.pz(),p.energy());
-    fjFakeJets_.push_back(jet);
+    fjFakeJets_.emplace_back(p.px(),p.py(),p.pz(),p.energy());
   }
 
-  std::auto_ptr<std::vector<T> > jets(new std::vector<T>() );
-  jets->reserve(fjFakeJets_.size());
+  auto jets = std::make_unique<std::vector<T> >(fjFakeJets_.size());
 
   for (unsigned int ijet=0;ijet<fjFakeJets_.size();++ijet) {
-    // allocate this jet
-    T jet;
     // get the fastjet jet
     const fastjet::PseudoJet& fjJet = fjFakeJets_[ijet];
 
@@ -253,6 +249,8 @@ void FullConeProducer::writeBkgJets( edm::Event & iEvent, edm::EventSetup const&
     std::vector<CandidatePtr> constituents =
       constituents_[ijet];
 
+    // construct jet in-place
+    auto & jet = (*jets)[ijet];
     writeSpecific(jet,
 		  Particle::LorentzVector(fjJet.px(),
 					  fjJet.py(),
@@ -269,14 +267,11 @@ void FullConeProducer::writeBkgJets( edm::Event & iEvent, edm::EventSetup const&
     }else{
       jet.setPileup (0.0);
     }
-
-    // add to the list
-    jets->push_back(jet);
   }
 
   // put the jets in the collection
-  iEvent.put(jets);
-  iEvent.put(directions,"directions");
+  iEvent.put(std::move(jets));
+  iEvent.put(std::move(directions), "directions");
 }
 
 void FullConeProducer::runAlgorithm( edm::Event & iEvent, edm::EventSetup const& iSetup){

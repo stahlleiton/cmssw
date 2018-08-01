@@ -491,12 +491,9 @@ void MyVirtualJetProducer::writeJets( edm::Event & iEvent, edm::EventSetup const
 
   using namespace reco;
 
-  std::auto_ptr<std::vector<T> > jets(new std::vector<T>() );
-  jets->reserve(fjJets_.size());
+  auto jets = std::make_unique<std::vector<T> >(fjJets_.size());
 
   for (unsigned int ijet=0;ijet<fjJets_.size();++ijet) {
-    // allocate this jet
-    T jet;
     // get the fastjet jet
     const fastjet::PseudoJet& fjJet = fjJets_[ijet];
     // get the constituents from fastjet
@@ -513,6 +510,8 @@ void MyVirtualJetProducer::writeJets( edm::Event & iEvent, edm::EventSetup const
 	dynamic_cast<fastjet::ClusterSequenceArea const *>(&*fjClusterSeq_);
       jetArea = clusterSequenceWithArea->area(fjJet);
     }
+
+    auto & jet = (*jets)[ijet];
 
     // write the specifics to the jet (simultaneously sets 4-vector, vertex).
     // These are overridden functions that will call the appropriate
@@ -532,19 +531,16 @@ void MyVirtualJetProducer::writeJets( edm::Event & iEvent, edm::EventSetup const
     }else{
       jet.setPileup (0.0);
     }
-
-    // add to the list
-    jets->push_back(jet);
   }
 
   // put the jets in the collection
-  iEvent.put(jets);
+  iEvent.put(std::move(jets));
 
   // calculate rho (median pT per unit area, for PU&UE subtraction down the line
   if (doRhoFastjet_) {
     if(doFastJetNonUniform_){
-      std::auto_ptr<std::vector<double> > rhos(new std::vector<double>);
-      std::auto_ptr<std::vector<double> > sigmas(new std::vector<double>);
+      auto rhos = std::make_unique<std::vector<double> >();
+      auto sigmas = std::make_unique<std::vector<double> >();
       int nEta = puCenters_.size();
       rhos->reserve(nEta);
       sigmas->reserve(nEta);
@@ -561,17 +557,17 @@ void MyVirtualJetProducer::writeJets( edm::Event & iEvent, edm::EventSetup const
 	rhos->push_back(rho);
 	sigmas->push_back(sigma);
       }
-      iEvent.put(rhos,"rhos");
-      iEvent.put(sigmas,"sigmas");
+      iEvent.put(std::move(rhos),"rhos");
+      iEvent.put(std::move(sigmas),"sigmas");
     }else{
-      std::auto_ptr<double> rho(new double(0.0));
-      std::auto_ptr<double> sigma(new double(0.0));
+      auto rho = std::make_unique<double>();
+      auto sigma = std::make_unique<double>();
       double mean_area = 0;
       fastjet::ClusterSequenceArea const * clusterSequenceWithArea =
 	dynamic_cast<fastjet::ClusterSequenceArea const *> ( &*fjClusterSeq_ );
       clusterSequenceWithArea->get_median_rho_and_sigma(*fjRangeDef_,false,*rho,*sigma,mean_area);
-      iEvent.put(rho,"rho");
-      iEvent.put(sigma,"sigma");
+      iEvent.put(std::move(rho),"rho");
+      iEvent.put(std::move(sigma),"sigma");
     }
   }
 }
