@@ -39,7 +39,7 @@ do
 			        matchGenjets="HiSignalGenJets"
 			        partons="hiSignalGenParticles"
 			    fi
-			    if ( [ $sub == "Vs" ] || [ $sub == "Cs" ] ) ; then
+			    if [ $sub == "Cs" ]; then
 			        resolveByDist="True"
 			    else 
 			        resolveByDist="False"

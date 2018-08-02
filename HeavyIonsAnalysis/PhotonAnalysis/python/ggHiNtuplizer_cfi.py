@@ -28,8 +28,6 @@ ggHiNtuplizer = cms.EDAnalyzer(
     conversions        = cms.InputTag('allConversions'),
     effAreasConfigFile = effAreasConfigFile25ns,
     doPfIso            = cms.bool(True),
-    doVsIso            = cms.bool(True),
+    doVsIso            = cms.bool(False),
     particleFlowCollection = cms.InputTag("particleFlowTmp"),
-    voronoiBackgroundCalo = cms.InputTag("voronoiBackgroundCalo"),
-    voronoiBackgroundPF = cms.InputTag("voronoiBackgroundPF")
 )
