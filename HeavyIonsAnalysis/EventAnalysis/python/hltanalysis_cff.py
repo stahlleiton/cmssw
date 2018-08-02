@@ -2,14 +2,14 @@ import FWCore.ParameterSet.Config as cms
 
 from HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi import *
 
-hltbitanalysis.UseTFileService = cms.untracked.bool(True)
 hltanalysis = hltbitanalysis.clone(
-    l1GtReadoutRecord    = cms.InputTag("gtDigis"),
-    l1GctHFBitCounts     = cms.InputTag("gctDigis"),
-    l1GctHFRingSums      = cms.InputTag("gctDigis"),
-    l1extramu            = cms.string('l1extraParticles'),
-    l1extramc            = cms.string('l1extraParticles'),
-    hltresults           = cms.InputTag("TriggerResults","","HLT"),
+    hltresults = cms.InputTag("TriggerResults::HLT"),
+    UseTFileService = cms.untracked.bool(True),
+    RunParameters = cms.PSet(
+        isData = cms.untracked.bool(True)),
+
+    OfflinePrimaryVertices0 = cms.InputTag(""),
+
     dummyBranches = cms.untracked.vstring()
     )
 
