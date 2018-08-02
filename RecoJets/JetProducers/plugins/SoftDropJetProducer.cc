@@ -489,6 +489,23 @@ void SoftDropJetProducer::writeSoftDropJets(  edm::Event & iEvent, edm::EventSet
   iEvent.put(std::move(lDroppedBranchesOut),"droppedBranches");
 }
 
+void SoftDropJetProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription descSoftDropJetProducer;
+  fillDescriptionsFromSoftDropJetProducer(descSoftDropJetProducer);
+  VirtualJetProducer::fillDescriptionsFromVirtualJetProducer(descSoftDropJetProducer);
+  descSoftDropJetProducer.add<string>("jetCollInstanceName", "");
+  descSoftDropJetProducer.add<bool>("sumRecHits", false);
+
+  descriptions.add("SoftDropJetProducer", descSoftDropJetProducer);
+}
+
+void SoftDropJetProducer::fillDescriptionsFromSoftDropJetProducer(edm::ParameterSetDescription& desc) {
+  desc.add<double>("zcut", -1.0);
+  desc.add<double>("beta", -1.0);
+  desc.add<double>("R0", -1.0);
+  desc.add<bool>("useOnlyCharged", false);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // define as cmssw plugin
 ////////////////////////////////////////////////////////////////////////////////

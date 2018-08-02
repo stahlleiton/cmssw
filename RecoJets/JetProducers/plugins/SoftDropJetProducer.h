@@ -36,6 +36,9 @@ namespace cms
 
     virtual void produce( edm::Event & iEvent, const edm::EventSetup & iSetup );
 
+    static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+    static void fillDescriptionsFromSoftDropJetProducer(edm::ParameterSetDescription& desc);
+
   protected:
     virtual void output(  edm::Event & iEvent, edm::EventSetup const& iSetup );
     template< typename T>
