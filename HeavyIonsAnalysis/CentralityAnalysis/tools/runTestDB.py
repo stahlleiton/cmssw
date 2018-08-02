@@ -56,13 +56,13 @@ process.makeCentralityTableDB = cms.EDAnalyzer('CentralityPopConProducer',
                                                loggingOn = cms.untracked.bool(True)
                                                )
 
-process.load("CondCore.DBCommon.CondDBCommon_cfi")
-process.CondDBCommon.connect = "oracle://cms_orcoff_prep/CMS_COND_PHYSICSTOOLS"
-process.CondDBCommon.DBParameters.messageLevel = cms.untracked.int32(3)
-process.CondDBCommon.DBParameters.authenticationPath = "authPath"
+process.load("CondCore.CondDB.CondDB_cfi")
+process.CondDB.connect = "oracle://cms_orcoff_prep/CMS_COND_PHYSICSTOOLS"
+process.CondDB.DBParameters.messageLevel = cms.untracked.int32(3)
+process.CondDB.DBParameters.authenticationPath = "authPath"
 
 process.PoolDBOutputService = cms.Service("PoolDBOutputService",
-                                          process.CondDBCommon,
+                                          process.CondDB,
                                           logconnect = cms.untracked.string("sqlite_file:" + "LogsTest.db"),
                                           timetype = cms.untracked.string("runnumber"),
                                           toPut = cms.VPSet(cms.PSet(record = cms.string(hiRecord),

@@ -753,8 +753,7 @@ def overrideJEC_pp2760(process):
     return process
 
 def overrideJEC_HI_PythiaCUETP8M1_5020GeV_753p1_v3_db(process):
-    process.load("CondCore.DBCommon.CondDBCommon_cfi")
-    #from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.load("CondCore.CondDB.CondDB_cfi")
     process.jec = cms.ESSource("PoolDBESSource",
                                DBParameters = cms.PSet(
                                    messageLevel = cms.untracked.int32(0)
@@ -834,8 +833,7 @@ def overrideJEC_HI_PythiaCUETP8M1_5020GeV_753p1_v3_db(process):
 
 
 def overrideJEC_HI_PythiaCUETP8M1_5020GeV_753p1_v6_db(process):
-    process.load("CondCore.DBCommon.CondDBCommon_cfi")
-    #from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.load("CondCore.CondDB.CondDB_cfi")
     process.jec = cms.ESSource("PoolDBESSource",
                                DBParameters = cms.PSet(
                                    messageLevel = cms.untracked.int32(0)
@@ -916,8 +914,7 @@ def overrideJEC_HI_PythiaCUETP8M1_5020GeV_753p1_v6_db(process):
 
 
 def overrideJEC_HI_PythiaCUETP8M1_5020GeV_753p1_v4_db(process):
-    process.load("CondCore.DBCommon.CondDBCommon_cfi")
-    #from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.load("CondCore.CondDB.CondDB_cfi")
     process.jec = cms.ESSource("PoolDBESSource",
                                DBParameters = cms.PSet(
                                    messageLevel = cms.untracked.int32(0)

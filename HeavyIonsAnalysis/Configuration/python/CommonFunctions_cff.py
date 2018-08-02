@@ -750,8 +750,7 @@ def overrideJEC_MC_Pbp5020(process):
 
 
 def overrideJEC_pp5020(process):
-    process.load("CondCore.DBCommon.CondDBCommon_cfi")
-    #from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.load("CondCore.CondDB.CondDB_cfi")
     process.jec = cms.ESSource("PoolDBESSource",
                                DBParameters = cms.PSet(
                                    messageLevel = cms.untracked.int32(0)
@@ -834,9 +833,7 @@ def overrideJEC_pp5020(process):
     return process
 
 def overrideJEC_PbPb5020(process):
-    #process.GlobalTag.toGet.extend([
-    process.load("CondCore.DBCommon.CondDBCommon_cfi")
-    #from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.load("CondCore.CondDB.CondDB_cfi")
     process.jec = cms.ESSource("PoolDBESSource",
                                DBParameters = cms.PSet(
                                    messageLevel = cms.untracked.int32(0)

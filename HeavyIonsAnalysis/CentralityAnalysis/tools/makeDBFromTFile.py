@@ -35,11 +35,11 @@ process.source = cms.Source("EmptyIOVSource",
                             interval = cms.uint64(1)
                             )
 
-process.load("CondCore.DBCommon.CondDBCommon_cfi")
-process.CondDBCommon.connect = "sqlite_file:" + ivars.outputFile
+process.load("CondCore.CondDB.CondDB_cfi")
+process.CondDB.connect = "sqlite_file:" + ivars.outputFile
 
 process.PoolDBOutputService = cms.Service("PoolDBOutputService",
-                                          process.CondDBCommon,
+                                          process.CondDB,
                                           timetype = cms.untracked.string("runnumber"),
                                           toPut = cms.VPSet(cms.PSet(record = cms.string('HeavyIonRcd'),
                                                                      tag = cms.string(ivars.outputTag)
