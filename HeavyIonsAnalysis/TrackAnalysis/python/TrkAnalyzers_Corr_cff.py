@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-from HeavyIonsAnalysis.JetAnalysis.TrkAnalyzers_cff import *
+from HeavyIonsAnalysis.TrackAnalysis.TrkAnalyzers_cff import *
 from SimTracker.TrackAssociation.trackingParticleRecoTrackAsssociation_cff import *
 
 anaTrack.doSimVertex = True  
@@ -26,14 +26,17 @@ tpRecoAssocHiGeneralTracks.label_tr = cms.InputTag("hiGeneralTracks")
 quickTrackAssociatorByHits.ComponentName = cms.string('quickTrackAssociatorByHits')
 
 quickTrackAssociatorByHits.SimToRecoDenominator = cms.string('reco')
-# quickTrackAssociatorByHits.Cut_RecoToSim = cms.double(0.5) # put this back in for 50% hit matching
+# put this back in for 50% hit matching
+# quickTrackAssociatorByHits.Cut_RecoToSim = cms.double(0.5)
 quickTrackAssociatorByHits.Quality_SimToReco = cms.double(0.0)
 
-trackSequencesPbPb = cms.Sequence(quickTrackAssociatorByHits +
-                                  tpRecoAssocHiGeneralTracks +
-								  anaTrack)
-								  
-trackSequencesPP = cms.Sequence(quickTrackAssociatorByHits +
-                                tpRecoAssocGeneralTracks +
-								ppTrack)
-							
+trackSequencesPbPb = cms.Sequence(
+    quickTrackAssociatorByHits +
+    tpRecoAssocHiGeneralTracks +
+    anaTrack)
+
+trackSequencesPP = cms.Sequence(
+    quickTrackAssociatorByHits +
+    tpRecoAssocGeneralTracks +
+    ppTrack)
+
