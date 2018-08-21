@@ -277,5 +277,3 @@ double ParticleTowerProducer::ieta2eta(int ieta) const {
 
 
 
-    //define this as a plug-in
-DEFINE_FWK_MODULE(ParticleTowerProducer);
