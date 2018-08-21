@@ -12,13 +12,8 @@ PuWithNtuple::PuWithNtuple(const edm::ParameterSet& iConfig, edm::ConsumesCollec
   dropZeroTowers_(iConfig.getUntrackedParameter<bool>("dropZeroTowers",true))
 {
 
-  if(iConfig.exists("minimumTowersFraction")){
-    minimumTowersFraction_ = iConfig.getParameter<double>("minimumTowersFraction");
-    cout<<"LIMITING THE MINIMUM TOWERS FRACTION TO : "<<minimumTowersFraction_<<endl;
-  }else{
-    minimumTowersFraction_ = 0;
-    cout<<"ATTENTION - NOT LIMITING THE MINIMUM TOWERS FRACTION"<<endl;
-  }
+  minimumTowersFraction_ = iConfig.getParameter<double>("minimumTowersFraction");
+  LogDebug("PileUpSubtractor")<<"LIMITING THE MINIMUM TOWERS FRACTION TO : "<<minimumTowersFraction_<<endl;
 
   Neta_ = 82;
 
