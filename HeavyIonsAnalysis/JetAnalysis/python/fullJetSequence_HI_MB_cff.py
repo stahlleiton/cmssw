@@ -5,13 +5,13 @@ from HeavyIonsAnalysis.JetAnalysis.rerecoRho_HI_cff import *
 from HeavyIonsAnalysis.JetAnalysis.rerecoJets_HI_cff import *
 from HeavyIonsAnalysis.JetAnalysis.rerecoTracks_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu3CaloJetSequence_PbPb_mb_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu3PFJetSequence_PbPb_mb_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akCs3PFJetSequence_PbPb_mb_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu3CaloJetSequence_HIonPbPb_mb_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu3PFJetSequence_HIonPbPb_mb_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akCs3PFJetSequence_HIonPbPb_mb_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu4CaloJetSequence_PbPb_mb_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu4PFJetSequence_PbPb_mb_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akCs4PFJetSequence_PbPb_mb_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu4CaloJetSequence_HIonPbPb_mb_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu4PFJetSequence_HIonPbPb_mb_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akCs4PFJetSequence_HIonPbPb_mb_cff import *
 
 genSignalSequence = cms.Sequence(
     genParticlesForJets +

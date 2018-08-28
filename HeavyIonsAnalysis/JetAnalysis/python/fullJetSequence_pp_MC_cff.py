@@ -2,11 +2,11 @@ import FWCore.ParameterSet.Config as cms
 
 from HeavyIonsAnalysis.JetAnalysis.rerecoJets_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.ak3CaloJetSequence_pp_mc_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.ak3PFJetSequence_pp_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.ak3CaloJetSequence_pponpp_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.ak3PFJetSequence_pponpp_mc_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.ak4CaloJetSequence_pp_mc_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.ak4PFJetSequence_pp_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.ak4CaloJetSequence_pponpp_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.ak4PFJetSequence_pponpp_mc_cff import *
 
 jetSequences = cms.Sequence(
     ak3CaloJets +

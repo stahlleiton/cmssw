@@ -5,20 +5,16 @@ from HeavyIonsAnalysis.JetAnalysis.rerecoRho_cff import *
 from HeavyIonsAnalysis.JetAnalysis.rerecoJets_cff import *
 from HeavyIonsAnalysis.JetAnalysis.rerecoTracks_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu3CaloJetSequence_pp_mc_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu3PFJetSequence_pp_mc_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akCs3PFJetSequence_pp_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu3CaloJetSequence_pponPbPb_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu3PFJetSequence_pponPbPb_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akCs3PFJetSequence_pponPbPb_mc_cff import *
 
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu4CaloJetSequence_pp_mc_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akPu4PFJetSequence_pp_mc_cff import *
-from HeavyIonsAnalysis.JetAnalysis.jets.akCs4PFJetSequence_pp_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu4CaloJetSequence_pponPbPb_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akPu4PFJetSequence_pponPbPb_mc_cff import *
+from HeavyIonsAnalysis.JetAnalysis.jets.akCs4PFJetSequence_pponPbPb_mc_cff import *
 
 genSignalSequence = cms.Sequence(
     genParticlesForJets +
-
-    # for gen matching: almost certainly wrong
-    ak3GenJets +
-    ak4GenJets +
 
     hiSignalGenParticles +
     genParticlesForJetsSignal +
@@ -37,10 +33,6 @@ genSignalSequence = cms.Sequence(
 
 genCleanedSequence = cms.Sequence(
     genParticlesForJets +
-
-    # for gen matching: almost certainly wrong
-    ak3GenJets +
-    ak4GenJets +
 
     ak3HiGenJets +
     ak4HiGenJets +
