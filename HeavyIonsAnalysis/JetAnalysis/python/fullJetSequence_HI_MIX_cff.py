@@ -5,6 +5,9 @@ from HeavyIonsAnalysis.JetAnalysis.rerecoRho_HI_cff import *
 from HeavyIonsAnalysis.JetAnalysis.rerecoJets_HI_cff import *
 from HeavyIonsAnalysis.JetAnalysis.rerecoTracks_cff import *
 
+# for legacy HI reco only!
+from HeavyIonsAnalysis.JetAnalysis.modificationsForHIReco_cff import *
+
 from HeavyIonsAnalysis.JetAnalysis.jets.akPu3CaloJetSequence_HIonPbPb_mc_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.akPu3PFJetSequence_HIonPbPb_mc_cff import *
 from HeavyIonsAnalysis.JetAnalysis.jets.akCs3PFJetSequence_HIonPbPb_mc_cff import *
