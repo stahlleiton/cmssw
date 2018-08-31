@@ -3,19 +3,15 @@ import FWCore.ParameterSet.Config as cms
 pfcandAnalyzer = cms.EDAnalyzer(
     'HiPFCandAnalyzer',
     pfCandidateLabel = cms.InputTag("particleFlow"),
-    jetLabel         = cms.InputTag("ak5patJets"),
     genLabel         = cms.InputTag('genParticles'),
+    jetLabel         = cms.InputTag("ak5patJets"),
     pfPtMin          = cms.double(0.0),
+    pfAbsEtaMax      = cms.double(5.0),
     genPtMin         = cms.double(0.5),
     jetPtMin         = cms.double(20.0),
-    verbosity        = cms.untracked.int32(0),
-    skipCharged      = cms.untracked.bool(False),
-    doJets_          = cms.untracked.bool(False),
-    doVS             = cms.untracked.bool(False),
-    bkg              = cms.InputTag("voronoiBackgroundPF"),
-    etaBins          = cms.int32(15),
-    fourierOrder     = cms.int32(5),
-    doUEraw_         = cms.untracked.bool(False)
+    doMC             = cms.bool(False),
+    doJets           = cms.bool(False),
+    skipCharged      = cms.bool(False),
     )
 
 pfcandAnalyzerCS = pfcandAnalyzer.clone(
