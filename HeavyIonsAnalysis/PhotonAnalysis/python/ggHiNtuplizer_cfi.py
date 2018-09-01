@@ -28,7 +28,6 @@ ggHiNtuplizer = cms.EDAnalyzer(
     conversions        = cms.InputTag('allConversions'),
     effAreasConfigFile = effAreasConfigFile25ns,
     doPfIso            = cms.bool(True),
-    doVsIso            = cms.bool(False),
     particleFlowCollection = cms.InputTag("particleFlow"),
 )
 

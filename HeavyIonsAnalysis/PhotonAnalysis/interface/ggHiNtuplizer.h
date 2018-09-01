@@ -47,7 +47,6 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    bool runOnParticleGun_;
    bool useValMapIso_;
    bool doPfIso_;
-   bool doVsIso_; // also requires above boolean to make sense
    bool doVID_;
    bool doRecHitsEB_;
    bool doRecHitsEE_;
@@ -68,8 +67,6 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
    edm::EDGetTokenT<reco::ConversionCollection> conversionsToken_;
    edm::EDGetTokenT<edm::View<reco::PFCandidate> >    pfCollection_;
-   edm::EDGetTokenT<edm::ValueMap<reco::VoronoiBackground> > voronoiBkgCalo_;
-   edm::EDGetTokenT<edm::ValueMap<reco::VoronoiBackground> > voronoiBkgPF_;
 
    edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEB_;
    edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEE_;
@@ -333,92 +330,6 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    std::vector<float> pfsumIso3;
    std::vector<float> pfsumIso4;
    std::vector<float> pfsumIso5;
-
-   std::vector<float> pfcVsIso1;
-   std::vector<float> pfcVsIso2;
-   std::vector<float> pfcVsIso3;
-   std::vector<float> pfcVsIso4;
-   std::vector<float> pfcVsIso5;
-   std::vector<float> pfcVsIso1th1;
-   std::vector<float> pfcVsIso2th1;
-   std::vector<float> pfcVsIso3th1;
-   std::vector<float> pfcVsIso4th1;
-   std::vector<float> pfcVsIso5th1;
-   std::vector<float> pfcVsIso1th2;
-   std::vector<float> pfcVsIso2th2;
-   std::vector<float> pfcVsIso3th2;
-   std::vector<float> pfcVsIso4th2;
-   std::vector<float> pfcVsIso5th2;
-
-   std::vector<float> pfnVsIso1;
-   std::vector<float> pfnVsIso2;
-   std::vector<float> pfnVsIso3;
-   std::vector<float> pfnVsIso4;
-   std::vector<float> pfnVsIso5;
-   std::vector<float> pfnVsIso1th1;
-   std::vector<float> pfnVsIso2th1;
-   std::vector<float> pfnVsIso3th1;
-   std::vector<float> pfnVsIso4th1;
-   std::vector<float> pfnVsIso5th1;
-   std::vector<float> pfnVsIso1th2;
-   std::vector<float> pfnVsIso2th2;
-   std::vector<float> pfnVsIso3th2;
-   std::vector<float> pfnVsIso4th2;
-   std::vector<float> pfnVsIso5th2;
-
-   std::vector<float> pfpVsIso1;
-   std::vector<float> pfpVsIso2;
-   std::vector<float> pfpVsIso3;
-   std::vector<float> pfpVsIso4;
-   std::vector<float> pfpVsIso5;
-   std::vector<float> pfpVsIso1th1;
-   std::vector<float> pfpVsIso2th1;
-   std::vector<float> pfpVsIso3th1;
-   std::vector<float> pfpVsIso4th1;
-   std::vector<float> pfpVsIso5th1;
-   std::vector<float> pfpVsIso1th2;
-   std::vector<float> pfpVsIso2th2;
-   std::vector<float> pfpVsIso3th2;
-   std::vector<float> pfpVsIso4th2;
-   std::vector<float> pfpVsIso5th2;
-
-   std::vector<float> pfsumVsIso1;
-   std::vector<float> pfsumVsIso2;
-   std::vector<float> pfsumVsIso3;
-   std::vector<float> pfsumVsIso4;
-   std::vector<float> pfsumVsIso5;
-   std::vector<float> pfsumVsIso1th1;
-   std::vector<float> pfsumVsIso2th1;
-   std::vector<float> pfsumVsIso3th1;
-   std::vector<float> pfsumVsIso4th1;
-   std::vector<float> pfsumVsIso5th1;
-   std::vector<float> pfsumVsIso1th2;
-   std::vector<float> pfsumVsIso2th2;
-   std::vector<float> pfsumVsIso3th2;
-   std::vector<float> pfsumVsIso4th2;
-   std::vector<float> pfsumVsIso5th2;
-
-   std::vector<float> pfVsSubIso1;
-   std::vector<float> pfVsSubIso2;
-   std::vector<float> pfVsSubIso3;
-   std::vector<float> pfVsSubIso4;
-   std::vector<float> pfVsSubIso5;
-
-   std::vector<float> towerIso1;
-   std::vector<float> towerIso2;
-   std::vector<float> towerIso3;
-   std::vector<float> towerIso4;
-   std::vector<float> towerIso5;
-   std::vector<float> towerVsIso1;
-   std::vector<float> towerVsIso2;
-   std::vector<float> towerVsIso3;
-   std::vector<float> towerVsIso4;
-   std::vector<float> towerVsIso5;
-   std::vector<float> towerVsSubIso1;
-   std::vector<float> towerVsSubIso2;
-   std::vector<float> towerVsSubIso3;
-   std::vector<float> towerVsSubIso4;
-   std::vector<float> towerVsSubIso5;
 
    // reco::Muon
    Int_t          nMu_;

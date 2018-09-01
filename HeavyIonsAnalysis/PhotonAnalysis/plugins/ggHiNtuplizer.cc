@@ -21,7 +21,6 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   runOnParticleGun_       = ps.getParameter<bool>("runOnParticleGun");
   useValMapIso_           = ps.getParameter<bool>("useValMapIso");
   doPfIso_                = ps.getParameter<bool>("doPfIso");
-  doVsIso_                = ps.getParameter<bool>("doVsIso");
   doRecHitsEB_            = ps.getParameter<bool>("doRecHitsEB");
   doRecHitsEE_            = ps.getParameter<bool>("doRecHitsEE");
   genPileupCollection_    = consumes<std::vector<PileupSummaryInfo>>(ps.getParameter<edm::InputTag>("pileupCollection"));
@@ -58,12 +57,6 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   if (doPfIso_) {
     pfCollection_         = consumes<edm::View<reco::PFCandidate> > (
       ps.getParameter<edm::InputTag>("particleFlowCollection"));
-    if (doVsIso_) {
-      voronoiBkgCalo_     = consumes<edm::ValueMap<reco::VoronoiBackground> > (
-        ps.getParameter<edm::InputTag>("voronoiBackgroundCalo"));
-      voronoiBkgPF_       = consumes<edm::ValueMap<reco::VoronoiBackground> > (
-        ps.getParameter<edm::InputTag>("voronoiBackgroundPF"));
-    }
   }
 
   // initialize output TTree
@@ -329,96 +322,6 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
     // tree_->Branch("pfsumIso3",&pfsumIso3);
     // tree_->Branch("pfsumIso4",&pfsumIso4);
     // tree_->Branch("pfsumIso5",&pfsumIso5);
-
-    if (doVsIso_) {
-      tree_->Branch("pfcVsIso1",&pfcVsIso1);
-      tree_->Branch("pfcVsIso2",&pfcVsIso2);
-      tree_->Branch("pfcVsIso3",&pfcVsIso3);
-      tree_->Branch("pfcVsIso4",&pfcVsIso4);
-      tree_->Branch("pfcVsIso5",&pfcVsIso5);
-      tree_->Branch("pfcVsIso1th1",&pfcVsIso1th1);
-      tree_->Branch("pfcVsIso2th1",&pfcVsIso2th1);
-      tree_->Branch("pfcVsIso3th1",&pfcVsIso3th1);
-      tree_->Branch("pfcVsIso4th1",&pfcVsIso4th1);
-      tree_->Branch("pfcVsIso5th1",&pfcVsIso5th1);
-      tree_->Branch("pfcVsIso1th2",&pfcVsIso1th2);
-      tree_->Branch("pfcVsIso2th2",&pfcVsIso2th2);
-      tree_->Branch("pfcVsIso3th2",&pfcVsIso3th2);
-      tree_->Branch("pfcVsIso4th2",&pfcVsIso4th2);
-      tree_->Branch("pfcVsIso5th2",&pfcVsIso5th2);
-
-      tree_->Branch("pfnVsIso1",&pfnVsIso1);
-      tree_->Branch("pfnVsIso2",&pfnVsIso2);
-      tree_->Branch("pfnVsIso3",&pfnVsIso3);
-      tree_->Branch("pfnVsIso4",&pfnVsIso4);
-      tree_->Branch("pfnVsIso5",&pfnVsIso5);
-      tree_->Branch("pfnVsIso1th1",&pfnVsIso1th1);
-      tree_->Branch("pfnVsIso2th1",&pfnVsIso2th1);
-      tree_->Branch("pfnVsIso3th1",&pfnVsIso3th1);
-      tree_->Branch("pfnVsIso4th1",&pfnVsIso4th1);
-      tree_->Branch("pfnVsIso5th1",&pfnVsIso5th1);
-      tree_->Branch("pfnVsIso1th2",&pfnVsIso1th2);
-      tree_->Branch("pfnVsIso2th2",&pfnVsIso2th2);
-      tree_->Branch("pfnVsIso3th2",&pfnVsIso3th2);
-      tree_->Branch("pfnVsIso4th2",&pfnVsIso4th2);
-      tree_->Branch("pfnVsIso5th2",&pfnVsIso5th2);
-
-      tree_->Branch("pfpVsIso1",&pfpVsIso1);
-      tree_->Branch("pfpVsIso2",&pfpVsIso2);
-      tree_->Branch("pfpVsIso3",&pfpVsIso3);
-      tree_->Branch("pfpVsIso4",&pfpVsIso4);
-      tree_->Branch("pfpVsIso5",&pfpVsIso5);
-      tree_->Branch("pfpVsIso1th1",&pfpVsIso1th1);
-      tree_->Branch("pfpVsIso2th1",&pfpVsIso2th1);
-      tree_->Branch("pfpVsIso3th1",&pfpVsIso3th1);
-      tree_->Branch("pfpVsIso4th1",&pfpVsIso4th1);
-      tree_->Branch("pfpVsIso5th1",&pfpVsIso5th1);
-      tree_->Branch("pfpVsIso1th2",&pfpVsIso1th2);
-      tree_->Branch("pfpVsIso2th2",&pfpVsIso2th2);
-      tree_->Branch("pfpVsIso3th2",&pfpVsIso3th2);
-      tree_->Branch("pfpVsIso4th2",&pfpVsIso4th2);
-      tree_->Branch("pfpVsIso5th2",&pfpVsIso5th2);
-
-      // tree_->Branch("pfsumVsIso1",&pfsumVsIso1);
-      // tree_->Branch("pfsumVsIso2",&pfsumVsIso2);
-      // tree_->Branch("pfsumVsIso3",&pfsumVsIso3);
-      // tree_->Branch("pfsumVsIso4",&pfsumVsIso4);
-      // tree_->Branch("pfsumVsIso5",&pfsumVsIso5);
-      // tree_->Branch("pfsumVsIso1th1",&pfsumVsIso1th1);
-      // tree_->Branch("pfsumVsIso2th1",&pfsumVsIso2th1);
-      // tree_->Branch("pfsumVsIso3th1",&pfsumVsIso3th1);
-      // tree_->Branch("pfsumVsIso4th1",&pfsumVsIso4th1);
-      // tree_->Branch("pfsumVsIso5th1",&pfsumVsIso5th1);
-      // tree_->Branch("pfsumVsIso1th2",&pfsumVsIso1th2);
-      // tree_->Branch("pfsumVsIso2th2",&pfsumVsIso2th2);
-      // tree_->Branch("pfsumVsIso3th2",&pfsumVsIso3th2);
-      // tree_->Branch("pfsumVsIso4th2",&pfsumVsIso4th2);
-      // tree_->Branch("pfsumVsIso5th2",&pfsumVsIso5th2);
-
-
-      // tree_->Branch("pfVsSubIso1",&pfVsSubIso1);
-      // tree_->Branch("pfVsSubIso2",&pfVsSubIso2);
-      // tree_->Branch("pfVsSubIso3",&pfVsSubIso3);
-      // tree_->Branch("pfVsSubIso4",&pfVsSubIso4);
-      // tree_->Branch("pfVsSubIso5",&pfVsSubIso5);
-
-
-      tree_->Branch("towerIso1",&towerIso1);
-      tree_->Branch("towerIso2",&towerIso2);
-      tree_->Branch("towerIso3",&towerIso3);
-      tree_->Branch("towerIso4",&towerIso4);
-      tree_->Branch("towerIso5",&towerIso5);
-      tree_->Branch("towerVsIso1",&towerVsIso1);
-      tree_->Branch("towerVsIso2",&towerVsIso2);
-      tree_->Branch("towerVsIso3",&towerVsIso3);
-      tree_->Branch("towerVsIso4",&towerVsIso4);
-      tree_->Branch("towerVsIso5",&towerVsIso5);
-      tree_->Branch("towerVsSubIso1",&towerVsSubIso1);
-      tree_->Branch("towerVsSubIso2",&towerVsSubIso2);
-      tree_->Branch("towerVsSubIso3",&towerVsSubIso3);
-      tree_->Branch("towerVsSubIso4",&towerVsSubIso4);
-      tree_->Branch("towerVsSubIso5",&towerVsSubIso5);
-    }
   }
 
   tree_->Branch("nMu",                   &nMu_);
@@ -692,86 +595,6 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   pfsumIso3.clear();
   pfsumIso4.clear();
   pfsumIso5.clear();
-  pfcVsIso1.clear();
-  pfcVsIso2.clear();
-  pfcVsIso3.clear();
-  pfcVsIso4.clear();
-  pfcVsIso5.clear();
-  pfcVsIso1th1.clear();
-  pfcVsIso2th1.clear();
-  pfcVsIso3th1.clear();
-  pfcVsIso4th1.clear();
-  pfcVsIso5th1.clear();
-  pfcVsIso1th2.clear();
-  pfcVsIso2th2.clear();
-  pfcVsIso3th2.clear();
-  pfcVsIso4th2.clear();
-  pfcVsIso5th2.clear();
-  pfnVsIso1.clear();
-  pfnVsIso2.clear();
-  pfnVsIso3.clear();
-  pfnVsIso4.clear();
-  pfnVsIso5.clear();
-  pfnVsIso1th1.clear();
-  pfnVsIso2th1.clear();
-  pfnVsIso3th1.clear();
-  pfnVsIso4th1.clear();
-  pfnVsIso5th1.clear();
-  pfnVsIso1th2.clear();
-  pfnVsIso2th2.clear();
-  pfnVsIso3th2.clear();
-  pfnVsIso4th2.clear();
-  pfnVsIso5th2.clear();
-  pfpVsIso1.clear();
-  pfpVsIso2.clear();
-  pfpVsIso3.clear();
-  pfpVsIso4.clear();
-  pfpVsIso5.clear();
-  pfpVsIso1th1.clear();
-  pfpVsIso2th1.clear();
-  pfpVsIso3th1.clear();
-  pfpVsIso4th1.clear();
-  pfpVsIso5th1.clear();
-  pfpVsIso1th2.clear();
-  pfpVsIso2th2.clear();
-  pfpVsIso3th2.clear();
-  pfpVsIso4th2.clear();
-  pfpVsIso5th2.clear();
-  pfsumVsIso1.clear();
-  pfsumVsIso2.clear();
-  pfsumVsIso3.clear();
-  pfsumVsIso4.clear();
-  pfsumVsIso5.clear();
-  pfsumVsIso1th1.clear();
-  pfsumVsIso2th1.clear();
-  pfsumVsIso3th1.clear();
-  pfsumVsIso4th1.clear();
-  pfsumVsIso5th1.clear();
-  pfsumVsIso1th2.clear();
-  pfsumVsIso2th2.clear();
-  pfsumVsIso3th2.clear();
-  pfsumVsIso4th2.clear();
-  pfsumVsIso5th2.clear();
-  pfVsSubIso1.clear();
-  pfVsSubIso2.clear();
-  pfVsSubIso3.clear();
-  pfVsSubIso4.clear();
-  pfVsSubIso5.clear();
-  towerIso1.clear();
-  towerIso2.clear();
-  towerIso3.clear();
-  towerIso4.clear();
-  towerIso5.clear();
-  towerVsIso1.clear();
-  towerVsIso2.clear();
-  towerVsIso3.clear();
-  towerVsIso4.clear();
-  towerVsIso5.clear();
-  towerVsSubIso1.clear();
-  towerVsSubIso2.clear();
-  towerVsSubIso3.clear();
-  towerVsSubIso4.clear();
-  towerVsSubIso5.clear();
 
   muPt_                 .clear();
   muEta_                .clear();
@@ -1095,7 +918,7 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
     elePFPUIso_          .push_back(pfIso.sumPUPt);
 
     // calculation on the fly
-    pfIsoCalculator pfIsoCal(e,es, pfCollection_, voronoiBkgPF_, pv);
+    pfIsoCalculator pfIsoCal(e,es, pfCollection_, pv);
     if (fabs(ele->superCluster()->eta()) > 1.566) {
       elePFChIso03_          .push_back(pfIsoCal.getPfIso(*ele, 1, 0.3, 0.015, 0.));
       elePFChIso04_          .push_back(pfIsoCal.getPfIso(*ele, 1, 0.4, 0.015, 0.));
@@ -1426,7 +1249,7 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
     }
 
     if (doPfIso_) {
-      pfIsoCalculator pfIso(e,es, pfCollection_, voronoiBkgPF_, pv);
+      pfIsoCalculator pfIso(e,es, pfCollection_, pv);
       // particle flow isolation
       pfcIso1.push_back( pfIso.getPfIso(*pho, 1, 0.1, 0.02, 0.0, 0 ));
       pfcIso2.push_back( pfIso.getPfIso(*pho, 1, 0.2, 0.02, 0.0, 0 ));
@@ -1445,56 +1268,6 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
       pfpIso3.push_back( pfIso.getPfIso(*pho, 4, 0.3, 0.0, 0.015, 0 ));
       pfpIso4.push_back( pfIso.getPfIso(*pho, 4, 0.4, 0.0, 0.015, 0 ));
       pfpIso5.push_back( pfIso.getPfIso(*pho, 4, 0.5, 0.0, 0.015, 0 ));
-
-      if (doVsIso_) {
-        pfcVsIso1.push_back(pfIso.getVsPfIso(*pho, 1, 0.1, 0.02, 0.0, 0, true));
-        pfcVsIso2.push_back(pfIso.getVsPfIso(*pho, 1, 0.2, 0.02, 0.0, 0, true));
-        pfcVsIso3.push_back(pfIso.getVsPfIso(*pho, 1, 0.3, 0.02, 0.0, 0, true));
-        pfcVsIso4.push_back(pfIso.getVsPfIso(*pho, 1, 0.4, 0.02, 0.0, 0, true));
-        pfcVsIso5.push_back(pfIso.getVsPfIso(*pho, 1, 0.5, 0.02, 0.0, 0, true));
-        pfcVsIso1th1.push_back(pfIso.getVsPfIso(*pho, 1, 0.1, 0.02, 0.0, 1, true));
-        pfcVsIso2th1.push_back(pfIso.getVsPfIso(*pho, 1, 0.2, 0.02, 0.0, 1, true));
-        pfcVsIso3th1.push_back(pfIso.getVsPfIso(*pho, 1, 0.3, 0.02, 0.0, 1, true));
-        pfcVsIso4th1.push_back(pfIso.getVsPfIso(*pho, 1, 0.4, 0.02, 0.0, 1, true));
-        pfcVsIso5th1.push_back(pfIso.getVsPfIso(*pho, 1, 0.5, 0.02, 0.0, 1, true));
-        pfcVsIso1th2.push_back(pfIso.getVsPfIso(*pho, 1, 0.1, 0.02, 0.0, 2, true));
-        pfcVsIso2th2.push_back(pfIso.getVsPfIso(*pho, 1, 0.2, 0.02, 0.0, 2, true));
-        pfcVsIso3th2.push_back(pfIso.getVsPfIso(*pho, 1, 0.3, 0.02, 0.0, 2, true));
-        pfcVsIso4th2.push_back(pfIso.getVsPfIso(*pho, 1, 0.4, 0.02, 0.0, 2, true));
-        pfcVsIso5th2.push_back(pfIso.getVsPfIso(*pho, 1, 0.5, 0.02, 0.0, 2, true));
-
-        pfnVsIso1.push_back(   pfIso.getVsPfIso(*pho, 5, 0.1, 0.0, 0.0, 0, true));
-        pfnVsIso2.push_back(   pfIso.getVsPfIso(*pho, 5, 0.2, 0.0, 0.0, 0, true));
-        pfnVsIso3.push_back(   pfIso.getVsPfIso(*pho, 5, 0.3, 0.0, 0.0, 0, true));
-        pfnVsIso4.push_back(   pfIso.getVsPfIso(*pho, 5, 0.4, 0.0, 0.0, 0, true));
-        pfnVsIso5.push_back(   pfIso.getVsPfIso(*pho, 5, 0.5, 0.0, 0.0, 0, true));
-        pfnVsIso1th1.push_back(pfIso.getVsPfIso(*pho, 5, 0.1, 0.0, 0.0, 1, true));
-        pfnVsIso2th1.push_back(pfIso.getVsPfIso(*pho, 5, 0.2, 0.0, 0.0, 1, true));
-        pfnVsIso3th1.push_back(pfIso.getVsPfIso(*pho, 5, 0.3, 0.0, 0.0, 1, true));
-        pfnVsIso4th1.push_back(pfIso.getVsPfIso(*pho, 5, 0.4, 0.0, 0.0, 1, true));
-        pfnVsIso5th1.push_back(pfIso.getVsPfIso(*pho, 5, 0.5, 0.0, 0.0, 1, true));
-        pfnVsIso1th2.push_back(pfIso.getVsPfIso(*pho, 5, 0.1, 0.0, 0.0, 2, true));
-        pfnVsIso2th2.push_back(pfIso.getVsPfIso(*pho, 5, 0.2, 0.0, 0.0, 2, true));
-        pfnVsIso3th2.push_back(pfIso.getVsPfIso(*pho, 5, 0.3, 0.0, 0.0, 2, true));
-        pfnVsIso4th2.push_back(pfIso.getVsPfIso(*pho, 5, 0.4, 0.0, 0.0, 2, true));
-        pfnVsIso5th2.push_back(pfIso.getVsPfIso(*pho, 5, 0.5, 0.0, 0.0, 2, true));
-
-        pfpVsIso1.push_back(    pfIso.getVsPfIso(*pho, 4, 0.1,  0.0, 0.015, 0, true));
-        pfpVsIso2.push_back(    pfIso.getVsPfIso(*pho, 4, 0.2,  0.0, 0.015, 0, true));
-        pfpVsIso3.push_back(    pfIso.getVsPfIso(*pho, 4, 0.3,  0.0, 0.015, 0, true));
-        pfpVsIso4.push_back(    pfIso.getVsPfIso(*pho, 4, 0.4,  0.0, 0.015, 0, true));
-        pfpVsIso5.push_back(    pfIso.getVsPfIso(*pho, 4, 0.5,  0.0, 0.015, 0, true));
-        pfpVsIso1th1.push_back( pfIso.getVsPfIso(*pho, 4, 0.1,  0.0, 0.015, 1, true));
-        pfpVsIso2th1.push_back( pfIso.getVsPfIso(*pho, 4, 0.2,  0.0, 0.015, 1, true));
-        pfpVsIso3th1.push_back( pfIso.getVsPfIso(*pho, 4, 0.3,  0.0, 0.015, 1, true));
-        pfpVsIso4th1.push_back( pfIso.getVsPfIso(*pho, 4, 0.4,  0.0, 0.015, 1, true));
-        pfpVsIso5th1.push_back( pfIso.getVsPfIso(*pho, 4, 0.5,  0.0, 0.015, 1, true));
-        pfpVsIso1th2.push_back( pfIso.getVsPfIso(*pho, 4, 0.1,  0.0, 0.015, 2, true));
-        pfpVsIso2th2.push_back( pfIso.getVsPfIso(*pho, 4, 0.2,  0.0, 0.015, 2, true));
-        pfpVsIso3th2.push_back( pfIso.getVsPfIso(*pho, 4, 0.3,  0.0, 0.015, 2, true));
-        pfpVsIso4th2.push_back( pfIso.getVsPfIso(*pho, 4, 0.4,  0.0, 0.015, 2, true));
-        pfpVsIso5th2.push_back( pfIso.getVsPfIso(*pho, 4, 0.5,  0.0, 0.015, 2, true));
-      }
     }
 
     //////////////////////////////////// MC matching ////////////////////////////////////
