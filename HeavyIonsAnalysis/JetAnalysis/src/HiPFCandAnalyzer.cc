@@ -88,9 +88,9 @@ HiPFCandAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
       if (gen.status() == 1 && std::abs(eta) < 3 && pt > genPtMin_) {
 	pfEvt_.genPDGId_.push_back( gen.pdgId() );
-	pfEvt_.genPt_.push_back( rndSF(pt, 4) );
-	pfEvt_.genEta_.push_back( rndDP(eta, 3) );
-	pfEvt_.genPhi_.push_back( rndDP(gen.phi(), 3) );
+	pfEvt_.genPt_.push_back(pt);
+	pfEvt_.genEta_.push_back(eta);
+	pfEvt_.genPhi_.push_back(gen.phi());
 	pfEvt_.nGENpart_++;
       }
     }

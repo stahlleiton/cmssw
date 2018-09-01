@@ -522,8 +522,8 @@ TrackAnalyzer::fillVertices(const edm::Event& iEvent){
 	  float DzError=sqrt(etrk.dzError()*etrk.dzError()+pev_.zVtxErr[i]*pev_.zVtxErr[i]);
 	  float Dxy=etrk.dxy(vtx_temp);
 	  float DxyError=sqrt(etrk.dxyError()*etrk.dxyError()+pev_.xVtxErr[i]*pev_.yVtxErr[i]);
-          pev_.trkDzOverDzError[trkCount*pev_.nVtx+i]=fabs(rndSF(Dz/DzError,4));
-          pev_.trkDxyOverDxyError[trkCount*pev_.nVtx+i]=fabs(rndSF(Dxy/DxyError,4));
+          pev_.trkDzOverDzError[trkCount*pev_.nVtx+i]=fabs(Dz/DzError);
+          pev_.trkDxyOverDxyError[trkCount*pev_.nVtx+i]=fabs(Dxy/DxyError);
           trkCount++;
 
           if(qualityStrings_.size()>0 && !etrk.quality(reco::TrackBase::qualityByName(qualityStrings_[0].data()))) continue;
@@ -649,17 +649,17 @@ TrackAnalyzer::fillTracks(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
 	}
 
-    pev_.trkEta[pev_.nTrk]=rndDP(etrk.eta(),3);
-    pev_.trkPhi[pev_.nTrk]=rndDP(etrk.phi(),3);
-    pev_.trkPt[pev_.nTrk]=rndSF(etrk.pt(),4);
-    pev_.trkPtError[pev_.nTrk]=rndSF(etrk.ptError(),4);
+    pev_.trkEta[pev_.nTrk]=etrk.eta();
+    pev_.trkPhi[pev_.nTrk]=etrk.phi();
+    pev_.trkPt[pev_.nTrk]=etrk.pt();
+    pev_.trkPtError[pev_.nTrk]=etrk.ptError();
     pev_.trkCharge[pev_.nTrk]=etrk.charge();
     pev_.trkNHit[pev_.nTrk]=etrk.numberOfValidHits();
     pev_.trkDxy[pev_.nTrk]=etrk.dxy();
     pev_.trkDxyError[pev_.nTrk]=etrk.dxyError();
     pev_.trkDz[pev_.nTrk]=etrk.dz();
     pev_.trkDzError[pev_.nTrk]=etrk.dzError();
-    pev_.trkChi2[pev_.nTrk]=rndSF(etrk.chi2(),4);
+    pev_.trkChi2[pev_.nTrk]=etrk.chi2();
     pev_.trkNdof[pev_.nTrk]=etrk.ndof();
     pev_.trkVx[pev_.nTrk]=etrk.vx();
     pev_.trkVy[pev_.nTrk]=etrk.vy();
@@ -667,16 +667,16 @@ TrackAnalyzer::fillTracks(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     math::XYZPoint v1(pev_.xVtx[pev_.maxPtVtx],pev_.yVtx[pev_.maxPtVtx], pev_.zVtx[pev_.maxPtVtx]);
     // std::cout << it << " " << pev_.nVtx << " " << etrk.dz(v1) << std::endl;
-    pev_.trkDz1[pev_.nTrk]=rndSF(etrk.dz(v1),4);
-    pev_.trkDzError1[pev_.nTrk]=rndSF(sqrt(etrk.dzError()*etrk.dzError()+pev_.zVtxErr[pev_.maxPtVtx]*pev_.zVtxErr[pev_.maxPtVtx]),4);
-    pev_.trkDxy1[pev_.nTrk]=rndSF(etrk.dxy(v1),4);
-    pev_.trkDxyError1[pev_.nTrk]=rndSF(sqrt(etrk.dxyError()*etrk.dxyError()+pev_.xVtxErr[pev_.maxPtVtx]*pev_.yVtxErr[pev_.maxPtVtx]),4);
+    pev_.trkDz1[pev_.nTrk]=etrk.dz(v1);
+    pev_.trkDzError1[pev_.nTrk]=sqrt(etrk.dzError()*etrk.dzError()+pev_.zVtxErr[pev_.maxPtVtx]*pev_.zVtxErr[pev_.maxPtVtx]);
+    pev_.trkDxy1[pev_.nTrk]=etrk.dxy(v1);
+    pev_.trkDxyError1[pev_.nTrk]=sqrt(etrk.dxyError()*etrk.dxyError()+pev_.xVtxErr[pev_.maxPtVtx]*pev_.yVtxErr[pev_.maxPtVtx]);
 
     math::XYZPoint v2(pev_.xVtx[pev_.maxMultVtx],pev_.yVtx[pev_.maxMultVtx], pev_.zVtx[pev_.maxMultVtx]);
-    pev_.trkDz2[pev_.nTrk]=rndSF(etrk.dz(v2),4);
-    pev_.trkDzError2[pev_.nTrk]=rndSF(sqrt(etrk.dzError()*etrk.dzError()+pev_.zVtxErr[pev_.maxMultVtx]*pev_.zVtxErr[pev_.maxMultVtx]),4);
-    pev_.trkDxy2[pev_.nTrk]=rndSF(etrk.dxy(v2),4);
-    pev_.trkDxyError2[pev_.nTrk]=rndSF(sqrt(etrk.dxyError()*etrk.dxyError()+pev_.xVtxErr[pev_.maxMultVtx]*pev_.yVtxErr[pev_.maxMultVtx]),4);
+    pev_.trkDz2[pev_.nTrk]=etrk.dz(v2);
+    pev_.trkDzError2[pev_.nTrk]=sqrt(etrk.dzError()*etrk.dzError()+pev_.zVtxErr[pev_.maxMultVtx]*pev_.zVtxErr[pev_.maxMultVtx]);
+    pev_.trkDxy2[pev_.nTrk]=etrk.dxy(v2);
+    pev_.trkDxyError2[pev_.nTrk]=sqrt(etrk.dxyError()*etrk.dxyError()+pev_.xVtxErr[pev_.maxMultVtx]*pev_.yVtxErr[pev_.maxMultVtx]);
 
     pev_.trkDxyBS[pev_.nTrk]=etrk.dxy(beamSpot.position());
     pev_.trkDxyErrorBS[pev_.nTrk]=sqrt(etrk.dxyError()*etrk.dxyError()+beamSpot.BeamWidthX()*beamSpot.BeamWidthY());
@@ -692,7 +692,7 @@ TrackAnalyzer::fillTracks(const edm::Event& iEvent, const edm::EventSetup& iSetu
        if(etrk.quality(reco::TrackBase::qualityByName(qualityStrings_[0].data()))) pev_.trkMVA[pev_.nTrk] = 1;
        else pev_.trkMVA[pev_.nTrk] = -1;
      }
-     else pev_.trkMVA[pev_.nTrk] = rndDP((*mvaoutput)[trackRef],3);//non algo=11 behavior
+     else pev_.trkMVA[pev_.nTrk] = (*mvaoutput)[trackRef];//non algo=11 behavior
 	 if(mvaSrcLabel_.label() == "generalTracks")
 	 {
 	   pev_.trkMVALoose[pev_.nTrk] = (!((pev_.trkAlgo[pev_.nTrk] == 4 && pev_.trkMVA[pev_.nTrk] < -0.7) || (pev_.trkAlgo[pev_.nTrk] == 5 && pev_.trkMVA[pev_.nTrk] < -0.1) || (pev_.trkAlgo[pev_.nTrk] == 6 && pev_.trkMVA[pev_.nTrk] < 0.3) || (pev_.trkAlgo[pev_.nTrk] == 7 && pev_.trkMVA[pev_.nTrk] < 0.4) || (pev_.trkAlgo[pev_.nTrk] == 8 && pev_.trkMVA[pev_.nTrk] < -0.2) || (pev_.trkAlgo[pev_.nTrk] == 9 && pev_.trkMVA[pev_.nTrk] < 0.0) ||(pev_.trkAlgo[pev_.nTrk] == 10 && pev_.trkMVA[pev_.nTrk] < -0.3)) || pev_.trkMVA[pev_.nTrk] == -99) &&  etrk.quality(reco::TrackBase::qualityByName("highPurity"));
@@ -903,8 +903,8 @@ TrackAnalyzer::fillSimTracks(const edm::Event& iEvent, const edm::EventSetup& iS
       if(doTrackVtxWImpPar_){
         for(int vtxNum = 0; vtxNum<pev_.nVtx; vtxNum++){
           math::XYZPoint pt(pev_.xVtx[vtxNum],pev_.yVtx[vtxNum], pev_.zVtx[vtxNum]);
-          pev_.mtrkDzOverDzError[pev_.nParticle*pev_.nVtx+vtxNum] = fabs(rndSF(mtrk->dz(pt)/(sqrt(mtrk->dzError()*mtrk->dzError()+pev_.zVtxErr[vtxNum]*pev_.zVtxErr[vtxNum])),4)); 
-          pev_.mtrkDxyOverDxyError[pev_.nParticle*pev_.nVtx+vtxNum] = fabs(rndSF(mtrk->dxy(pt)/(sqrt(mtrk->dxyError()*mtrk->dxyError()+pev_.xVtxErr[vtxNum]*pev_.yVtxErr[vtxNum])),4));
+          pev_.mtrkDzOverDzError[pev_.nParticle*pev_.nVtx+vtxNum] = fabs(mtrk->dz(pt)/(sqrt(mtrk->dzError()*mtrk->dzError()+pev_.zVtxErr[vtxNum]*pev_.zVtxErr[vtxNum]))); 
+          pev_.mtrkDxyOverDxyError[pev_.nParticle*pev_.nVtx+vtxNum] = fabs(mtrk->dxy(pt)/(sqrt(mtrk->dxyError()*mtrk->dxyError()+pev_.xVtxErr[vtxNum]*pev_.yVtxErr[vtxNum])));
         }
       }
       if(doMVA_){
@@ -917,7 +917,7 @@ TrackAnalyzer::fillSimTracks(const edm::Event& iEvent, const edm::EventSetup& iS
           if(mtrk->quality(reco::TrackBase::qualityByName(qualityStrings_[0].data()))) pev_.mtrkMVA[pev_.nParticle] = 1;
           else pev_.mtrkMVA[pev_.nParticle] = -1;
         }
-        else pev_.mtrkMVA[pev_.nParticle] = rndDP((*mvaoutput)[trackRef],3);//non algo=11 behavior
+        else pev_.mtrkMVA[pev_.nParticle] = (*mvaoutput)[trackRef];//non algo=11 behavior
 
 	    if(mvaSrcLabel_.label() == "generalTracks")
 	    {
