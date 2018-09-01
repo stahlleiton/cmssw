@@ -1,166 +1,89 @@
+#include "DataFormats/Math/interface/deltaPhi.h"
+
 #include "HeavyIonsAnalysis/PhotonAnalysis/src/pfIsoCalculator.h"
 
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-
-#include "Geometry/Records/interface/IdealGeometryRecord.h"
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
-#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
-
-#include "DataFormats/Common/interface/Handle.h"
-#include "DataFormats/EgammaReco/interface/BasicCluster.h"
-#include "DataFormats/EgammaReco/interface/SuperCluster.h"
-
-
-using namespace edm;
-using namespace reco;
-
-#define PI 3.141592653589793238462643383279502884197169399375105820974945
-
-
-pfIsoCalculator::pfIsoCalculator(const edm::Event &iEvent, const edm::EventSetup &iSetup, const edm::InputTag &pfCandidateLabel_, const edm::InputTag &vtxLabel_ )
+pfIsoCalculator::pfIsoCalculator(const edm::Event &iEvent,
+                                 const edm::EDGetTokenT<edm::View<reco::PFCandidate> > pfCandidates_,
+                                 const math::XYZPoint& pv)
 {
+  iEvent.getByToken(pfCandidates_, candidatesView);
 
-  using namespace edm;
-  using namespace reco;
-
-
-  //edm::Handle<reco::PFCandidateCollection> pfCandidates;
-  edm::Handle<reco::CandidateView> candidatesView;
-  //iEvent.getByLabel(pfCandidateLabel_,pfCandidates);
-  iEvent.getByLabel(pfCandidateLabel_,candidatesView);
-  // pfCandidateColl = pfCandidates.product();
-
-  // vertex
-  iEvent.getByLabel(vtxLabel_,vtxs);
-  int greatestvtx = 0;
-  int nVertex = vtxs->size();
-  for (unsigned int i = 0 ; i< vtxs->size(); ++i){
-    unsigned int daughter = (*vtxs)[i].tracksSize();
-    if( daughter > (*vtxs)[greatestvtx].tracksSize()) greatestvtx = i;
-  }
-  if(nVertex<=0){
-    vtx_ = reco::Vertex::Point(0,0,0);
-  }
-  else
-    vtx_ =  (*vtxs)[greatestvtx].position();
-}
-
-pfIsoCalculator::pfIsoCalculator(const edm::Event &iEvent, const edm::EventSetup &iSetup, const edm::EDGetTokenT<edm::View<reco::PFCandidate> > pfCandidates_, const math::XYZPoint& pv)
-{
-
-  using namespace edm;
-  using namespace reco;
-
-
-  //edm::Handle<reco::PFCandidateCollection> pfCandidates;
-  //edm::Handle<reco::CandidateView> candidatesView;
-  //iEvent.getByToken(pfCandidates_,pfCandidates);
-  iEvent.getByToken(pfCandidates_,candidatesView);
-  //pfCandidateColl = pfCandidates.product();
-  //pfCandidateColl = candidatesView.product();
-
-  // vertex
   vtx_ = pv;
 }
 
-
-
-double pfIsoCalculator::getPfIso(const reco::Photon& photon, int pfId, double r1, double r2, double jWidth, double threshold)
+double pfIsoCalculator::getPfIso(const reco::Photon& photon, int pfId,
+                                 double r1, double r2, double threshold,
+                                 double jWidth)
 {
-  using namespace edm;
-  using namespace reco;
+  double photonEta = photon.eta();
+  double photonPhi = photon.phi();
+  double totalEt = 0;
 
-  double photonEta  = photon.eta();
-  double photonPhi  = photon.phi();
-  double TotalEt = 0;
+  for (const auto& pf : *candidatesView) {
+    if ( pf.particleId() != pfId )   continue;
+    double pfEta = pf.eta();
+    double pfPhi = pf.phi();
 
-  // if (!pfCandidateColl)
-  //return -999;
+    double dEta = std::abs(photonEta - pfEta);
+    double dPhi = reco::deltaPhi(pfPhi, photonPhi);
+    double dR2 = dEta*dEta + dPhi*dPhi;
+    double pfPt = pf.pt();
 
-  //for(unsigned icand=0;icand<pfCandidateColl->size(); icand++) {
-  for (edm::View<reco::PFCandidate>::const_iterator pf = candidatesView->begin(); pf != candidatesView->end(); ++pf) {
+    // remove the photon itself
+    if ( pf.superClusterRef() == photon.superCluster() ) continue;
 
-    //const reco::PFCandidate pfCandidate = pfCandidateColl->at(icand);
-    if ( pf->particleId() != pfId )   continue;
-    double pfEta = pf->eta();
-    double pfPhi = pf->phi();
-
-    double dEta = fabs( photonEta - pfEta);
-    double dPhi = pfPhi - photonPhi;
-    while ( fabs(dPhi) > PI) {
-      if ( dPhi > PI )  dPhi = dPhi - 2.*PI;
-      if ( dPhi < PI*(-1.) )  dPhi = dPhi + 2.*PI;
-    }
-    double dR = sqrt(dEta*dEta+dPhi*dPhi);
-    double thePt = pf->pt();
-
-
-    // Remove the photon itself
-    if ( pf->superClusterRef() == photon.superCluster() ) continue;
-
-    if( pf->particleId()==reco::PFCandidate::h){
-      float dz = fabs( pf->vz() - vtx_.z());
+    if(pf.particleId() == reco::PFCandidate::h){
+      float dz = std::abs(pf.vz() - vtx_.z());
       if (dz > 0.2) continue;
-      double dxy = ( -( pf->vx() - vtx_.x())*pf->py() + (pf->vy() - vtx_.y())*pf->px()) / pf->pt();
-      if(fabs(dxy) > 0.1) continue;
+      double dxy = ((vtx_.x() - pf.vx())*pf.py() + (pf.vy() - vtx_.y())*pf.px()) / pf.pt();
+      if (std::abs(dxy) > 0.1) continue;
     }
-
-
-
 
     // Jurassic Cone /////
-    if ( dR > r1 ) continue;
-    if ( dR < r2 ) continue;
-    if ( fabs(dEta) <  jWidth)  continue;
-    if (thePt<threshold) continue;
-    TotalEt += thePt;
+    if (dR2 > r1 *r1) continue;
+    if (dR2 < r2 * r2) continue;
+    if (std::abs(dEta) < jWidth)  continue;
+    if (pfPt < threshold) continue;
+    totalEt += pfPt;
   }
 
-  return TotalEt;
+  return totalEt;
 }
 
-double pfIsoCalculator::getPfIso(const reco::GsfElectron& ele, int pfId, double r1, double r2, double threshold)
+double pfIsoCalculator::getPfIso(const reco::GsfElectron& ele, int pfId,
+                                 double r1, double r2, double threshold)
 {
-
-  using namespace edm;
-  using namespace reco;
-
   double eleEta = ele.eta();
   double elePhi = ele.phi();
-  double TotalEt = 0.;
+  double totalEt = 0.;
 
-  for (edm::View<reco::PFCandidate>::const_iterator pf = candidatesView->begin(); pf != candidatesView->end(); ++pf) {
-    if ( pf->particleId() != pfId )   continue;
-    double pfEta = pf->eta();
-    double pfPhi = pf->phi();
+  for (const auto& pf : *candidatesView) {
+    if ( pf.particleId() != pfId )   continue;
+    double pfEta = pf.eta();
+    double pfPhi = pf.phi();
 
-    double dEta = fabs( eleEta - pfEta);
-    double dPhi = pfPhi - elePhi;
-    while ( fabs(dPhi) > PI) {
-      if ( dPhi > PI )  dPhi = dPhi - 2.*PI;
-      if ( dPhi < PI*(-1.) )  dPhi = dPhi + 2.*PI;
-    }
-    double dR = sqrt(dEta*dEta+dPhi*dPhi);
-    double thePt = pf->pt();
+    double dEta = std::abs(eleEta - pfEta);
+    double dPhi = reco::deltaPhi(pfPhi, elePhi);
+    double dR2 = dEta*dEta + dPhi*dPhi;
+    double pfPt = pf.pt();
 
     // remove electron itself
-    if (pf->particleId() == reco::PFCandidate::e) continue;
+    if (pf.particleId() == reco::PFCandidate::e) continue;
 
-    if (pf->particleId() == reco::PFCandidate::h) {
-      float dz = fabs(pf->vz() - vtx_.z());
+    if (pf.particleId() == reco::PFCandidate::h) {
+      float dz = std::abs(pf.vz() - vtx_.z());
       if (dz > 0.2) continue;
-      double dxy = ( -(pf->vx() - vtx_.x())*pf->py() + (pf->vy() - vtx_.y())*pf->px()) / pf->pt();
-      if ( fabs(dxy) > 0.1) continue;
+      double dxy = ((vtx_.x() - pf.vx())*pf.py() + (pf.vy() - vtx_.y())*pf.px()) / pf.pt();
+      if (std::abs(dxy) > 0.1) continue;
     }
 
-    //inside the cone size
-    if (dR > r1) continue;
-    if (dR < r2) continue;
-    if (thePt < threshold) continue;
-    TotalEt += thePt;
+    // inside the cone size
+    if (dR2 > r1 * r1) continue;
+    if (dR2 < r2 * r2) continue;
+    if (pfPt < threshold) continue;
+    totalEt += pfPt;
 
   }
 
-  return TotalEt;
-
+  return totalEt;
 }

@@ -1,4 +1,3 @@
-#include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
@@ -7,11 +6,12 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "EgammaAnalysis/ElectronTools/interface/SuperClusterHelper.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 
-#include "HeavyIonsAnalysis/PhotonAnalysis/src/pfIsoCalculator.h"
-#include "HeavyIonsAnalysis/PhotonAnalysis/interface/ggHiNtuplizer.h"
 #include "HeavyIonsAnalysis/PhotonAnalysis/interface/GenParticleParentage.h"
+#include "HeavyIonsAnalysis/PhotonAnalysis/interface/ggHiNtuplizer.h"
+#include "HeavyIonsAnalysis/PhotonAnalysis/src/pfIsoCalculator.h"
 
 ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   effectiveAreas_( (ps.getParameter<edm::FileInPath>("effAreasConfigFile")).fullPath() )
@@ -44,12 +44,12 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
       ps.getParameter<edm::InputTag>("recoPhotonHiIsolationMap"));
   }
   if(doRecHitsEB_){
-      recHitsEB_ = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (
+      recHitsEB_ = consumes<EcalRecHitCollection> (
         ps.getUntrackedParameter<edm::InputTag>("recHitsEB",
           edm::InputTag("ecalRecHit","EcalRecHitsEB")));
   }
   if(doRecHitsEE_){
-      recHitsEE_ = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (
+      recHitsEE_ = consumes<EcalRecHitCollection> (
         ps.getUntrackedParameter<edm::InputTag>("recHitsEE",
           edm::InputTag("ecalRecHit","EcalRecHitsEE")));
   }
@@ -255,9 +255,9 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   tree_->Branch("phoBC1inUnClean",       &phoBC1inUnClean_);
   tree_->Branch("phoBC1rawID",           &phoBC1rawID_);
 
-  tree_->Branch("phoBC2E",               &phoBC2E_);
-  tree_->Branch("phoBC2Eta",             &phoBC2Eta_);
-  tree_->Branch("phoBC2Phi",             &phoBC2Phi_);
+  /* tree_->Branch("phoBC2E",               &phoBC2E_); */
+  /* tree_->Branch("phoBC2Eta",             &phoBC2Eta_); */
+  /* tree_->Branch("phoBC2Phi",             &phoBC2Phi_); */
 
   tree_->Branch("pho_ecalClusterIsoR2", &pho_ecalClusterIsoR2_);
   tree_->Branch("pho_ecalClusterIsoR3", &pho_ecalClusterIsoR3_);
@@ -316,12 +316,6 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
     tree_->Branch("pfnIso3",&pfnIso3);
     tree_->Branch("pfnIso4",&pfnIso4);
     tree_->Branch("pfnIso5",&pfnIso5);
-
-    // tree_->Branch("pfsumIso1",&pfsumIso1);
-    // tree_->Branch("pfsumIso2",&pfsumIso2);
-    // tree_->Branch("pfsumIso3",&pfsumIso3);
-    // tree_->Branch("pfsumIso4",&pfsumIso4);
-    // tree_->Branch("pfsumIso5",&pfsumIso5);
   }
 
   tree_->Branch("nMu",                   &nMu_);
@@ -537,9 +531,9 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   phoBC1inUnClean_      .clear();
   phoBC1rawID_          .clear();
 
-  phoBC2E_              .clear();
-  phoBC2Eta_            .clear();
-  phoBC2Phi_            .clear();
+  /* phoBC2E_              .clear(); */
+  /* phoBC2Eta_            .clear(); */
+  /* phoBC2Phi_            .clear(); */
   pho_ecalClusterIsoR2_.clear();
   pho_ecalClusterIsoR3_.clear();
   pho_ecalClusterIsoR4_.clear();
@@ -590,11 +584,6 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   pfnIso3.clear();
   pfnIso4.clear();
   pfnIso5.clear();
-  pfsumIso1.clear();
-  pfsumIso2.clear();
-  pfsumIso3.clear();
-  pfsumIso4.clear();
-  pfsumIso5.clear();
 
   muPt_                 .clear();
   muEta_                .clear();
@@ -635,9 +624,9 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
 
   // best-known primary vertex coordinates
   math::XYZPoint pv(0, 0, 0);
-  for (std::vector<reco::Vertex>::const_iterator v = vtxHandle->begin(); v != vtxHandle->end(); ++v)
-    if (!v->isFake()) {
-      pv.SetXYZ(v->x(), v->y(), v->z());
+  for (const auto& v : *vtxHandle)
+    if (!v.isFake()) {
+      pv.SetXYZ(v.x(), v.y(), v.z());
       break;
     }
 
@@ -661,10 +650,10 @@ void ggHiNtuplizer::fillGenPileupInfo(const edm::Event& e)
   edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
   e.getByToken(genPileupCollection_, genPileupHandle);
 
-  for (std::vector<PileupSummaryInfo>::const_iterator pu = genPileupHandle->begin(); pu != genPileupHandle->end(); ++pu) {
-    nPU_   .push_back(pu->getPU_NumInteractions());
-    puTrue_.push_back(pu->getTrueNumInteractions());
-    puBX_  .push_back(pu->getBunchCrossing());
+  for (const auto& pu : *genPileupHandle) {
+    nPU_   .push_back(pu.getPU_NumInteractions());
+    puTrue_.push_back(pu.getTrueNumInteractions());
+    puBX_  .push_back(pu.getBunchCrossing());
 
     nPUInfo_++;
   }
@@ -678,12 +667,8 @@ void ggHiNtuplizer::fillGenParticles(const edm::Event& e)
   edm::Handle<std::vector<reco::GenParticle> > genParticlesHandle;
   e.getByToken(genParticlesCollection_, genParticlesHandle);
 
-  int genIndex = 0;
-
   // loop over MC particles
-  for (std::vector<reco::GenParticle>::const_iterator p = genParticlesHandle->begin(); p != genParticlesHandle->end(); ++p) {
-    genIndex++;
-
+  for (auto p = genParticlesHandle->begin(); p != genParticlesHandle->end(); ++p) {
     // skip all primary particles if not particle gun MC
     if (!runOnParticleGun_ && !p->mother()) continue;
 
@@ -756,7 +741,7 @@ void ggHiNtuplizer::fillGenParticles(const edm::Event& e)
     mcMomMass_.push_back(momMass);
     mcGMomPID_.push_back(gmomPID);
 
-    mcIndex_  .push_back(genIndex - 1);
+    mcIndex_  .push_back(p - genParticlesHandle->begin());
 
     mcCalIsoDR03_.push_back(getGenCalIso(genParticlesHandle, p, 0.3, false, false));
     mcCalIsoDR04_.push_back(getGenCalIso(genParticlesHandle, p, 0.4, false, false));
@@ -764,7 +749,6 @@ void ggHiNtuplizer::fillGenParticles(const edm::Event& e)
     mcTrkIsoDR04_.push_back(getGenTrkIso(genParticlesHandle, p, 0.4) );
 
     nMC_++;
-
   } // gen-level particles loop
 
 }
@@ -777,7 +761,7 @@ float ggHiNtuplizer::getGenCalIso(edm::Handle<std::vector<reco::GenParticle> > &
 
   float etSum = 0;
 
-  for (reco::GenParticleCollection::const_iterator p = handle->begin(); p != handle->end(); ++p) {
+  for (auto p = handle->begin(); p != handle->end(); ++p) {
     if (p == thisPart) continue;
     if (p->status() != 1) continue;
 
@@ -808,7 +792,7 @@ float ggHiNtuplizer::getGenTrkIso(edm::Handle<std::vector<reco::GenParticle> > &
 
   float ptSum = 0;
 
-  for (reco::GenParticleCollection::const_iterator p = handle->begin(); p != handle->end(); ++p) {
+  for (auto p = handle->begin(); p != handle->end(); ++p) {
     if (p == thisPart) continue;
     if (p->status() != 1) continue;
     if (p->charge() == 0) continue;  // do not count neutral particles
@@ -862,7 +846,7 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
 
 
   // loop over electrons
-  for (edm::View<reco::GsfElectron>::const_iterator ele = gsfElectronsHandle->begin(); ele != gsfElectronsHandle->end(); ++ele) {
+  for (auto ele = gsfElectronsHandle->begin(); ele != gsfElectronsHandle->end(); ++ele) {
     eleCharge_           .push_back(ele->charge());
     eleChargeConsistent_ .push_back((int)ele->isGsfCtfScPixChargeConsistent());
     eleSCPixCharge_      .push_back(ele->scPixCharge());
@@ -898,7 +882,7 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
     eleHoverE_           .push_back(ele->hcalOverEcal());
     eleHoverEBc_         .push_back(ele->hcalOverEcalBc());
     eleEoverP_           .push_back(ele->eSuperClusterOverP());
-    eleEoverPInv_        .push_back(fabs(1./ele->ecalEnergy() - 1./ele->trackMomentumAtVtx().R()));
+    eleEoverPInv_        .push_back(std::abs(1./ele->ecalEnergy() - 1./ele->trackMomentumAtVtx().R()));
     eleBrem_             .push_back(ele->fbrem());
     eledEtaAtVtx_        .push_back(ele->deltaEtaSuperClusterTrackAtVtx());
     eledPhiAtVtx_        .push_back(ele->deltaPhiSuperClusterTrackAtVtx());
@@ -918,8 +902,8 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
     elePFPUIso_          .push_back(pfIso.sumPUPt);
 
     // calculation on the fly
-    pfIsoCalculator pfIsoCal(e,es, pfCollection_, pv);
-    if (fabs(ele->superCluster()->eta()) > 1.566) {
+    pfIsoCalculator pfIsoCal(e, pfCollection_, pv);
+    if (std::abs(ele->superCluster()->eta()) > 1.566) {
       elePFChIso03_          .push_back(pfIsoCal.getPfIso(*ele, 1, 0.3, 0.015, 0.));
       elePFChIso04_          .push_back(pfIsoCal.getPfIso(*ele, 1, 0.4, 0.015, 0.));
       elePFPhoIso03_         .push_back(pfIsoCal.getPfIso(*ele, 4, 0.3, 0.08, 0.));
@@ -973,17 +957,13 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
       if (rhoH.isValid())
         rho = *rhoH;
 
-      float eA = effectiveAreas_.getEffectiveArea(fabs(ele->superCluster()->eta()));
+      float eA = effectiveAreas_.getEffectiveArea(std::abs(ele->superCluster()->eta()));
       eleEffAreaTimesRho_.push_back(eA*rho);
 
       bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,
           conversions,
           theBeamSpot->position());
       elepassConversionVeto_.push_back( (int) passConvVeto );
-
-      // seed
-      // eleBC1E_             .push_back(ele->superCluster()->seed()->energy());
-      // eleBC1Eta_           .push_back(ele->superCluster()->seed()->eta());
 
       // parameters of the very first PFCluster
       // reco::CaloCluster_iterator bc = ele->superCluster()->clustersBegin();
@@ -995,7 +975,7 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
       //    eleBC2Eta_.push_back(-99);
       // }
 
-      const edm::Ptr<reco::GsfElectron> elePtr(gsfElectronsHandle, ele-gsfElectronsHandle->begin()); //value map is keyed of edm::Ptrs so we need to make one
+      const edm::Ptr<reco::GsfElectron> elePtr(gsfElectronsHandle, ele - gsfElectronsHandle->begin()); //value map is keyed of edm::Ptrs so we need to make one
       bool passVetoID   = false;
       bool passLooseID  = false;
       bool passMediumID = false;
@@ -1029,17 +1009,17 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
     isoMap = * recoPhotonHiIsoHandle;
   }
 
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBHandle;
+  edm::Handle<EcalRecHitCollection> recHitsEBHandle;
   if (doRecHitsEB_) {
       e.getByToken(recHitsEB_, recHitsEBHandle);
   }
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEHandle;
+  edm::Handle<EcalRecHitCollection> recHitsEEHandle;
   if (doRecHitsEE_) {
       e.getByToken(recHitsEE_, recHitsEEHandle);
   }
 
   // loop over photons
-  for (edm::View<reco::Photon>::const_iterator pho = recoPhotonsHandle->begin(); pho != recoPhotonsHandle->end(); ++pho) {
+  for (auto pho = recoPhotonsHandle->begin(); pho != recoPhotonsHandle->end(); ++pho) {
     phoE_             .push_back(pho->energy());
     phoEt_            .push_back(pho->et());
     phoEta_           .push_back(pho->eta());
@@ -1185,11 +1165,10 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
         int iBC = 0;
         for (reco::CaloCluster_iterator bc = pho->superCluster()->clustersBegin(); bc != pho->superCluster()->clustersEnd(); ++bc) {
 
-            std::vector<std::pair<DetId, float>>::const_iterator hitBC;
-            for (hitBC = (*bc)->hitsAndFractions().begin(); hitBC != (*bc)->hitsAndFractions().end(); ++hitBC) {
+            for (const auto& hitBC : (*bc)->hitsAndFractions()) {
 
-                const DetId & rhDetId = (*hitBC).first;
-                edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > >* recHitsHandle;
+                const DetId & rhDetId = hitBC.first;
+                edm::Handle<EcalRecHitCollection>* recHitsHandle;
 
                 if (rhDetId.subdetId() == EcalBarrel && doRecHitsEB_) {
                     recHitsHandle = (&recHitsEBHandle);
@@ -1199,7 +1178,7 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
                 }
                 else continue;
 
-                edm::SortedCollection<EcalRecHit>::const_iterator rhIter = (*recHitsHandle)->find(rhDetId);
+                EcalRecHitCollection::const_iterator rhIter = (*recHitsHandle)->find(rhDetId);
                 const EcalRecHit & rh = (*rhIter);
 
                 rhRawId_.push_back(rhDetId.rawId());
@@ -1249,7 +1228,7 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
     }
 
     if (doPfIso_) {
-      pfIsoCalculator pfIso(e,es, pfCollection_, pv);
+      pfIsoCalculator pfIso(e, pfCollection_, pv);
       // particle flow isolation
       pfcIso1.push_back( pfIso.getPfIso(*pho, 1, 0.1, 0.02, 0.0, 0 ));
       pfcIso2.push_back( pfIso.getPfIso(*pho, 1, 0.2, 0.02, 0.0, 0 ));
@@ -1263,19 +1242,19 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
       pfnIso4.push_back( pfIso.getPfIso(*pho, 5, 0.4, 0.0, 0.0, 0 ));
       pfnIso5.push_back( pfIso.getPfIso(*pho, 5, 0.5, 0.0, 0.0, 0 ));
 
-      pfpIso1.push_back( pfIso.getPfIso(*pho, 4, 0.1, 0.0, 0.015, 0 ));
-      pfpIso2.push_back( pfIso.getPfIso(*pho, 4, 0.2, 0.0, 0.015, 0 ));
-      pfpIso3.push_back( pfIso.getPfIso(*pho, 4, 0.3, 0.0, 0.015, 0 ));
-      pfpIso4.push_back( pfIso.getPfIso(*pho, 4, 0.4, 0.0, 0.015, 0 ));
-      pfpIso5.push_back( pfIso.getPfIso(*pho, 4, 0.5, 0.0, 0.015, 0 ));
+      pfpIso1.push_back( pfIso.getPfIso(*pho, 4, 0.1, 0.0, 0.0, 0.015 ));
+      pfpIso2.push_back( pfIso.getPfIso(*pho, 4, 0.2, 0.0, 0.0, 0.015 ));
+      pfpIso3.push_back( pfIso.getPfIso(*pho, 4, 0.3, 0.0, 0.0, 0.015 ));
+      pfpIso4.push_back( pfIso.getPfIso(*pho, 4, 0.4, 0.0, 0.0, 0.015 ));
+      pfpIso5.push_back( pfIso.getPfIso(*pho, 4, 0.5, 0.0, 0.0, 0.015 ));
     }
 
     //////////////////////////////////// MC matching ////////////////////////////////////
     if (doGenParticles_ && !isData_) {
-      float delta2 = 0.15*0.15;
+      constexpr float delta2 = 0.15*0.15;
 
-      bool gpTemp(false);
-      Float_t currentMaxPt(-1);
+      bool gpTemp = false;
+      float currentMaxPt = -1;
       int matchedIndex = -1;
 
       for (unsigned igen = 0; igen < mcEt_.size(); ++igen) {
@@ -1290,11 +1269,11 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
       }
 
       // if no matching photon was found try with other particles
-      std::vector<int> otherPdgIds_(1, 11);
+      std::vector<int> otherPdgIds_ = {1, 11};
       if ( !gpTemp ) {
         currentMaxPt = -1;
         for (unsigned igen = 0; igen < mcEt_.size(); ++igen) {
-          if (mcStatus_[igen] != 1 || find(otherPdgIds_.begin(), otherPdgIds_.end(), fabs(mcPID_[igen])) == otherPdgIds_.end()) continue;
+          if (mcStatus_[igen] != 1 || find(otherPdgIds_.begin(), otherPdgIds_.end(), std::abs(mcPID_[igen])) == otherPdgIds_.end()) continue;
           if (reco::deltaR2(pho->eta(), pho->phi(), mcEta_[igen], mcPhi_[igen]) < delta2 &&
               mcPt_[igen] > currentMaxPt) {
 
@@ -1319,21 +1298,21 @@ void ggHiNtuplizer::fillMuons(const edm::Event& e, const edm::EventSetup& es, ma
   edm::Handle<edm::View<reco::Muon> > recoMuonsHandle;
   e.getByToken(recoMuonsCollection_, recoMuonsHandle);
 
-  for (edm::View<reco::Muon>::const_iterator mu = recoMuonsHandle->begin(); mu != recoMuonsHandle->end(); ++mu) {
-    if (mu->pt() < 5) continue;
-    if (!(mu->isPFMuon() || mu->isGlobalMuon() || mu->isTrackerMuon())) continue;
+  for (const auto& mu : *recoMuonsHandle) {
+    if (mu.pt() < 5) continue;
+    if (!(mu.isPFMuon() || mu.isGlobalMuon() || mu.isTrackerMuon())) continue;
 
-    muPt_    .push_back(mu->pt());
-    muEta_   .push_back(mu->eta());
-    muPhi_   .push_back(mu->phi());
-    muCharge_.push_back(mu->charge());
-    muType_  .push_back(mu->type());
-    muIsGood_.push_back((int) muon::isGoodMuon(*mu, muon::selectionTypeFromString("TMOneStationTight")));
-    muD0_    .push_back(mu->muonBestTrack()->dxy(pv));
-    muDz_    .push_back(mu->muonBestTrack()->dz(pv));
+    muPt_    .push_back(mu.pt());
+    muEta_   .push_back(mu.eta());
+    muPhi_   .push_back(mu.phi());
+    muCharge_.push_back(mu.charge());
+    muType_  .push_back(mu.type());
+    muIsGood_.push_back(muon::isGoodMuon(mu, muon::selectionTypeFromString("TMOneStationTight")));
+    muD0_    .push_back(mu.muonBestTrack()->dxy(pv));
+    muDz_    .push_back(mu.muonBestTrack()->dz(pv));
 
-    const reco::TrackRef glbMu = mu->globalTrack();
-    const reco::TrackRef innMu = mu->innerTrack();
+    const reco::TrackRef glbMu = mu.globalTrack();
+    const reco::TrackRef innMu = mu.innerTrack();
 
     if (glbMu.isNull()) {
       muChi2NDF_ .push_back(-99);
@@ -1359,12 +1338,12 @@ void ggHiNtuplizer::fillMuons(const edm::Event& e, const edm::EventSetup& es, ma
       muTrkQuality_  .push_back(innMu->quality(reco::TrackBase::highPurity));
     }
 
-    muStations_ .push_back(mu->numberOfMatchedStations());
-    muIsoTrk_   .push_back(mu->isolationR03().sumPt);
-    muPFChIso_  .push_back(mu->pfIsolationR04().sumChargedHadronPt);
-    muPFPhoIso_ .push_back(mu->pfIsolationR04().sumPhotonEt);
-    muPFNeuIso_ .push_back(mu->pfIsolationR04().sumNeutralHadronEt);
-    muPFPUIso_  .push_back(mu->pfIsolationR04().sumPUPt);
+    muStations_ .push_back(mu.numberOfMatchedStations());
+    muIsoTrk_   .push_back(mu.isolationR03().sumPt);
+    muPFChIso_  .push_back(mu.pfIsolationR04().sumChargedHadronPt);
+    muPFPhoIso_ .push_back(mu.pfIsolationR04().sumPhotonEt);
+    muPFNeuIso_ .push_back(mu.pfIsolationR04().sumNeutralHadronEt);
+    muPFPUIso_  .push_back(mu.pfIsolationR04().sumPUPt);
 
     nMu_++;
   } // muons loop

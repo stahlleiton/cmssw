@@ -1,46 +1,26 @@
 #ifndef pfIsoCalculator_h
 #define pfIsoCalculator_h
 
+#include "DataFormats/EgammaCandidates/interface/Photon.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/EventSetup.h"
-#include "FWCore/Framework/interface/ESHandle.h"
-
-#include "FWCore/Utilities/interface/InputTag.h"
-
-#include "DataFormats/EgammaReco/interface/BasicClusterFwd.h"
-#include "DataFormats/EgammaReco/interface/SuperClusterFwd.h"
-
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 
-//#include "RecoCaloTools/MetaCollections/interface/CaloRecHitMetaCollections.h"
-#include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
-
-#include "DataFormats/EgammaCandidates/interface/Photon.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
-
-
-
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-
 class pfIsoCalculator
 {
+  public:
+    pfIsoCalculator(const edm::Event &iEvent, const edm::EDGetTokenT<edm::View<reco::PFCandidate> > pfCandidates, const math::XYZPoint& pv);
 
- public:
+    double getPfIso(const reco::Photon& photon,  int pfId, double r1=0.4, double r2=0.00, double threshold=0, double jWidth=0.0);
+    double getPfIso(const reco::GsfElectron& ele, int pfId, double r1=0.4, double r2=0.00, double threshold=0);
 
-  pfIsoCalculator(const edm::Event &iEvent, const edm::EventSetup &iSetup, const edm::InputTag &pfCandidateLabel_, const edm::InputTag &vtxLabel_) ;
-  pfIsoCalculator(const edm::Event &iEvent, const edm::EventSetup &iSetup, const edm::EDGetTokenT<edm::View<reco::PFCandidate> > pfCandidates, const math::XYZPoint& pv) ;
-  double getPfIso (const reco::Photon& photon,  int pfId, double r1=0.4, double r2=0.00, double jWidth=0.00, double threshold=0);
-  double getPfIso (const reco::GsfElectron& ele, int pfId, double r = 0.4, double r2=0.00, double threshold = 0);
-
- private:
-  //const reco::PFCandidateCollection *pfCandidateColl;
-  edm::Handle<edm::View<reco::PFCandidate> > candidatesView;
-  edm::Handle<reco::VertexCollection> vtxs;
-  reco::Vertex::Point vtx_;
-
+  private:
+    edm::Handle<edm::View<reco::PFCandidate> > candidatesView;
+    reco::Vertex::Point vtx_;
 };
 
 #endif

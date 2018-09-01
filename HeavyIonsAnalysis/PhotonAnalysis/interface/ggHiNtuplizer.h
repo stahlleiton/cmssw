@@ -1,25 +1,31 @@
 #ifndef ggHiNtuplizer_h
 #define ggHiNtuplizer_h
 
-#include "TTree.h"
-
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "DataFormats/Common/interface/Handle.h"
+#include "DataFormats/Common/interface/ValueMap.h"
+#include "DataFormats/Common/interface/View.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EgammaCandidates/interface/Conversion.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
+#include "DataFormats/EgammaCandidates/interface/HIPhotonIsolation.h"
+#include "DataFormats/EgammaCandidates/interface/Photon.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
-#include "DataFormats/EgammaCandidates/interface/Photon.h"
-#include "DataFormats/EgammaCandidates/interface/HIPhotonIsolation.h"
-#include "DataFormats/MuonReco/interface/Muon.h"
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/EgammaCandidates/interface/ConversionFwd.h"
-#include "DataFormats/EgammaCandidates/interface/Conversion.h"
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "RecoEgamma/EgammaTools/interface/EffectiveAreas.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
+#include <TTree.h>
 
 class ggHiNtuplizer : public edm::EDAnalyzer {
 
@@ -68,8 +74,8 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    edm::EDGetTokenT<reco::ConversionCollection> conversionsToken_;
    edm::EDGetTokenT<edm::View<reco::PFCandidate> >    pfCollection_;
 
-   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEB_;
-   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEE_;
+   edm::EDGetTokenT<EcalRecHitCollection> recHitsEB_;
+   edm::EDGetTokenT<EcalRecHitCollection> recHitsEE_;
 
    const CaloGeometry *geo;
 
@@ -268,9 +274,9 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    std::vector<int>    phoBC1inUnClean_;
    std::vector<uint32_t> phoBC1rawID_;
 
-   std::vector<float>  phoBC2E_;
-   std::vector<float>  phoBC2Eta_;
-   std::vector<float>  phoBC2Phi_;
+   /* std::vector<float>  phoBC2E_; */
+   /* std::vector<float>  phoBC2Eta_; */
+   /* std::vector<float>  phoBC2Phi_; */
    std::vector<float>  pho_ecalClusterIsoR2_;
    std::vector<float>  pho_ecalClusterIsoR3_;
    std::vector<float>  pho_ecalClusterIsoR4_;
@@ -324,12 +330,6 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    std::vector<float> pfnIso3;
    std::vector<float> pfnIso4;
    std::vector<float> pfnIso5;
-
-   std::vector<float> pfsumIso1;
-   std::vector<float> pfsumIso2;
-   std::vector<float> pfsumIso3;
-   std::vector<float> pfsumIso4;
-   std::vector<float> pfsumIso5;
 
    // reco::Muon
    Int_t          nMu_;
