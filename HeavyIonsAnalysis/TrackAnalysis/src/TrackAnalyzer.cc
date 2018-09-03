@@ -410,8 +410,8 @@ TrackAnalyzer::fillVertices(const edm::Event& iEvent) {
     pev_.nVtxSim = vertices->size();
     for (unsigned int i = 0; i < vertices->size(); ++i) {
       pev_.zVtxSim[i] = (*vertices)[i].position().z();
-      pev_.xVtxSim[i] = (*vertices)[i].position().z();
-      pev_.yVtxSim[i] = (*vertices)[i].position().z();
+      pev_.xVtxSim[i] = (*vertices)[i].position().x();
+      pev_.yVtxSim[i] = (*vertices)[i].position().y();
     }
   }
 
