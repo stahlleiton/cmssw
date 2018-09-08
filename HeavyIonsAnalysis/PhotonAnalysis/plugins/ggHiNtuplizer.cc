@@ -31,7 +31,7 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   vtxCollection_          = consumes<std::vector<reco::Vertex>>(ps.getParameter<edm::InputTag>("VtxLabel"));
   doVID_                  = ps.getParameter<bool>("doElectronVID");
   if (doVID_) {
-    rhoToken_               = consumes<double> (ps.getParameter <edm::InputTag>("rho"));
+    rhoToken_               = consumes<double>(ps.getParameter<edm::InputTag>("rho"));
     beamSpotToken_          = consumes<reco::BeamSpot>(ps.getParameter <edm::InputTag>("beamSpot"));
     conversionsToken_       = consumes< reco::ConversionCollection >(ps.getParameter<edm::InputTag>("conversions"));
     eleVetoIdMapToken_      = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("electronVetoID"));
@@ -153,6 +153,8 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   tree_->Branch("elePFChIso04",          &elePFChIso04_);
   tree_->Branch("elePFPhoIso04",         &elePFPhoIso04_);
   tree_->Branch("elePFNeuIso04",         &elePFNeuIso04_);
+  tree_->Branch("elePFRelIsoWithEA",     &elePFRelIsoWithEA_);
+  tree_->Branch("elePFRelIsoWithDBeta",  &elePFRelIsoWithDBeta_);
 
   tree_->Branch("eleR9",                 &eleR9_);
   tree_->Branch("eleE3x3",               &eleE3x3_);
@@ -432,6 +434,8 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   elePFChIso04_         .clear();
   elePFPhoIso04_        .clear();
   elePFNeuIso04_        .clear();
+  elePFRelIsoWithEA_    .clear();
+  elePFRelIsoWithDBeta_ .clear();
   eleR9_                .clear();
   eleE3x3_              .clear();
   eleE5x5_              .clear();
@@ -820,20 +824,23 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
 
   edm::Handle<reco::ConversionCollection> conversions;
   edm::Handle<reco::BeamSpot> theBeamSpot;
-  edm::Handle<double> rhoH;
+
   edm::Handle<edm::ValueMap<bool> > veto_id_decisions;
   edm::Handle<edm::ValueMap<bool> > loose_id_decisions;
   edm::Handle<edm::ValueMap<bool> > medium_id_decisions;
   edm::Handle<edm::ValueMap<bool> > tight_id_decisions;
+
+  edm::Handle<double> rhoH;
+  if (!rhoToken_.isUninitialized())
+    e.getByToken(rhoToken_, rhoH);
+  float rho = rhoH.isValid() ? *rhoH : -999;
+
   if (doVID_) {
     // Get the conversions collection
     e.getByToken(conversionsToken_, conversions);
 
     // Get the beam spot
     e.getByToken(beamSpotToken_, theBeamSpot);
-
-    // Get rho value
-    e.getByToken(rhoToken_, rhoH);
 
     // Get the electron ID data from the event stream.
     // Note: this implies that the VID ID modules have been run upstream.
@@ -901,6 +908,12 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
     elePFNeuIso_         .push_back(pfIso.sumNeutralHadronEt);
     elePFPUIso_          .push_back(pfIso.sumPUPt);
 
+    double area = effectiveAreas_.getEffectiveArea(ele->superCluster()->eta());
+    elePFRelIsoWithEA_   .push_back((pfIso.sumChargedHadronPt + std::max(0.0,
+      pfIso.sumNeutralHadronEt + pfIso.sumPhotonEt - rho * area)) / ele->pt());
+    elePFRelIsoWithDBeta_.push_back((pfIso.sumChargedHadronPt + std::max(0.0,
+      pfIso.sumNeutralHadronEt + pfIso.sumPhotonEt - 0.5 * pfIso.sumPUPt)) / ele->pt());
+
     // calculation on the fly
     pfIsoCalculator pfIsoCal(e, pfCollection_, pv);
     if (std::abs(ele->superCluster()->eta()) > 1.566) {
@@ -953,12 +966,7 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
     }
 
     if (doVID_) {
-      float rho = -999 ;
-      if (rhoH.isValid())
-        rho = *rhoH;
-
-      float eA = effectiveAreas_.getEffectiveArea(std::abs(ele->superCluster()->eta()));
-      eleEffAreaTimesRho_.push_back(eA*rho);
+      eleEffAreaTimesRho_.push_back(area * rho);
 
       bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,
           conversions,
