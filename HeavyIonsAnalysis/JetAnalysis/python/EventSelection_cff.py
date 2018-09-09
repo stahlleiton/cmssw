@@ -1,8 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-from HeavyIonsAnalysis.Configuration.collisionEventSelection_cff import *
-from HeavyIonsAnalysis.VertexAnalysis.PAPileUpVertexFilter_cff import *
-
 from CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi import HBHENoiseFilterResultProducer
 fHBHENoiseFilterResult = cms.EDFilter(
     'BooleanFlagFilter',
