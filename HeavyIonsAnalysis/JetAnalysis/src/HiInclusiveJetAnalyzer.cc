@@ -1512,6 +1512,18 @@ HiInclusiveJetAnalyzer::analyze(const Event& iEvent,
         jets_.jtPfCEM[jets_.nref] = (*patjets)[j].electronMultiplicity();
         jets_.jtPfNEM[jets_.nref] = (*patjets)[j].photonMultiplicity();
         jets_.jtPfMUM[jets_.nref] = (*patjets)[j].muonMultiplicity();
+      } else {
+        jets_.jtPfCHF[jets_.nref] = 0;
+        jets_.jtPfNHF[jets_.nref] = 0;
+        jets_.jtPfCEF[jets_.nref] = 0;
+        jets_.jtPfNEF[jets_.nref] = 0;
+        jets_.jtPfMUF[jets_.nref] = 0;
+
+        jets_.jtPfCHM[jets_.nref] = 0;
+        jets_.jtPfNHM[jets_.nref] = 0;
+        jets_.jtPfCEM[jets_.nref] = 0;
+        jets_.jtPfNEM[jets_.nref] = 0;
+        jets_.jtPfMUM[jets_.nref] = 0;
       }
         
       if(doStandardJetID_){
