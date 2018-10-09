@@ -209,6 +209,11 @@ class ggHiNtuplizer : public edm::EDAnalyzer {
    std::vector<float>  phoEta_;
    std::vector<float>  phoPhi_;
 
+   std::vector<float>  phoEcorrStdEcal_;
+   std::vector<float>  phoEcorrPhoEcal_;
+   std::vector<float>  phoEcorrRegr1_;
+   std::vector<float>  phoEcorrRegr2_;
+
    std::vector<float>  phoSCE_;
    std::vector<float>  phoSCRawE_;
    std::vector<float>  phoSCEta_;
