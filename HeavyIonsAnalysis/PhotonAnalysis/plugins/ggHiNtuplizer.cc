@@ -193,6 +193,10 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
   tree_->Branch("phoEcorrPhoEcal",       &phoEcorrPhoEcal_);
   tree_->Branch("phoEcorrRegr1",         &phoEcorrRegr1_);
   tree_->Branch("phoEcorrRegr2",         &phoEcorrRegr2_);
+  tree_->Branch("phoEcorrErrStdEcal",    &phoEcorrErrStdEcal_);
+  tree_->Branch("phoEcorrErrPhoEcal",    &phoEcorrErrPhoEcal_);
+  tree_->Branch("phoEcorrErrRegr1",      &phoEcorrErrRegr1_);
+  tree_->Branch("phoEcorrErrRegr2",      &phoEcorrErrRegr2_);
 
   tree_->Branch("phoSCE",                &phoSCE_);
   tree_->Branch("phoSCRawE",             &phoSCRawE_);
@@ -476,6 +480,10 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   phoEcorrPhoEcal_      .clear();
   phoEcorrRegr1_        .clear();
   phoEcorrRegr2_        .clear();
+  phoEcorrErrStdEcal_   .clear();
+  phoEcorrErrPhoEcal_   .clear();
+  phoEcorrErrRegr1_     .clear();
+  phoEcorrErrRegr2_     .clear();
 
   phoSCE_               .clear();
   phoSCRawE_            .clear();
@@ -1048,6 +1056,11 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
     phoEcorrPhoEcal_  .push_back(pho->getCorrectedEnergy(reco::Photon::P4type::ecal_photons));
     phoEcorrRegr1_    .push_back(pho->getCorrectedEnergy(reco::Photon::P4type::regression1));
     phoEcorrRegr2_    .push_back(pho->getCorrectedEnergy(reco::Photon::P4type::regression2));
+    // errors for those corrections
+    phoEcorrErrStdEcal_  .push_back(pho->getCorrectedEnergyError(reco::Photon::P4type::ecal_standard));
+    phoEcorrErrPhoEcal_  .push_back(pho->getCorrectedEnergyError(reco::Photon::P4type::ecal_photons));
+    phoEcorrErrRegr1_    .push_back(pho->getCorrectedEnergyError(reco::Photon::P4type::regression1));
+    phoEcorrErrRegr2_    .push_back(pho->getCorrectedEnergyError(reco::Photon::P4type::regression2));
 
     // SuperCluster info
     phoSCE_           .push_back(pho->superCluster()->energy());
