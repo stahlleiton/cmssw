@@ -81,7 +81,11 @@ private:
   int HltEvtCnt;
   int hiBin;
   int hiNpix, hiNpixelTracks, hiNtracks, hiNtracksPtCut, hiNtracksEtaCut, hiNtracksEtaPtCut;
-  float hiHF, hiHFplus, hiHFminus, hiHFplusEta4, hiHFminusEta4, hiHFhit, hiHFhitPlus, hiHFhitMinus, hiEB, hiET, hiEE, hiEEplus, hiEEminus, hiZDC, hiZDCplus, hiZDCminus;
+  int hiNpixPlus, hiNpixMinus, hiNpixelTracksPlus, hiNpixelTracksMinus;
+  float hiHF, hiHFplus, hiHFminus, hiHFplusEta4, hiHFminusEta4, hiHFhit, hiHFhitPlus, hiHFhitMinus;
+  float hiHFECut, hiHFECutPlus, hiHFECutMinus;
+  float hiEB, hiET, hiEE, hiEEplus, hiEEminus;
+  float hiZDC, hiZDCplus, hiZDCminus;
 
   float fNpart;
   float fNcoll;
@@ -276,7 +280,11 @@ HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(CentralityTag_, centrality);
 
     hiNpix = centrality->multiplicityPixel();
+    hiNpixPlus = centrality->multiplicityPixelPlus();
+    hiNpixMinus = centrality->multiplicityPixelMinus();
     hiNpixelTracks = centrality->NpixelTracks();
+    hiNpixelTracksPlus = centrality->NpixelTracksPlus();
+    hiNpixelTracksMinus = centrality->NpixelTracksMinus();
     hiNtracks = centrality->Ntracks();
     hiNtracksPtCut = centrality->NtracksPtCut();
     hiNtracksEtaCut = centrality->NtracksEtaCut();
@@ -285,6 +293,9 @@ HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     hiHF = centrality->EtHFtowerSum();
     hiHFplus = centrality->EtHFtowerSumPlus();
     hiHFminus = centrality->EtHFtowerSumMinus();
+    hiHFECut = centrality->EtHFtowerSumECut();
+    hiHFECutPlus = centrality->EtHFtowerSumECutPlus();
+    hiHFECutMinus = centrality->EtHFtowerSumECutMinus();
     hiHFplusEta4 = centrality->EtHFtruncatedPlus();
     hiHFminusEta4 = centrality->EtHFtruncatedMinus();
     hiHFhit = centrality->EtHFhitSum();
@@ -424,6 +435,9 @@ HiEvtAnalyzer::beginJob()
   thi_->Branch("hiHF",&hiHF,"hiHF/F");
   thi_->Branch("hiHFplus",&hiHFplus,"hiHFplus/F");
   thi_->Branch("hiHFminus",&hiHFminus,"hiHFminus/F");
+  thi_->Branch("hiHFECut",&hiHFECut,"hiHFECut/F");
+  thi_->Branch("hiHFECutPlus",&hiHFECutPlus,"hiHFECutPlus/F");
+  thi_->Branch("hiHFECutMinus",&hiHFECutMinus,"hiHFECutMinus/F");
   thi_->Branch("hiHFplusEta4",&hiHFplusEta4,"hiHFplusEta4/F");
   thi_->Branch("hiHFminusEta4",&hiHFminusEta4,"hiHFminusEta4/F");
 
@@ -441,7 +455,11 @@ HiEvtAnalyzer::beginJob()
   thi_->Branch("hiEEplus",&hiEEplus,"hiEEplus/F");
   thi_->Branch("hiEEminus",&hiEEminus,"hiEEminus/F");
   thi_->Branch("hiNpix",&hiNpix,"hiNpix/I");
+  thi_->Branch("hiNpixPlus",&hiNpixPlus,"hiNpixPlus/I");
+  thi_->Branch("hiNpixMinus",&hiNpixMinus,"hiNpixMinus/I");
   thi_->Branch("hiNpixelTracks",&hiNpixelTracks,"hiNpixelTracks/I");
+  thi_->Branch("hiNpixelTracksPlus",&hiNpixelTracksPlus,"hiNpixelTracksPlus/I");
+  thi_->Branch("hiNpixelTracksMinus",&hiNpixelTracksMinus,"hiNpixelTracksMinus/I");
   thi_->Branch("hiNtracks",&hiNtracks,"hiNtracks/I");
   thi_->Branch("hiNtracksPtCut",&hiNtracksPtCut,"hiNtracksPtCut/I");
   thi_->Branch("hiNtracksEtaCut",&hiNtracksEtaCut,"hiNtracksEtaCut/I");
