@@ -23,7 +23,7 @@ from HLTrigger.special.hltPixelClusterShapeFilter_cfi import *
 hltPixelClusterShapeFilter.inputTag = "siPixelRecHits"
 
 # Cluster-shape filter re-run offline from ClusterCompatibility object
-from HeavyIonsAnalysis.EventAnalysis.HIClusterCompatibilityFilter_cfi import *
+from HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi import *
 
 collisionEventSelection = cms.Sequence(
     hfCoincFilter3 *
