@@ -3,10 +3,9 @@ import FWCore.ParameterSet.Config as cms
 from HeavyIonsAnalysis.TrackAnalysis.TrkAnalyzers_cff import *
 from SimTracker.TrackAssociation.trackingParticleRecoTrackAsssociation_cff import *
 
-anaTrack.doSimVertex = True  
-anaTrack.doSimTrack = True 
+anaTrack.doSimVertex = True
+anaTrack.doSimTrack = True
 anaTrack.fillSimTrack = True
-
 anaTrack.simTrackPtMin = 0.49
 
 pixelTrack.simTrackPtMin = 0.4
@@ -14,8 +13,7 @@ pixelTrack.simTrackPtMin = 0.4
 ppTrack.doSimVertex = True
 ppTrack.doSimTrack = True
 ppTrack.fillSimTrack = True
-
-ppTrack.simTrackPtMin = 0.49
+ppTrack.simTrackPtMin = 0.1
 ppTrack.associatorMap = cms.InputTag('tpRecoAssocGeneralTracks')
 
 tpRecoAssocGeneralTracks = trackingParticleRecoTrackAsssociation.clone()
@@ -23,8 +21,8 @@ tpRecoAssocGeneralTracks.label_tr = cms.InputTag("generalTracks")
 
 tpRecoAssocHiGeneralTracks = trackingParticleRecoTrackAsssociation.clone()
 tpRecoAssocHiGeneralTracks.label_tr = cms.InputTag("hiGeneralTracks")
-quickTrackAssociatorByHits.ComponentName = cms.string('quickTrackAssociatorByHits')
 
+quickTrackAssociatorByHits.ComponentName = cms.string('quickTrackAssociatorByHits')
 quickTrackAssociatorByHits.SimToRecoDenominator = cms.string('reco')
 # put this back in for 50% hit matching
 # quickTrackAssociatorByHits.Cut_RecoToSim = cms.double(0.5)
@@ -39,4 +37,3 @@ trackSequencesPP = cms.Sequence(
     quickTrackAssociatorByHits +
     tpRecoAssocGeneralTracks +
     ppTrack)
-

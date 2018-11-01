@@ -21,3 +21,8 @@ pfcandAnalyzer.pfCandidateLabel = "particleFlowTmp"
 pfcandAnalyzer.genLabel = "hiGenParticles"
 
 pfcandAnalyzerCS.genLabel = "hiGenParticles"
+
+from HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi import (
+    hiEvtAnalyzer)
+
+hiEvtAnalyzer.Vertex = "hiSelectedVertex"
