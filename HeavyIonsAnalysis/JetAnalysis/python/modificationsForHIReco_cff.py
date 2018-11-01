@@ -26,3 +26,8 @@ from HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi import (
     hiEvtAnalyzer)
 
 hiEvtAnalyzer.Vertex = "hiSelectedVertex"
+
+from HeavyIonsAnalysis.Configuration.collisionEventSelection_cff import(
+    primaryVertexFilter)
+
+primaryVertexFilter.src = "hiSelectedVertex"
