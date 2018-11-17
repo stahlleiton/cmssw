@@ -16,7 +16,7 @@ class TreePFCandEventData
 {
   public:
     void SetTree(TTree * t) { tree_ = t; }
-    void SetBranches(bool doJets, bool doMC);
+    void SetBranches(bool doJets, bool doMC, bool doCaloEnergy);
     void Clear();
 
     Int_t nPFpart_;
@@ -27,6 +27,11 @@ class TreePFCandEventData
     std::vector<Float_t> pfPhi_;
     std::vector<Float_t> pfM_;
 
+    std::vector<Float_t> pfEcalE_;
+    std::vector<Float_t> pfEcalEraw_;
+    std::vector<Float_t> pfHcalE_;
+    std::vector<Float_t> pfHcalEraw_;
+    
     Int_t nGENpart_;
     std::vector<Int_t> genPDGId_;
     std::vector<Float_t> genPt_;
@@ -72,5 +77,6 @@ class HiPFCandAnalyzer : public edm::EDAnalyzer {
 
     bool doJets_;
     bool doMC_;
+    bool doCaloEnergy_;
     bool skipCharged_;
 };
