@@ -80,6 +80,9 @@ private:
 
 
   reco::GenParticleRef findDaughterRef(reco::GenParticleRef GenParticleDaughter, int GenParticlePDG);
+  bool isSameLorentzV(TLorentzVector* v1, TLorentzVector* v2);
+  int IndexOfThisMuon(TLorentzVector* v1, TClonesArray* vlist, bool IsGen);
+  int IndexOfThisJpsi(int mu1_idx, int mu2_idx);
   void fillGenInfo();
   bool isAbHadron(int pdgID);
   bool isAMixedbHadron(int pdgID, int momPdgID);
@@ -155,29 +158,29 @@ private:
   TClonesArray* Reco_mu_4mom;
   TClonesArray* Reco_QQ_4mom;
   TClonesArray* Reco_QQ_vtx;
-  TClonesArray* Reco_QQ_mupl_4mom;
-  TClonesArray* Reco_QQ_mumi_4mom;
   TClonesArray* Reco_trk_4mom;
   TClonesArray* Reco_trk_vtx;
 
   TClonesArray* Gen_mu_4mom;
   TClonesArray* Gen_QQ_4mom;
-  TClonesArray* Gen_QQ_mupl_4mom;
-  TClonesArray* Gen_QQ_mumi_4mom;
 
-  static const int Max_QQ_size = 1000000;
-  static const int Max_mu_size = 1000000;
-  static const int Max_trk_size = 1000000;
+  static const int Max_QQ_size = 100000;
+  static const int Max_mu_size = 100000;
+  static const int Max_trk_size = 100000;
 
   int Gen_QQ_size; // number of generated Onia
   int Gen_QQ_type[Max_QQ_size]; // Onia type: prompt, non-prompt, unmatched
   float Gen_QQ_ctau[Max_QQ_size];    // ctau: flight time
   float Gen_QQ_ctau3D[Max_QQ_size];    // ctau3D: 3D flight time
   int Gen_QQ_momId[Max_QQ_size];    // pdgId of mother particle of 2 muons
+  int Gen_QQ_mupl_idx[Max_QQ_size];    // index of the muon plus from Jpsi, in the full list of muons
+  int Gen_QQ_mumi_idx[Max_QQ_size];    // index of the muon minus from Jpsi, in the full list of muons
+  int Gen_QQ_whichRec[Max_QQ_size]; // index of the reconstructed Jpsi that was matched with this gen Jpsi. Is -1 if one of the 2 muons from Jpsi was not reconstructed
   
   int Gen_mu_size; // number of generated muons
   int Gen_mu_charge[Max_mu_size]; // muon charge
   int Gen_mu_type[Max_mu_size]; // muon type: prompt, non-prompt, unmatched
+  int Gen_mu_whichRec[Max_mu_size]; // index of the reconstructed muon that was matched with this gen muon. Is -1 if the muon was not reconstructed
 
   int Reco_QQ_size;       // Number of reconstructed Onia 
   int Reco_QQ_type[Max_QQ_size];   // Onia category: GG, GT, TT
@@ -186,9 +189,10 @@ private:
                              1 = +/+
                              2 = -/- 
                           */
+  int Reco_QQ_mupl_idx[Max_QQ_size];    // index of the muon plus from Jpsi, in the full list of muons
+  int Reco_QQ_mumi_idx[Max_QQ_size];    // index of the muon minus from Jpsi, in the full list of muons
+  int Reco_QQ_whichGen[Max_QQ_size]; // index of the generated Jpsi that was matched with this rec Jpsi. Is -1 if one of the 2 muons from Jpsi was not reconstructed
   ULong64_t Reco_QQ_trig[Max_QQ_size];      // Vector of trigger bits matched to the Onia
-  ULong64_t Reco_QQ_mupl_trig[Max_QQ_size];      // Vector of trigger bits matched to the Onia
-  ULong64_t Reco_QQ_mumi_trig[Max_QQ_size];      // Vector of trigger bits matched to the Onia
   bool Reco_QQ_isCowboy[Max_mu_size]; // Cowboy/Sailor Flag 
   float Reco_QQ_VtxProb[Max_QQ_size]; // chi2 probability of vertex fitting 
   float Reco_QQ_ctau[Max_QQ_size];    // ctau: flight time
@@ -209,33 +213,6 @@ private:
   int  Reco_QQ_NtrkDeltaR04[Max_QQ_size];
   int  Reco_QQ_NtrkDeltaR05[Max_QQ_size];
 
-  bool Reco_QQ_mupl_isGoodMuon[Max_QQ_size];      // Vector of isGoodMuon(TMOneStationTight) for plus muon
-  bool Reco_QQ_mumi_isGoodMuon[Max_QQ_size];      // Vector of isGoodMuon(TMOneStationTight) for minus muon
-  bool Reco_QQ_mupl_highPurity[Max_QQ_size];      // Vector of high purity flag for plus muon
-  bool Reco_QQ_mumi_highPurity[Max_QQ_size];      // Vector of high purity flag for minus muon
-  bool Reco_QQ_mupl_TrkMuArb[Max_QQ_size];      // Vector of TrackerMuonArbitrated for plus muon
-  bool Reco_QQ_mumi_TrkMuArb[Max_QQ_size];      // Vector of TrackerMuonArbitrated for minus muon
-  bool Reco_QQ_mupl_TMOneStaTight[Max_QQ_size]; // Vector of TMOneStationTight for plus muon
-  bool Reco_QQ_mumi_TMOneStaTight[Max_QQ_size]; // Vector of TMOneStationTight for minus muon
-
-  int Reco_QQ_mupl_SelectionType[Max_QQ_size];  
-  int Reco_QQ_mumi_SelectionType[Max_QQ_size];  
-  int Reco_QQ_mupl_nPixValHits[Max_QQ_size];  // Number of valid pixel hits in plus sta muons
-  int Reco_QQ_mumi_nPixValHits[Max_QQ_size];  // Number of valid pixel hits in minus sta muons
-  int Reco_QQ_mupl_nMuValHits[Max_QQ_size];  // Number of valid muon hits in plus sta muons
-  int Reco_QQ_mumi_nMuValHits[Max_QQ_size];  // Number of valid muon hits in minus sta muons
-  int Reco_QQ_mupl_nTrkHits[Max_QQ_size];  // track hits plus global muons
-  int Reco_QQ_mumi_nTrkHits[Max_QQ_size];  // track hits minus global muons
-  int Reco_QQ_mupl_nPixWMea[Max_QQ_size];  // pixel layers with measurement for plus inner track muons
-  int Reco_QQ_mumi_nPixWMea[Max_QQ_size];  // pixel layers with measurement for minus inner track muons
-  int Reco_QQ_mupl_nTrkWMea[Max_QQ_size];  // track layers with measurement for plus inner track muons
-  int Reco_QQ_mumi_nTrkWMea[Max_QQ_size];  // track layers with measurement for minus inner track muons
-  int Reco_QQ_mupl_StationsMatched[Max_QQ_size];  // number of stations matched for plus inner track muons
-  int Reco_QQ_mumi_StationsMatched[Max_QQ_size];  // number of stations matched for minus inner track muons
-  float Reco_QQ_mupl_normChi2_inner[Max_QQ_size];  // chi2/ndof for plus inner track muons
-  float Reco_QQ_mumi_normChi2_inner[Max_QQ_size];  // chi2/ndof for minus inner track muons
-  float Reco_QQ_mupl_normChi2_global[Max_QQ_size];  // chi2/ndof for plus global muons
-  float Reco_QQ_mumi_normChi2_global[Max_QQ_size];  // chi2/ndof for minus global muons
   float Reco_QQ_mupl_dxy[Max_QQ_size];  // dxy for plus inner track muons
   float Reco_QQ_mumi_dxy[Max_QQ_size];  // dxy for minus inner track muons
   float Reco_QQ_mupl_dxyErr[Max_QQ_size];  // dxy error for plus inner track muons
@@ -244,20 +221,13 @@ private:
   float Reco_QQ_mumi_dz[Max_QQ_size];  // dz for minus inner track muons
   float Reco_QQ_mupl_dzErr[Max_QQ_size];  // dz error for plus inner track muons
   float Reco_QQ_mumi_dzErr[Max_QQ_size];  // dz error for minus inner track muons
-  float Reco_QQ_mupl_pt_inner[Max_QQ_size];  // pT for plus inner track muons
-  float Reco_QQ_mumi_pt_inner[Max_QQ_size];  // pT for minus inner track muons
-  float Reco_QQ_mupl_pt_global[Max_QQ_size];  // pT for plus global muons
-  float Reco_QQ_mumi_pt_global[Max_QQ_size];  // pT for minus global muons
-  float Reco_QQ_mupl_ptErr_inner[Max_QQ_size];  // pT error for plus inner track muons
-  float Reco_QQ_mumi_ptErr_inner[Max_QQ_size];  // pT error for minus inner track muons
-  float Reco_QQ_mupl_ptErr_global[Max_QQ_size];  // pT error for plus global muons
-  float Reco_QQ_mumi_ptErr_global[Max_QQ_size];  // pT error for minus global muons
 
   int Reco_mu_size;           // Number of reconstructed muons
   int Reco_mu_SelectionType[Max_mu_size];           
   ULong64_t Reco_mu_trig[Max_mu_size];      // Vector of trigger bits matched to the muon
   int Reco_mu_charge[Max_mu_size];  // Vector of charge of muons
   int Reco_mu_type[Max_mu_size];  // Vector of type of muon (global=0, tracker=1, calo=2)  
+  int Reco_mu_whichGen[Max_mu_size]; // index of the generated muon that was matched with this reco muon. Is -1 if the muon is not associated with a generated muon (fake, or very bad resolution)
 
   bool Reco_mu_isGoodMuon[Max_mu_size];    // Vector of isGoodMuon(TMOneStationTight)
   bool Reco_mu_highPurity[Max_mu_size];    // Vector of high purity flag  
@@ -416,7 +386,7 @@ private:
   float zVtx;
   float nPV;
 
- // Triger stuff
+  // Trigger stuff
   // PUT HERE THE *LAST FILTERS* OF THE BITS YOU LIKE
   static const unsigned int sNTRIGGERS = 65;
   unsigned int NTRIGGERS;
@@ -547,7 +517,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
     std::cout<<" Trigger "<<iTr<<"\t"<<HLTLastFilters[iTr]<<std::endl;
   }
 
-  etaMax = 2.4;
+  etaMax = 2.5;
 
   JpsiMassMin = 2.6;
   JpsiMassMax = 3.5;
@@ -897,94 +867,34 @@ HiOniaAnalyzer::fillTreeJpsi(int iSign, int count) {
   TLorentzVector vMuon2 = lorentzMomentum(muon2->p4());
 
   reco::TrackRef iTrack_mupl;
-  reco::TrackRef gTrack_mupl;
-
   reco::TrackRef iTrack_mumi;
-  reco::TrackRef gTrack_mumi;
 
   if (muon1->charge() > muon2->charge()) {
-    new((*Reco_QQ_mupl_4mom)[Reco_QQ_size])TLorentzVector(vMuon1);
-    new((*Reco_QQ_mumi_4mom)[Reco_QQ_size])TLorentzVector(vMuon2);
 
-    Reco_QQ_mupl_trig[Reco_QQ_size] = trigBits_mu1;
-    Reco_QQ_mumi_trig[Reco_QQ_size] = trigBits_mu2;
-
-    Reco_QQ_mupl_SelectionType[Reco_QQ_size] = muonIDmask(muon1);
-    Reco_QQ_mumi_SelectionType[Reco_QQ_size] = muonIDmask(muon2);
+    Reco_QQ_mupl_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon1 , Reco_mu_4mom, false);
+    Reco_QQ_mumi_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon2 , Reco_mu_4mom, false);
 
     if (TVector2::Phi_mpi_pi(vMuon1.Phi() - vMuon2.Phi()) > 0) Reco_QQ_isCowboy[Reco_QQ_size] = true;
     else Reco_QQ_isCowboy[Reco_QQ_size] = false;
 
-    Reco_QQ_mupl_StationsMatched[Reco_QQ_size] = muon1->numberOfMatchedStations();
-    Reco_QQ_mumi_StationsMatched[Reco_QQ_size] = muon2->numberOfMatchedStations();
-
-    Reco_QQ_mupl_isGoodMuon[Reco_QQ_size] = muon::isGoodMuon(*muon1, muon::TMOneStationTight);
-    Reco_QQ_mumi_isGoodMuon[Reco_QQ_size] = muon::isGoodMuon(*muon2, muon::TMOneStationTight);
-
-    Reco_QQ_mupl_TrkMuArb[Reco_QQ_size] = muon1->muonID("TrackerMuonArbitrated");
-    Reco_QQ_mupl_TMOneStaTight[Reco_QQ_size] = muon1->muonID("TMOneStationTight");
-
-    Reco_QQ_mumi_TrkMuArb[Reco_QQ_size] = muon2->muonID("TrackerMuonArbitrated");
-    Reco_QQ_mumi_TMOneStaTight[Reco_QQ_size] = muon2->muonID("TMOneStationTight");
-
     iTrack_mupl = muon1->innerTrack();
     iTrack_mumi = muon2->innerTrack();
 
-    if (muon1->isGlobalMuon())
-      gTrack_mupl = muon1->globalTrack();
-
-    if (muon2->isGlobalMuon())
-      gTrack_mumi = muon2->globalTrack();
   }
   else {
-    new((*Reco_QQ_mupl_4mom)[Reco_QQ_size])TLorentzVector(vMuon2);
-    new((*Reco_QQ_mumi_4mom)[Reco_QQ_size])TLorentzVector(vMuon1);
 
-    Reco_QQ_mupl_trig[Reco_QQ_size] = trigBits_mu2;
-    Reco_QQ_mumi_trig[Reco_QQ_size] = trigBits_mu1;
-
-    Reco_QQ_mupl_SelectionType[Reco_QQ_size] = muonIDmask(muon2);
-    Reco_QQ_mumi_SelectionType[Reco_QQ_size] = muonIDmask(muon1);
+    Reco_QQ_mupl_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon2 , Reco_mu_4mom, false);
+    Reco_QQ_mumi_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon1 , Reco_mu_4mom, false);
 
     if (TVector2::Phi_mpi_pi(vMuon2.Phi() - vMuon1.Phi()) > 0) Reco_QQ_isCowboy[Reco_QQ_size] = true;
     else Reco_QQ_isCowboy[Reco_QQ_size] = false;
 
-    Reco_QQ_mupl_StationsMatched[Reco_QQ_size] = muon2->numberOfMatchedStations();
-    Reco_QQ_mumi_StationsMatched[Reco_QQ_size] = muon1->numberOfMatchedStations();
-
-    Reco_QQ_mupl_isGoodMuon[Reco_QQ_size] = muon::isGoodMuon(*muon2, muon::TMOneStationTight);
-    Reco_QQ_mumi_isGoodMuon[Reco_QQ_size] = muon::isGoodMuon(*muon1, muon::TMOneStationTight);
-
-    Reco_QQ_mupl_TrkMuArb[Reco_QQ_size] = muon2->muonID("TrackerMuonArbitrated");
-    Reco_QQ_mupl_TMOneStaTight[Reco_QQ_size] = muon2->muonID("TMOneStationTight");
-
-    Reco_QQ_mumi_TrkMuArb[Reco_QQ_size] = muon1->muonID("TrackerMuonArbitrated");
-    Reco_QQ_mumi_TMOneStaTight[Reco_QQ_size] = muon1->muonID("TMOneStationTight");
-
     iTrack_mupl = muon2->innerTrack();
     iTrack_mumi = muon1->innerTrack();
 
-    if (muon2->isGlobalMuon())
-      gTrack_mupl = muon2->globalTrack();
-
-    if (muon1->isGlobalMuon())
-      gTrack_mumi = muon1->globalTrack();
   }
 
-
-  if (!_theMinimumFlag) {
-    Reco_QQ_mupl_nTrkHits[Reco_QQ_size] = iTrack_mupl->found();
-    Reco_QQ_mumi_nTrkHits[Reco_QQ_size] = iTrack_mumi->found();
-    Reco_QQ_mupl_highPurity[Reco_QQ_size] = iTrack_mupl->quality(reco::TrackBase::highPurity);
-    Reco_QQ_mumi_highPurity[Reco_QQ_size] = iTrack_mumi->quality(reco::TrackBase::highPurity);
-    Reco_QQ_mupl_normChi2_inner[Reco_QQ_size] = iTrack_mupl->normalizedChi2();
-    Reco_QQ_mumi_normChi2_inner[Reco_QQ_size] = iTrack_mumi->normalizedChi2();
-    Reco_QQ_mupl_nPixValHits[Reco_QQ_size] = iTrack_mupl->hitPattern().numberOfValidPixelHits();
-    Reco_QQ_mumi_nPixValHits[Reco_QQ_size] = iTrack_mumi->hitPattern().numberOfValidPixelHits(); 
-    Reco_QQ_mupl_nPixWMea[Reco_QQ_size] = iTrack_mupl->hitPattern().pixelLayersWithMeasurement();
-    Reco_QQ_mumi_nPixWMea[Reco_QQ_size] = iTrack_mumi->hitPattern().pixelLayersWithMeasurement();
-    Reco_QQ_mupl_nTrkWMea[Reco_QQ_size] = iTrack_mupl->hitPattern().trackerLayersWithMeasurement();
-    Reco_QQ_mumi_nTrkWMea[Reco_QQ_size] = iTrack_mumi->hitPattern().trackerLayersWithMeasurement();
+  if (!_theMinimumFlag && _muonLessPrimaryVertex) {
     Reco_QQ_mupl_dxy[Reco_QQ_size] = iTrack_mupl->dxy(RefVtx);
     Reco_QQ_mumi_dxy[Reco_QQ_size] = iTrack_mumi->dxy(RefVtx);
     Reco_QQ_mupl_dxyErr[Reco_QQ_size] = iTrack_mupl->dxyError();
@@ -993,36 +903,6 @@ HiOniaAnalyzer::fillTreeJpsi(int iSign, int count) {
     Reco_QQ_mumi_dz[Reco_QQ_size] = iTrack_mumi->dz(RefVtx);
     Reco_QQ_mupl_dzErr[Reco_QQ_size] = iTrack_mupl->dzError();
     Reco_QQ_mumi_dzErr[Reco_QQ_size] = iTrack_mumi->dzError();
-    Reco_QQ_mupl_pt_inner[Reco_QQ_size] = iTrack_mupl->pt();
-    Reco_QQ_mumi_pt_inner[Reco_QQ_size] = iTrack_mumi->pt();
-    Reco_QQ_mupl_ptErr_inner[Reco_QQ_size] = iTrack_mupl->ptError();
-    Reco_QQ_mumi_ptErr_inner[Reco_QQ_size] = iTrack_mumi->ptError();
-    
-    if (gTrack_mupl.isNonnull()) {
-      Reco_QQ_mupl_nMuValHits[Reco_QQ_size] = gTrack_mupl->hitPattern().numberOfValidMuonHits();
-      Reco_QQ_mupl_normChi2_global[Reco_QQ_size] = gTrack_mupl->normalizedChi2();
-      Reco_QQ_mupl_pt_global[Reco_QQ_size] = gTrack_mupl->pt();
-      Reco_QQ_mupl_ptErr_global[Reco_QQ_size] = gTrack_mupl->ptError();
-    }
-    else {
-      Reco_QQ_mupl_nMuValHits[Reco_QQ_size] = -1;
-      Reco_QQ_mupl_normChi2_global[Reco_QQ_size] = 999;
-      Reco_QQ_mupl_pt_global[Reco_QQ_size] = -1;
-      Reco_QQ_mupl_ptErr_global[Reco_QQ_size] = -1;
-    }
-
-    if (gTrack_mumi.isNonnull()) {
-      Reco_QQ_mumi_nMuValHits[Reco_QQ_size] = gTrack_mumi->hitPattern().numberOfValidMuonHits();
-      Reco_QQ_mumi_normChi2_global[Reco_QQ_size] = gTrack_mumi->normalizedChi2();
-      Reco_QQ_mumi_pt_global[Reco_QQ_size] = gTrack_mumi->pt();
-      Reco_QQ_mumi_ptErr_global[Reco_QQ_size] = gTrack_mumi->ptError();
-    }
-    else {
-      Reco_QQ_mumi_nMuValHits[Reco_QQ_size] = -1;
-      Reco_QQ_mumi_normChi2_global[Reco_QQ_size] = 999;
-      Reco_QQ_mumi_pt_global[Reco_QQ_size] = -1;
-      Reco_QQ_mumi_ptErr_global[Reco_QQ_size] = -1;
-    }
   }
 
   
@@ -1488,8 +1368,6 @@ HiOniaAnalyzer::InitEvent()
 
   Reco_QQ_4mom->Clear();
   Reco_QQ_vtx->Clear();
-  Reco_QQ_mupl_4mom->Clear();
-  Reco_QQ_mumi_4mom->Clear();
   Reco_mu_4mom->Clear();
 
   if (_useGeTracks && _fillRecoTracks) {
@@ -1499,8 +1377,6 @@ HiOniaAnalyzer::InitEvent()
 
   if (_isMC) {
     Gen_QQ_4mom->Clear();
-    Gen_QQ_mupl_4mom->Clear();
-    Gen_QQ_mumi_4mom->Clear();
     Gen_mu_4mom->Clear();
   }
 
@@ -1512,6 +1388,39 @@ HiOniaAnalyzer::InitEvent()
   }
 
   return;
+}
+
+bool
+HiOniaAnalyzer::isSameLorentzV(TLorentzVector* v1, TLorentzVector* v2){
+  return (fabs(v1->Pt() - v2->Pt()) < 1e-7
+          && fabs(v1->Phi() - v2->Phi()) < 1e-7);
+}
+
+int
+HiOniaAnalyzer::IndexOfThisMuon(TLorentzVector* v1, TClonesArray* vlist, bool IsGen){
+  int GoodIndex = -1;
+  for(int iMu=0;iMu< (IsGen?Gen_mu_size:Reco_mu_size) ;iMu++){
+    TLorentzVector *testMu = (TLorentzVector*) (IsGen?Gen_mu_4mom:Reco_mu_4mom)->ConstructedAt(iMu);
+    if(isSameLorentzV(v1, testMu)){
+      GoodIndex = iMu;
+      break;
+    }
+  }
+  if (GoodIndex==-1){std::cout<<"Problem finding index of the muon, no matching of the TLorentzVector"<<std::endl;}
+  return GoodIndex;
+}
+
+int
+HiOniaAnalyzer::IndexOfThisJpsi(int mu1_idx, int mu2_idx){
+  int GoodIndex = -1;
+  for(int iJpsi=0; iJpsi<Reco_QQ_size; iJpsi++){
+    if((Reco_QQ_mumi_idx[iJpsi] == mu1_idx && Reco_QQ_mupl_idx[iJpsi] == mu2_idx) ||
+       (Reco_QQ_mumi_idx[iJpsi] == mu2_idx && Reco_QQ_mupl_idx[iJpsi] == mu1_idx)){
+      GoodIndex = iJpsi;
+      break;
+    }
+  }
+  return GoodIndex;
 }
 
 reco::GenParticleRef  
@@ -1558,6 +1467,23 @@ HiOniaAnalyzer::fillGenInfo()
   }
   
   if (collGenParticles.isValid()) {
+
+    //GenInfo for all muons in the event
+    for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
+	it!=collGenParticles->end();++it) {
+      const reco::GenParticle* gen = &(*it);
+
+      if (abs(gen->pdgId()) == 13  && gen->status() == 1) {
+        Gen_mu_type[Gen_mu_size] = _isPromptMC ? 0 : 1; // prompt: 0, non-prompt: 1
+        Gen_mu_charge[Gen_mu_size] = gen->charge();
+
+        TLorentzVector vMuon = lorentzMomentum(gen->p4());
+        new((*Gen_mu_4mom)[Gen_mu_size])TLorentzVector(vMuon);
+
+        Gen_mu_size++;
+      }
+    }
+
     for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
         it!=collGenParticles->end();++it) {
       const reco::GenParticle* gen = &(*it);
@@ -1587,12 +1513,12 @@ HiOniaAnalyzer::fillGenInfo()
           TLorentzVector vMuon2 = lorentzMomentum(genMuon2->p4());
             
           if (genMuon1->charge() > genMuon2->charge()) {
-            new((*Gen_QQ_mupl_4mom)[Gen_QQ_size])TLorentzVector(vMuon1);
-            new((*Gen_QQ_mumi_4mom)[Gen_QQ_size])TLorentzVector(vMuon2);
+            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , Gen_mu_4mom, true);
+            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , Gen_mu_4mom, true);
           }
           else {
-            new((*Gen_QQ_mupl_4mom)[Gen_QQ_size])TLorentzVector(vMuon2);
-            new((*Gen_QQ_mumi_4mom)[Gen_QQ_size])TLorentzVector(vMuon1);
+            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , Gen_mu_4mom, true);
+            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , Gen_mu_4mom, true);
           }
           Gen_QQ_size++;
         }
@@ -1780,9 +1706,6 @@ HiOniaAnalyzer::InitTree()
 
   Reco_mu_4mom = new TClonesArray("TLorentzVector", 100);
   Reco_QQ_4mom = new TClonesArray("TLorentzVector",10);
-  Reco_QQ_mupl_4mom = new TClonesArray("TLorentzVector",10);
-  Reco_QQ_mumi_4mom = new TClonesArray("TLorentzVector",10);
-
   Reco_QQ_vtx = new TClonesArray("TVector3", 100);
 
   if (_useGeTracks && _fillRecoTracks) {
@@ -1793,8 +1716,6 @@ HiOniaAnalyzer::InitTree()
   if (_isMC) {
     Gen_mu_4mom = new TClonesArray("TLorentzVector", 2);
     Gen_QQ_4mom = new TClonesArray("TLorentzVector", 2);
-    Gen_QQ_mupl_4mom = new TClonesArray("TLorentzVector", 2);
-    Gen_QQ_mumi_4mom = new TClonesArray("TLorentzVector", 2);
   }
 
   //myTree = new TTree("myTree","My TTree of dimuons");
@@ -1839,11 +1760,10 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Reco_QQ_type", Reco_QQ_type,   "Reco_QQ_type[Reco_QQ_size]/I");
   myTree->Branch("Reco_QQ_sign", Reco_QQ_sign,   "Reco_QQ_sign[Reco_QQ_size]/I");
   myTree->Branch("Reco_QQ_4mom", "TClonesArray", &Reco_QQ_4mom, 32000, 0);
-  myTree->Branch("Reco_QQ_mupl_4mom", "TClonesArray", &Reco_QQ_mupl_4mom, 32000, 0);
-  myTree->Branch("Reco_QQ_mumi_4mom", "TClonesArray", &Reco_QQ_mumi_4mom, 32000, 0);
+  myTree->Branch("Reco_QQ_mupl_idx",      Reco_QQ_mupl_idx,    "Reco_QQ_mupl_idx[Reco_QQ_size]/I");
+  myTree->Branch("Reco_QQ_mumi_idx",      Reco_QQ_mumi_idx,    "Reco_QQ_mumi_idx[Reco_QQ_size]/I");
+
   myTree->Branch("Reco_QQ_trig", Reco_QQ_trig,   "Reco_QQ_trig[Reco_QQ_size]/l");
-  myTree->Branch("Reco_QQ_mupl_trig", Reco_QQ_mupl_trig,   "Reco_QQ_mupl_trig[Reco_QQ_size]/l");
-  myTree->Branch("Reco_QQ_mumi_trig", Reco_QQ_mumi_trig,   "Reco_QQ_mumi_trig[Reco_QQ_size]/l");
   myTree->Branch("Reco_QQ_isCowboy", Reco_QQ_isCowboy,   "Reco_QQ_isCowboy[Reco_QQ_size]/O");
   myTree->Branch("Reco_QQ_ctau", Reco_QQ_ctau,   "Reco_QQ_ctau[Reco_QQ_size]/F");
   myTree->Branch("Reco_QQ_ctauErr", Reco_QQ_ctauErr,   "Reco_QQ_ctauErr[Reco_QQ_size]/F");
@@ -1851,6 +1771,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Reco_QQ_ctauErr3D", Reco_QQ_ctauErr3D,   "Reco_QQ_ctauErr3D[Reco_QQ_size]/F");
 
   if (_isMC){
+    myTree->Branch("Reco_QQ_whichGen", Reco_QQ_whichGen,   "Reco_QQ_whichGen[Reco_QQ_size]/I");
     myTree->Branch("Reco_QQ_ctauTrue", Reco_QQ_ctauTrue,   "Reco_QQ_ctauTrue[Reco_QQ_size]/F");
     myTree->Branch("Reco_QQ_ctauTrue3D", Reco_QQ_ctauTrue3D,   "Reco_QQ_ctauTrue3D[Reco_QQ_size]/F");
   }
@@ -1860,33 +1781,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Reco_QQ_vtx", "TClonesArray", &Reco_QQ_vtx, 32000, 0);
   myTree->Branch("Reco_QQ_Ntrk", Reco_QQ_Ntrk, "Reco_QQ_Ntrk[Reco_QQ_size]/I");
 
-  if (!_theMinimumFlag) {
-    myTree->Branch("Reco_QQ_mupl_SelectionType", Reco_QQ_mupl_SelectionType,   "Reco_QQ_mupl_SelectionType[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_SelectionType", Reco_QQ_mumi_SelectionType,   "Reco_QQ_mumi_SelectionType[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mupl_isGoodMuon", Reco_QQ_mupl_isGoodMuon,   "Reco_QQ_mupl_isGoodMuon[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mumi_isGoodMuon", Reco_QQ_mumi_isGoodMuon,   "Reco_QQ_mumi_isGoodMuon[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mupl_highPurity", Reco_QQ_mupl_highPurity,   "Reco_QQ_mupl_highPurity[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mumi_highPurity", Reco_QQ_mumi_highPurity,   "Reco_QQ_mumi_highPurity[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mupl_TrkMuArb", Reco_QQ_mupl_TrkMuArb,   "Reco_QQ_mupl_TrkMuArb[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mumi_TrkMuArb", Reco_QQ_mumi_TrkMuArb,   "Reco_QQ_mumi_TrkMuArb[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mupl_TMOneStaTight", Reco_QQ_mupl_TMOneStaTight, "Reco_QQ_mupl_TMOneStaTight[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mumi_TMOneStaTight", Reco_QQ_mumi_TMOneStaTight, "Reco_QQ_mumi_TMOneStaTight[Reco_QQ_size]/O");
-    myTree->Branch("Reco_QQ_mupl_nPixValHits", Reco_QQ_mupl_nPixValHits,   "Reco_QQ_mupl_nPixValHits[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_nPixValHits", Reco_QQ_mumi_nPixValHits,   "Reco_QQ_mumi_nPixValHits[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mupl_nMuValHits", Reco_QQ_mupl_nMuValHits,   "Reco_QQ_mupl_nMuValHits[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_nMuValHits", Reco_QQ_mumi_nMuValHits,   "Reco_QQ_mumi_nMuValHits[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mupl_nTrkHits",Reco_QQ_mupl_nTrkHits, "Reco_QQ_mupl_nTrkHits[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_nTrkHits",Reco_QQ_mumi_nTrkHits, "Reco_QQ_mumi_nTrkHits[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mupl_normChi2_inner",Reco_QQ_mupl_normChi2_inner, "Reco_QQ_mupl_normChi2_inner[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_normChi2_inner",Reco_QQ_mumi_normChi2_inner, "Reco_QQ_mumi_normChi2_inner[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_normChi2_global",Reco_QQ_mupl_normChi2_global, "Reco_QQ_mupl_normChi2_global[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_normChi2_global",Reco_QQ_mumi_normChi2_global, "Reco_QQ_mumi_normChi2_global[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_nPixWMea",Reco_QQ_mupl_nPixWMea, "Reco_QQ_mupl_nPixWMea[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_nPixWMea",Reco_QQ_mumi_nPixWMea, "Reco_QQ_mumi_nPixWMea[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mupl_nTrkWMea",Reco_QQ_mupl_nTrkWMea, "Reco_QQ_mupl_nTrkWMea[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_nTrkWMea",Reco_QQ_mumi_nTrkWMea, "Reco_QQ_mumi_nTrkWMea[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mupl_StationsMatched",Reco_QQ_mupl_StationsMatched, "Reco_QQ_mupl_StationsMatched[Reco_QQ_size]/I");
-    myTree->Branch("Reco_QQ_mumi_StationsMatched",Reco_QQ_mumi_StationsMatched, "Reco_QQ_mumi_StationsMatched[Reco_QQ_size]/I");
+  if (!_theMinimumFlag && _muonLessPrimaryVertex) {
     myTree->Branch("Reco_QQ_mupl_dxy",Reco_QQ_mupl_dxy, "Reco_QQ_mupl_dxy[Reco_QQ_size]/F");
     myTree->Branch("Reco_QQ_mumi_dxy",Reco_QQ_mumi_dxy, "Reco_QQ_mumi_dxy[Reco_QQ_size]/F");
     myTree->Branch("Reco_QQ_mupl_dxyErr",Reco_QQ_mupl_dxyErr, "Reco_QQ_mupl_dxyErr[Reco_QQ_size]/F");
@@ -1895,18 +1790,11 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_QQ_mumi_dz",Reco_QQ_mumi_dz, "Reco_QQ_mumi_dz[Reco_QQ_size]/F");
     myTree->Branch("Reco_QQ_mupl_dzErr",Reco_QQ_mupl_dzErr, "Reco_QQ_mupl_dzErr[Reco_QQ_size]/F");
     myTree->Branch("Reco_QQ_mumi_dzErr",Reco_QQ_mumi_dzErr, "Reco_QQ_mumi_dzErr[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_pt_inner",Reco_QQ_mupl_pt_inner, "Reco_QQ_mupl_pt_inner[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_pt_inner",Reco_QQ_mumi_pt_inner, "Reco_QQ_mumi_pt_inner[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_pt_global",Reco_QQ_mupl_pt_global, "Reco_QQ_mupl_pt_global[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_pt_global",Reco_QQ_mumi_pt_global, "Reco_QQ_mumi_pt_global[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_ptErr_inner",Reco_QQ_mupl_ptErr_inner, "Reco_QQ_mupl_ptErr_inner[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_ptErr_inner",Reco_QQ_mumi_ptErr_inner, "Reco_QQ_mumi_ptErr_inner[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_ptErr_global",Reco_QQ_mupl_ptErr_global, "Reco_QQ_mupl_ptErr_global[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_ptErr_global",Reco_QQ_mumi_ptErr_global, "Reco_QQ_mumi_ptErr_global[Reco_QQ_size]/F");
   }
 
   myTree->Branch("Reco_mu_size", &Reco_mu_size,  "Reco_mu_size/I");
   myTree->Branch("Reco_mu_type", Reco_mu_type,   "Reco_mu_type[Reco_mu_size]/I");
+  myTree->Branch("Reco_mu_whichGen", Reco_mu_whichGen,   "Reco_mu_whichGen[Reco_mu_size]/I");
   myTree->Branch("Reco_mu_SelectionType", Reco_mu_SelectionType,   "Reco_mu_SelectionType[Reco_mu_size]/I");
   myTree->Branch("Reco_mu_charge", Reco_mu_charge,   "Reco_mu_charge[Reco_mu_size]/I");
   myTree->Branch("Reco_mu_4mom", "TClonesArray", &Reco_mu_4mom, 32000, 0);
@@ -1958,13 +1846,15 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Gen_QQ_momId",      Gen_QQ_momId,    "Gen_QQ_momId[Gen_QQ_size]/I");
     myTree->Branch("Gen_QQ_ctau",      Gen_QQ_ctau,    "Gen_QQ_ctau[Gen_QQ_size]/F");
     myTree->Branch("Gen_QQ_ctau3D",      Gen_QQ_ctau3D,    "Gen_QQ_ctau3D[Gen_QQ_size]/F");  
-    myTree->Branch("Gen_QQ_mupl_4mom", "TClonesArray", &Gen_QQ_mupl_4mom, 32000, 0); 
-    myTree->Branch("Gen_QQ_mumi_4mom", "TClonesArray", &Gen_QQ_mumi_4mom, 32000, 0);
-
+    myTree->Branch("Gen_QQ_mupl_idx",      Gen_QQ_mupl_idx,    "Gen_QQ_mupl_idx[Gen_QQ_size]/I");
+    myTree->Branch("Gen_QQ_mumi_idx",      Gen_QQ_mumi_idx,    "Gen_QQ_mumi_idx[Gen_QQ_size]/I");
+    myTree->Branch("Gen_QQ_whichRec", Gen_QQ_whichRec,   "Gen_QQ_whichRec[Gen_QQ_size]/I");
+    
     myTree->Branch("Gen_mu_size",   &Gen_mu_size,  "Gen_mu_size/I");
     myTree->Branch("Gen_mu_type",   Gen_mu_type,   "Gen_mu_type[Gen_mu_size]/I");
     myTree->Branch("Gen_mu_charge", Gen_mu_charge, "Gen_mu_charge[Gen_mu_size]/I");
     myTree->Branch("Gen_mu_4mom",   "TClonesArray", &Gen_mu_4mom, 32000, 0);
+    myTree->Branch("Gen_mu_whichRec", Gen_mu_whichRec,   "Gen_mu_whichRec[Gen_mu_size]/I");
   }
 
   return;
