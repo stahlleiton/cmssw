@@ -100,7 +100,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
 
     # check if there is at least one (inclusive) global+tracker di-muon
     process.onia2MuMuPatGlbGlbFilter = cms.EDFilter("CandViewCountFilter",
-        src       = cms.InputTag('onia2MuMuPatGlbGlb'),
+        srcDimuon = cms.InputTag('onia2MuMuPatGlbGlb'),
         minNumber = cms.uint32(1),
     )
 

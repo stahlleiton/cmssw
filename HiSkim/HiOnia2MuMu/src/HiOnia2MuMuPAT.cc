@@ -410,14 +410,14 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
           userFloat["DCA"] = -100;
           userFloat["ppdlPV"] = -100;
           userFloat["ppdlErrPV"] = -100;
-          userFloat["cosAlpha"] = -100;
+          userFloat["cosAlpha"] = -10;
           userFloat["ppdlBS"] = -100;
           userFloat["ppdlErrBS"] = -100;
           userFloat["ppdlOrigPV"] = -100;
           userFloat["ppdlErrOrigPV"] = -100;
           userFloat["ppdlPV3D"] = -100;
           userFloat["ppdlErrPV3D"] = -100;
-          userFloat["cosAlpha3D"] = -100;
+          userFloat["cosAlpha3D"] = -10;
           userFloat["ppdlBS3D"] = -100;
           userFloat["ppdlErrBS3D"] = -100;
           userFloat["ppdlOrigPV3D"] = -100;

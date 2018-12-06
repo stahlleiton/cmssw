@@ -78,7 +78,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     #-- Collections
                                     srcMuon             = cms.InputTag("patMuonsWithTrigger"),     # Name of PAT Muon Collection
                                     srcMuonNoTrig       = cms.InputTag("patMuonsWithoutTrigger"),  # Name of PAT Muon Without Trigger Collection
-                                    src                 = cms.InputTag("onia2MuMuPatGlbGlb"),      # Name of Onia Skim Collection
+                                    srcDimuon           = cms.InputTag("onia2MuMuPatGlbGlb"),      # Name of Onia Skim Collection
                                     EvtPlane            = cms.InputTag("hiEvtPlane",""),           # Name of Event Plane Collection. For RECO use: hiEventPlane,recoLevel
                                     
                                     triggerResultsLabel = cms.InputTag("TriggerResults","",HLTProName), # Label of Trigger Results
@@ -98,7 +98,9 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     applyCuts          = cms.bool(False),
                                     selTightGlobalMuon = cms.bool(False),
                                     storeEfficiency    = cms.bool(False),
-                                    
+                                    SofterSgMuAcceptance = cms.bool(False),
+                                    SumETvariables = cms.bool(True),
+
                                     removeSignalEvents = cms.untracked.bool(False),  # Remove/Keep signal events
                                     removeTrueMuons    = cms.untracked.bool(False),  # Remove/Keep gen Muons
                                     storeSameSign      = cms.untracked.bool(True),   # Store/Drop same sign dimuons

@@ -10,6 +10,8 @@ HLTProcess     = "HLT" # Name of HLT process
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "Glb" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker) are availale
 applyEventSel  = True  # Only apply Event Selection if the required collections are present
+SumETvariables = True # Whether to write out SumET-related variables
+SofterSgMuAcceptance = False # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.8 at high |eta|)
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
 saveHLTBit     = False # for trigger analysis
@@ -20,10 +22,12 @@ saveHLTobj     = False # For trigger analysis
 # Print Onia Tree settings:
 print( " " )
 print( "[INFO] Settings used for ONIA TREE: " )
-print( "[INFO] isMC          = " + ("True" if isMC else "False") )
-print( "[INFO] applyEventSel = " + ("True" if applyEventSel else "False") )
-print( "[INFO] keepExtraColl = " + ("True" if keepExtraColl else "False") )
-print( "[INFO] muonSelection = " + muonSelection )
+print( "[INFO] isMC                 = " + ("True" if isMC else "False") )
+print( "[INFO] applyEventSel        = " + ("True" if applyEventSel else "False") )
+print( "[INFO] keepExtraColl        = " + ("True" if keepExtraColl else "False") )
+print( "[INFO] SumETvariables       = " + ("True" if SumETvariables else "False") )
+print( "[INFO] SofterSgMuAcceptance = " + ("True" if SofterSgMuAcceptance else "False") )
+print( "[INFO] muonSelection        = " + muonSelection )
 print( " " )
 
 # set up process
@@ -38,7 +42,7 @@ options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
     '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/483/00000/901AFDEE-00C0-3242-A7DF-90885EC50A1E.root'
 ]
-options.maxEvents = -1 # -1 means all events
+options.maxEvents = 300 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -158,6 +162,8 @@ process.hionia.srcTracks        = cms.InputTag("generalTracks")
 #process.hionia.muonLessPV       = cms.bool(False)
 process.hionia.primaryVertexTag = cms.InputTag("offlinePrimaryVertices")
 process.hionia.genParticles     = cms.InputTag("genParticles")
+process.hionia.SofterSgMuAcceptance = cms.bool(SofterSgMuAcceptance)
+process.hionia.SumETvariables = cms.bool(SumETvariables)
 
 if applyEventSel:
     process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
