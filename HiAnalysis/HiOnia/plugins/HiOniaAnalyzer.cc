@@ -84,6 +84,8 @@ private:
   int IndexOfThisMuon(TLorentzVector* v1, TClonesArray* vlist, bool IsGen);
   int IndexOfThisJpsi(int mu1_idx, int mu2_idx);
   void fillGenInfo();
+  void fillMuMatchingInfo();
+  void fillQQMatchingInfo();
   bool isAbHadron(int pdgID);
   bool isAMixedbHadron(int pdgID, int momPdgID);
   reco::GenParticleRef findMotherRef(reco::GenParticleRef GenParticleMother, int GenParticlePDG);
@@ -167,8 +169,8 @@ private:
   TClonesArray* Gen_mu_4mom;
   TClonesArray* Gen_QQ_4mom;
 
-  static const int Max_QQ_size = 10000;
-  static const int Max_mu_size = 3000;
+  static const int Max_QQ_size = 1000;
+  static const int Max_mu_size = 1000;
   static const int Max_trk_size = 10000;
 
   int Gen_QQ_size; // number of generated Onia
@@ -178,7 +180,7 @@ private:
   int Gen_QQ_momId[Max_QQ_size];    // pdgId of mother particle of 2 muons
   int Gen_QQ_mupl_idx[Max_QQ_size];    // index of the muon plus from Jpsi, in the full list of muons
   int Gen_QQ_mumi_idx[Max_QQ_size];    // index of the muon minus from Jpsi, in the full list of muons
-  int Gen_QQ_whichRec[Max_QQ_size]; // index of the reconstructed Jpsi that was matched with this gen Jpsi. Is -1 if one of the 2 muons from Jpsi was not reconstructed
+  int Gen_QQ_whichRec[Max_QQ_size]; // index of the reconstructed Jpsi that was matched with this gen Jpsi. Is -1 if one of the 2 muons from Jpsi was not reconstructed. Is -2 if the two muons were reconstructed, but the dimuon was not selected
   
   int Gen_mu_size; // number of generated muons
   int Gen_mu_charge[Max_mu_size]; // muon charge
@@ -254,7 +256,8 @@ private:
   float Reco_mu_pt_global[Max_mu_size];  // pT for global muons
   float Reco_mu_ptErr_inner[Max_mu_size];  // pT error for inner track muons
   float Reco_mu_ptErr_global[Max_mu_size];  // pT error for global muons
-  
+  float Reco_mu_pTrue[Max_mu_size];  // P of the associated generated muon, used to match the Reco_mu with the Gen_mu
+
   int muType; // type of muon (GlbTrk=0, Trk=1, Glb=2, none=-1) 
 
   int Reco_trk_size;           // Number of reconstructed tracks
@@ -384,7 +387,8 @@ private:
   float JpsiPtMax;           // DEFINITION
   float JpsiRapMin;          // OF BIN
   float JpsiRapMax;          // LIMITS 
-  double JpsiPDGMass = 3.096916;
+  float JpsiPDGMass = 3.096916;
+  float VtxProbCut;
 
   math::XYZPoint RefVtx;
   float RefVtx_xError;
@@ -530,6 +534,8 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
 
   JpsiMassMin = 2.6;
   JpsiMassMax = 3.5;
+
+  VtxProbCut = 0.001;
 
   JpsiPtMin = _ptbinranges[0];
   //std::cout << "Pt min = " << JpsiPtMin << std::endl;
@@ -718,6 +724,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   if (_fillSingleMuons)
     this->fillRecoMuons(theCentralityBin);
+  else std::cout<<"[WARNING]: _fillSingleMuons is set to FALSE, meaning that NO muon information will be written out, not even the muons from selected dimuons [Code change from December 2018]"<<std::endl;
 
   if (_useGeTracks){
     iEvent.getByToken(_recoTracksToken,collTracks);
@@ -730,6 +737,8 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (_isMC) {
     iEvent.getByToken(_genParticleToken,collGenParticles);
     this->fillGenInfo();
+    this->fillMuMatchingInfo(); //Needs to be done after fillGenInfo, and the filling of reco muons collections
+    this->fillQQMatchingInfo(); //Needs to be done after fillMuMatchingInfo
   }
   
   if (_fillTree)
@@ -824,6 +833,10 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
 	std::cout<<"ERROR: 'iTrack' pointer in fillTreeMuon is NULL ! Return now"<<std::endl; return;
       }
     }
+
+    Reco_mu_pTrue[Reco_mu_size] = ( (muon->genParticleRef()).isNonnull() )?
+      ((float)(muon->genParticleRef())->p()):
+      (-1);
   }
   else {
     std::cout<<"ERROR: 'muon' pointer in fillTreeMuon is NULL ! Return now"<<std::endl; return;
@@ -847,14 +860,15 @@ HiOniaAnalyzer::fillTreeJpsi(int count) {
     const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon1"));
     const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon2"));
 
-    ULong64_t trigBits=0, trigBits_mu1=0, trigBits_mu2=0;
+    ULong64_t trigBits=0;
+    //ULong64_t trigBits_mu1=0, trigBits_mu2=0;
     for (unsigned int iTr=1; iTr<NTRIGGERS; ++iTr) {
       if (isTriggerMatched[iTr]) {trigBits += pow(2,iTr-1);}
 
-      const pat::TriggerObjectStandAloneCollection mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
-      const pat::TriggerObjectStandAloneCollection mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
-      if (mu1HLTMatchesFilter.size() > 0) { trigBits_mu1 += pow(2,iTr-1); }
-      if (mu2HLTMatchesFilter.size() > 0) { trigBits_mu2 += pow(2,iTr-1); }
+      // const pat::TriggerObjectStandAloneCollection mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
+      // const pat::TriggerObjectStandAloneCollection mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
+      // if (mu1HLTMatchesFilter.size() > 0) { trigBits_mu1 += pow(2,iTr-1); }
+      // if (mu2HLTMatchesFilter.size() > 0) { trigBits_mu2 += pow(2,iTr-1); }
     }
 
     if (muon1==NULL || muon2==NULL){
@@ -1316,7 +1330,7 @@ HiOniaAnalyzer::makeCuts(bool keepSameSign) {
 bool
 HiOniaAnalyzer::checkCuts(const pat::CompositeCandidate* cand, const pat::Muon* muon1,  const pat::Muon* muon2, bool(HiOniaAnalyzer::* callFunc1)(const pat::Muon*), bool(HiOniaAnalyzer::* callFunc2)(const pat::Muon*)) {
   if ( (((this->*callFunc1)(muon1) && (this->*callFunc2)(muon2)) || ((this->*callFunc1)(muon2) && (this->*callFunc2)(muon1))) &&
-       (!_applycuts || cand->userFloat("vProb") > 0.001) )
+       (!_applycuts || cand->userFloat("vProb") > VtxProbCut) )
     return true;
   else
     return false;
@@ -1490,8 +1504,8 @@ HiOniaAnalyzer::InitEvent()
 
 bool
 HiOniaAnalyzer::isSameLorentzV(TLorentzVector* v1, TLorentzVector* v2){
-  return (fabs(v1->Pt() - v2->Pt()) < 1e-7
-          && fabs(v1->Phi() - v2->Phi()) < 1e-7);
+  return (fabs(v1->Pt() - v2->Pt()) < 1e-5
+          && fabs(v1->Phi() - v2->Phi()) < 1e-6);
 }
 
 int
@@ -1565,6 +1579,21 @@ HiOniaAnalyzer::fillGenInfo()
   }
   
   if (collGenParticles.isValid()) {
+    //Fill the single muons, before the dimuons (important)
+    for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
+        it!=collGenParticles->end();++it) {
+      const reco::GenParticle* gen = &(*it);
+      
+      if (abs(gen->pdgId()) == 13  && gen->status() == 1) {
+        Gen_mu_type[Gen_mu_size] = _isPromptMC ? 0 : 1; // prompt: 0, non-prompt: 1
+        Gen_mu_charge[Gen_mu_size] = gen->charge();
+
+        TLorentzVector vMuon = lorentzMomentum(gen->p4());
+        new((*Gen_mu_4mom)[Gen_mu_size])TLorentzVector(vMuon);
+
+        Gen_mu_size++;
+      }
+    }
 
     for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
         it!=collGenParticles->end();++it) {
@@ -1605,21 +1634,81 @@ HiOniaAnalyzer::fillGenInfo()
           Gen_QQ_size++;
         }
       }
+    }
 
-      if (abs(gen->pdgId()) == 13  && gen->status() == 1) {
-        Gen_mu_type[Gen_mu_size] = _isPromptMC ? 0 : 1; // prompt: 0, non-prompt: 1
-        Gen_mu_charge[Gen_mu_size] = gen->charge();
+  }  
+  return;
+}
 
-        TLorentzVector vMuon = lorentzMomentum(gen->p4());
-        new((*Gen_mu_4mom)[Gen_mu_size])TLorentzVector(vMuon);
+//Find the indices of the reconstructed muon matching each generated muon, and vice versa
+void
+HiOniaAnalyzer::fillMuMatchingInfo()
+{
+ 
+  //Find the index of generated muon associated to a reco muon, txs to Reco_mu_pTrue
+  for (int irec=0;irec<Reco_mu_size;irec++){
+    int foundGen = -1;
+    if(Reco_mu_pTrue[irec]>=0){ //if pTrue=-1, then the reco muon is a fake                                                                                                                                                                  
 
-        Gen_mu_size++;
+      for (int igen=0;igen<Gen_mu_size;igen++){
+        TLorentzVector *genmuMom = (TLorentzVector*)Gen_mu_4mom->ConstructedAt(igen);
+        if(fabs(genmuMom->P() - Reco_mu_pTrue[irec])/Reco_mu_pTrue[irec] < 1e-5){
+          foundGen = igen; 
+	  break;
+        }
       }
 
     }
+    Reco_mu_whichGen[irec] = foundGen;
   }
   
-  return;
+  //Find the index of reconstructed muon associated to a gen muon
+  for (int igen=0;igen<Gen_mu_size;igen++){
+    int foundRec = -1;
+    for (int irec=0;irec<Reco_mu_size;irec++){
+      if((Reco_mu_whichGen[irec] == igen)){
+	foundRec = irec;
+	break;
+      }
+    }
+    Gen_mu_whichRec[igen] = foundRec;
+  }
+  
+}
+
+//Find the indices of the reconstructed J/psi matching each generated J/psi (when the two daughter muons are reconstructed), and vice versa
+void
+HiOniaAnalyzer::fillQQMatchingInfo(){
+  for (int igen=0;igen<Gen_QQ_size;igen++){
+    Gen_QQ_whichRec[igen] = -1;
+    int Reco_mupl_idx = Gen_mu_whichRec[Gen_QQ_mupl_idx[igen]]; //index of the reconstructed mupl associated to the generated mupl of Jpsi
+    int Reco_mumi_idx = Gen_mu_whichRec[Gen_QQ_mumi_idx[igen]]; //index of the reconstructed mumi associated to the generated mumi of Jpsi
+    
+    if((Reco_mupl_idx>=0) && (Reco_mumi_idx>=0)){   //Search for Reco_QQ only if both muons are reco
+      for (int irec=0;irec<Reco_QQ_size;irec++){
+	if(((Reco_mupl_idx == Reco_QQ_mupl_idx[irec]) && (Reco_mumi_idx == Reco_QQ_mumi_idx[irec])) ||    //the charges might be wrong in reco
+	   ((Reco_mupl_idx == Reco_QQ_mumi_idx[irec]) && (Reco_mumi_idx == Reco_QQ_mupl_idx[irec]))	   ){
+	  Gen_QQ_whichRec[igen] = irec;
+	  break;
+	}
+      }
+      
+      if (Gen_QQ_whichRec[igen]==-1) Gen_QQ_whichRec[igen] = -2; //Means the two muons were reconstructed, but the dimuon was not selected
+    }
+  }
+
+  //Find the index of generated J/psi associated to a reco QQ
+  for (int irec=0;irec<Reco_QQ_size;irec++){
+    Reco_QQ_whichGen[irec] = -1;
+    
+    for (int igen=0;igen<Gen_QQ_size;igen++){
+      if((Gen_QQ_whichRec[igen] == irec)){
+	Reco_QQ_whichGen[irec] = igen;
+	break;
+      }
+    }      
+  }
+  
 }
 
 void
@@ -1748,7 +1837,7 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
 	  ULong64_t trigBits=0;
 	  for (unsigned int iTr=1; iTr<NTRIGGERS; ++iTr) {
 	    const pat::TriggerObjectStandAloneCollection muHLTMatchesFilter = muon->triggerObjectMatchesByFilter(  HLTLastFilters[iTr] );
-	    const pat::TriggerObjectStandAloneCollection muHLTMatchesPath = muon->triggerObjectMatchesByPath( theTriggerNames.at(iTr), true, false );
+	    //const pat::TriggerObjectStandAloneCollection muHLTMatchesPath = muon->triggerObjectMatchesByPath( theTriggerNames.at(iTr), true, false );
 
 	    // apparently matching by path gives false positives so we use matching by filter for all triggers for which we know the filter name
 	    if ( muHLTMatchesFilter.size() > 0 ) {
@@ -1801,18 +1890,18 @@ void
 HiOniaAnalyzer::InitTree()
 {
 
-  Reco_mu_4mom = new TClonesArray("TLorentzVector", 100);
-  Reco_QQ_4mom = new TClonesArray("TLorentzVector",10);
-  Reco_QQ_vtx = new TClonesArray("TVector3", 100);
+  Reco_mu_4mom = new TClonesArray("TLorentzVector", Max_mu_size);
+  Reco_QQ_4mom = new TClonesArray("TLorentzVector", Max_QQ_size);
+  Reco_QQ_vtx = new TClonesArray("TVector3", Max_QQ_size);
 
   if (_useGeTracks && _fillRecoTracks) {
-    Reco_trk_4mom = new TClonesArray("TLorentzVector", 100);
-    Reco_trk_vtx = new TClonesArray("TVector3", 100);
+    Reco_trk_4mom = new TClonesArray("TLorentzVector", Max_trk_size);
+    Reco_trk_vtx = new TClonesArray("TVector3", Max_trk_size);
   }
 
   if (_isMC) {
-    Gen_mu_4mom = new TClonesArray("TLorentzVector", 2);
-    Gen_QQ_4mom = new TClonesArray("TLorentzVector", 2);
+    Gen_mu_4mom = new TClonesArray("TLorentzVector", 10);
+    Gen_QQ_4mom = new TClonesArray("TLorentzVector", 10);
   }
 
   //myTree = new TTree("myTree","My TTree of dimuons");
