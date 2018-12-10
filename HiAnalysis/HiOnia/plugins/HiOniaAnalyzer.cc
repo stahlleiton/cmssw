@@ -259,6 +259,7 @@ private:
   float Reco_mu_pTrue[Max_mu_size];  // P of the associated generated muon, used to match the Reco_mu with the Gen_mu
 
   int muType; // type of muon (GlbTrk=0, Trk=1, Glb=2, none=-1) 
+  std::vector<float> EtaOfWantedMuons; //To know which single muons to fill, when fillSingleMuons=false and we want only the muons from selected dimuons
 
   int Reco_trk_size;           // Number of reconstructed tracks
   int Reco_trk_charge[Max_trk_size];  // Vector of charge of tracks
@@ -722,9 +723,8 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // APPLY CUTS
   this->makeCuts(_storeSs);
 
-  if (_fillSingleMuons)
-    this->fillRecoMuons(theCentralityBin);
-  else std::cout<<"[WARNING]: _fillSingleMuons is set to FALSE, meaning that NO muon information will be written out, not even the muons from selected dimuons [Code change from December 2018]"<<std::endl;
+  //_fillSingleMuons is checked within the fillRecoMuons function, thanks to info on the wanted muons stored in makeCuts function
+  this->fillRecoMuons(theCentralityBin);
 
   if (_useGeTracks){
     iEvent.getByToken(_recoTracksToken,collTracks);
@@ -1295,24 +1295,32 @@ HiOniaAnalyzer::makeCuts(bool keepSameSign) {
 	  if ( _muonSel==(std::string)("Glb") ) {
 	    if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selGlobalMuon)){
 	      _thePassedCats.push_back(Glb_Glb);  _thePassedCands.push_back(cand);
+	      if(!_fillSingleMuons){
+		EtaOfWantedMuons.push_back(muon1->eta()); EtaOfWantedMuons.push_back(muon2->eta());}
 	    }
 	    muonSelFound = true;
 	  }
 	  if ( _muonSel==(std::string)("GlbTrk") ) {
 	    if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selGlobalMuon)){
 	      _thePassedCats.push_back(GlbTrk_GlbTrk);  _thePassedCands.push_back(cand);
+	      if(!_fillSingleMuons){
+		EtaOfWantedMuons.push_back(muon1->eta()); EtaOfWantedMuons.push_back(muon2->eta());}
 	    }
 	    muonSelFound = true;
 	  }
 	  if ( _muonSel==(std::string)("Trk") ) {
 	    if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selTrackerMuon,&HiOniaAnalyzer::selTrackerMuon)){
 	      _thePassedCats.push_back(Trk_Trk);  _thePassedCands.push_back(cand);
+	      if(!_fillSingleMuons){
+		EtaOfWantedMuons.push_back(muon1->eta()); EtaOfWantedMuons.push_back(muon2->eta());}
 	    }
 	    muonSelFound = true;
 	  }
           if ( _muonSel==(std::string)("GlbOrTrk") ){
 	    if (checkCuts(cand,muon1,muon2,&HiOniaAnalyzer::selGlobalOrTrackerMuon,&HiOniaAnalyzer::selGlobalOrTrackerMuon)){
 	      _thePassedCats.push_back(GlbOrTrk_GlbOrTrk);  _thePassedCands.push_back(cand);
+	      if(!_fillSingleMuons){
+		EtaOfWantedMuons.push_back(muon1->eta()); EtaOfWantedMuons.push_back(muon2->eta());}
 	    }
 	    muonSelFound = true;
           }
@@ -1787,6 +1795,15 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
 	std::cout<<"ERROR: 'muon' pointer in fillRecoMuons is NULL ! Return now"<<std::endl; return;
       } else {
 
+	//Trick to recover feature of filling only muons from selected dimuons
+	if(!_fillSingleMuons){
+	  bool WantedMuon = false;
+	  for (int k=0;k<(int)EtaOfWantedMuons.size();k++){
+	    if (fabs(muon->eta() - EtaOfWantedMuons[k]) < 1e-5) WantedMuon = true;
+	  }
+	  if (!WantedMuon) continue;
+	}
+      
 	bool isBarrel = false;
 	if ( fabs(muon->eta() < 1.2) ) isBarrel = true;
 	std::string theLabel = theTriggerNames.at(0) + "_" + theCentralities.at(iCent);
