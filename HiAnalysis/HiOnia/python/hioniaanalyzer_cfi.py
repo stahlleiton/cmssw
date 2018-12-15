@@ -31,14 +31,17 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         storeEfficiency = cms.bool(False),
                         SofterSgMuAcceptance = cms.bool(False),
                         SumETvariables = cms.bool(True),
-                        
+                        OneMatchedHLTMu = cms.int32(-1),
+                        storeSameSign = cms.bool(False),
+                        AtLeastOneCand = cms.bool(False),
+                        doTrimuons = cms.bool(False),
                         removeSignalEvents = cms.untracked.bool(False),
                         removeTrueMuons = cms.untracked.bool(False),
-                        storeSameSign = cms.untracked.bool(False),
                         
                         muonLessPV = cms.bool(False),
                         
                         #-- Gen Details
+                        BcPDG = cms.int32(541),
                         oniaPDG = cms.int32(443),
                         muonSel = cms.string("GlbGlb"),
                         isHI = cms.untracked.bool(True),
