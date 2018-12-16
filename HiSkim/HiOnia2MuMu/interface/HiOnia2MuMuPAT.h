@@ -48,7 +48,6 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     virtual void beginJob() ;
     virtual void produce(edm::Event&, const edm::EventSetup&);
     virtual void endJob() ;
-    bool isSoftMuon(const pat::Muon*);
     bool isAbHadron(int pdgID);
     bool isAMixedbHadron(int pdgID, int momPdgID);
     reco::GenParticleRef findMotherRef(reco::GenParticleRef GenParticle, int GenParticlePDG);
@@ -64,19 +63,13 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     StringCutObjectSelector<pat::Muon> higherPuritySelection_;
     StringCutObjectSelector<pat::Muon> lowerPuritySelection_; 
     StringCutObjectSelector<reco::Candidate, true> dimuonSelection_;
-    StringCutObjectSelector<reco::Candidate, true> trimuonSelection_;
-    StringCutObjectSelector<reco::Candidate, true> LateDimuonSel_;
-    StringCutObjectSelector<reco::Candidate, true> LateTrimuonSel_;
     bool addCommonVertex_, addMuonlessPrimaryVertex_;
     bool resolveAmbiguity_;
     bool addMCTruth_;
-    bool onlySoftMuons_;
-    bool doTrimuons_;
     GreaterByPt<pat::CompositeCandidate> pTComparator_;
     GreaterByVProb<pat::CompositeCandidate> vPComparator_;
 
     InvariantMassFromVertex massCalculator;
-    math::XYZPoint RefVtx;
 };
 
 //
