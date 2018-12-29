@@ -936,7 +936,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     	for (std::map<std::string, float>::iterator i = userBcFloat.begin(); i != userBcFloat.end(); i++) { BcCand.addUserFloat(i->first , i->second); }
     	for (std::map<std::string, reco::Vertex>::iterator i = userBcVertex.begin(); i != userBcVertex.end(); i++) { BcCand.addUserData(i->first , i->second); }
 
-	if(!LateTrimuonSel_(myCand)) continue;	
+	if(!LateTrimuonSel_(BcCand)) continue;	
     	// ---- Push back output ----  
     	trimuOutput->push_back(BcCand);
 
