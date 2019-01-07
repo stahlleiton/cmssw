@@ -1931,7 +1931,7 @@ HiOniaAnalyzer::selTrackerMuon(const pat::Muon* aMuon) {
   if(!_applycuts)
     return true;
 
-  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRK":"TRKSOFT"));
+  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRKSOFT":"TRK"));
   bool isGood = isSoftMuon(aMuon);
 
   return ( isInAcc && isGood );
@@ -1946,7 +1946,7 @@ HiOniaAnalyzer::selGlobalOrTrackerMuon(const pat::Muon* aMuon) {
   if(!_applycuts)
     return true;
 
-  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRK":"TRKSOFT"));
+  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRKSOFT":"TRK"));
   bool isGood = isSoftMuon(aMuon);
 
   return ( isInAcc && isGood );
@@ -2594,7 +2594,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("LS",      &lumiSection, "LS/i"); 
   myTree->Branch("zVtx",    &zVtx,        "zVtx/F"); 
   myTree->Branch("nPV",    &nPV,        "nPV/F"); 
-  myTree->Branch("Centrality", &centBin, "Centrality/I");
+  if (_isHI || _isPA) myTree->Branch("Centrality", &centBin, "Centrality/I");
 
   myTree->Branch("nTrig", &nTrig, "nTrig/I");
   myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
