@@ -2025,7 +2025,7 @@ HiOniaAnalyzer::IndexOfThisMuon(TLorentzVector* v1, TClonesArray* vlist, bool Is
       break;
     }
   }
-  if (GoodIndex==-1) std::cout<<"Problem finding index of the muon, no matching of the TLorentzVector. This is usually due to low quality muons."<<std::endl;
+  if (GoodIndex==-1) std::cout<<"Problem finding index of the muon, no matching of the TLorentzVector !!! "<<std::endl;
   
   return GoodIndex;
 }
@@ -2499,7 +2499,7 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
         if ( _muonSel==(std::string)("Glb")      && selGlobalMuon(muon)  ) muType = Glb;
         if ( _muonSel==(std::string)("GlbTrk")   && selGlobalMuon(muon)  ) muType = GlbTrk;
         if ( _muonSel==(std::string)("Trk")      && selTrackerMuon(muon) ) muType = Trk;
-        if ( _muonSel==(std::string)("TwoGlbAmongThree") && selTrackerMuon(muon) ) muType = Trk;
+        if ( _muonSel==(std::string)("TwoGlbAmongThree") && selGlobalOrTrackerMuon(muon) ) muType = Trk;
 	if ( _muonSel==(std::string)("GlbOrTrk") && selGlobalOrTrackerMuon(muon) ) muType = GlbOrTrk;
       
 	if ( muType==GlbOrTrk || muType==GlbTrk || muType==Trk || muType==Glb ) {
