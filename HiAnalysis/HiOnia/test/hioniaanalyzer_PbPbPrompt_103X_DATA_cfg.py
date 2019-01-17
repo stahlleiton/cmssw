@@ -8,7 +8,7 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 HLTProcess     = "HLT" # Name of HLT process 
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
-muonSelection  = "TwoGlbAmongThree" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
+muonSelection  = "Glb" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
 applyEventSel  = False # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without isGlobal which should be put in 'muonSelection' parameter) from the beginning of HiSkim. If you want the full SoftMuon selection, set this flag false and add 'isSoftMuon' in lowerPuritySelection. In any case, if applyCuts=True, isSoftMuon is required at HiAnalysis level for muons of selected dimuons.
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection)
@@ -49,7 +49,7 @@ options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
     '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/483/00000/901AFDEE-00C0-3242-A7DF-90885EC50A1E.root'
 ]
-options.maxEvents = 100 # -1 means all events
+options.maxEvents = -1 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -243,5 +243,6 @@ process.TFileService = cms.Service("TFileService",
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 process.schedule  = cms.Schedule( process.oniaTreeAna )
 #process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )

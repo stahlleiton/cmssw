@@ -4,6 +4,70 @@ from PhysicsTools.PatAlgos.tools.helpers import *
 
 def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root", doTrimu=False):
 
+    if muonTriggerList==[[],[],[],[]]:
+        muonTriggerList = {
+            'DoubleMuonTrigger' : cms.vstring(
+                "HLT_HIL1DoubleMuOpen_v1",
+                "HLT_HIL1DoubleMuOpen_OS_Centrality_40_100_v1",
+                "HLT_HIL1DoubleMuOpen_Centrality_50_100_v1",
+                "HLT_HIL1DoubleMu10_v1",
+                "HLT_HIL2_L1DoubleMu10_v1",
+                "HLT_HIL3_L1DoubleMu10_v1",
+                "HLT_HIL2DoubleMuOpen_v1",
+                "HLT_HIL3DoubleMuOpen_v1",
+                "HLT_HIL3DoubleMuOpen_M60120_v1",
+                "HLT_HIL3DoubleMuOpen_JpsiPsi_v1",
+                "HLT_HIL3DoubleMuOpen_Upsi_v1",
+                "HLT_HIL3Mu0_L2Mu0_v1",
+                "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1",
+                "HLT_HIL3Mu2p5NHitQ10_L2Mu2_M7toinf_v1",
+                "HLT_HIL3Mu3_L1TripleMuOpen_v1"
+                ),
+            'DoubleMuonFilter'  : cms.vstring(
+                "hltL1fL1sL1DoubleMuOpenL1Filtered0",
+                "hltL1fL1sL1DoubleMuOpenOSCentrality40100L1Filtered0",
+                "hltL1fL1sL1DoubleMuOpenCentrality50100L1Filtered0",
+                "hltL1fL1sL1DoubleMu10L1Filtered0",
+                "hltL2fL1sL1DoubleMu10L1f0L2Filtered0",
+                "hltDoubleMuOpenL1DoubleMu10Filtered",
+                "hltL2fL1sL1DoubleMuOpenL1f0L2Filtered0",
+                "hltL3fL1DoubleMuOpenL3Filtered0",
+                "hltL3fL1DoubleMuOpenL3FilteredM60120",
+                "hltL3fL1DoubleMuOpenL3FilteredPsi",
+                "hltL3fL1DoubleMuOpenL3FilteredUpsi",
+                "hltL3f0L3Mu0L2Mu0Filtered0",
+                "hltL3f0L3Mu0L2Mu0DR3p5FilteredNHitQ10M1to5",
+                "hltL3f0L3Mu2p5NHitQ10L2Mu2FilteredM7toinf",
+                "hltL3fL1sL1DoubleMuOpenL1fN3L2f0L3Filtered3"
+                ),
+            'SingleMuonTrigger' : cms.vstring(
+                "HLT_HIL1MuOpen_Centrality_70_100_v1",
+                "HLT_HIL1MuOpen_Centrality_80_100_v1",
+                "HLT_HIL2Mu3_NHitQ15_v1",
+                "HLT_HIL2Mu5_NHitQ15_v1",
+                "HLT_HIL2Mu7_NHitQ15_v1",
+                "HLT_HIL3Mu3_NHitQ10_v1",
+                "HLT_HIL3Mu5_NHitQ10_v1",
+                "HLT_HIL3Mu7_NHitQ10_v1",
+                "HLT_HIL3Mu12_v1",
+                "HLT_HIL3Mu15_v1",
+                "HLT_HIL3Mu20_v1",
+                ),
+            'SingleMuonFilter'  : cms.vstring(
+                "hltL1fL1sL1MuOpenCentrality70100L1Filtered0",
+                "hltL1fL1sL1MuOpenCentrality80100L1Filtered0",
+                "hltL2fL1sMuOpenL1f0L2Filtered3NHitQ15",
+                "hltL2fL1sMuOpenL1f0L2Filtered5NHitQ15",
+                "hltL2fL1sMuOpenL1f0L2Filtered7NHitQ15",
+                "hltL3fL1sL1SingleMuOpenL1f0L2f0L3Filtered3NHitQ10",
+                "hltL3fL1sL1SingleMuOpenL1f0L2f0L3Filtered5NHitQ10",
+                "hltL3fL1sL1SingleMuOpenL1f0L2f0L3Filtered7NHitQ10",
+                "hltL3fL1sL1SingleMuOpenL1f7L2f0L3Filtered12",
+                "hltL3fL1sL1SingleMuOpenL1f7L2f0L3Filtered15",
+                "hltL3fL1sL1SingleMuOpenL1f7L2f0L3Filtered20",
+                )
+            }
+
     process.load("FWCore.MessageService.MessageLogger_cfi")
     process.MessageLogger.categories.extend(["GetManyWithoutRegistration","GetByLabelWithoutRegistration"])
     process.MessageLogger.destinations = ['cout', 'cerr']
@@ -20,8 +84,8 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 
 ###################### Onia Skim Producer #################################################
 
-    import HLTrigger.HLTfilters.hltHighLevel_cfi
-    process.hltOniaHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+    #import HLTrigger.HLTfilters.hltHighLevel_cfi
+    #process.hltOniaHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
 
     from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import onia2MuMuPAT
     onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=useL1Stage2, doTrimuons=doTrimu)
@@ -49,7 +113,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
         process.genMuons.src = "genParticles"
         process.onia2MuMuPatGlbGlb.genParticles = "genParticles"
         
-    process.patMuonSequence.remove(process.hltOniaHI)
+    #process.patMuonSequence.remove(process.hltOniaHI)
 
 ##### Dimuon pair selection
     commonP1 = "|| (innerTrack.isNonnull && genParticleRef(0).isNonnull)"
@@ -154,4 +218,5 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     process.hionia.srcTracks        = cms.InputTag("generalTracks")
 
     #process.oniaTreeAna = cms.EndPath(process.patMuonSequence * process.onia2MuMuPatGlbGlb * process.hionia )
-    process.oniaTreeAna = cms.Path(process.patMuonSequence * process.onia2MuMuPatGlbGlb * process.hionia )
+    #process.oniaTreeAna = cms.Path(process.patMuonSequence * process.onia2MuMuPatGlbGlb * process.hionia )
+    process.oniaTreeAna = cms.Sequence(process.patMuonSequence * process.onia2MuMuPatGlbGlb * process.hionia )

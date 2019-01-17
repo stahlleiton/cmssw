@@ -9,7 +9,7 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 HLTProcess     = "HLT" # Name of HLT process 
 isMC           = True  # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "Glb" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
-applyEventSel  = True  # Only apply Event Selection if the required collections are present
+applyEventSel  = False  # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without isGlobal which should be put in 'muonSelection' parameter) from the beginning of HiSkim. If you want the full SoftMuon selection, set this flag false and add 'isSoftMuon' in lowerPuritySelection
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection)
 SumETvariables = True  # Whether to write out SumET-related variables
@@ -183,8 +183,8 @@ process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
-  process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
-  process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
+  #process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
+  #process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
   process.oniaTreeAna.replace(process.hionia, process.primaryVertexFilter * process.hionia )
 
 if atLeastOneCand:
