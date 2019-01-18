@@ -24,8 +24,6 @@ HLTInfo::HLTInfo() {
 
   //set parameter defaults 
   _Debug=false;
-  _OR_BXes=false;
-  UnpackBxInEvent=1;
 }
 
 void HLTInfo::beginRun(const edm::Run& run, const edm::EventSetup& c){ 
@@ -63,30 +61,15 @@ void HLTInfo::setup(const edm::ParameterSet& pSet, TTree* HltTree) {
   }
 
   dummyBranches_ = pSet.getUntrackedParameter<std::vector<std::string> >("dummyBranches",std::vector<std::string>(0));
+  l1dummies = pSet.getUntrackedParameter<std::vector<std::string> >("l1dummyBranches",std::vector<std::string>(0));
 
   HltEvtCnt = 0;
-  const int kMaxTrigFlag = 10000;
   trigflag = new int[kMaxTrigFlag];
   trigPrescl = new int[kMaxTrigFlag];
 
   L1EvtCnt = 0;
-  const int kMaxL1Flag = 10000;
   l1flag = new int[kMaxL1Flag];
-  l1flag5Bx = new int[kMaxTrigFlag];
   l1Prescl = new int[kMaxL1Flag];
-
-  l1techflag = new int[kMaxL1Flag];
-  //  l1techflag5Bx = new int[kMaxTrigFlag];
-  l1techPrescl = new int[kMaxTrigFlag];
-
-  const int kMaxHLTPart = 10000;
-  hltppt = new float[kMaxHLTPart];
-  hltpeta = new float[kMaxHLTPart];
-
-  algoBitToName = new TString[512];
-  techBitToName = new TString[512];
-  
-
 }
 
 /* **Analyze the event** */
@@ -107,26 +90,24 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
 
     // 1st event : Book as many branches as trigger paths provided in the input...
     if (HltEvtCnt==0){
-      for (int itrig = 0; itrig != ntrigs; ++itrig) {
-        TString trigName = triggerNames.triggerName(itrig);
-        HltTree->Branch(trigName,trigflag+itrig,trigName+"/I");
-        HltTree->Branch(trigName+"_Prescl",trigPrescl+itrig,trigName+"_Prescl/I");
-      }
-
-      int itdum = ntrigs;
+      int itdum = 0;
       for (auto & dummyBranche : dummyBranches_) {
 	TString trigName(dummyBranche.data());
-	bool addThisBranch = true;
-	for (int itrig = 0; itrig != ntrigs; ++itrig) {
-	  TString realTrigName = triggerNames.triggerName(itrig);
-	  if(trigName == realTrigName) addThisBranch = false;
-	}
-	if(addThisBranch){
-	  HltTree->Branch(trigName,trigflag+itdum,trigName+"/I");
-	  HltTree->Branch(trigName+"_Prescl",trigPrescl+itdum,trigName+"_Prescl/I");
-	  trigflag[itdum] = 0;
-	  trigPrescl[itdum] = 0;
-	  ++itdum;
+	HltTree->Branch(trigName,trigflag+itdum,trigName+"/I");
+	HltTree->Branch(trigName+"_Prescl",trigPrescl+itdum,trigName+"_Prescl/I");
+	trigflag[itdum] = 0;
+	trigPrescl[itdum] = 0;
+	pathtoindex[dummyBranche] = itdum;
+	++itdum;
+      }
+
+      for (int itrig = 0; itrig != ntrigs; ++itrig) {
+        const std::string& trigName = triggerNames.triggerName(itrig);
+	if (pathtoindex.find(trigName) == pathtoindex.end()) {
+	  TString TSname = trigName;
+	  HltTree->Branch(TSname,trigflag+itdum+itrig,TSname+"/I");
+	  HltTree->Branch(TSname+"_Prescl",trigPrescl+itdum+itrig,TSname+"_Prescl/I");
+	  pathtoindex[trigName] = itdum + itrig;
 	}
       }
 
@@ -134,22 +115,21 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
     }
     // ...Fill the corresponding accepts in branch-variables
 
-    //std::cout << "Number of prescale sets: " << hltConfig_.prescaleSize() << std::endl;
-    //std::cout << "Number of HLT paths: " << hltConfig_.size() << std::endl;
-    //int presclSet = hltConfig_.prescaleSet(iEvent, eventSetup);
-    //std::cout<<"\tPrescale set number: "<< presclSet <<std::endl; 
+    /* reset accept status to -1 */
+    for (int i = 0; i < kMaxTrigFlag; ++i) {
+      trigflag[i] = -1;
+      trigPrescl[i] = -1;
+    }
 
     for (int itrig = 0; itrig != ntrigs; ++itrig){
 
       const std::string& trigName=triggerNames.triggerName(itrig);
       bool accept = hltresults->accept(itrig);
 
-      //trigPrescl[itrig] = hltConfig_.prescaleValue(iEvent, eventSetup, trigName);
-      trigPrescl[itrig] = hltPrescaleProvider_->prescaleValue(iEvent, eventSetup, trigName);
+      int index = pathtoindex[trigName];
+      trigPrescl[index] = hltPrescaleProvider_->prescaleValue(iEvent, eventSetup, trigName);
 
-
-      if (accept){trigflag[itrig] = 1;}
-      else {trigflag[itrig] = 0;}
+      trigflag[index] = accept;
 
       if (_Debug){
         if (_Debug) std::cout << "%HLTInfo --  Number of HLT Triggers: " << ntrigs << std::endl;
@@ -167,47 +147,42 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
   auto& l1GtUtils = const_cast<l1t::L1TGlobalUtil&>(hltPrescaleProvider_->l1tGlobalUtil());
 
   l1GtUtils.retrieveL1(iEvent,eventSetup);
-  /*
-  unsigned long long id = eventSetup.get<L1TUtmTriggerMenuRcd>().cacheIdentifier();
-  
-  if (id != cache_id_) {
-    cache_id_ = id; 
-  */
+
   edm::ESHandle<L1TUtmTriggerMenu> menu;
   eventSetup.get<L1TUtmTriggerMenuRcd>().get(menu);
-  //std::map<std::string, L1TUtmAlgorithm> const & algorithmMap_ = &(menu->getAlgorithmMap());    
-  /*
-  // get the bit/name association
-  for (auto const & keyval: menu->getAlgorithmMap()) {
-    std::string const & name  = keyval.second.getName();
-    unsigned int        index = keyval.second.getIndex();
-    std::cerr << "bit: " << index << "\tname: " << name << std::endl;
-  }
-  */
-    //} // end get menu
 
-  // 1st event : Book as many branches as trigger paths provided in the input...
   if (l1results.isValid() && l1results->size() != 0) {
-    /*
-    edm::TriggerNames const& triggerNames = iEvent.triggerNames(&results);
-    // 1st event : Book as many branches as trigger paths provided in the input...
-    */
-    if (L1EvtCnt==0){
+    /* reset accept status to -1 */
+    for (int i = 0; i < kMaxL1Flag; ++i) {
+      l1flag[i] = -1;
+      l1Prescl[i] = -1;
+    }
 
+    // 1st event : Book as many branches as trigger paths provided in the input...
+    if (L1EvtCnt==0){
+      int itdum = 0;
+      for (auto & dummy : l1dummies) {
+	TString trigName(dummy.data());
+	HltTree->Branch(trigName,trigflag+itdum,trigName+"/I");
+	HltTree->Branch(trigName+"_Prescl",trigPrescl+itdum,trigName+"_Prescl/I");
+	trigflag[itdum] = 0;
+	trigPrescl[itdum] = 0;
+	pathtoindex[dummy] = itdum;
+	++itdum;
+      }
+
+      int il1 = 0;
       // get the bit/name association         
       for (auto const & keyval: menu->getAlgorithmMap()) { 
-	std::string const & trigName  = keyval.second.getName(); 
-	unsigned int index = keyval.second.getIndex(); 
-	if (_Debug) std::cerr << "bit: " << index << "\tname: " << trigName << std::endl;
+	std::string const & l1trigName  = keyval.second.getName();
 	  
-	int itrig = index;
- 	algoBitToName[itrig] = TString( trigName );
-	
-	TString l1trigName = static_cast<const char *>(algoBitToName[itrig]);
-	std::string l1triggername = static_cast<const char *>(algoBitToName[itrig]);
-
-	HltTree->Branch(l1trigName,l1flag+itrig,l1trigName+"/I");                    
-        HltTree->Branch(l1trigName+"_Prescl",l1Prescl+itrig,l1trigName+"_Prescl/I"); 
+	if (pathtoindex.find(l1trigName) == pathtoindex.end()) {
+	  TString l1TSname = l1trigName;
+	  HltTree->Branch(l1TSname,l1flag+itdum+il1,l1TSname+"/I");
+	  HltTree->Branch(l1TSname+"_Prescl",l1Prescl+itdum+il1,l1TSname+"_Prescl/I");
+	  pathtoindex[l1trigName] = itdum + il1;
+	  ++il1;
+	}
 
       } // end algo Map
 
@@ -217,19 +192,16 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
     GlobalAlgBlk const &result = l1results->at(0, 0);
 
     // get the individual decisions from the GlobalAlgBlk
-    for (unsigned int itrig = 0; itrig < result.maxPhysicsTriggers; ++itrig) {
-       //      std::cerr << "bit: " << itrig << "\tresult: " << results.getAlgoDecisionFinal(itrig) << std::endl;
+    for (auto const& keyval : menu->getAlgorithmMap()) {
+      auto const& l1pathname = keyval.second.getName();
+      int l1index = keyval.second.getIndex();
 
-      bool myflag = result.getAlgoDecisionFinal(itrig) ; 
-      if (myflag ) { l1flag[itrig] = 1; }
-      else {l1flag[itrig] =0 ; }
+      int index = pathtoindex[l1pathname];
 
-      int index = itrig;
-      l1GtUtils.getPrescaleByBit(index, l1Prescl[itrig]);
+      bool accept = result.getAlgoDecisionFinal(l1index);
+      l1flag[index] = accept;
 
-      if (_Debug) std::cout << "L1 TD: "<<itrig<<" "<<algoBitToName[itrig]<<" " 
-			    << l1flag[itrig] <<" " 
-			    << l1Prescl[itrig] << std::endl;           
+      l1GtUtils.getPrescaleByBit(l1index, l1Prescl[index]);
     }
 
     //    L1EvtCnt++;
