@@ -2594,15 +2594,16 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("LS",      &lumiSection, "LS/i"); 
   myTree->Branch("zVtx",    &zVtx,        "zVtx/F"); 
   myTree->Branch("nPV",    &nPV,        "nPV/F"); 
-  if (_isHI || _isPA) myTree->Branch("Centrality", &centBin, "Centrality/I");
+  if (_isHI || _isPA){
+    myTree->Branch("Centrality", &centBin, "Centrality/I");
+    myTree->Branch("Npix",&Npix,"Npix/I");
+    myTree->Branch("NpixelTracks",&NpixelTracks,"NpixelTracks/I");
+    myTree->Branch("Ntracks", &Ntracks, "Ntracks/I");
+  }
 
   myTree->Branch("nTrig", &nTrig, "nTrig/I");
   myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
   myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/l");
-
-  myTree->Branch("Npix",&Npix,"Npix/I");
-  myTree->Branch("NpixelTracks",&NpixelTracks,"NpixelTracks/I");
-  myTree->Branch("Ntracks", &Ntracks, "Ntracks/I");
 
   if ((_isHI || _isPA) && _SumETvariables){
     myTree->Branch("SumET_HF",&SumET_HF,"SumET_HF/F");
