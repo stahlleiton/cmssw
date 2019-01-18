@@ -1856,8 +1856,8 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
   }
   else if (muonType == (std::string)("TRK")) {
     return (fabs(aMuon->eta()) < 2.4 &&
-            ((fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 3.3) ||
-             (1.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
+            ((fabs(aMuon->eta()) < 1. && aMuon->pt() >= 3.3) ||
+             (1. <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
              (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
   }
   else if (muonType == (std::string)("GLBSOFT")) {
