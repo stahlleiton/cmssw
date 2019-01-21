@@ -83,6 +83,12 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
 
   /////////// Analyzing HLT Trigger Results (TriggerResults) //////////
   if (hltresults.isValid()) {
+    /* reset accept status to -1 */
+    for (int i = 0; i < kMaxTrigFlag; ++i) {
+      trigflag[i] = -1;
+      trigPrescl[i] = -1;
+    }
+
     int ntrigs = hltresults->size();
     if (ntrigs==0){std::cout << "%HLTInfo -- No trigger name given in TriggerResults of the input " << std::endl;}
 
@@ -95,8 +101,6 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
 	TString trigName(dummyBranche.data());
 	HltTree->Branch(trigName,trigflag+itdum,trigName+"/I");
 	HltTree->Branch(trigName+"_Prescl",trigPrescl+itdum,trigName+"_Prescl/I");
-	trigflag[itdum] = 0;
-	trigPrescl[itdum] = 0;
 	pathtoindex[dummyBranche] = itdum;
 	++itdum;
       }
@@ -114,12 +118,6 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
       HltEvtCnt++;
     }
     // ...Fill the corresponding accepts in branch-variables
-
-    /* reset accept status to -1 */
-    for (int i = 0; i < kMaxTrigFlag; ++i) {
-      trigflag[i] = -1;
-      trigPrescl[i] = -1;
-    }
 
     for (int itrig = 0; itrig != ntrigs; ++itrig){
 
@@ -163,10 +161,8 @@ void HLTInfo::analyze(const edm::Handle<edm::TriggerResults>                 & h
       int itdum = 0;
       for (auto & dummy : l1dummies) {
 	TString trigName(dummy.data());
-	HltTree->Branch(trigName,trigflag+itdum,trigName+"/I");
-	HltTree->Branch(trigName+"_Prescl",trigPrescl+itdum,trigName+"_Prescl/I");
-	trigflag[itdum] = 0;
-	trigPrescl[itdum] = 0;
+	HltTree->Branch(trigName,l1flag+itdum,trigName+"/I");
+	HltTree->Branch(trigName+"_Prescl",l1Prescl+itdum,trigName+"_Prescl/I");
 	pathtoindex[dummy] = itdum;
 	++itdum;
       }
