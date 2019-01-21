@@ -157,9 +157,10 @@ process.GlobalTag.toGet.extend([
 
 # For OniaTree Analyzer
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
-oniaTreeAnalyzer(process, muonTriggerList=triggerList, 
-                 #HLTProName=HLTProcess, muonSelection=muonSelection, 
-                 useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
+oniaTreeAnalyzer(process, 
+                 #muonTriggerList=triggerList, HLTProName=HLTProcess, 
+                 muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
+process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
 #process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
@@ -245,6 +246,5 @@ process.TFileService = cms.Service("TFileService",
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
-process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 process.schedule  = cms.Schedule( process.oniaTreeAna )
 #process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )
