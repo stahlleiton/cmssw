@@ -1,6 +1,6 @@
 ### HiForest Configuration
 # Collisions: PbPb
-# Type: Minimum Bias Monte Carlo
+# Type: Embedded Monte Carlo
 # Input: AOD
 
 import FWCore.ParameterSet.Config as cms
@@ -11,7 +11,7 @@ process = cms.Process('HiForest')
 ###############################################################################
 
 process.load("HeavyIonsAnalysis.JetAnalysis.HiForest_cff")
-process.HiForest.inputLines = cms.vstring("HiForest 103X")
+process.HiForest.inputLines = cms.vstring("HiForest 104X")
 import subprocess, os
 version = subprocess.check_output(['git',
     '-C', os.path.expandvars('$CMSSW_BASE/src'), 'describe', '--tags'])
@@ -81,7 +81,7 @@ process.TFileService = cms.Service("TFileService",
 # Jets
 #############################
 # jet reco sequence
-process.load('HeavyIonsAnalysis.JetAnalysis.fullJetSequence_pponAA_MB_cff')
+process.load('HeavyIonsAnalysis.JetAnalysis.fullJetSequence_pponAA_MIX_cff')
 # replace above with this one for JEC:
 # process.load('HeavyIonsAnalysis.JetAnalysis.fullJetSequence_JEC_cff')
 
@@ -133,7 +133,6 @@ process.load('HeavyIonsAnalysis.TrackAnalysis.TrkAnalyzers_cff')
 #####################
 # Photons
 #####################
-
 process.load('HeavyIonsAnalysis.PhotonAnalysis.ggHiNtuplizer_cfi')
 
 ###############################################################################
@@ -141,7 +140,6 @@ process.load('HeavyIonsAnalysis.PhotonAnalysis.ggHiNtuplizer_cfi')
 #######################
 # B-tagging
 ######################
-
 # replace pp CSVv2 with PbPb CSVv2 (positive and negative taggers unchanged!)
 process.load('RecoBTag.CSVscikit.csvscikitTagJetTags_cfi')
 process.load('RecoBTag.CSVscikit.csvscikitTaggerProducer_cfi')
@@ -185,9 +183,9 @@ process.ana_step = cms.Path(
     process.hltanalysis +
     process.centralityBin +
     process.hiEvtAnalyzer +
-    process.genCleanedSequence +
-    process.jetSequence +
     process.HiGenParticleAna +
+    process.genSignalSequence +
+    process.jetSequence +
     process.ggHiNtuplizer +
     process.ggHiNtuplizerGED +
     process.hiFJRhoAnalyzer +
@@ -259,6 +257,5 @@ process.pAna = cms.EndPath(process.skimanalysis)
 from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
 process = MassReplaceInputTag(process,"offlinePrimaryVertices","offlinePrimaryVerticesRecovery")
 process.offlinePrimaryVerticesRecovery.oldVertexLabel = "offlinePrimaryVertices"
-
 # Customization
 ###############################################################################
