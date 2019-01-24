@@ -1015,7 +1015,7 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
       eleEffAreaTimesRho_.push_back(area * rho);
 
       bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,
-          conversions,
+          *conversions,
           theBeamSpot->position());
       elepassConversionVeto_.push_back( (int) passConvVeto );
 
