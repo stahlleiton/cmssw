@@ -84,9 +84,6 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 
 ###################### Onia Skim Producer #################################################
 
-    #import HLTrigger.HLTfilters.hltHighLevel_cfi
-    #process.hltOniaHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
-
     from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import onia2MuMuPAT
     onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=useL1Stage2, doTrimuons=doTrimu)
 

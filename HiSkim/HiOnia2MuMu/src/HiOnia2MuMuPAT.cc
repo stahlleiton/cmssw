@@ -148,9 +148,9 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //  int Jpsinb=0;
   // JPsi candidates only from muons
   for(int i=0; i<ourMuNb; i++){
-    pat::Muon it = ourMuons[i];
+    const pat::Muon& it = ourMuons[i];
     for(int j=i+1; j<ourMuNb; j++){
-      pat::Muon it2 = ourMuons[j];
+      const pat::Muon& it2 = ourMuons[j];
       // one muon must pass tight quality
       if (!(higherPuritySelection_(it) || higherPuritySelection_(it2))) continue;
 
@@ -564,12 +564,6 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
           userFloat["ppdlTrue3D"] = -99.;
         }
       }
-      //////////////// Don't want to fill userfloats with the default addMCTruth = false
-      // else {
-      //   userInt["momPDGId"] =  0;
-      //   userFloat["ppdlTrue"] = -99.;
-      //   userFloat["ppdlTrue3D"] = -99.;
-      // }
 
       userInt["Ntrk"] = Ntrk;
 
@@ -586,7 +580,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(!doTrimuons_) continue;
       // ---- Create all trimuon combinations (Bc candidates) ----
       for(int k=j+1; k<ourMuNb; k++){
-      	pat::Muon it3 = ourMuons[k];
+      	const pat::Muon& it3 = ourMuons[k];
     	// Two must pass tight quality  (includes |eta|<2.4)
     	if (!( (higherPuritySelection_(it) && higherPuritySelection_(it2))
 	       || (higherPuritySelection_(it) && higherPuritySelection_(it3))
@@ -720,11 +714,11 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     		}
     	      } else {
     		if ( muonLess.size()==thePrimaryV.tracksSize() ){
-    		  //edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-    		  //  "Still have the original PV: the refit was not done 'cose it is already muonless" << "\n";
+		  //edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
+		  //  "Still have the original PV: the refit was not done 'cose it is already muonless" << "\n";
     		} else if ( muonLess.size()<=1 ){
-    		  //edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-    		  //  "Still have the original PV: the refit was not done 'cose there are not enough tracks to do the refit without the muon tracks" << "\n";
+		  //edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
+		  //  "Still have the original PV: the refit was not done 'cose there are not enough tracks to do the refit without the muon tracks" << "\n";
     		} else {
     		  edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
     		    "Still have the original PV: Something weird just happened, muonLess.size()=" << muonLess.size() << " and thePrimaryV.tracksSize()=" << thePrimaryV.tracksSize() << " ." << "\n";
@@ -944,7 +938,6 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }//it2 muon
   }//it muon
 
-  //  std::cout<<"number of selected Bc = "<<Bcnb<<std::endl;
   //  std::sort(oniaOutput->begin(),oniaOutput->end(),pTComparator_);
   std::sort(oniaOutput->begin(),oniaOutput->end(),vPComparator_);
   iEvent.put(std::move(oniaOutput),"");

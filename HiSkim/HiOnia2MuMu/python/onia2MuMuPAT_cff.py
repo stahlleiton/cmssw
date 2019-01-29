@@ -4,10 +4,10 @@ from PhysicsTools.PatAlgos.tools.helpers import *
 
 def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stage2=False, doTrimuons=False):
     # Setup the process
-    #process.options = cms.untracked.PSet(
-    #    wantSummary = cms.untracked.bool(True),
-    #    # fileMode = cms.untracked.string('MERGE'),
-    #)
+    process.options = cms.untracked.PSet(
+        wantSummary = cms.untracked.bool(True),
+        # fileMode = cms.untracked.string('MERGE'),
+    )
      
     # Drop the DQM stuff on input
     '''
@@ -104,7 +104,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         doTrimuons               = cms.bool(doTrimuons) ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
     )
 
-    # check if there is at least one (inclusive) di-muon (or a trimuon if doTrimuons=true)
+    # check if there is at least one (inclusive) di-muon. BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
     process.onia2MuMuPatGlbGlbFilter = cms.EDFilter("CandViewCountFilter",
         src = cms.InputTag('onia2MuMuPatGlbGlb'),
         minNumber = cms.uint32(1),

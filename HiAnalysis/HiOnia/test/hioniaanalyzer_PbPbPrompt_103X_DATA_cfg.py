@@ -15,12 +15,12 @@ applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + 
 SumETvariables = True  # Whether to write out SumET-related variables
 SofterSgMuAcceptance = False # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.8 at high |eta|). Applies when applyCuts=True
 doTrimuons     = False # Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
-atLeastOneCand = False # Keep only events that have one selected dimuon (or at least one trimuon if doTrimuons = true)
+atLeastOneCand = False # Keep only events that have one selected dimuon (or at least one trimuon if doTrimuons = true). BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
-saveHLTBit     = False # for trigger analysis
-saveHLTobj     = False # For trigger analysis
+#saveHLTBit     = False # for trigger analysis
+#saveHLTobj     = False # For trigger analysis
 
 #----------------------------------------------------------------------------
 
@@ -193,10 +193,10 @@ if applyEventSel:
 if atLeastOneCand:
   process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
   if doTrimuons:
-    process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilter * process.onia2MuMuPatGlbGlbFilter3mu)
+    process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
 
 #----------------------------------------------------------------------------
-
+'''
 # For HLTBitAnalyzer
 process.load("HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi")
 process.hltbitanalysis.HLTProcessName              = HLTProcess
@@ -234,6 +234,7 @@ process.hltobject.triggerResults = cms.InputTag("TriggerResults","",HLTProcess)
 process.hltobject.triggerEvent   = cms.InputTag("hltTriggerSummaryAOD","",HLTProcess)
 if saveHLTobj:
   process.hltObjectAna = cms.EndPath(process.hltobject)
+'''
 
 #----------------------------------------------------------------------------
 #Options:
@@ -246,5 +247,8 @@ process.TFileService = cms.Service("TFileService",
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+
+#if saveHLTobj or saveHLTBit:
+#    process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )
+#else: 
 process.schedule  = cms.Schedule( process.oniaTreeAna )
-#process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )
