@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root"):
+def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root", doTrimu=False):
 
     process.load("FWCore.MessageService.MessageLogger_cfi")
     process.MessageLogger.categories.extend(["GetManyWithoutRegistration","GetByLabelWithoutRegistration"])
@@ -24,7 +24,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     process.hltOniaHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
 
     from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import onia2MuMuPAT
-    onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=useL1Stage2)
+    onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=useL1Stage2, doTrimuons=doTrimu)
 
 ### Temporal fix for the PAT Trigger prescale warnings.
     if (HLTProName == 'HLT') :
@@ -55,18 +55,23 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     commonP1 = "|| (innerTrack.isNonnull && genParticleRef(0).isNonnull)"
     commonP2 = " && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"
     if muonSelection == "Glb":
-        highP = "isGlobalMuon"; # At least one muon must pass this selection
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("("+highP+commonP1+")"+commonP2)
+        highP = "isGlobalMuon"; # At least one muon must pass this selection. No need to repeat the lowerPuritySelection cuts.
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
         lowP = "isGlobalMuon"; # BOTH muons must pass this selection
         process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
     elif muonSelection == "GlbTrk":
         highP = "(isGlobalMuon && isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("("+highP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
         lowP = "(isGlobalMuon && isTrackerMuon)";
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
+    elif (muonSelection == "GlbOrTrk" or muonSelection == "TwoGlbAmongThree"):
+        highP = "(isGlobalMuon || isTrackerMuon)";
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
+        lowP = "(isGlobalMuon || isTrackerMuon)";
         process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
     elif muonSelection == "Trk":
         highP = "isTrackerMuon";
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("("+highP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
         lowP = "isTrackerMuon";
         process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
     else:
@@ -78,7 +83,8 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     #-- Collections
                                     srcMuon             = cms.InputTag("patMuonsWithTrigger"),     # Name of PAT Muon Collection
                                     srcMuonNoTrig       = cms.InputTag("patMuonsWithoutTrigger"),  # Name of PAT Muon Without Trigger Collection
-                                    src                 = cms.InputTag("onia2MuMuPatGlbGlb"),      # Name of Onia Skim Collection
+                                    srcDimuon           = cms.InputTag("onia2MuMuPatGlbGlb",""),      # Name of Onia Skim Collection for dimuons
+                                    srcTrimuon          = cms.InputTag("onia2MuMuPatGlbGlb","trimuon"),      # Name of Onia Skim Collection for trimuons
                                     EvtPlane            = cms.InputTag("hiEvtPlane",""),           # Name of Event Plane Collection. For RECO use: hiEventPlane,recoLevel
                                     
                                     triggerResultsLabel = cms.InputTag("TriggerResults","",HLTProName), # Label of Trigger Results
@@ -98,13 +104,19 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     applyCuts          = cms.bool(False),
                                     selTightGlobalMuon = cms.bool(False),
                                     storeEfficiency    = cms.bool(False),
-                                    
+                                    SofterSgMuAcceptance = cms.bool(False),
+                                    SumETvariables     = cms.bool(True),
+                                    OneMatchedHLTMu    = cms.int32(-1),  # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to-1 for no matching. 
+                                    doTrimuons         = cms.bool(doTrimu),  # Whether to produce trimuon objects
+                                    storeSameSign      = cms.bool(True),   # Store/Drop same sign dimuons
+                                    AtLeastOneCand     = cms.bool(False),  # If true, store only events that have at least one selected candidate dimuon (or trimuon candidate if doTrimuons=true)
+
                                     removeSignalEvents = cms.untracked.bool(False),  # Remove/Keep signal events
                                     removeTrueMuons    = cms.untracked.bool(False),  # Remove/Keep gen Muons
-                                    storeSameSign      = cms.untracked.bool(True),   # Store/Drop same sign dimuons
-                                    
+
                                     #-- Gen Details
                                     oniaPDG = cms.int32(pdgID),
+                                    BcPDG = cms.int32(541),
                                     muonSel = cms.string(muonSelection),
                                     isHI = cms.untracked.bool(True),
                                     isPA = cms.untracked.bool(False),
