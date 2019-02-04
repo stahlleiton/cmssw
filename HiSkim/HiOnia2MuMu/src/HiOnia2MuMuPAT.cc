@@ -43,7 +43,6 @@ HiOnia2MuMuPAT::HiOnia2MuMuPAT(const edm::ParameterSet& iConfig):
   addCommonVertex_(iConfig.getParameter<bool>("addCommonVertex")),
   addMuonlessPrimaryVertex_(iConfig.getParameter<bool>("addMuonlessPrimaryVertex")),
   resolveAmbiguity_(iConfig.getParameter<bool>("resolvePileUpAmbiguity")),
-  addMCTruth_(iConfig.getParameter<bool>("addMCTruth")),
   onlySoftMuons_(iConfig.getParameter<bool>("onlySoftMuons")),
   doTrimuons_(iConfig.getParameter<bool>("doTrimuons"))
 {  
@@ -148,9 +147,9 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //  int Jpsinb=0;
   // JPsi candidates only from muons
   for(int i=0; i<ourMuNb; i++){
-    pat::Muon it = ourMuons[i];
+    const pat::Muon& it = ourMuons[i];
     for(int j=i+1; j<ourMuNb; j++){
-      pat::Muon it2 = ourMuons[j];
+      const pat::Muon& it2 = ourMuons[j];
       // one muon must pass tight quality
       if (!(higherPuritySelection_(it) || higherPuritySelection_(it2))) continue;
 
@@ -290,13 +289,13 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             } else {
               if ( muonLess.size()==thePrimaryV.tracksSize() ){
                 edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-                  "Still have the original PV: the refit was not done 'cose it is already muonless" << "\n";
+                 "Still have the original PV: the refit was not done 'cose it is already muonless" << "\n";
               } else if ( muonLess.size()<=1 ){
                 edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
                   "Still have the original PV: the refit was not done 'cose there are not enough tracks to do the refit without the muon tracks" << "\n";
               } else {
                 edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-                  "Still have the original PV: Something weird just happend, muonLess.size()=" << muonLess.size() << " and thePrimaryV.tracksSize()=" << thePrimaryV.tracksSize() << " ." << "\n";
+                  "Still have the original PV: Something weird just happened, muonLess.size()=" << muonLess.size() << " and thePrimaryV.tracksSize()=" << thePrimaryV.tracksSize() << " ." << "\n";
               }
             }
           }// refit vtx without the muon tracks
@@ -511,66 +510,6 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         }
       }
 
-      ///////////////////////////////////// This is now done in HiAnalysis from the matched generated Jpsi, so by default addMCTruth = false
-      // ---- MC Truth, if enabled ----
-      if (addMCTruth_) {
-        reco::GenParticleRef genMu1 = it.genParticleRef();
-        reco::GenParticleRef genMu2 = it2.genParticleRef();
-        if (genMu1.isNonnull() && genMu2.isNonnull()) {
-          if (genMu1->numberOfMothers()>0 && genMu2->numberOfMothers()>0){
-            if ( !(abs(genMu1->pdgId())==13) || !(abs(genMu2->pdgId())==13) ) { 
-              std::cout << "Warning: Generated particles are not muons, pdgID1: " << genMu1->pdgId() << " and pdgID2: " <<  genMu1->pdgId() << std::endl;
-            }
-            reco::GenParticleRef mom1 = findMotherRef(genMu1->motherRef(), genMu1->pdgId());
-            reco::GenParticleRef mom2 = findMotherRef(genMu2->motherRef(), genMu2->pdgId());
-            if (mom1.isNonnull() && (mom1 == mom2)) {
-              myCand.setGenParticleRef(mom1); // set
-              myCand.embedGenParticle();      // and embed
-              std::pair<int, std::pair<float, float> > MCinfo = findJpsiMCInfo(mom1);
-              userInt["momPDGId"] = MCinfo.first;
-              userFloat["ppdlTrue"] = MCinfo.second.first;
-              userFloat["ppdlTrue3D"] = MCinfo.second.second;
-            } else {
-              userInt["momPDGId"] =  0;
-              userFloat["ppdlTrue"] = -99.;
-              userFloat["ppdlTrue3D"] = -99.;
-            }
-          } else {
-            Handle<GenParticleCollection>theGenParticles;
-            iEvent.getByToken(theGenParticlesToken_, theGenParticles);
-            if (theGenParticles.isValid()){
-              for(size_t iGenParticle=0; iGenParticle<theGenParticles->size();++iGenParticle) {
-                const Candidate & genCand = (*theGenParticles)[iGenParticle];
-                if (genCand.pdgId()==443 || genCand.pdgId()==100443 || 
-                    genCand.pdgId()==553 || genCand.pdgId()==100553 || genCand.pdgId()==200553) {
-                  reco::GenParticleRef mom1(theGenParticles,iGenParticle);
-                  myCand.setGenParticleRef(mom1);
-                  myCand.embedGenParticle();
-                  std::pair<int, std::pair<float, float> > MCinfo = findJpsiMCInfo(mom1);
-                  userInt["momPDGId"] = MCinfo.first;
-                  userFloat["ppdlTrue"] = MCinfo.second.first;
-                  userFloat["ppdlTrue3D"] = MCinfo.second.second;
-                }
-              }
-            } else {
-              userInt["momPDGId"] =  0;
-              userFloat["ppdlTrue"] = -99.;
-              userFloat["ppdlTrue3D"] = -99.;
-            }
-          }
-        } else {
-          userInt["momPDGId"] =  0;
-          userFloat["ppdlTrue"] = -99.;
-          userFloat["ppdlTrue3D"] = -99.;
-        }
-      }
-      //////////////// Don't want to fill userfloats with the default addMCTruth = false
-      // else {
-      //   userInt["momPDGId"] =  0;
-      //   userFloat["ppdlTrue"] = -99.;
-      //   userFloat["ppdlTrue3D"] = -99.;
-      // }
-
       userInt["Ntrk"] = Ntrk;
 
       for (std::map<std::string, int>::iterator i = userInt.begin(); i != userInt.end(); i++) { myCand.addUserInt(i->first , i->second); }
@@ -586,7 +525,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(!doTrimuons_) continue;
       // ---- Create all trimuon combinations (Bc candidates) ----
       for(int k=j+1; k<ourMuNb; k++){
-      	pat::Muon it3 = ourMuons[k];
+      	const pat::Muon& it3 = ourMuons[k];
     	// Two must pass tight quality  (includes |eta|<2.4)
     	if (!( (higherPuritySelection_(it) && higherPuritySelection_(it2))
 	       || (higherPuritySelection_(it) && higherPuritySelection_(it3))
@@ -936,7 +875,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     	for (std::map<std::string, float>::iterator i = userBcFloat.begin(); i != userBcFloat.end(); i++) { BcCand.addUserFloat(i->first , i->second); }
     	for (std::map<std::string, reco::Vertex>::iterator i = userBcVertex.begin(); i != userBcVertex.end(); i++) { BcCand.addUserData(i->first , i->second); }
 
-	if(!LateTrimuonSel_(myCand)) continue;	
+	if(!LateTrimuonSel_(BcCand)) continue;	
     	// ---- Push back output ----  
     	trimuOutput->push_back(BcCand);
 
@@ -944,7 +883,6 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }//it2 muon
   }//it muon
 
-  //  std::cout<<"number of selected Bc = "<<Bcnb<<std::endl;
   //  std::sort(oniaOutput->begin(),oniaOutput->end(),pTComparator_);
   std::sort(oniaOutput->begin(),oniaOutput->end(),vPComparator_);
   iEvent.put(std::move(oniaOutput),"");
@@ -953,110 +891,6 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::sort(trimuOutput->begin(),trimuOutput->end(),vPComparator_);
     iEvent.put(std::move(trimuOutput),"trimuon");
   }
-}
-
-
-/////////////////////////// Functions used only if addMCTruth = true
-bool 
-HiOnia2MuMuPAT::isAbHadron(int pdgID) {
-
-  if (abs(pdgID) == 511 || abs(pdgID) == 521 || abs(pdgID) == 531 || abs(pdgID) == 5122) return true;
-  return false;
-
-}
-
-bool 
-HiOnia2MuMuPAT::isAMixedbHadron(int pdgID, int momPdgID) {
-
-  if ((abs(pdgID) == 511 && abs(momPdgID) == 511 && pdgID*momPdgID < 0) || 
-      (abs(pdgID) == 531 && abs(momPdgID) == 531 && pdgID*momPdgID < 0)) 
-      return true;
-  return false;
-
-}
-
-reco::GenParticleRef   
-HiOnia2MuMuPAT::findMotherRef(reco::GenParticleRef GenParticle, int GenParticlePDG) {
-
-  reco::GenParticleRef GenParticleMother = GenParticle;       // find mothers
-  for(int i=0; i<1000; ++i) {
-    if (GenParticleMother.isNonnull() && (GenParticleMother->pdgId()==GenParticlePDG) && GenParticleMother->numberOfMothers()>0) {        
-      GenParticleMother = GenParticleMother->motherRef();
-    } else break;
-  }
-  return GenParticleMother;
-
-}
-
-std::pair<int, std::pair<float, float> >   
-HiOnia2MuMuPAT::findJpsiMCInfo(reco::GenParticleRef genJpsi) {
-
-  int momJpsiID = 0;
-  float trueLife = -99.;
-  float trueLife3D = -99.;
-
-  if (genJpsi->numberOfMothers()>0) {
-    TVector3 trueVtx(0.0,0.0,0.0);
-    TVector3 trueP(0.0,0.0,0.0);
-    TVector3 trueVtxMom(0.0,0.0,0.0);
-
-    trueVtx.SetXYZ(genJpsi->vertex().x(),genJpsi->vertex().y(),genJpsi->vertex().z());
-    trueP.SetXYZ(genJpsi->momentum().x(),genJpsi->momentum().y(),genJpsi->momentum().z());
-            
-    bool aBhadron = false;
-    reco::GenParticleRef Jpsimom = findMotherRef(genJpsi->motherRef(), genJpsi->pdgId());   
-    if (Jpsimom.isNull()) {
-      std::pair<float, float> trueLifePair = std::make_pair(trueLife, trueLife3D);
-      std::pair<int, std::pair<float, float>> result = std::make_pair(momJpsiID, trueLifePair);
-      return result;
-    } else if (Jpsimom->numberOfMothers()<=0) {
-      if (isAbHadron(Jpsimom->pdgId())) {  
-        momJpsiID = Jpsimom->pdgId();
-        trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z());
-        aBhadron = true;
-      }
-    } else {
-      reco::GenParticleRef Jpsigrandmom = findMotherRef(Jpsimom->motherRef(), Jpsimom->pdgId());  
-      if (isAbHadron(Jpsimom->pdgId())) {       
-        if (Jpsigrandmom.isNonnull() && isAMixedbHadron(Jpsimom->pdgId(),Jpsigrandmom->pdgId())) {       
-          momJpsiID = Jpsigrandmom->pdgId();
-          trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-        } else {                  
-          momJpsiID = Jpsimom->pdgId();
-          trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z());
-        }
-        aBhadron = true;
-      } else if (Jpsigrandmom.isNonnull() && isAbHadron(Jpsigrandmom->pdgId()))  {        
-        if (Jpsigrandmom->numberOfMothers()<=0) {
-          momJpsiID = Jpsigrandmom->pdgId();
-          trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-        } else { 
-          reco::GenParticleRef JpsiGrandgrandmom = findMotherRef(Jpsigrandmom->motherRef(), Jpsigrandmom->pdgId());
-          if (JpsiGrandgrandmom.isNonnull() && isAMixedbHadron(Jpsigrandmom->pdgId(),JpsiGrandgrandmom->pdgId())) {
-            momJpsiID = JpsiGrandgrandmom->pdgId();
-            trueVtxMom.SetXYZ(JpsiGrandgrandmom->vertex().x(),JpsiGrandgrandmom->vertex().y(),JpsiGrandgrandmom->vertex().z());
-          } else {
-            momJpsiID = Jpsigrandmom->pdgId();
-            trueVtxMom.SetXYZ(Jpsigrandmom->vertex().x(),Jpsigrandmom->vertex().y(),Jpsigrandmom->vertex().z());
-          }
-        }
-        aBhadron = true;
-      }
-    }
-    if (!aBhadron) {
-      momJpsiID = Jpsimom->pdgId();
-      trueVtxMom.SetXYZ(Jpsimom->vertex().x(),Jpsimom->vertex().y(),Jpsimom->vertex().z()); 
-    }
-    
-    TVector3 vdiff = trueVtx - trueVtxMom;
-    trueLife = vdiff.Perp()*3.096916/trueP.Perp();
-    trueLife3D = vdiff.Mag()*3.096916/trueP.Mag();
-  }
-
-  std::pair<float, float> trueLifePair = std::make_pair(trueLife, trueLife3D);
-  std::pair<int, std::pair<float, float> > result = std::make_pair(momJpsiID, trueLifePair);
-  return result;
-
 }
 
 // ------------ method called once each job just before starting event loop  ------------

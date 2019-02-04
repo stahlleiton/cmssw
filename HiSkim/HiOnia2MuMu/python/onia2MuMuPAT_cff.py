@@ -10,6 +10,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     )
      
     # Drop the DQM stuff on input
+    '''
     if hasattr(process, "source") and hasattr(process.source, "inputCommands"): 
         process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
     else:
@@ -17,7 +18,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
                                     inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*"),
                                     fileNames = cms.untracked.vstring()
                                     )
-
+    '''
     # Prune generated particles to muons and their parents
     process.genMuons = cms.EDProducer("GenParticlePruner",
         src = cms.InputTag("genParticles"),
@@ -73,7 +74,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
       
     # Make a sequence
     process.patMuonSequence = cms.Sequence(
-        process.hltOniaHI *
+        #process.hltOniaHI *
         process.genMuons *
         process.patMuonsWithTriggerSequence
     )
@@ -97,13 +98,12 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         LateTrimuonSel           = cms.string(""), ## The trimuon must pass this selection before being written out 
         addCommonVertex          = cms.bool(True), ## Embed the full reco::Vertex out of the common vertex fit
         addMuonlessPrimaryVertex = cms.bool(False), ## Embed the primary vertex re-made from all the tracks except the two muons
-        addMCTruth               = cms.bool(False if MC else False),      ## This is now done in HiAnalysis, so default is False
         resolvePileUpAmbiguity   = cms.bool(True), ## Order PVs by their vicinity to the J/psi vertex, not by sumPt                            
         onlySoftMuons            = cms.bool(False), ## Keep only the isSoftMuons (without highPurity) for the single muons + the di(tri)muon combinations
         doTrimuons               = cms.bool(doTrimuons) ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
     )
 
-    # check if there is at least one (inclusive) di-muon (or a trimuon if doTrimuons=true)
+    # check if there is at least one (inclusive) di-muon. BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
     process.onia2MuMuPatGlbGlbFilter = cms.EDFilter("CandViewCountFilter",
         src = cms.InputTag('onia2MuMuPatGlbGlb'),
         minNumber = cms.uint32(1),

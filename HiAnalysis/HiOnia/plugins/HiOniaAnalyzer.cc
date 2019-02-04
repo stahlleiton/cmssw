@@ -82,7 +82,7 @@ private:
 
   reco::GenParticleRef findDaughterRef(reco::GenParticleRef GenParticleDaughter, int GenParticlePDG);
   bool isSameLorentzV(TLorentzVector* v1, TLorentzVector* v2);
-  int IndexOfThisMuon(TLorentzVector* v1, TClonesArray* vlist, bool IsGen);
+  int IndexOfThisMuon(TLorentzVector* v1, bool isGen=false);
   int IndexOfThisJpsi(int mu1_idx, int mu2_idx);
   void fillGenInfo();
   void fillMuMatchingInfo();
@@ -91,7 +91,7 @@ private:
   bool isAbHadron(int pdgID);
   bool isNeutrino(int pdgID);
   bool isAMixedbHadron(int pdgID, int momPdgID);
-  std::pair<bool, reco::GenParticleRef> findBcMotherRef(reco::GenParticleRef GenParticleMother,int GenParticlePDG, int verbose);
+  std::pair<bool, reco::GenParticleRef> findBcMotherRef(reco::GenParticleRef GenParticleMother,int GenParticlePDG);
   reco::GenParticleRef findMotherRef(reco::GenParticleRef GenParticleMother, int GenParticlePDG);
   std::pair<int, std::pair<float, float> >  findGenMCInfo(const reco::GenParticle *genJpsi);
   std::pair<int, std::pair<float, float> >  findGenBcInfo(reco::GenParticleRef genBc, const reco::GenParticle *genJpsi);
@@ -122,6 +122,7 @@ private:
   void checkTriggers(const pat::CompositeCandidate* aJpsiCand);
   void hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetup);
 
+  long int FloatToIntkey(float v);
   void beginRun(const edm::Run &, const edm::EventSetup &);  
 
   TLorentzVector lorentzMomentum(const reco::Candidate::LorentzVector& p);
@@ -279,7 +280,7 @@ private:
   int Reco_mu_type[Max_mu_size];  // Vector of type of muon (global=0, tracker=1, calo=2)  
   int Reco_mu_whichGen[Max_mu_size]; // index of the generated muon that was matched with this reco muon. Is -1 if the muon is not associated with a generated muon (fake, or very bad resolution)
 
-  bool Reco_mu_isGoodMuon[Max_mu_size];    // Vector of isGoodMuon(TMOneStationTight)
+  //  bool Reco_mu_isGoodMuon[Max_mu_size];    // Vector of isGoodMuon(TMOneStationTight)
   bool Reco_mu_highPurity[Max_mu_size];    // Vector of high purity flag  
   bool Reco_mu_TrkMuArb[Max_mu_size];      // Vector of TrackerMuonArbitrated
   bool Reco_mu_TMOneStaTight[Max_mu_size]; // Vector of TMOneStationTight
@@ -365,7 +366,6 @@ private:
   edm::EDGetTokenT<pat::MuonCollection>               _patMuonToken;
   edm::EDGetTokenT<pat::MuonCollection>               _patMuonNoTrigToken;
   edm::EDGetTokenT<pat::CompositeCandidateCollection> _patJpsiToken;
-  bool           _doTrimuons;
   edm::EDGetTokenT<pat::CompositeCandidateCollection> _patTrimuonToken;
   edm::EDGetTokenT<reco::TrackCollection>             _recoTracksToken;
   edm::EDGetTokenT<reco::GenParticleCollection>       _genParticleToken;
@@ -412,6 +412,7 @@ private:
   bool           _isPromptMC;
   bool           _useEvtPlane;
   bool           _useGeTracks;
+  bool           _doTrimuons;
 
   int _oniaPDG;
   int _BcPDG;
@@ -463,10 +464,8 @@ private:
 
   std::map<std::string, int> mapTriggerNameToIntFired_;
   std::map<std::string, int> mapTriggerNameToPrescaleFac_;
-
-  const pat::TriggerObjectStandAloneCollection mu1HLTMatchesFilter;
-  const pat::TriggerObjectStandAloneCollection mu2HLTMatchesFilter;
-  const pat::TriggerObjectStandAloneCollection mu3HLTMatchesFilter;
+  std::map<long int, int> mapMuonMomToIndex_;
+  std::map<long int, int> mapGenMuonMomToIndex_;
 
   HLTPrescaleProvider hltPrescaleProvider;
   bool hltPrescaleInit;
@@ -489,8 +488,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _patMuonToken(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("srcMuon"))),
   _patMuonNoTrigToken(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("srcMuonNoTrig"))),
   _patJpsiToken(consumes<pat::CompositeCandidateCollection>(iConfig.getParameter<edm::InputTag>("srcDimuon"))),
-  _doTrimuons(iConfig.getParameter<bool>("doTrimuons")),
-  _patTrimuonToken(consumes<pat::CompositeCandidateCollection>(iConfig.getParameter<edm::InputTag>(_doTrimuons?"srcTrimuon":"srcDimuon"))), // the names of userData are the same as for dimuons, but with 'trimuon' product instance name
+  _patTrimuonToken(consumes<pat::CompositeCandidateCollection>(iConfig.getParameter<edm::InputTag>("srcTrimuon"))), //the names of userData are the same as for dimuons, but with 'trimuon' product instance name. Ignored if the collection does not exist
   _recoTracksToken(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("srcTracks"))),
   _genParticleToken(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("genParticles"))),
   _thePVsToken(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertexTag"))),
@@ -534,6 +532,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _isPromptMC(iConfig.getUntrackedParameter<bool>("isPromptMC",true) ),
   _useEvtPlane(iConfig.getUntrackedParameter<bool>("useEvtPlane",false) ),
   _useGeTracks(iConfig.getUntrackedParameter<bool>("useGeTracks",false) ),
+  _doTrimuons(iConfig.getParameter<bool>("doTrimuons")),
   _oniaPDG(iConfig.getParameter<int>("oniaPDG")),
   _BcPDG(iConfig.getParameter<int>("BcPDG")),
   _OneMatchedHLTMu(iConfig.getParameter<int>("OneMatchedHLTMu")),
@@ -871,46 +870,50 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
     TLorentzVector vMuon = lorentzMomentum(muon->p4());
     new((*Reco_mu_4mom)[Reco_mu_size])TLorentzVector(vMuon);
 
+    //Fill map of the muon indices. Use long int keys, to avoid rounding errors on a float key. Implies a precision of 10^-6
+    mapMuonMomToIndex_[ FloatToIntkey(vMuon.Pt()) ] = Reco_mu_size;
+
     Reco_mu_trig[Reco_mu_size] = trigBits;
 
     reco::TrackRef iTrack = muon->innerTrack();
   
     if (!_theMinimumFlag) {
+      Reco_mu_SelectionType[Reco_mu_size] = muonIDmask(muon);
+      //      Reco_mu_isGoodMuon[Reco_mu_size] = muon::isGoodMuon(*muon, muon::TMOneStationTight);
+      Reco_mu_TrkMuArb[Reco_mu_size] = muon->muonID("TrackerMuonArbitrated");
+      Reco_mu_TMOneStaTight[Reco_mu_size] = muon->muonID("TMOneStationTight");
+      Reco_mu_StationsMatched[Reco_mu_size] = muon->numberOfMatchedStations();
+     
       if (!iTrack.isNull()){
-	Reco_mu_SelectionType[Reco_mu_size] = muonIDmask(muon);
 	Reco_mu_highPurity[Reco_mu_size] = iTrack->quality(reco::TrackBase::highPurity);
-	Reco_mu_isGoodMuon[Reco_mu_size] = muon::isGoodMuon(*muon, muon::TMOneStationTight);
-	Reco_mu_TrkMuArb[Reco_mu_size] = muon->muonID("TrackerMuonArbitrated");
-	Reco_mu_TMOneStaTight[Reco_mu_size] = muon->muonID("TMOneStationTight");
 	Reco_mu_nTrkHits[Reco_mu_size] = iTrack->found();
 	Reco_mu_normChi2_inner[Reco_mu_size] = iTrack->normalizedChi2();
 	Reco_mu_nPixValHits[Reco_mu_size] = iTrack->hitPattern().numberOfValidPixelHits();
 	Reco_mu_nPixWMea[Reco_mu_size] = iTrack->hitPattern().pixelLayersWithMeasurement();
 	Reco_mu_nTrkWMea[Reco_mu_size] = iTrack->hitPattern().trackerLayersWithMeasurement();
-	Reco_mu_StationsMatched[Reco_mu_size] = muon->numberOfMatchedStations();
 	Reco_mu_dxy[Reco_mu_size] = iTrack->dxy(RefVtx);
 	Reco_mu_dxyErr[Reco_mu_size] = iTrack->dxyError();
 	Reco_mu_dz[Reco_mu_size] = iTrack->dz(RefVtx);
 	Reco_mu_dzErr[Reco_mu_size] = iTrack->dzError();
 	Reco_mu_pt_inner[Reco_mu_size] = iTrack->pt();
 	Reco_mu_ptErr_inner[Reco_mu_size] = iTrack->ptError();
-    
-	if (muon->isGlobalMuon()) {
-	  reco::TrackRef gTrack = muon->globalTrack();
-	  Reco_mu_nMuValHits[Reco_mu_size] = gTrack->hitPattern().numberOfValidMuonHits();
-	  Reco_mu_normChi2_global[Reco_mu_size] = gTrack->normalizedChi2();
-	  Reco_mu_pt_global[Reco_mu_size] = gTrack->pt();
-	  Reco_mu_ptErr_global[Reco_mu_size] = gTrack->ptError();
-	}
-	else {
-	  Reco_mu_nMuValHits[Reco_mu_size] = -1;
-	  Reco_mu_normChi2_global[Reco_mu_size] = 999;
-	  Reco_mu_pt_global[Reco_mu_size] = -1;
-	  Reco_mu_ptErr_global[Reco_mu_size] = -1;
-	}
       }
       else{
 	std::cout<<"ERROR: 'iTrack' pointer in fillTreeMuon is NULL ! Return now"<<std::endl; return;
+      }
+    
+      if (muon->isGlobalMuon()) {
+	reco::TrackRef gTrack = muon->globalTrack();
+	Reco_mu_nMuValHits[Reco_mu_size] = gTrack->hitPattern().numberOfValidMuonHits();
+	Reco_mu_normChi2_global[Reco_mu_size] = gTrack->normalizedChi2();
+	Reco_mu_pt_global[Reco_mu_size] = gTrack->pt();
+	Reco_mu_ptErr_global[Reco_mu_size] = gTrack->ptError();
+      }
+      else {
+	Reco_mu_nMuValHits[Reco_mu_size] = -1;
+	Reco_mu_normChi2_global[Reco_mu_size] = 999;
+	Reco_mu_pt_global[Reco_mu_size] = -1;
+	Reco_mu_ptErr_global[Reco_mu_size] = -1;
       }
     }
 
@@ -981,26 +984,30 @@ HiOniaAnalyzer::fillTreeJpsi(int count) {
 
       if (muon1->charge() > muon2->charge()) {
 
-	Reco_QQ_mupl_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon1 , Reco_mu_4mom, false);
-	Reco_QQ_mumi_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon2 , Reco_mu_4mom, false);
+	Reco_QQ_mupl_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon1); 
+	Reco_QQ_mumi_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon2);
 
 	if (TVector2::Phi_mpi_pi(vMuon1.Phi() - vMuon2.Phi()) > 0) Reco_QQ_isCowboy[Reco_QQ_size] = true;
 	else Reco_QQ_isCowboy[Reco_QQ_size] = false;
 
-	iTrack_mupl = muon1->innerTrack();
-	iTrack_mumi = muon2->innerTrack();
+	if(_muonLessPrimaryVertex){
+	  iTrack_mupl = muon1->innerTrack();
+	  iTrack_mumi = muon2->innerTrack();
+	}
 
       }
       else {
 
-	Reco_QQ_mupl_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon2 , Reco_mu_4mom, false);
-	Reco_QQ_mumi_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon1 , Reco_mu_4mom, false);
+	Reco_QQ_mupl_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon2);
+	Reco_QQ_mumi_idx[Reco_QQ_size] = IndexOfThisMuon(&vMuon1);
 
 	if (TVector2::Phi_mpi_pi(vMuon2.Phi() - vMuon1.Phi()) > 0) Reco_QQ_isCowboy[Reco_QQ_size] = true;
 	else Reco_QQ_isCowboy[Reco_QQ_size] = false;
 
-	iTrack_mupl = muon2->innerTrack();
-	iTrack_mumi = muon1->innerTrack();
+	if(_muonLessPrimaryVertex){
+	  iTrack_mupl = muon2->innerTrack();
+	  iTrack_mumi = muon1->innerTrack();
+	}
 
       }
 
@@ -1134,14 +1141,6 @@ HiOniaAnalyzer::fillTreeJpsi(int count) {
 	    double dzsigma = sqrt(track->dzError()*track->dzError()+RefVtx_zError*RefVtx_zError);    
 	    double dxy = track->dxy(RefVtx);
 	    double dxysigma = sqrt(track->dxyError()*track->dxyError() + RefVtx_xError*RefVtx_yError);
-	    // to be fixed
-	    // double dxysigma = sqrt(track->dxyError()*track->dxyError() + RefVtx_xError*RefVtx_xError+RefVtx_yError*RefVtx_yError);
-	    // std::cout << "original: " << dxysigma
-	    //                << " better: "  << sqrt( pow(track->dxyError(),2) + pow(RefVtx_xError,2) + pow(RefVtx_yError,2) )
-	    //                << " ratio: " << dxysigma / sqrt( pow(track->dxyError(),2) + pow(RefVtx_xError,2) + pow(RefVtx_yError,2) )
-	    //                << " best: "
-	    //                << std::endl;
-      
 
 	    if (track->qualityByName("highPurity") &&
 		track->pt()>0.2 && fabs(track->eta())<2.4 &&
@@ -1224,9 +1223,9 @@ HiOniaAnalyzer::fillTreeBc(int count) {
       reco::TrackRef iTrack_mumi;
       reco::TrackRef iTrack_muW;
 
-      int mu1_idx = IndexOfThisMuon(&vMuon1 , Reco_mu_4mom, false);
-      int mu2_idx = IndexOfThisMuon(&vMuon2 , Reco_mu_4mom, false);
-      int mu3_idx = IndexOfThisMuon(&vMuon3 , Reco_mu_4mom, false);
+      int mu1_idx = IndexOfThisMuon(&vMuon1);
+      int mu2_idx = IndexOfThisMuon(&vMuon2);
+      int mu3_idx = IndexOfThisMuon(&vMuon3);
 
       //One dimuon combination has to pass the Jpsi kinematic cuts
       if (IndexOfThisJpsi(mu1_idx,mu2_idx)==-1 && IndexOfThisJpsi(mu2_idx,mu3_idx)==-1 && IndexOfThisJpsi(mu1_idx,mu3_idx)==-1) {return;}
@@ -1242,7 +1241,7 @@ HiOniaAnalyzer::fillTreeBc(int count) {
 	if (Reco_mu_charge[mu1_idx]==Reco_mu_charge[mu2_idx]){
 	  mu_loneCharge = mu3_idx; mu_SameCharge2 = mu1_idx;
 	}
-	if (Reco_mu_charge[mu1_idx]==Reco_mu_charge[mu3_idx]){
+	else if (Reco_mu_charge[mu1_idx]==Reco_mu_charge[mu3_idx]){
 	  mu_loneCharge = mu2_idx; mu_SameCharge1 = mu1_idx;
 	}
 
@@ -1580,8 +1579,8 @@ HiOniaAnalyzer::checkTriggers(const pat::CompositeCandidate* aJpsiCand) {
 
       // Trigger passed
       for (unsigned int iTr = 1; iTr<NTRIGGERS; ++iTr) {
-	const pat::TriggerObjectStandAloneCollection mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
-	const pat::TriggerObjectStandAloneCollection mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
+	const auto& mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
+	const auto& mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[iTr] );
     
 	// const pat::TriggerObjectStandAloneCollection mu1HLTMatchesPath = muon1->triggerObjectMatchesByPath( theTriggerNames.at(iTr), true, false );
 	// const pat::TriggerObjectStandAloneCollection mu2HLTMatchesPath = muon2->triggerObjectMatchesByPath( theTriggerNames.at(iTr), true, false );
@@ -1604,12 +1603,9 @@ HiOniaAnalyzer::checkTriggers(const pat::CompositeCandidate* aJpsiCand) {
 
       for (unsigned int iTr=1;iTr<NTRIGGERS;++iTr) {
 	if (isTriggerMatched[iTr]) {
-	  // fill event counting histogram only once per event, also if several muons fired trigger
-	  //      if (alreadyFilled[iTr]) continue;
 	  // since we have bins for event info, let's try to fill here the trigger info for each pair
 	  // also if there are several pairs matched to the same kind of trigger
 	  hStats->Fill(iTr+NTRIGGERS); // pair info
-	  //      alreadyFilled[iTr]=true;
 	}
       }
     }
@@ -1809,11 +1805,10 @@ HiOniaAnalyzer::checkCuts(const pat::CompositeCandidate* cand, const pat::Muon* 
 
 bool
 HiOniaAnalyzer::checkBcCuts(const pat::CompositeCandidate* cand, const pat::Muon* muon1, const pat::Muon* muon2, const pat::Muon* muon3, bool(HiOniaAnalyzer::* callFunc1)(const pat::Muon*), bool(HiOniaAnalyzer::* callFunc2)(const pat::Muon*), bool(HiOniaAnalyzer::* callFunc3)(const pat::Muon*)) {
-  if (_OneMatchedHLTMu>-1){
-    const pat::TriggerObjectStandAloneCollection mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[_OneMatchedHLTMu] );
-    const pat::TriggerObjectStandAloneCollection mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[_OneMatchedHLTMu] );
-    const pat::TriggerObjectStandAloneCollection mu3HLTMatchesFilter = muon3->triggerObjectMatchesByFilter( HLTLastFilters[_OneMatchedHLTMu] );
-  }
+  const auto& mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[_OneMatchedHLTMu] );
+  const auto& mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[_OneMatchedHLTMu] );
+  const auto& mu3HLTMatchesFilter = muon3->triggerObjectMatchesByFilter( HLTLastFilters[_OneMatchedHLTMu] );
+  
   if ( ( ((this->*callFunc1)(muon1) && (this->*callFunc2)(muon2) && (this->*callFunc3)(muon3))
          //symmetrize, assuming arguments functions 2 and 3 are THE SAME ! 
          || ((this->*callFunc1)(muon2) && (this->*callFunc2)(muon1) && (this->*callFunc3)(muon3))
@@ -1856,8 +1851,8 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
   }
   else if (muonType == (std::string)("TRK")) {
     return (fabs(aMuon->eta()) < 2.4 &&
-            ((fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 3.3) ||
-             (1.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
+            ((fabs(aMuon->eta()) < 1. && aMuon->pt() >= 3.3) ||
+             (1. <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
              (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
   }
   else if (muonType == (std::string)("GLBSOFT")) {
@@ -1931,7 +1926,7 @@ HiOniaAnalyzer::selTrackerMuon(const pat::Muon* aMuon) {
   if(!_applycuts)
     return true;
 
-  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRK":"TRKSOFT"));
+  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRKSOFT":"TRK"));
   bool isGood = isSoftMuon(aMuon);
 
   return ( isInAcc && isGood );
@@ -1946,7 +1941,7 @@ HiOniaAnalyzer::selGlobalOrTrackerMuon(const pat::Muon* aMuon) {
   if(!_applycuts)
     return true;
 
-  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRK":"TRKSOFT"));
+  bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRKSOFT":"TRK"));
   bool isGood = isSoftMuon(aMuon);
 
   return ( isInAcc && isGood );
@@ -2016,17 +2011,12 @@ HiOniaAnalyzer::isSameLorentzV(TLorentzVector* v1, TLorentzVector* v2){
 }
 
 int
-HiOniaAnalyzer::IndexOfThisMuon(TLorentzVector* v1, TClonesArray* vlist, bool IsGen){
-  int GoodIndex = -1;
-  for(int iMu=0;iMu< (IsGen?Gen_mu_size:Reco_mu_size) ;iMu++){
-    TLorentzVector *testMu = (TLorentzVector*) (IsGen?Gen_mu_4mom:Reco_mu_4mom)->ConstructedAt(iMu);
-    if(isSameLorentzV(v1, testMu)){
-      GoodIndex = iMu;
-      break;
-    }
-  }
-  if (GoodIndex==-1){std::cout<<"Problem finding index of the muon, no matching of the TLorentzVector"<<std::endl;}
-  return GoodIndex;
+HiOniaAnalyzer::IndexOfThisMuon(TLorentzVector* v1, bool isGen){
+  const auto& mapMuIdx =  (isGen ?  mapGenMuonMomToIndex_ : mapMuonMomToIndex_);
+  const long int& muPt = FloatToIntkey(v1->Pt());
+
+  if (mapMuIdx.count(muPt)==0) return -1;
+  else return mapMuIdx.at(muPt);
 }
 
 int
@@ -2071,7 +2061,7 @@ HiOniaAnalyzer::findDaughterRef(reco::GenParticleRef GenParticleDaughter, int Ge
 }
 
 std::pair<bool, reco::GenParticleRef>
-HiOniaAnalyzer::findBcMotherRef(reco::GenParticleRef GenParticleMother, int BcPDG, int verbose = 0) {
+HiOniaAnalyzer::findBcMotherRef(reco::GenParticleRef GenParticleMother, int BcPDG) {
 
   bool FoundBc = false;
   for(int i=0; i<1000; ++i) {
@@ -2126,6 +2116,9 @@ HiOniaAnalyzer::fillGenInfo()
         TLorentzVector vMuon = lorentzMomentum(gen->p4());
         new((*Gen_mu_4mom)[Gen_mu_size])TLorentzVector(vMuon);
 
+	//Fill map of the muon indices. Use long int keys, to avoid rounding errors on a float key. Implies a precision of 10^-6     
+	mapGenMuonMomToIndex_[ FloatToIntkey(vMuon.Pt()) ] = Gen_mu_size;
+
         Gen_mu_size++;
       }
     }
@@ -2160,17 +2153,17 @@ HiOniaAnalyzer::fillGenInfo()
           TLorentzVector vMuon2 = lorentzMomentum(genMuon2->p4());
             
           if (genMuon1->charge() > genMuon2->charge()) {
-            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , Gen_mu_4mom, true);
-            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , Gen_mu_4mom, true);
+            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , true);
+            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , true);
           }
           else {
-            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , Gen_mu_4mom, true);
-            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , Gen_mu_4mom, true);
+            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , true);
+            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , true);
           }
 
 	  if(_doTrimuons){
 	    //GenInfo for the Bc and the daughter muon from the W daughter of the Bc. Beware, this is designed for generated Bc's having QQ as a daughter!!
-	    std::pair<bool, reco::GenParticleRef> findBcMom = findBcMotherRef( findMotherRef(gen->motherRef(),gen->pdgId()) , _BcPDG, 0); //the boolean says if the Bc mother was found
+	    std::pair<bool, reco::GenParticleRef> findBcMom = findBcMotherRef( findMotherRef(gen->motherRef(),gen->pdgId()) , _BcPDG); //the boolean says if the Bc mother was found
 	  
 	    if (findBcMom.first) {
 	  
@@ -2213,15 +2206,6 @@ HiOniaAnalyzer::fillGenInfo()
 	      }
 	    
 	      //Fill info for Bc and its mu,nu daughters
-	      // if (verbose){
-	      //   std::cout<<"BcPID = "<<genBc->pdgId()<<std::endl;
-	      //   std::cout<<"Bc 1st daughter PID = "<<genDau1->pdgId()<<std::endl;
-	      //   std::cout<<"Bc 2nd daughter PID = "<<genDau2->pdgId()<<std::endl;
-	      //   std::cout<<"Bc 3rd daughter PID = "<<genDau3->pdgId()<<std::endl;
-	      //   std::cout<<"Jpsi PID = "<<gen->pdgId()<<std::endl;
-	      //   std::cout<<"status of neutrino daughter of Bc = "<<gennuW->status()<<std::endl;
-	      //   std::cout<<"status of muon daughter of Bc = "<<genmuW->status()<<std::endl;
-	      // }
 	      if(goodDaughters && (genmuW->charge() == genBc->charge()) 
 		 && ( genmuW->status() == 1 ) ){
 	
@@ -2236,7 +2220,7 @@ HiOniaAnalyzer::fillGenInfo()
 		new((*Gen_Bc_4mom)[Gen_Bc_size])TLorentzVector(vBc);
 
 		TLorentzVector vmuW = lorentzMomentum(genmuW->p4());
-		Gen_Bc_muW_idx[Gen_Bc_size] = IndexOfThisMuon(&vmuW , Gen_mu_4mom, true);
+		Gen_Bc_muW_idx[Gen_Bc_size] = IndexOfThisMuon(&vmuW, true);
 	      
 		TLorentzVector vnuW = lorentzMomentum(gennuW->p4());
 		new((*Gen_Bc_nuW_4mom)[Gen_Bc_size])TLorentzVector(vnuW);
@@ -2388,11 +2372,6 @@ HiOniaAnalyzer::fillRecoTracks()
 	std::cout<<"ERROR: 'track' pointer in fillRecoTracks is NULL ! Return now"<<std::endl; return;
       } else {
 
-	// double dz = track->dz(RefVtx);
-	// double dzsigma = sqrt(track->dzError()*track->dzError()+RefVtx_zError*RefVtx_zError);    
-	// double dxy = track->dxy(RefVtx);
-	// double dxysigma = sqrt(track->dxyError()*track->dxyError() + RefVtx_xError*RefVtx_yError);
-      
 	if (track->qualityByName("highPurity") &&
 	    track->pt()>0.2 && fabs(track->eta())<2.4 &&
 	    track->ptError()/track->pt()<0.1)  {
@@ -2498,7 +2477,7 @@ HiOniaAnalyzer::fillRecoMuons(int iCent)
         if ( _muonSel==(std::string)("Glb")      && selGlobalMuon(muon)  ) muType = Glb;
         if ( _muonSel==(std::string)("GlbTrk")   && selGlobalMuon(muon)  ) muType = GlbTrk;
         if ( _muonSel==(std::string)("Trk")      && selTrackerMuon(muon) ) muType = Trk;
-        if ( _muonSel==(std::string)("TwoGlbAmongThree") && selTrackerMuon(muon) ) muType = Trk;
+        if ( _muonSel==(std::string)("TwoGlbAmongThree") && selGlobalOrTrackerMuon(muon) ) muType = Trk;
 	if ( _muonSel==(std::string)("GlbOrTrk") && selGlobalOrTrackerMuon(muon) ) muType = GlbOrTrk;
       
 	if ( muType==GlbOrTrk || muType==GlbTrk || muType==Trk || muType==Glb ) {
@@ -2593,15 +2572,16 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("LS",      &lumiSection, "LS/i"); 
   myTree->Branch("zVtx",    &zVtx,        "zVtx/F"); 
   myTree->Branch("nPV",    &nPV,        "nPV/F"); 
-  myTree->Branch("Centrality", &centBin, "Centrality/I");
+  if (_isHI || _isPA){
+    myTree->Branch("Centrality", &centBin, "Centrality/I");
+    myTree->Branch("Npix",&Npix,"Npix/I");
+    myTree->Branch("NpixelTracks",&NpixelTracks,"NpixelTracks/I");
+    myTree->Branch("Ntracks", &Ntracks, "Ntracks/I");
+  }
 
   myTree->Branch("nTrig", &nTrig, "nTrig/I");
   myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
   myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/l");
-
-  myTree->Branch("Npix",&Npix,"Npix/I");
-  myTree->Branch("NpixelTracks",&NpixelTracks,"NpixelTracks/I");
-  myTree->Branch("Ntracks", &Ntracks, "Ntracks/I");
 
   if ((_isHI || _isPA) && _SumETvariables){
     myTree->Branch("SumET_HF",&SumET_HF,"SumET_HF/F");
@@ -2677,14 +2657,14 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Reco_QQ_Ntrk", Reco_QQ_Ntrk, "Reco_QQ_Ntrk[Reco_QQ_size]/I");
 
   if (!_theMinimumFlag && _muonLessPrimaryVertex) {
-    myTree->Branch("Reco_QQ_mupl_dxy",Reco_QQ_mupl_dxy, "Reco_QQ_mupl_dxy[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_dxy",Reco_QQ_mumi_dxy, "Reco_QQ_mumi_dxy[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_dxyErr",Reco_QQ_mupl_dxyErr, "Reco_QQ_mupl_dxyErr[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_dxyErr",Reco_QQ_mumi_dxyErr, "Reco_QQ_mumi_dxyErr[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_dz",Reco_QQ_mupl_dz, "Reco_QQ_mupl_dz[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_dz",Reco_QQ_mumi_dz, "Reco_QQ_mumi_dz[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mupl_dzErr",Reco_QQ_mupl_dzErr, "Reco_QQ_mupl_dzErr[Reco_QQ_size]/F");
-    myTree->Branch("Reco_QQ_mumi_dzErr",Reco_QQ_mumi_dzErr, "Reco_QQ_mumi_dzErr[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mupl_dxy_muonlessVtx",Reco_QQ_mupl_dxy, "Reco_QQ_mupl_dxy_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mumi_dxy_muonlessVtx",Reco_QQ_mumi_dxy, "Reco_QQ_mumi_dxy_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mupl_dxyErr_muonlessVtx",Reco_QQ_mupl_dxyErr, "Reco_QQ_mupl_dxyErr_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mumi_dxyErr_muonlessVtx",Reco_QQ_mumi_dxyErr, "Reco_QQ_mumi_dxyErr_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mupl_dz_muonlessVtx",Reco_QQ_mupl_dz, "Reco_QQ_mupl_dz_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mumi_dz_muonlessVtx",Reco_QQ_mumi_dz, "Reco_QQ_mumi_dz_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mupl_dzErr_muonlessVtx",Reco_QQ_mupl_dzErr, "Reco_QQ_mupl_dzErr_muonlessVtx[Reco_QQ_size]/F");
+    myTree->Branch("Reco_QQ_mumi_dzErr_muonlessVtx",Reco_QQ_mumi_dzErr, "Reco_QQ_mumi_dzErr_muonlessVtx[Reco_QQ_size]/F");
   }
 
   myTree->Branch("Reco_mu_size", &Reco_mu_size,  "Reco_mu_size/I");
@@ -2714,7 +2694,7 @@ HiOniaAnalyzer::InitTree()
   }
 
   if (!_theMinimumFlag) {
-    myTree->Branch("Reco_mu_isGoodMuon", Reco_mu_isGoodMuon,   "Reco_mu_isGoodMuon[Reco_mu_size]/O");
+    //    myTree->Branch("Reco_mu_isGoodMuon", Reco_mu_isGoodMuon,   "Reco_mu_isGoodMuon[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_highPurity", Reco_mu_highPurity,   "Reco_mu_highPurity[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_TrkMuArb", Reco_mu_TrkMuArb,   "Reco_mu_TrkMuArb[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, "Reco_mu_TMOneStaTight[Reco_mu_size]/O");
@@ -3147,18 +3127,6 @@ HiOniaAnalyzer::findGenBcInfo(reco::GenParticleRef genBc, const reco::GenParticl
   trueVtxMom.SetXYZ(genBc->vertex().x(),genBc->vertex().y(),genBc->vertex().z());
   trueP.SetXYZ(genBc->momentum().x(),genBc->momentum().y(),genBc->momentum().z());
 
-  // if (genBc->numberOfMothers()>0) {
-  //   reco::GenParticleRef Bcmom = findMotherRef(genBc->motherRef(), genBc->pdgId());
-  //   TVector3 trueVtxBcMom(Bcmom->vertex().x(),Bcmom->vertex().y(),Bcmom->vertex().z());
-
-  //   TVector3 vdiffBcmom = trueVtxMom - trueVtxBcMom;
-  //   float trueLife3D_Bcmom = -99.;
-  //   trueLife3D_Bcmom = vdiffBcmom.Mag()*BcPDGMass/trueP.Mag();
-  //   if(trueLife3D_Bcmom>0.0001){
-  //     //std::cout<<"LIFETIME : Bc does not seem to come from primary vertex!! Travel distance of Bc mom =  " << trueLife3D_Bcmom <<std::endl; 
-  //   }
-  // }
-
   TVector3 vdiff = trueVtx - trueVtxMom;
   trueLife = vdiff.Perp()*BcPDGMass/trueP.Perp();
 
@@ -3177,6 +3145,13 @@ int HiOniaAnalyzer::muonIDmask(const pat::Muon* muon)
          mask = mask | (int) pow(2, type);
 
    return mask;
+}
+
+long int HiOniaAnalyzer::FloatToIntkey(float v)
+{
+  float vres = fabs(v);
+  while(vres>0.1) vres = vres/10; //Assume argument v is always above 0.1, true for abs(Pt)
+  return (long int) (10000000*vres); // Precision 10^-6 (i.e. 7-1) on the comparison
 }
 
 //define this as a plug-in
