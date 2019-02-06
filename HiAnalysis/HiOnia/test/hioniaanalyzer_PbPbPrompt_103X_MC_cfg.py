@@ -123,7 +123,7 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = '103X_upgrade2018_realistic_HI_v6'
+  globalTag = '103X_upgrade2018_realistic_HI_v11'
 else:
   globalTag = '103X_dataRun2_Prompt_v3'
 
