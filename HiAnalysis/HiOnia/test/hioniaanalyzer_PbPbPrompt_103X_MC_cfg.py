@@ -6,7 +6,7 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 # Setup Settings for ONIA TREE: PbPb 2018
 
-HLTProcess     = "HLT" # Name of HLT process 
+HLTProcess     = "HLT" # Name of HLT process
 isMC           = True # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "Glb" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
 applyEventSel  = False # Only apply Event Selection if the required collections are present
@@ -47,7 +47,7 @@ options = VarParsing.VarParsing ('analysis')
 options.outputFile = "Oniatree.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-    '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/483/00000/901AFDEE-00C0-3242-A7DF-90885EC50A1E.root'
+    '/store/user/anstahll/Dilepton/MC/Embedded/JpsiMM_5p02TeV_TuneCP5_Embd_RECO_20190117/JpsiMM_5p02TeV_TuneCP5/JpsiMM_5p02TeV_TuneCP5_Embd_RECO_20190117/190118_020651/0001/JpsiMM_5p02TeV_TuneCP5_Embd_step2_1074.root'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -57,7 +57,7 @@ options.parseArguments()
 triggerList    = {
 		# Double Muon Trigger List
 		'DoubleMuonTrigger' : cms.vstring(
-			"HLT_HIL1DoubleMuOpen_v1",#0 
+			"HLT_HIL1DoubleMuOpen_v1",#0
 			"HLT_HIL1DoubleMuOpen_OS_Centrality_40_100_v1", #1
 			"HLT_HIL1DoubleMuOpen_Centrality_50_100_v1", #2
 			"HLT_HIL1DoubleMu10_v1", #3
@@ -123,7 +123,7 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = '103X_upgrade2018_realistic_HI_v6'
+  globalTag = '103X_upgrade2018_realistic_HI_v11'
 else:
   globalTag = '103X_dataRun2_Prompt_v3'
 
@@ -157,8 +157,8 @@ process.GlobalTag.toGet.extend([
 
 # For OniaTree Analyzer
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
-oniaTreeAnalyzer(process, 
-                 #muonTriggerList=triggerList, HLTProName=HLTProcess, 
+oniaTreeAnalyzer(process,
+                 #muonTriggerList=triggerList, HLTProName=HLTProcess,
                  muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
 process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 
@@ -166,7 +166,7 @@ process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 #process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
 #process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("") ## No need to repeat lowerPuritySelection in there, already included
 if applyCuts:
-  process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.01") 
+  process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.01")
 process.onia2MuMuPatGlbGlb.onlySoftMuons         = cms.bool(OnlySoftMuons)
 process.hionia.minimumFlag      = cms.bool(keepExtraColl)           #for Reco_trk_*
 process.hionia.useGeTracks      = cms.untracked.bool(keepExtraColl) #for Reco_trk_*
@@ -242,7 +242,7 @@ process.source = cms.Source("PoolSource",
 #process.source = cms.Source("NewEventStreamFileReader", # for streamer data
 		fileNames = cms.untracked.vstring( options.inputFiles ),
 		)
-process.TFileService = cms.Service("TFileService", 
+process.TFileService = cms.Service("TFileService",
 		fileName = cms.string( options.outputFile )
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
@@ -250,5 +250,5 @@ process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 #if saveHLTobj or saveHLTBit:
 #    process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )
-#else: 
+#else:
 process.schedule  = cms.Schedule( process.oniaTreeAna )

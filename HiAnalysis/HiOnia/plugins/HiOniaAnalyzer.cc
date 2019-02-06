@@ -49,6 +49,7 @@
 
 #include "DataFormats/HeavyIonEvent/interface/Centrality.h"
 #include "DataFormats/HeavyIonEvent/interface/EvtPlane.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 #include "HiAnalysis/HiOnia/interface/MyCommonHistoManager.h"
 #include "DataFormats/Math/interface/deltaR.h"
@@ -187,6 +188,8 @@ private:
   static const int Max_mu_size = 1000;
   static const int Max_trk_size = 10000;
 
+  float Gen_weight; // generator weight
+  float Gen_pthat; // ptHat scale of generated hard scattering
   int Gen_QQ_size; // number of generated Onia
   int Gen_QQ_type[Max_QQ_size]; // Onia type: prompt, non-prompt, unmatched
   float Gen_QQ_ctau[Max_QQ_size];    // ctau: flight time
@@ -359,6 +362,7 @@ private:
   edm::Handle<reco::TrackCollection> collTracks;
 
   edm::Handle<reco::GenParticleCollection> collGenParticles;
+  edm::Handle<GenEventInfoProduct> genInfo;
 
   edm::Handle<edm::TriggerResults> collTriggerResults;
 
@@ -369,6 +373,7 @@ private:
   edm::EDGetTokenT<pat::CompositeCandidateCollection> _patTrimuonToken;
   edm::EDGetTokenT<reco::TrackCollection>             _recoTracksToken;
   edm::EDGetTokenT<reco::GenParticleCollection>       _genParticleToken;
+  edm::EDGetTokenT<GenEventInfoProduct>               _genInfoToken;
   edm::EDGetTokenT<reco::VertexCollection>            _thePVsToken;
   edm::EDGetTokenT<edm::TriggerResults>               _tagTriggerResultsToken;
   edm::EDGetTokenT<reco::Centrality>                  _centralityTagToken;
@@ -491,6 +496,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _patTrimuonToken(consumes<pat::CompositeCandidateCollection>(iConfig.getParameter<edm::InputTag>("srcTrimuon"))), //the names of userData are the same as for dimuons, but with 'trimuon' product instance name. Ignored if the collection does not exist
   _recoTracksToken(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("srcTracks"))),
   _genParticleToken(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("genParticles"))),
+  _genInfoToken(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
   _thePVsToken(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertexTag"))),
   _tagTriggerResultsToken(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResultsLabel"))),
   _centralityTagToken(consumes<reco::Centrality>(iConfig.getParameter<edm::InputTag> ("CentralitySrc"))),
@@ -803,6 +809,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   if (_isMC) {
     iEvent.getByToken(_genParticleToken,collGenParticles);
+    iEvent.getByToken(_genInfoToken,genInfo);
 
     this->fillGenInfo();
     this->fillMuMatchingInfo(); //Needs to be done after fillGenInfo, and the filling of reco muons collections
@@ -1977,6 +1984,9 @@ HiOniaAnalyzer::InitEvent()
 
     Gen_QQ_size = 0;
     Gen_mu_size = 0;
+
+    Gen_weight = -1.;
+    Gen_pthat = -1.;
   }
 
   if(_doTrimuons){
@@ -2101,6 +2111,11 @@ HiOniaAnalyzer::fillGenInfo()
     std::cout << "Too many muons: " << Gen_mu_size << std::endl;
     std::cout << "Maximum allowed: " << Max_mu_size << std::endl;
     return;
+  }
+  
+  if (genInfo.isValid()) {
+    if (genInfo->hasBinningValues()) Gen_pthat = genInfo->binningValues()[0];
+    Gen_weight = genInfo->weight();
   }
   
   if (collGenParticles.isValid()) {
@@ -2717,6 +2732,8 @@ HiOniaAnalyzer::InitTree()
   }
 
   if (_isMC) {
+    myTree->Branch("Gen_weight",       &Gen_weight,    "Gen_weight/F");
+    myTree->Branch("Gen_pthat",        &Gen_pthat,     "Gen_pthat/F");
     myTree->Branch("Gen_QQ_size",      &Gen_QQ_size,    "Gen_QQ_size/I");
     myTree->Branch("Gen_QQ_type",      Gen_QQ_type,    "Gen_QQ_type[Gen_QQ_size]/I");
     myTree->Branch("Gen_QQ_4mom",      "TClonesArray", &Gen_QQ_4mom, 32000, 0);
