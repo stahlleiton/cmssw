@@ -26,13 +26,13 @@ process.HiForest.HiForestVersion = cms.string(version)
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-        "file:/afs/cern.ch/work/r/rbi/public/mtd-hydjet/Hydjet_RECO_295.root"
+"/store/user/anstahll/MTD/MC/NonEmbedded/Hydjet_5p02TeV_TuneCP5_MTD_RECO_20190127/Hydjet_5p02TeV_TuneCP5_MTD/Hydjet_5p02TeV_TuneCP5_MTD_RECO_20190127/190127_085926/0000/Hydjet_RECO_99.root"
         ),
     )
 
 # Number of events we want to process, -1 = all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1)
+    input = cms.untracked.int32(-1)
     )
 
 ###############################################################################
@@ -40,9 +40,8 @@ process.maxEvents = cms.untracked.PSet(
 ###############################################################################
 
 process.load('Configuration.StandardSequences.Services_cff')
-# process.load('Configuration.Geometry.GeometryDB_cff')
 process.load('Configuration.Geometry.GeometryExtended2023D35Reco_cff')
-process.load('Configuration.StandardSequences.MagneticField_38T_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
@@ -50,11 +49,11 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '103X_upgrade2023_realistic_v2', '')
 process.HiForest.GlobalTagLabel = process.GlobalTag.globaltag
 
-print('\n\033[31m~*~ USING CENTRALITY TABLE FOR Hydjet Drum5Ev8 ~*~\033[0m\n')
+print('\n\033[31m~*~ USING CENTRALITY TABLE FOR Phase2 Hydjet Drum5Ev8 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5Ev8_v1030pre5x02_mc"),
+        tag = cms.string("CentralityTable_HFtowers200_HydjetTuneCP5MTD_v1040mtd4x1_mc"),
         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
         label = cms.untracked.string("HFtowers")
         ),
@@ -66,8 +65,10 @@ process = overrideJEC_PbPb5020(process)
 process.load("RecoHI.HiCentralityAlgos.HiCentrality_cfi")
 process.hiCentrality.producePixelhits = False
 process.hiCentrality.producePixelTracks = False
-process.hiCentrality.srcTracks = 'generalTracks'
-process.hiCentrality.srcVertex = 'offlinePrimaryVertices'
+process.hiCentrality.srcEBhits = cms.InputTag("HGCalRecHit","HGCHEBRecHits")
+process.hiCentrality.srcEEhits = cms.InputTag("HGCalRecHit","HGCEERecHits")
+process.hiCentrality.srcTracks = cms.InputTag("generalTracks")
+process.hiCentrality.srcVertex = cms.InputTag("offlinePrimaryVertices")
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
 process.centralityBin.Centrality = cms.InputTag("hiCentrality")
 process.centralityBin.centralityVariable = cms.string("HFtowers")
