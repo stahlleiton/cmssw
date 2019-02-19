@@ -19,7 +19,7 @@ atLeastOneCand = False # Keep only events that have one selected dimuon (or at l
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
-
+saveHLT        = False # wheter to save the HLT trees or not 
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -33,6 +33,7 @@ print( "[INFO] SofterSgMuAcceptance = " + ("True" if SofterSgMuAcceptance else "
 print( "[INFO] muonSelection        = " + muonSelection )
 print( "[INFO] onlySoftMuons        = " + ("True" if OnlySoftMuons else "False") )
 print( "[INFO] doTrimuons           = " + ("True" if doTrimuons else "False") )
+print( "[INFO] saveHLT              = " + ("True" if saveHLT else "False") )
 print( " " )
 
 # set up process
@@ -224,7 +225,10 @@ process.hltobject.triggerEvent   = cms.InputTag("hltTriggerSummaryAOD","",HLTPro
 #---------------------------------------------------------------------------
 
 #For the main analysis list
-process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.hltbitanalysis * process.hltobject * process.centralityBin * process.hionia )
+if saveHLT:
+  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.hltbitanalysis * process.hltobject * process.centralityBin * process.hionia )
+else:
+  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.centralityBin * process.hionia )
 
 if atLeastOneCand:
   process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
