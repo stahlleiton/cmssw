@@ -170,6 +170,7 @@ class TrackExtenderWithMTDT : public edm::stream::EDProducer<> {
   static constexpr char pathLengthOrigTrkName[] = "generalTrackPathLength";
   static constexpr char tmtdOrigTrkName[] = "generalTracktmtd";
   static constexpr char sigmatmtdOrigTrkName[] = "generalTracksigmatmtd";
+  static constexpr char assocOrigTrkName[] = "generalTrackassoc";
   
   edm::EDGetTokenT<InputCollection> tracksToken_;
   edm::EDGetTokenT<MTDTrackingDetSetVector> hitsToken_;
@@ -247,6 +248,7 @@ TrackExtenderWithMTDT<TrackCollection>::TrackExtenderWithMTDT(const ParameterSet
   produces<edm::ValueMap<float> >(pathLengthOrigTrkName);
   produces<edm::ValueMap<float> >(tmtdOrigTrkName);
   produces<edm::ValueMap<float> >(sigmatmtdOrigTrkName);
+  produces<edm::ValueMap<int> >(assocOrigTrkName);
  
   produces<edm::OwnVector<TrackingRecHit>>();
   produces<reco::TrackExtraCollection>();
@@ -348,6 +350,7 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
   std::vector<float> pathLengthsOrigTrkRaw;
   std::vector<float> tmtdOrigTrkRaw;
   std::vector<float> sigmatmtdOrigTrkRaw;  
+  std::vector<int>   assocOrigTrkRaw;
   
   edm::Handle<InputCollection> tracksH;  
   ev.getByToken(tracksToken_,tracksH);
@@ -435,10 +438,12 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
       mtdthits.insert(mtdthits.end(),thits.begin(),thits.end());
       thits.swap(mtdthits);
     }
+
     const auto& trajwithmtd = theTransformer->transform(ttrack,thits);
     float pMap = 0.f, betaMap = 0.f, t0Map = 0.f, sigmat0Map = -1.f, pathLengthMap = -1.f, tmtdMap = 0.f, sigmatmtdMap = -1.f;
-    
-    for( const auto& trj : trajwithmtd ) {      
+    int iMap = -1;
+
+    for( const auto& trj : trajwithmtd) {      
       const auto& thetrj = (updateTraj_ ? trj : trajs.front());
       float pathLength = 0.f, tmtd = 0.f, sigmatmtd = -1.f;
       reco::Track result = buildTrack(track, thetrj, trj, bs, magfield.product(), 
@@ -470,6 +475,7 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
 	tmtdMap = tmtd;
 	sigmatmtdMap = sigmatmtd;
         auto& backtrack = output->back();
+	iMap=output->size()-1;
 	pMap = backtrack.p();
 	betaMap = backtrack.beta();
 	t0Map = backtrack.t0();
@@ -488,6 +494,7 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
     pathLengthsOrigTrkRaw.push_back(pathLengthMap);
     tmtdOrigTrkRaw.push_back(tmtdMap);
     sigmatmtdOrigTrkRaw.push_back(sigmatmtdMap);
+    assocOrigTrkRaw.push_back(iMap);
     ++itrack;
   }
 
@@ -509,6 +516,7 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
   fillValueMap(ev, tracksH, pathLengthsOrigTrkRaw, pathLengthOrigTrkName);
   fillValueMap(ev, tracksH, tmtdOrigTrkRaw, tmtdOrigTrkName);
   fillValueMap(ev, tracksH, sigmatmtdOrigTrkRaw, sigmatmtdOrigTrkName);
+  fillValueMap(ev, tracksH, assocOrigTrkRaw, assocOrigTrkName);
 }
 
 namespace {
