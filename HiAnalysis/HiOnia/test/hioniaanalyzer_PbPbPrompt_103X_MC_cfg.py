@@ -19,7 +19,7 @@ atLeastOneCand = False # Keep only events that have one selected dimuon (or at l
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
-saveHLT        = False # wheter to save the HLT trees or not 
+saveHLT        = False # wheter to save the HLT trees or not
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -122,7 +122,7 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = '103X_upgrade2018_realistic_HI_v11'
+  globalTag = '103X_upgrade2018_realistic_HI_v12'
 else:
   globalTag = '103X_dataRun2_Prompt_v3'
 

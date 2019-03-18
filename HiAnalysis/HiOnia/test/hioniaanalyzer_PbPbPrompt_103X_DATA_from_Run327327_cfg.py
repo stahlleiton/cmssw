@@ -6,7 +6,7 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 # Setup Settings for ONIA TREE: PbPb 2018
 
-HLTProcess     = "HLT" # Name of HLT process 
+HLTProcess     = "HLT" # Name of HLT process
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "Glb" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
 applyEventSel  = True # Only apply Event Selection if the required collections are present
@@ -55,7 +55,7 @@ options.parseArguments()
 triggerList    = {
 		# Double Muon Trigger List
 		'DoubleMuonTrigger' : cms.vstring(
-			"HLT_HIL1DoubleMuOpen_v1",#0 
+			"HLT_HIL1DoubleMuOpen_v1",#0
 			"HLT_HIL1DoubleMuOpen_OS_Centrality_40_100_v1", #1
 			"HLT_HIL1DoubleMuOpen_Centrality_50_100_v1", #2
 			"HLT_HIL1DoubleMu10_v1", #3
@@ -115,7 +115,7 @@ triggerList    = {
                         "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered7NHitQ10",
                         "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered12",
                         "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered15",
-                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered20",                    
+                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered20",
 			)
                 }
 
@@ -155,15 +155,15 @@ process.GlobalTag.toGet.extend([
 
 # For OniaTree Analyzer
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
-oniaTreeAnalyzer(process, 
-                 #muonTriggerList=triggerList, HLTProName=HLTProcess, 
+oniaTreeAnalyzer(process,
+                 #muonTriggerList=triggerList, HLTProName=HLTProcess,
                  muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
 #process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
 #process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("") ## No need to repeat lowerPuritySelection in there, already included
 if applyCuts:
-  process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.01") 
+  process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.01")
 process.onia2MuMuPatGlbGlb.onlySoftMuons         = cms.bool(OnlySoftMuons)
 process.hionia.minimumFlag      = cms.bool(keepExtraColl)           #for Reco_trk_*
 process.hionia.useGeTracks      = cms.untracked.bool(keepExtraColl) #for Reco_trk_*
@@ -180,7 +180,7 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 
-process.oniaTreeAna = cms.Path(process.centralityBin * process.hionia)
+process.oniaTreeAna = cms.Path(process.dimuonEvtSel * process.patMuonSequence * process.onia2MuMuPatGlbGlb * process.centralityBin * process.hionia)
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
@@ -200,7 +200,7 @@ process.source = cms.Source("PoolSource",
 #process.source = cms.Source("NewEventStreamFileReader", # for streamer data
 		fileNames = cms.untracked.vstring( options.inputFiles ),
 		)
-process.TFileService = cms.Service("TFileService", 
+process.TFileService = cms.Service("TFileService",
 		fileName = cms.string( options.outputFile )
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
