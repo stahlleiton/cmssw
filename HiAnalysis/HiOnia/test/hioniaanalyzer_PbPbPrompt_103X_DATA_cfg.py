@@ -45,7 +45,7 @@ options = VarParsing.VarParsing ('analysis')
 options.outputFile = "Oniatree.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-    '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/483/00000/901AFDEE-00C0-3242-A7DF-90885EC50A1E.root'
+    '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/859/00000/9D9FEF75-B31A-9645-9090-0F99D895AED9.root'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -180,20 +180,21 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 
-process.oniaTreeAna = cms.Path(process.centralityBin * process.hionia)
+process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
   process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
   process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
   process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesRecovery_cfi")
-  process.oniaTreeAna.replace(process.hionia, process.offlinePrimaryVerticesRecovery * process.hfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
+  process.oniaTreeAna.replace(process.hionia, process.hfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
 
 if atLeastOneCand:
   process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
   if doTrimuons:
     process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
 
+process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.oniaTreeAna)
 #----------------------------------------------------------------------------
 #Options:
 process.source = cms.Source("PoolSource",

@@ -142,7 +142,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '')
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
 #process.centralityBin.Centrality = cms.InputTag("hiCentrality")
 #process.centralityBin.centralityVariable = cms.string("HFtowers")
-print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
+print('\n\033[31m~*~ USING CENTRALITY TABLE FOR HYDJET DRUM5EV8 TUNE~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
@@ -225,10 +225,12 @@ process.hltobject.triggerEvent   = cms.InputTag("hltTriggerSummaryAOD","",HLTPro
 #---------------------------------------------------------------------------
 
 #For the main analysis list
+process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
+
 if saveHLT:
-  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.hltbitanalysis * process.hltobject * process.centralityBin * process.hionia )
+  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.hltbitanalysis * process.hltobject * process.oniaTreeAna )
 else:
-  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.centralityBin * process.hionia )
+  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.oniaTreeAna )
 
 if atLeastOneCand:
   process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)

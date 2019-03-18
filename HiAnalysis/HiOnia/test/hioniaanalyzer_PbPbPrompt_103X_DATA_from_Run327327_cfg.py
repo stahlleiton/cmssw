@@ -180,20 +180,21 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 
-process.oniaTreeAna = cms.Path(process.centralityBin * process.hionia)
+process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
   process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
   process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
   process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesRecovery_cfi")
-  process.oniaTreeAna.replace(process.hionia, process.offlinePrimaryVerticesRecovery * process.hfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
+  process.oniaTreeAna.replace(process.hionia, process.hfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
 
 if atLeastOneCand:
   process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
   if doTrimuons:
     process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
 
+process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.oniaTreeAna)
 #----------------------------------------------------------------------------
 #Options:
 process.source = cms.Source("PoolSource",
