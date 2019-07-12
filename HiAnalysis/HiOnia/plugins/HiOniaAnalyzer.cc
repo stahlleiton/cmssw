@@ -282,6 +282,8 @@ private:
   int Reco_mu_charge[Max_mu_size];  // Vector of charge of muons
   int Reco_mu_type[Max_mu_size];  // Vector of type of muon (global=0, tracker=1, calo=2)  
   int Reco_mu_whichGen[Max_mu_size]; // index of the generated muon that was matched with this reco muon. Is -1 if the muon is not associated with a generated muon (fake, or very bad resolution)
+  int Reco_mu_InLooseAcceptance[Max_mu_size];  // Vector of charge of muons
+  int Reco_mu_InTightAcceptance[Max_mu_size];  // Vector of charge of muons
 
   //  bool Reco_mu_isGoodMuon[Max_mu_size];    // Vector of isGoodMuon(TMOneStationTight)
   bool Reco_mu_highPurity[Max_mu_size];    // Vector of high purity flag  
@@ -874,6 +876,9 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
     Reco_mu_charge[Reco_mu_size] = muon->charge();
     Reco_mu_type[Reco_mu_size] = iType;
   
+    Reco_mu_InLooseAcceptance[Reco_mu_size] = isMuonInAccept(muon,"GLBSOFT");
+    Reco_mu_InTightAcceptance[Reco_mu_size] = isMuonInAccept(muon,"GLB");
+
     TLorentzVector vMuon = lorentzMomentum(muon->p4());
     new((*Reco_mu_4mom)[Reco_mu_size])TLorentzVector(vMuon);
 
@@ -1853,6 +1858,12 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
   if (muonType == (std::string)("GLB")) {
     return (fabs(aMuon->eta()) < 2.4 &&
             ((fabs(aMuon->eta()) < 1.2 && aMuon->pt() >= 3.5) ||
+             (1.2 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.1 && aMuon->pt() >= 5.47-1.89*fabs(aMuon->eta())) ||
+             (2.1 <= fabs(aMuon->eta()) && aMuon->pt() >= 1.5)));
+  }
+  else if (muonType == (std::string)("Acceptance2015")) {
+    return (fabs(aMuon->eta()) < 2.4 &&
+            ((fabs(aMuon->eta()) < 1.2 && aMuon->pt() >= 3.5) ||
              (1.2 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.1 && aMuon->pt() >= 5.77-1.89*fabs(aMuon->eta())) ||
              (2.1 <= fabs(aMuon->eta()) && aMuon->pt() >= 1.8)));
   }
@@ -1864,9 +1875,12 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
   }
   else if (muonType == (std::string)("GLBSOFT")) {
     return (fabs(aMuon->eta()) < 2.4 &&
-            ((fabs(aMuon->eta()) < 1.0 && aMuon->pt() >= 3.3) ||
-             (1.0 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.35 && aMuon->pt() >= 6.73-3.43*fabs(aMuon->eta()) ) ||
-             (1.35 <= fabs(aMuon->eta()) && aMuon->pt() >= 3.52-1.05*fabs(aMuon->eta()) )));
+            ((fabs(aMuon->eta()) < 0.3 && aMuon->pt() >= 3.4) ||
+	     (0.3 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.1 && aMuon->pt() >= 3.3) ||
+             (1.1 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.4 && aMuon->pt() >= 7.7-4.0*fabs(aMuon->eta()) ) ||
+	     (1.4 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.55 && aMuon->pt() >= 2.1) ||
+             (1.55 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->pt() >= 4.25-1.39*fabs(aMuon->eta()) ) ||
+	     (2.2 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.4 && aMuon->pt() >= 1.2)));
   }
   else if (muonType == (std::string)("TRKSOFT")) {
     return (fabs(aMuon->eta()) < 2.4 &&
@@ -1881,11 +1895,11 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
 
 bool
 HiOniaAnalyzer::isSoftMuon(const pat::Muon* aMuon) {
-  return (
-          muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
+  return (aMuon->isTrackerMuon() &&
+          ( (!_isHI) || (muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
+			 aMuon->innerTrack()->quality(reco::TrackBase::highPurity) ) ) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&
-          //aMuon->innerTrack()->quality(reco::TrackBase::highPurity) &&
           fabs(aMuon->innerTrack()->dxy(RefVtx)) < 0.3 &&
           fabs(aMuon->innerTrack()->dz(RefVtx)) < 20. 
           );
@@ -2710,6 +2724,8 @@ HiOniaAnalyzer::InitTree()
 
   if (!_theMinimumFlag) {
     //    myTree->Branch("Reco_mu_isGoodMuon", Reco_mu_isGoodMuon,   "Reco_mu_isGoodMuon[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_InLooseAcceptance", Reco_mu_InLooseAcceptance,   "Reco_mu_InLooseAcceptance[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_InTightAcceptance", Reco_mu_InTightAcceptance,   "Reco_mu_InTightAcceptance[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_highPurity", Reco_mu_highPurity,   "Reco_mu_highPurity[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_TrkMuArb", Reco_mu_TrkMuArb,   "Reco_mu_TrkMuArb[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, "Reco_mu_TMOneStaTight[Reco_mu_size]/O");
@@ -2960,7 +2976,7 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
       unsigned int triggerIndex= hltConfig.triggerIndex( it->first );
       if (it->first == "NoTrigger") continue;
       if (triggerIndex >= n) {
-              std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << it->first << " not available in config!" << std::endl;
+	//std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << it->first << " not available in config!" << std::endl;
       }
       else {
         it->second= triggerIndex;
