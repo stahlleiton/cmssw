@@ -151,4 +151,4 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('Onia2MuMuPAT') ) if Filter else cms.untracked.PSet()
     )
 
-    process.e = cms.EndPath(process.outOnia2MuMu)
+#    process.e = cms.EndPath(process.outOnia2MuMu)

@@ -19,9 +19,7 @@ atLeastOneCand = False # Keep only events that have one selected dimuon (or at l
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
-#saveHLTBit     = False # for trigger analysis
-#saveHLTobj     = False # For trigger analysis
-
+saveHLT        = False # wheter to save the HLT trees or not 
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -35,6 +33,7 @@ print( "[INFO] SofterSgMuAcceptance = " + ("True" if SofterSgMuAcceptance else "
 print( "[INFO] muonSelection        = " + muonSelection )
 print( "[INFO] onlySoftMuons        = " + ("True" if OnlySoftMuons else "False") )
 print( "[INFO] doTrimuons           = " + ("True" if doTrimuons else "False") )
+print( "[INFO] saveHLT              = " + ("True" if saveHLT else "False") )
 print( " " )
 
 # set up process
@@ -168,11 +167,11 @@ process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '')
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
 #process.centralityBin.Centrality = cms.InputTag("hiCentrality")
 #process.centralityBin.centralityVariable = cms.string("HFtowers")
-print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
+print('\n\033[31m~*~ USING CENTRALITY TABLE FOR HYDJET DRUM5EV8 TUNE~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x01_mc"),
+        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc"),
         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
         label = cms.untracked.string("HFtowers")
         ),
@@ -185,7 +184,6 @@ from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process,
                  muonTriggerList=triggerList,# HLTProName=HLTProcess,
                  muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
-process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
 #process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
@@ -208,20 +206,13 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 
-process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
-if applyEventSel:
-  process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
-  #process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
-  #process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
-  process.oniaTreeAna.replace(process.hionia, process.primaryVertexFilter * process.hionia )
+#----------------------------------------------------------------------------
 
-if atLeastOneCand:
-  process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
-  if doTrimuons:
-    process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
+# For the primary vertex recovery
+process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesRecovery_cfi")
 
 #----------------------------------------------------------------------------
-'''
+
 # For HLTBitAnalyzer
 process.load("HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi")
 process.hltbitanalysis.HLTProcessName              = HLTProcess
@@ -244,11 +235,9 @@ if (HLTProcess == "HLT") :
 	process.hltbitanalysis.l1tExtBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
 	process.hltbitanalysis.gmtStage2Digis    = cms.string("gtStage2Digis")
 	process.hltbitanalysis.caloStage2Digis   = cms.string("gtStage2Digis")
-        if saveHLTBit:
-          process.hltBitAna = cms.EndPath(process.hltbitanalysis)
-#
+
 ##----------------------------------------------------------------------------
-#
+
 # For HLTObject Analyzer
 process.load("HeavyIonsAnalysis.EventAnalysis.hltobject_cfi")
 process.hltobject.processName = cms.string(HLTProcess)
@@ -257,9 +246,66 @@ process.hltobject.loadTriggersFromHLT = cms.untracked.bool(False)
 process.hltobject.triggerNames = triggerList['DoubleMuonTrigger'] + triggerList['SingleMuonTrigger']
 process.hltobject.triggerResults = cms.InputTag("TriggerResults","",HLTProcess)
 process.hltobject.triggerEvent   = cms.InputTag("hltTriggerSummaryAOD","",HLTProcess)
-if saveHLTobj:
-  process.hltObjectAna = cms.EndPath(process.hltobject)
-'''
+
+#---------------------------------------------------------------------------
+
+#For the main analysis list
+process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
+
+if saveHLT:
+  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.hltbitanalysis * process.hltobject * process.oniaTreeAna )
+else:
+  process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.oniaTreeAna )
+
+if atLeastOneCand:
+  process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
+  if doTrimuons:
+    process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
+
+#---------------------------------------------------------------------------
+
+# For skimAnalysis Tree
+process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
+process.skimanalysis.hltresults = cms.InputTag("TriggerResults","","HIOnia")
+
+process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
+process.pclusterCompatibilityFilter = cms.Path(process.clusterCompatibilityFilter)
+process.pprimaryVertexFilter = cms.Path(process.primaryVertexFilter)
+process.pBeamScrapingFilter = cms.Path(process.beamScrapingFilter)
+process.collisionEventSelectionAOD = cms.Path(process.collisionEventSelectionAOD)
+process.collisionEventSelectionAODv2 = cms.Path(process.collisionEventSelectionAODv2)
+
+process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
+process.phfCoincFilter1Th3 = cms.Path(process.hfCoincFilterTh3)
+process.phfCoincFilter2Th3 = cms.Path(process.hfCoincFilter2Th3)
+process.phfCoincFilter3Th3 = cms.Path(process.hfCoincFilter3Th3)
+process.phfCoincFilter4Th3 = cms.Path(process.hfCoincFilter4Th3)
+process.phfCoincFilter5Th3 = cms.Path(process.hfCoincFilter5Th3)
+process.phfCoincFilter1Th4 = cms.Path(process.hfCoincFilterTh4)
+process.phfCoincFilter2Th4 = cms.Path(process.hfCoincFilter2Th4)
+process.phfCoincFilter3Th4 = cms.Path(process.hfCoincFilter3Th4)
+process.phfCoincFilter4Th4 = cms.Path(process.hfCoincFilter4Th4)
+process.phfCoincFilter5Th4 = cms.Path(process.hfCoincFilter5Th4)
+process.phfCoincFilter1Th5 = cms.Path(process.hfCoincFilterTh5)
+process.phfCoincFilter4Th2 = cms.Path(process.hfCoincFilter4Th2)
+
+process.load("HeavyIonsAnalysis.VertexAnalysis.PAPileUpVertexFilter_cff")
+process.pVertexFilterCutG = cms.Path(process.pileupVertexFilterCutG)
+process.pVertexFilterCutGloose = cms.Path(process.pileupVertexFilterCutGloose)
+process.pVertexFilterCutGtight = cms.Path(process.pileupVertexFilterCutGtight)
+process.pVertexFilterCutGplus = cms.Path(process.pileupVertexFilterCutGplus)
+process.pVertexFilterCutE = cms.Path(process.pileupVertexFilterCutE)
+process.pVertexFilterCutEandG = cms.Path(process.pileupVertexFilterCutEandG)
+
+#process.load('HeavyIonsAnalysis.JetAnalysis.EventSelection_cff')
+#process.pHBHENoiseFilterResultProducer = cms.Path(process.HBHENoiseFilterResultProducer)
+#process.HBHENoiseFilterResult = cms.Path(process.fHBHENoiseFilterResult)
+#process.HBHENoiseFilterResultRun1 = cms.Path(process.fHBHENoiseFilterResultRun1)
+#process.HBHENoiseFilterResultRun2Loose = cms.Path(process.fHBHENoiseFilterResultRun2Loose)
+#process.HBHENoiseFilterResultRun2Tight = cms.Path(process.fHBHENoiseFilterResultRun2Tight)
+#process.HBHEIsoNoiseFilterResult = cms.Path(process.fHBHEIsoNoiseFilterResult)
+
+process.skimAna = cms.EndPath(process.skimanalysis)
 
 #----------------------------------------------------------------------------
 #Options:
@@ -273,7 +319,7 @@ process.TFileService = cms.Service("TFileService",
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
-#if saveHLTobj or saveHLTBit:
-#    process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )
-#else:
-process.schedule  = cms.Schedule( process.oniaTreeAna )
+#######################Offline Primary Vertices
+from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
+process = MassReplaceInputTag(process,"offlinePrimaryVertices","offlinePrimaryVerticesRecovery")
+process.offlinePrimaryVerticesRecovery.oldVertexLabel = "offlinePrimaryVertices"
