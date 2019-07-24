@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root", doTrimu=False):
+def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False):
 
     if muonTriggerList==[[],[],[],[]]:
         muonTriggerList = {
@@ -105,7 +105,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     process.onia2MuMuPatGlbGlb.primaryVertexTag         = cms.InputTag("offlinePrimaryVertices")
     process.patMuonsWithoutTrigger.pvSrc                = cms.InputTag("offlinePrimaryVertices")
 # Adding muonLessPV gives you lifetime values wrt. muonLessPV only
-    process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = False
+    process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = muonlessPV
     if isMC:
         process.genMuons.src = "genParticles"
         process.onia2MuMuPatGlbGlb.genParticles = "genParticles"
@@ -209,7 +209,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 
     process.hionia.primaryVertexTag = cms.InputTag("offlinePrimaryVertices")
     process.hionia.genParticles     = cms.InputTag("genParticles")
-    process.hionia.muonLessPV       = cms.bool(False)
+    process.hionia.muonLessPV       = cms.bool(muonlessPV)
     process.hionia.CentralitySrc    = cms.InputTag("")
     process.hionia.CentralityBinSrc = cms.InputTag("")
     process.hionia.srcTracks        = cms.InputTag("generalTracks")

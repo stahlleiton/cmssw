@@ -14,7 +14,7 @@ OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection, applied at the end of HiSkim)
 SumETvariables = True  # Whether to write out SumET-related variables
 SofterSgMuAcceptance = False # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.5 at high |eta|). Applies when applyCuts=True
-doTrimuons     = False # Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
+doTrimuons     = False # Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons (if atLeastOneCand)
 atLeastOneCand = False # Keep only events that have one selected dimuon (or at least one trimuon if doTrimuons = true). BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
@@ -45,9 +45,8 @@ options = VarParsing.VarParsing ('analysis')
 # Input and Output File Names
 options.outputFile = "Oniatree.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
-options.inputFiles =[
-  '/store/user/anstahll/Dilepton/MC/Embedded/JPsiMM_5p02TeV_TuneCP5_Embd_RECO_20190326/JPsiMM_5p02TeV_TuneCP5_Embd/JPsiMM_5p02TeV_TuneCP5_Embd_RECO_20190326/190327_060527/0008/HIN-HINPbPbAutumn18DRHIMix-00008_step2_8495.root',
-  '/store/user/anstahll/Dilepton/MC/Embedded/JPsiMM_5p02TeV_TuneCP5_Embd_RECO_20190326/JPsiMM_5p02TeV_TuneCP5_Embd/JPsiMM_5p02TeV_TuneCP5_Embd_RECO_20190326/190327_060527/0008/HIN-HINPbPbAutumn18DRHIMix-00008_step2_8496.root'
+options.inputFiles =[ '/store/user/anstahll/Dilepton/MC/Embedded/JpsiMM_5p02TeV_TuneCP5_Embd_RECO_20190117/JpsiMM_5p02TeV_TuneCP5/JpsiMM_5p02TeV_TuneCP5_Embd_RECO_20190117/190118_020651/0001/JpsiMM_5p02TeV_TuneCP5_Embd_step2_1074.root'
+#'file:/home/llr/cms/falmagne/production/PbPb2018/BcTrimu/genMC/CMSSW_10_3_2/src/Bc_reco.root'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -72,9 +71,9 @@ triggerList    = {
 			"HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1",#12
 			"HLT_HIL3Mu2p5NHitQ10_L2Mu2_M7toinf_v1",#13
 			"HLT_HIL3Mu3_L1TripleMuOpen_v1",#14
-			"HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L1step",#15
-			"HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L2step",#16
-			"HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L3step",#17
+                        "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L1step",#15
+                        "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L2step",#16
+                        "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L3step",#17
                         ),
 		# Double Muon Filter List
 		'DoubleMuonFilter'  : cms.vstring(
@@ -124,15 +123,6 @@ triggerList    = {
 	        'SingleMuonFilter'  : cms.vstring(
                         "hltL1fL1sL1MuOpenCentrality70100L1Filtered0",
                         "hltL1fL1sL1MuOpenCentrality80100L1Filtered0",
-                        "hltL2fL1sMu3OpenL1f0L2Filtered3NHitQ15",
-                        "hltL2fL1sMu3OpenL1f0L2Filtered5NHitQ15",
-                        "hltL2fL1sMu3OpenL1f0L2Filtered7NHitQ15",
-                        "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered3NHitQ10",
-                        "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered5NHitQ10",
-                        "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered7NHitQ10",
-                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered12",
-                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered15",
-                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered20",
                         "hltL2fL1sMuOpenL1f0L2Filtered3NHitQ15",
                         "hltL2fL1sMuOpenL1f0L2Filtered5NHitQ15",
                         "hltL2fL1sMuOpenL1f0L2Filtered7NHitQ15",
@@ -142,6 +132,15 @@ triggerList    = {
                         "hltL3fL1sL1SingleMuOpenL1f7L2f0L3Filtered12",
                         "hltL3fL1sL1SingleMuOpenL1f7L2f0L3Filtered15",
                         "hltL3fL1sL1SingleMuOpenL1f7L2f0L3Filtered20",
+                        "hltL2fL1sMu3OpenL1f0L2Filtered3NHitQ15",
+                        "hltL2fL1sMu3OpenL1f0L2Filtered5NHitQ15",
+                        "hltL2fL1sMu3OpenL1f0L2Filtered7NHitQ15",
+                        "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered3NHitQ10",
+                        "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered5NHitQ10",
+                        "hltL3fL1sL1SingleMu3OpenL1f0L2f0L3Filtered7NHitQ10",
+                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered12",
+                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered15",
+                        "hltL3fL1sL1SingleMu3OpenL1f7L2f0L3Filtered20",
 			)
                 }
 
@@ -182,7 +181,7 @@ process.GlobalTag.toGet.extend([
 # For OniaTree Analyzer
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process,
-                 muonTriggerList=triggerList,# HLTProName=HLTProcess,
+                 muonTriggerList=triggerList, #HLTProName=HLTProcess,
                  muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
@@ -260,13 +259,13 @@ else:
 if atLeastOneCand:
   process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilter)
   if doTrimuons:
-    process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
+    process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb * process.onia2MuMuPatGlbGlbFilterTrimu)
 
 #---------------------------------------------------------------------------
 
-# For skimAnalysis Tree
-process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
-process.skimanalysis.hltresults = cms.InputTag("TriggerResults","","HIOnia")
+## For skimAnalysis Tree
+#process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
+#process.skimanalysis.hltresults = cms.InputTag("TriggerResults","","HIOnia")
 
 process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
 process.pclusterCompatibilityFilter = cms.Path(process.clusterCompatibilityFilter)
@@ -305,7 +304,11 @@ process.pVertexFilterCutEandG = cms.Path(process.pileupVertexFilterCutEandG)
 #process.HBHENoiseFilterResultRun2Tight = cms.Path(process.fHBHENoiseFilterResultRun2Tight)
 #process.HBHEIsoNoiseFilterResult = cms.Path(process.fHBHEIsoNoiseFilterResult)
 
-process.skimAna = cms.EndPath(process.skimanalysis)
+#process.skimAna = cms.EndPath(process.skimanalysis)
+
+if applyEventSel:
+  #process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
+  process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.pprimaryVertexFilter * process.pclusterCompatibilityFilter * process.hionia )
 
 #----------------------------------------------------------------------------
 #Options:
@@ -319,7 +322,7 @@ process.TFileService = cms.Service("TFileService",
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
-#######################Offline Primary Vertices
+################ Offline Primary Vertices Recovery
 from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
 process = MassReplaceInputTag(process,"offlinePrimaryVertices","offlinePrimaryVerticesRecovery")
 process.offlinePrimaryVerticesRecovery.oldVertexLabel = "offlinePrimaryVertices"
