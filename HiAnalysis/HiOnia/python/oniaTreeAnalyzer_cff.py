@@ -115,7 +115,10 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 ##### Dimuon pair selection
     commonP1 = "|| (innerTrack.isNonnull && genParticleRef(0).isNonnull)"
     commonP2 = " && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"
-    if muonSelection == "Glb":
+    if muonSelection == "All":
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("")
+    elif muonSelection == "Glb":
         highP = "isGlobalMuon"; # At least one muon must pass this selection. No need to repeat the lowerPuritySelection cuts.
         process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
         lowP = "isGlobalMuon"; # BOTH muons must pass this selection

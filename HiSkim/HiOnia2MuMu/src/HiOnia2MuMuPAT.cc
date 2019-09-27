@@ -448,6 +448,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
           userFloat["vProb"] = -1;
           userFloat["vertexWeight"] = -100;
           userFloat["sumPTPV"] = -100;
+          userFloat["MassErr"] = -10;
           userFloat["DCA"] = -10;
           userFloat["ppdlPV"] = -100;
           userFloat["ppdlErrPV"] = -100;
@@ -481,6 +482,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         userFloat["vProb"] = -1;
         userFloat["vertexWeight"] = -100;
         userFloat["sumPTPV"] = -100;
+        userFloat["MassErr"] = -10;
         userFloat["DCA"] = -10;
         userFloat["ppdlPV"] = -100;
         userFloat["ppdlErrPV"] = -100;
