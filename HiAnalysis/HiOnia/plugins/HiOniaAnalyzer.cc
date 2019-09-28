@@ -2339,8 +2339,9 @@ HiOniaAnalyzer::fillMuMatchingInfo()
     if(Reco_mu_pTrue[irec]>=0){ //if pTrue=-1, then the reco muon is a fake                                                                                                                                                                  
 
       for (int igen=0;igen<Gen_mu_size;igen++){
+        if (Gen_mu_charge[igen]!=Reco_mu_charge[irec]) continue;
         TLorentzVector *genmuMom = (TLorentzVector*)Gen_mu_4mom->ConstructedAt(igen);
-        if(fabs(genmuMom->P() - Reco_mu_pTrue[irec])/Reco_mu_pTrue[irec] < 1e-5){
+        if(fabs(genmuMom->P() - Reco_mu_pTrue[irec])/Reco_mu_pTrue[irec] < 3e-6){
           foundGen = igen; 
 	  break;
         }
@@ -2469,15 +2470,16 @@ HiOniaAnalyzer::fillGenMuonRecoTracks()
       const auto& muChg = Gen_mu_charge[iGen];
 
       // Find the reco track
-      int iTrack  = -1; double minDeltaPt = 10.;
+      int iTrack  = -1; double minDeltaR = 0.05;
       for (const auto& trk : trkInfo) {
-	const auto& iTrk = std::get<0>(trk.second);
-	const auto& trackChg = std::get<1>(trk.second);
-	const auto& trackP4 = std::get<2>(trk.second);
-	if (muChg!=trackChg || muP4.DeltaR(trackP4)>0.05) continue;
-	const auto& dPt = (trackP4.Pt() - muP4.Pt())/muP4.Pt();
-	if (dPt<-minDeltaPt) { continue; } else if (dPt>minDeltaPt) { break; }
-	if (std::abs(dPt)<minDeltaPt) { iTrack = iTrk; minDeltaPt = std::abs(dPt); }
+	    const auto& trackChg = std::get<1>(trk.second);
+	    if (muChg!=trackChg) continue;
+        const auto& trackP4 = std::get<2>(trk.second);
+        const auto& dPt = (trackP4.Pt() - muP4.Pt())/muP4.Pt();
+        if (dPt<-0.5) { continue; } else if (dPt>0.5) { break; }
+        const auto& deltaR = muP4.DeltaR(trackP4);
+        const auto& iTrk = std::get<0>(trk.second);
+        if (deltaR<minDeltaR) { iTrack = iTrk; minDeltaR = deltaR; }
       }
       if (iTrack<0) continue;
 
