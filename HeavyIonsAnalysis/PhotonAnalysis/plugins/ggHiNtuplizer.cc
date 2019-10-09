@@ -509,6 +509,23 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) :
       tree_->Branch("pfcIso3pTgt3p0subUE",&pfcIso3pTgt3p0subUE_);
       tree_->Branch("pfcIso4pTgt3p0subUE",&pfcIso4pTgt3p0subUE_);
       tree_->Branch("pfcIso5pTgt3p0subUE",&pfcIso5pTgt3p0subUE_);
+
+      // photon pf isolation UE-subtracted and cone excluded
+      tree_->Branch("pfcIso2subUEec",&pfcIso2subUEec_);
+      tree_->Branch("pfcIso3subUEec",&pfcIso3subUEec_);
+      tree_->Branch("pfcIso4subUEec",&pfcIso4subUEec_);
+
+      tree_->Branch("pfpIso2subUEec",&pfpIso2subUEec_);
+      tree_->Branch("pfpIso3subUEec",&pfpIso3subUEec_);
+      tree_->Branch("pfpIso4subUEec",&pfpIso4subUEec_);
+
+      tree_->Branch("pfnIso2subUEec",&pfnIso2subUEec_);
+      tree_->Branch("pfnIso3subUEec",&pfnIso3subUEec_);
+      tree_->Branch("pfnIso4subUEec",&pfnIso4subUEec_);
+
+      tree_->Branch("pfcIso2pTgt2p0subUEec",&pfcIso2pTgt2p0subUEec_);
+      tree_->Branch("pfcIso3pTgt2p0subUEec",&pfcIso3pTgt2p0subUEec_);
+      tree_->Branch("pfcIso4pTgt2p0subUEec",&pfcIso4pTgt2p0subUEec_);
     }
   }
 
@@ -954,6 +971,22 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
       pfcIso3pTgt3p0subUE_.clear();
       pfcIso4pTgt3p0subUE_.clear();
       pfcIso5pTgt3p0subUE_.clear();
+
+      pfcIso2subUEec_.clear();
+      pfcIso3subUEec_.clear();
+      pfcIso4subUEec_.clear();
+
+      pfpIso2subUEec_.clear();
+      pfpIso3subUEec_.clear();
+      pfpIso4subUEec_.clear();
+
+      pfnIso2subUEec_.clear();
+      pfnIso3subUEec_.clear();
+      pfnIso4subUEec_.clear();
+
+      pfcIso2pTgt2p0subUEec_.clear();
+      pfcIso3pTgt2p0subUEec_.clear();
+      pfcIso4pTgt2p0subUEec_.clear();
     }
   }
 
@@ -1859,6 +1892,22 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
       pfcIso3pTgt3p0subUE_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.3, 0.0, 3.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap));
       pfcIso4pTgt3p0subUE_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.4, 0.0, 3.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap));
       pfcIso5pTgt3p0subUE_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.5, 0.0, 3.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap));
+
+      pfcIso2subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.2, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfcIso3subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.3, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfcIso4subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.4, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+
+      pfpIso2subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::gamma, 0.2, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfpIso3subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::gamma, 0.3, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfpIso4subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::gamma, 0.4, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+
+      pfnIso2subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h0, 0.2, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfnIso3subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h0, 0.3, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfnIso4subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h0, 0.4, 0.0, 0.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+
+      pfcIso2pTgt2p0subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.2, 0.0, 2.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfcIso3pTgt2p0subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.3, 0.0, 2.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
+      pfcIso4pTgt2p0subUEec_.push_back( pfIso.getPfIsoSubUE(*pho, reco::PFCandidate::h, 0.4, 0.0, 2.0, 0, pfIsoCalculator::removePFcand, particlesInIsoMap, true));
     }
 
     //////////////////////////////////// MC matching ////////////////////////////////////

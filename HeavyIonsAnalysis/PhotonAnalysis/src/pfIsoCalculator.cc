@@ -76,7 +76,7 @@ double pfIsoCalculator::getPfIso(const reco::Photon& photon, int pfId,
 
 double pfIsoCalculator::getPfIsoSubUE(const reco::Photon& photon, int pfId,
                                       double r1, double r2, double threshold,
-                                      double jWidth, int footprintRemoval, const std::vector<reco::PFCandidateRef>& particlesInIsoMap)
+                                      double jWidth, int footprintRemoval, const std::vector<reco::PFCandidateRef>& particlesInIsoMap, bool excludeCone)
 {
   double photonEta = photon.eta();
   double photonPhi = photon.phi();
@@ -148,8 +148,15 @@ double pfIsoCalculator::getPfIsoSubUE(const reco::Photon& photon, int pfId,
   areaStrip -= areaInnerCone;
   areaCone -= areaInnerCone;
 
-  double subEt = getPfIso(photon, pfId, r1, r2, threshold, jWidth, footprintRemoval, particlesInIsoMap) - totalEt * (areaCone / areaStrip);
-  return subEt;
+  double coneEt = getPfIso(photon, pfId, r1, r2, threshold, jWidth, footprintRemoval, particlesInIsoMap);
+  double ueEt = totalEt;
+  double ueArea = areaStrip;
+  if (excludeCone) {
+    ueEt = totalEt - coneEt;
+    ueArea = areaStrip - areaCone;
+  }
+
+  return coneEt - ueEt * (areaCone / ueArea);
 }
 
 double pfIsoCalculator::getPfIso(const reco::GsfElectron& ele, int pfId,
