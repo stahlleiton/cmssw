@@ -69,7 +69,6 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     StringCutObjectSelector<reco::Candidate, true> LateTrimuonSel_;
     bool addCommonVertex_, addMuonlessPrimaryVertex_;
     bool resolveAmbiguity_;
-    bool addMCTruth_;
     bool onlySoftMuons_;
     bool doTrimuons_;
     GreaterByPt<pat::CompositeCandidate> pTComparator_;

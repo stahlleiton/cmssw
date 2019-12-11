@@ -14,7 +14,6 @@ onia2MuMuPAT = cms.EDProducer('Onia2MuMuPAT',
   LateTrimuonSel  = cms.string(""), ## The trimuon must pass this selection before being written out
   addCommonVertex = cms.bool(True), ## Embed the full reco::Vertex out of the common vertex fit
   addMuonlessPrimaryVertex = cms.bool(True), ## Embed the primary vertex re-made from all the tracks except the two muons
-  addMCTruth = cms.bool(False),      ## This is now done in HiAnalysis, so default is False
   onlySoftMuons = cms.bool(True), ## Keep only the isSoftMuons (without highPurity) for the single muons + the di(tri)muon combinations
   doTrimuons = cms.bool(False), ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
   resolvePileUpAmbiguity = cms.bool(False)   ## Order PVs by their vicinity to the J/psi vertex, not by sumPt                            
