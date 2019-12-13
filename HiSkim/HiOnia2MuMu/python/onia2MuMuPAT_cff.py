@@ -104,8 +104,13 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     )
 
     # check if there is at least one (inclusive) di-muon. BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
+
     process.onia2MuMuPatGlbGlbFilter = cms.EDFilter("CandViewCountFilter",
         src = cms.InputTag('onia2MuMuPatGlbGlb'),
+        minNumber = cms.uint32(1),
+    )
+    process.onia2MuMuPatGlbGlbFilterTrimu = cms.EDFilter("CandViewCountFilter",
+        src = cms.InputTag('onia2MuMuPatGlbGlb','trimuon'),
         minNumber = cms.uint32(1),
     )
     process.onia2MuMuPatGlbGlbFilter3mu = cms.EDFilter("CandViewCountFilter",
@@ -121,7 +126,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     )
 
     if doTrimuons:
-        process.Onia2MuMuPAT.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilter * process.onia2MuMuPatGlbGlbFilter3mu)
+        process.Onia2MuMuPAT.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilterTrimu)
      
     process.outOnia2MuMu = cms.OutputModule("PoolOutputModule",
         fileName = cms.untracked.string('onia2MuMuPAT.root'),
@@ -151,4 +156,4 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('Onia2MuMuPAT') ) if Filter else cms.untracked.PSet()
     )
 
-    process.e = cms.EndPath(process.outOnia2MuMu)
+#    process.e = cms.EndPath(process.outOnia2MuMu)

@@ -67,7 +67,7 @@ HiOnia2MuMuPAT::~HiOnia2MuMuPAT()
 bool
 HiOnia2MuMuPAT::isSoftMuon(const pat::Muon* aMuon) {
   return (
-          muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
+          //muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&
           //aMuon->innerTrack()->quality(reco::TrackBase::highPurity) && 

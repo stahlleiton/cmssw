@@ -8,19 +8,17 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 HLTProcess     = "HLT" # Name of HLT process 
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
-muonSelection  = "Glb" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
-applyEventSel  = False # Only apply Event Selection if the required collections are present
+muonSelection  = "GlbTrk" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
+applyEventSel  = True # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without isGlobal which should be put in 'muonSelection' parameter) from the beginning of HiSkim. If you want the full SoftMuon selection, set this flag false and add 'isSoftMuon' in lowerPuritySelection. In any case, if applyCuts=True, isSoftMuon is required at HiAnalysis level for muons of selected dimuons.
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection, applied at the end of HiSkim)
 SumETvariables = True  # Whether to write out SumET-related variables
-SofterSgMuAcceptance = False # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.8 at high |eta|). Applies when applyCuts=True
+SofterSgMuAcceptance = False # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.5 at high |eta|). Applies when applyCuts=True
 doTrimuons     = False # Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
 atLeastOneCand = False # Keep only events that have one selected dimuon (or at least one trimuon if doTrimuons = true). BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
-#saveHLTBit     = False # for trigger analysis
-#saveHLTobj     = False # For trigger analysis
 
 #----------------------------------------------------------------------------
 
@@ -47,7 +45,7 @@ options = VarParsing.VarParsing ('analysis')
 options.outputFile = "Oniatree.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-    '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/483/00000/901AFDEE-00C0-3242-A7DF-90885EC50A1E.root'
+  '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/483/00000/901AFDEE-00C0-3242-A7DF-90885EC50A1E.root'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -147,7 +145,7 @@ print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1031x02_offline"),
+        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
         label = cms.untracked.string("HFtowers")
         ),
@@ -160,7 +158,6 @@ from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process, 
                  #muonTriggerList=triggerList, HLTProName=HLTProcess, 
                  muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
-process.oniaTreeAna = cms.EndPath(process.oniaTreeAna)
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
 #process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
@@ -184,10 +181,12 @@ process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 
 process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
+
 if applyEventSel:
   process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
   process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
   process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
+  process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesRecovery_cfi")
   process.oniaTreeAna.replace(process.hionia, process.hfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
 
 if atLeastOneCand:
@@ -195,47 +194,7 @@ if atLeastOneCand:
   if doTrimuons:
     process.oniaTreeAna.replace(process.onia2MuMuPatGlbGlb, process.onia2MuMuPatGlbGlbFilter3mu * process.onia2MuMuPatGlbGlb)
 
-#----------------------------------------------------------------------------
-'''
-# For HLTBitAnalyzer
-process.load("HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi")
-process.hltbitanalysis.HLTProcessName              = HLTProcess
-process.hltbitanalysis.hltresults                  = cms.InputTag("TriggerResults","",HLTProcess)
-process.hltbitanalysis.l1tAlgBlkInputTag           = cms.InputTag("hltGtStage2Digis","",HLTProcess)
-process.hltbitanalysis.l1tExtBlkInputTag           = cms.InputTag("hltGtStage2Digis","",HLTProcess)
-process.hltbitanalysis.gObjectMapRecord            = cms.InputTag("hltGtStage2ObjectMap","",HLTProcess)
-process.hltbitanalysis.gmtStage2Digis              = cms.string("hltGtStage2Digis")
-process.hltbitanalysis.caloStage2Digis             = cms.string("hltGtStage2Digis")
-process.hltbitanalysis.UseL1Stage2                 = cms.untracked.bool(True)
-process.hltbitanalysis.getPrescales                = cms.untracked.bool(False)
-process.hltbitanalysis.getL1InfoFromEventSetup     = cms.untracked.bool(False)
-process.hltbitanalysis.UseTFileService             = cms.untracked.bool(True)
-process.hltbitanalysis.RunParameters.HistogramFile = cms.untracked.string(options.outputFile)
-process.hltbitanalysis.RunParameters.isData        = cms.untracked.bool(not isMC)
-process.hltbitanalysis.RunParameters.Monte         = cms.bool(isMC)
-process.hltbitanalysis.RunParameters.GenTracks     = cms.bool(False)
-if (HLTProcess == "HLT") :
-	process.hltbitanalysis.l1tAlgBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
-	process.hltbitanalysis.l1tExtBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
-	process.hltbitanalysis.gmtStage2Digis    = cms.string("gtStage2Digis")
-	process.hltbitanalysis.caloStage2Digis   = cms.string("gtStage2Digis")
-        if saveHLTBit:
-          process.hltBitAna = cms.EndPath(process.hltbitanalysis)
-#
-##----------------------------------------------------------------------------
-#
-# For HLTObject Analyzer
-process.load("HeavyIonsAnalysis.EventAnalysis.hltobject_cfi")
-process.hltobject.processName = cms.string(HLTProcess)
-process.hltobject.treeName = cms.string(options.outputFile)
-process.hltobject.loadTriggersFromHLT = cms.untracked.bool(False)
-process.hltobject.triggerNames = triggerList['DoubleMuonTrigger'] + triggerList['SingleMuonTrigger']
-process.hltobject.triggerResults = cms.InputTag("TriggerResults","",HLTProcess)
-process.hltobject.triggerEvent   = cms.InputTag("hltTriggerSummaryAOD","",HLTProcess)
-if saveHLTobj:
-  process.hltObjectAna = cms.EndPath(process.hltobject)
-'''
-
+process.oniaTreeAna = cms.Path(process.offlinePrimaryVerticesRecovery * process.oniaTreeAna)
 #----------------------------------------------------------------------------
 #Options:
 process.source = cms.Source("PoolSource",
@@ -248,7 +207,9 @@ process.TFileService = cms.Service("TFileService",
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
-#if saveHLTobj or saveHLTBit:
-#    process.schedule  = cms.Schedule( process.oniaTreeAna , process.hltBitAna , process.hltObjectAna )
-#else: 
 process.schedule  = cms.Schedule( process.oniaTreeAna )
+
+################ Offline Primary Vertices Recovery
+from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
+process = MassReplaceInputTag(process,"offlinePrimaryVertices","offlinePrimaryVerticesRecovery")
+process.offlinePrimaryVerticesRecovery.oldVertexLabel = "offlinePrimaryVertices"
