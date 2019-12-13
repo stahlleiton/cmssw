@@ -35,10 +35,13 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         storeSameSign = cms.bool(False),
                         AtLeastOneCand = cms.bool(False),
                         doTrimuons = cms.bool(False),
+                        flipJpsiDirection = cms.int32(0),
+                        genealogyInfo = cms.bool(False),
                         removeSignalEvents = cms.untracked.bool(False),
                         removeTrueMuons = cms.untracked.bool(False),
                         
                         muonLessPV = cms.bool(False),
+                        useSVfinder = cms.bool(False),
                         
                         #-- Gen Details
                         BcPDG = cms.int32(541),

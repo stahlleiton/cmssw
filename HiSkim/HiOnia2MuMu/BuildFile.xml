@@ -39,4 +39,5 @@
 <use   name="CondFormats/DataRecord"/>
 <use   name="CondFormats/RecoMuonObjects"/>
 <use   name="TrackingTools/IPTools"/>
+<use   name="CommonTools/RecoAlgos"/>
 <flags   EDM_PLUGIN="1"/>
