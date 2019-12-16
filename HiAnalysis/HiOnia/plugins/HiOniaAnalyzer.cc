@@ -467,6 +467,7 @@ private:
   int _oniaPDG;
   int _BcPDG;
   int _OneMatchedHLTMu;
+  bool           _checkTrigNames;
 
   std::vector<unsigned int>                     _thePassedCats;
   std::vector<const pat::CompositeCandidate*>   _thePassedCands;
@@ -596,6 +597,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _oniaPDG(iConfig.getParameter<int>("oniaPDG")),
   _BcPDG(iConfig.getParameter<int>("BcPDG")),
   _OneMatchedHLTMu(iConfig.getParameter<int>("OneMatchedHLTMu")),
+  _checkTrigNames(iConfig.getParameter<bool>("checkTrigNames")),
   hltPrescaleProvider(iConfig, consumesCollector(), *this),
   _iConfig(iConfig)
 {
@@ -744,7 +746,8 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::cout<<"ERROR: privtxs is NULL or not isValid ! Return now"<<std::endl; return;
   }
 
-  this->hltReport(iEvent, iSetup);
+  if(_checkTrigNames)
+    this->hltReport(iEvent, iSetup);
 
   for (unsigned int iTr = 1 ; iTr < theTriggerNames.size() ; iTr++) {
     if (mapTriggerNameToIntFired_[theTriggerNames.at(iTr)] == 3) {
@@ -924,8 +927,8 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   
   // ---- Fill the tree with this event only if AtLeastOneCand=false OR if there is at least one dimuon candidate in the event (or at least one trimuon cand if doTrimuons=true) ---- 
-  if (_fillTree && oneGoodCand )
-    myTree->Fill();
+  if (_fillTree && oneGoodCand ){
+    myTree->Fill();}
   
   return;
 }
@@ -2057,7 +2060,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
 	if (muon1==NULL || muon2==NULL || muon3==NULL){
 	  std::cout<<"ERROR: 'muon1' or 'muon2' or 'muon3' pointer in makeBcCuts is NULL ! Return now"<<std::endl; return;
 	} else {  
-	
+
 	  if(!keepWrongSign && (muon1->charge() + muon2->charge() + muon3->charge() != 1) 
 	     && (muon1->charge() + muon2->charge() + muon3->charge() != -1)) continue;
 
@@ -2073,7 +2076,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
 	  if (fabs(RefVtx.Z()) > _iConfig.getParameter< double > ("maxAbsZ")) continue;
       
 	  if (fabs(muon1->eta()) >= etaMax || fabs(muon2->eta()) >= etaMax || fabs(muon3->eta()) >= etaMax ) continue;
-      
+
 	  //Pass muon selection?
 	  if (    ( _muonSel==(std::string)("GlbOrTrk") ) &&
 		  checkBcCuts(cand,muon1,muon2,muon3,&HiOniaAnalyzer::selGlobalOrTrackerMuon,&HiOniaAnalyzer::selGlobalOrTrackerMuon,&HiOniaAnalyzer::selGlobalOrTrackerMuon)
@@ -2086,7 +2089,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
 		  checkBcCuts(cand,muon1,muon2,muon3,&HiOniaAnalyzer::selTrackerMuon,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selGlobalMuon)
 		  ){
 	    _thePassedBcCats.push_back(TwoGlbAmongThree);  _thePassedBcCands.push_back(cand);
-	    if(!_fillSingleMuons){
+	  if(!_fillSingleMuons){
 	      EtaOfWantedMuons.push_back(muon1->eta()); EtaOfWantedMuons.push_back(muon2->eta()); EtaOfWantedMuons.push_back(muon3->eta());}
 	  }
 	  else if(( _muonSel==(std::string)("Glb") ) &&
@@ -2231,7 +2234,7 @@ HiOniaAnalyzer::checkBcCuts(const pat::CompositeCandidate* cand, const pat::Muon
   const auto& mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[(_OneMatchedHLTMu<0)?0:_OneMatchedHLTMu] );
   const auto& mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[(_OneMatchedHLTMu<0)?0:_OneMatchedHLTMu] );
   const auto& mu3HLTMatchesFilter = muon3->triggerObjectMatchesByFilter( HLTLastFilters[(_OneMatchedHLTMu<0)?0:_OneMatchedHLTMu] );
-  
+
   if ( ( ((this->*callFunc1)(muon1) && (this->*callFunc2)(muon2) && (this->*callFunc3)(muon3))
          //symmetrize, assuming arguments functions 2 and 3 are THE SAME ! 
          || ((this->*callFunc1)(muon2) && (this->*callFunc2)(muon1) && (this->*callFunc3)(muon3))
@@ -2323,11 +2326,11 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
              (1.2 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.1 && aMuon->pt() >= 5.77-1.89*fabs(aMuon->eta())) ||
              (2.1 <= fabs(aMuon->eta()) && aMuon->pt() >= 1.8)));
   }
-  else if (muonType == (std::string)("TRK")) {
+  else if (muonType == (std::string)("TRK")) { //This is actually softer than the "TRKSOFT" acceptance
     return (fabs(aMuon->eta()) < 2.4 &&
-            ((fabs(aMuon->eta()) < 1. && aMuon->pt() >= 3.3) ||
-             (1. <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2.2 && aMuon->p() >= 2.9) ||
-             (2.2 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
+            ((fabs(aMuon->eta()) < 0.8 && aMuon->pt() >= 3.3) ||
+             (0.8 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 2. && aMuon->p() >= 2.9) ||
+             (2. <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8)));
   }
   else if (muonType == (std::string)("GLBSOFT")) {
     return (fabs(aMuon->eta()) < 2.4 &&
@@ -2352,7 +2355,7 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
 bool
 HiOniaAnalyzer::isSoftMuon(const pat::Muon* aMuon) {
   return (aMuon->isTrackerMuon() &&
-          ( (!_isHI) || (muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
+          ( _isHI || (muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
                          aMuon->innerTrack()->quality(reco::TrackBase::highPurity) ) ) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&

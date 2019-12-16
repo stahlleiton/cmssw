@@ -39,6 +39,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         genealogyInfo = cms.bool(False),
                         removeSignalEvents = cms.untracked.bool(False),
                         removeTrueMuons = cms.untracked.bool(False),
+                        checkTrigNames     = cms.bool(True),  # Whether to names of the triggers given in the config 
                         
                         muonLessPV = cms.bool(False),
                         useSVfinder = cms.bool(False),

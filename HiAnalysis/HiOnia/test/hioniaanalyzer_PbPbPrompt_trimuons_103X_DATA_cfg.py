@@ -12,7 +12,7 @@ muonSelection  = "TwoGlbAmongThree" # Single muon selection: Glb(isGlobal), GlbT
 applyEventSel  = True # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = True # Keep only isSoftMuon's (with highPurity because this is pp config) from the beginning of HiSkim. In any case, if applyCuts=True, isSoftMuon is required at HiAnalysis level for muons of selected dimuons.
 applyCuts      = True # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection, applied at the end of HiSkim)
-SumETvariables = True  # Whether to write out SumET-related variables
+SumETvariables = False  # Whether to write out SumET-related variables
 SofterSgMuAcceptance = True # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.8 at high |eta|). Applies when applyCuts=True
 doTrimuons     = True # Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
 doDimuonTrk    = False # Make collections of Jpsi+track candidates in addition to dimuons
@@ -47,9 +47,10 @@ options = VarParsing.VarParsing ('analysis')
 options.outputFile = "Oniatree.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-  '/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
+  '/store/hidata/HIRun2018A/HIDoubleMuonPsiPeri/AOD/04Apr2019-v1/260002/657ECBA9-4E31-0448-B23A-980CF9137A25.root',
+  #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
 ]
-options.maxEvents = 1000 # -1 means all events
+options.maxEvents = 3000 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -185,13 +186,13 @@ oniaTreeAnalyzer(process,
                  muonTriggerList=triggerList, #HLTProName=HLTProcess, 
                  muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, muonlessPV=muonLessPV, doTrimu=doTrimuons)
 
-process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("2.4 < mass && mass < 3.8 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
-process.onia2MuMuPatGlbGlb.trimuonSelection      = cms.string("2.9 < mass && mass < 8.3 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
-#process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
+process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("2.5 < mass && mass < 3.6 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
+process.onia2MuMuPatGlbGlb.trimuonSelection      = cms.string("3.0 < mass && mass < 7.8 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
+process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("(isGlobalMuon || isTrackerMuon || genParticleRef(0).isNonnull) && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<25 && abs(eta) < 2.4 && ((abs(eta) < 1. && pt >= 3.3) || (1. <= abs(eta) && abs(eta) < 2. && p >= 2.9) || (2. <= abs(eta) && pt >= 0.8))")#tracker muon acceptance
 #process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("") ## No need to repeat lowerPuritySelection in there, already included
 if applyCuts:
   process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.002")
-  process.onia2MuMuPatGlbGlb.LateTrimuonSel        = cms.string("userFloat(\"vProb\")>0.005 && userFloat(\"ppdlPV3D\")>0 && userFloat(\"ppdlPV\")>0 && userFloat(\"cosAlpha\")>0.2")
+  process.onia2MuMuPatGlbGlb.LateTrimuonSel        = cms.string("userFloat(\"vProb\")>0.005 && userFloat(\"ppdlPV3D\")>0 && userFloat(\"ppdlPV\")>0 && userFloat(\"cosAlpha3D\")>0.4")
 process.onia2MuMuPatGlbGlb.onlySoftMuons         = cms.bool(OnlySoftMuons)
 process.hionia.minimumFlag      = cms.bool(keepExtraColl)           #for Reco_trk_*
 process.hionia.useGeTracks      = cms.untracked.bool(keepExtraColl) #for Reco_trk_*
@@ -207,6 +208,7 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 process.hionia.useSVfinder      = cms.bool(useSVfinder)
+process.hionia.checkTrigNames   = cms.bool(False)
 
 process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 

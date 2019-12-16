@@ -170,6 +170,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     SofterSgMuAcceptance = cms.bool(False),
                                     SumETvariables     = cms.bool(True),
                                     OneMatchedHLTMu    = cms.int32(-1),  # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to-1 for no matching. 
+                                    checkTrigNames     = cms.bool(True),  # Whether to names of the triggers given in the config
                                     doTrimuons         = cms.bool(doTrimu),  # Whether to produce trimuon objects
                                     DimuonTrk          = cms.bool(doDimuTrk),  # Whether to produce Jpsi+track objects
                                     flipJpsiDirection  = cms.int32(flipJpsiDir),  # Whether to flip the Jpsi momentum direction

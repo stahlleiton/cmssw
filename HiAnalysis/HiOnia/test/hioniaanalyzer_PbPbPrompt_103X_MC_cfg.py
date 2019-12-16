@@ -204,6 +204,7 @@ process.hionia.SumETvariables   = cms.bool(SumETvariables)
 process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
+process.hionia.checkTrigNames   = cms.bool(False)
 
 #----------------------------------------------------------------------------
 

@@ -52,10 +52,11 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         process.muonMatchHLTL1.preselection = cms.string("")
         #process.muonL1Info.matched = cms.InputTag("gtStage2Digis:Muon:RECO")
 
-    #process.patTrigger.collections.append("hltIterL3MuonCandidatesPPOnAA")
-    #process.patTrigger.collections.append("hltL2MuonCandidatesPPOnAA") 
-    #process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltIterL3MuonCandidatesPPOnAA")') 
-    #process.muonMatchHLTL2.matchedCuts = cms.string('coll("hltL2MuonCandidatesPPOnAA")') 
+    #This is NEEDED in PbPb, but should be REMOVED in pp
+    process.patTrigger.collections.append("hltIterL3MuonCandidatesPPOnAA")
+    process.patTrigger.collections.append("hltL2MuonCandidatesPPOnAA") 
+    process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltIterL3MuonCandidatesPPOnAA")') 
+    process.muonMatchHLTL2.matchedCuts = cms.string('coll("hltL2MuonCandidatesPPOnAA")') 
 
     process.muonL1Info.maxDeltaR = 0.3
     process.muonL1Info.maxDeltaEta   = 0.2
