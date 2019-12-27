@@ -206,7 +206,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   ParticleMass pion_mass = 0.13957018;
   float pion_sigma = 0.0000000001;
   ParticleMass jp_mass = 3.09687;
-  MultiTrackKinematicConstraint * jpsi_c = new TwoTrackMassKinematicConstraint(jp_mass);
+  MultiTrackKinematicConstraint* jpsi_c = new TwoTrackMassKinematicConstraint(jp_mass);
   KinematicConstrainedVertexFitter KCfitter;
 
   TrackCollection muonLess; // track collection related to PV, minus the 2 muons (if muonLessPV option is activated)
@@ -364,7 +364,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      t_tks.push_back((*theTTBuilder).build(*it));
 	      t_tks.back().setBeamSpot(bs);
 	    }
-	    AdaptiveVertexFitter* theFitter=new AdaptiveVertexFitter();
+	    std::unique_ptr<AdaptiveVertexFitter> theFitter( new AdaptiveVertexFitter() );
 	    TransientVertex pvs = theFitter->vertex(t_tks, bs);  // if you want the beam constraint
 
 	    if (pvs.isValid()) {
@@ -496,7 +496,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	userFloat["ppdlErrPV3D"] = ctauErrPV3D;
 	userFloat["cosAlpha3D"] = cosAlpha3D;
 
-	if (addMuonlessPrimaryVertex_) {
+	if (addMuonlessPrimaryVertex_ && !doTrimuons_ && !DimuonTrk_) {
 	  // lifetime using Original PV
 	  pvtx.SetXYZ(theOriginalPV.position().x(),theOriginalPV.position().y(),0);
 	  vdiff = vtx - pvtx;
@@ -609,13 +609,11 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  const reco::TrackBase::Point &refPoint1 = rotatePoint(thePrimaryV.position(), (it.track())->referencePoint(), flipJpsi); //catch tracks of original muons
 	  const reco::TrackBase::Vector &Momentum1 = rotateMomentum(*it.track(), flipJpsi); 
 	  muon1Trk = reco::Track(muon1Trk.chi2(), muon1Trk.ndof(), refPoint1, Momentum1, it.charge(), muon1Trk.covariance(), muon1Trk.originalAlgo()); //forget TrackQuality info here
-	  userTrack["muon1Track"] = muon1Trk;
 	  mu1 = LorentzVector(muon1Trk.px(),muon1Trk.py(),muon1Trk.pz(), sqrt(pow(muon1Trk.p(),2) + pow(muMasses[0],2)) );
 
 	  const reco::TrackBase::Point &refPoint2 = rotatePoint(thePrimaryV.position(), (it2.track())->referencePoint(), flipJpsi);
 	  const reco::TrackBase::Vector &Momentum2 = rotateMomentum(*it2.track(), flipJpsi); 
 	  muon2Trk = reco::Track(muon2Trk.chi2(), muon2Trk.ndof(), refPoint2, Momentum2, it2.charge(), muon2Trk.covariance(), muon2Trk.originalAlgo()); 
-	  userTrack["muon2Track"] = muon2Trk;
 	  mu2 = LorentzVector(muon2Trk.px(),muon2Trk.py(),muon2Trk.pz(), sqrt(pow(muon2Trk.p(),2) + pow(muMasses[1],2)) );
 	  // cout<<"PV x, y,, z = "<<thePrimaryV.position().x()<<" "<<thePrimaryV.position().y()<<" "<<thePrimaryV.position().z()<<" "<<endl;
 	  // cout<<"old track x, y, z, px, py, pz = "<<(*it.track()).referencePoint().x()<<" "<<(*it.track()).referencePoint().y()<<" "<<(*it.track()).referencePoint().z()<<" "<<(*it.track()).px()<<" "<<(*it.track()).py()<<" "<<(*it.track()).pz()<<endl;
@@ -623,18 +621,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	  jpsi = mu1 + mu2;
 	  myCandTmp.setP4(jpsi);
-	  if(myVertex.isValid() && addCommonVertex_){
-	    userVertex["commonVertex"] = Vertex(reco::Vertex::Point(2*thePrimaryV.position().x() - myVertex.position().x(), 2*thePrimaryV.position().y() - myVertex.position().y(), 2*thePrimaryV.position().z() - myVertex.position().z() ),
-						userVertex["commonVertex"].error(), vChi2, vNDF, 2);
-	  }
-	  userInt["flipJpsi"] = flipJpsi;
-	  for (std::map<std::string, reco::Track>::iterator i = userTrack.begin(); i != userTrack.end(); i++) { myCandTmp.addUserData(i->first , i->second); }
 	}
-
-	for (std::map<std::string, int>::iterator i = userInt.begin(); i != userInt.end(); i++) { myCandTmp.addUserInt(i->first , i->second); }
-	for (std::map<std::string, reco::Vertex>::iterator i = userVertex.begin(); i != userVertex.end(); i++) { myCandTmp.addUserData(i->first , i->second); }
-	// ---- Push back output ----  
-	oniaOutput->push_back(myCandTmp);
 
 	///////////////////////////////////////////////////////
 	////// Building dimuon+track candidates 
@@ -753,7 +740,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		  t_tks.push_back((*theTTBuilder).build(*it));
 		  t_tks.back().setBeamSpot(bs);
 		}
-		AdaptiveVertexFitter* theFitter=new AdaptiveVertexFitter();
+		std::unique_ptr<AdaptiveVertexFitter> theFitter( new AdaptiveVertexFitter() );
 		TransientVertex pvs = theFitter->vertex(t_tks, bs);  // if you want the beam constraint
 
 		if (pvs.isValid()) {
@@ -942,6 +929,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
       TrimuonCand:
 	if(!doTrimuons_) continue;
+	int passedBcCands = 0;
 	
 	// ---- Create all trimuon combinations (Bc candidates) ----
 	for(int k = ((flipJpsiDirection_==0)?(j+1):0) ; k<ourMuNb; k++){ //when flipping the Jpsi direction, we run over all possible third muons
@@ -1073,7 +1061,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		    t_tks.push_back((*theTTBuilder).build(*it));
 		    t_tks.back().setBeamSpot(bs);
 		  }
-		  AdaptiveVertexFitter* theFitter=new AdaptiveVertexFitter();
+		  std::unique_ptr<AdaptiveVertexFitter> theFitter( new AdaptiveVertexFitter() );
 		  TransientVertex pvs = theFitter->vertex(t_tks, bs);  // if you want the beam constraint
 
 		  if (pvs.isValid()) {
@@ -1207,8 +1195,28 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  if(!LateTrimuonSel_(BcCand)) continue;
 	  // ---- Push back output ----  
 	  trimuOutput->push_back(BcCand);
+	  passedBcCands+=1;
 
 	}//it3 muon
+
+	if((!doTrimuons_) || passedBcCands>0){
+	  if(flipJpsiDirection_>0){
+	    userTrack["muon1Track"] = muon1Trk;
+	    userTrack["muon2Track"] = muon2Trk;
+	    if(myVertex.isValid() && addCommonVertex_){
+	      userVertex["commonVertex"] = Vertex(reco::Vertex::Point(2*thePrimaryV.position().x() - myVertex.position().x(), 2*thePrimaryV.position().y() - myVertex.position().y(), 2*thePrimaryV.position().z() - myVertex.position().z() ),
+						  userVertex["commonVertex"].error(), vChi2, vNDF, 2);
+	    }
+	    userInt["flipJpsi"] = flipJpsi;
+	    for (std::map<std::string, reco::Track>::iterator i = userTrack.begin(); i != userTrack.end(); i++) { myCandTmp.addUserData(i->first , i->second); }
+	  }
+
+	  for (std::map<std::string, int>::iterator i = userInt.begin(); i != userInt.end(); i++) { myCandTmp.addUserInt(i->first , i->second); }
+	  for (std::map<std::string, reco::Vertex>::iterator i = userVertex.begin(); i != userVertex.end(); i++) { myCandTmp.addUserData(i->first , i->second); }
+	  // ---- Push back output of this Jpsi candidate ----  
+	  oniaOutput->push_back(myCandTmp);
+	}
+
       }//flipJpsi (always 0 when flipJpsiDirection_==0, i.e. the loop runs only once)
     }//it2 muon
   }//it muon
@@ -1226,6 +1234,9 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::sort(dimutrkOutput->begin(),dimutrkOutput->end(),vPComparator_);
     iEvent.put(std::move(dimutrkOutput),"dimutrk");
   }
+
+  //smart pointer does not work for this variable
+  delete jpsi_c;
 }
 
 // ------------ method called once each job just before starting event loop  ------------

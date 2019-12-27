@@ -173,8 +173,8 @@ private:
   // TFileService
   edm::Service<TFileService> fs;
 
-  // TFile
-  TFile* fOut;
+  // // TFile
+  // TFile* fOut;
 
   // TTree
   TTree* myTree;
@@ -351,30 +351,30 @@ private:
   int Reco_trk_nTrkWMea[Max_trk_size];
 
   // histos
-  TH1F* hGoodMuonsNoTrig;
-  TH1F* hGoodMuons;
-  TH1F* hL1DoubleMu0;
+  TH1F* hGoodMuonsNoTrig = NULL;
+  TH1F* hGoodMuons = NULL;
+  TH1F* hL1DoubleMu0 = NULL;
 
-  MyCommonHistoManager* myRecoMuonHistos;
-  MyCommonHistoManager* myRecoGlbMuonHistos;
-  MyCommonHistoManager* myRecoTrkMuonHistos;
+  MyCommonHistoManager* myRecoMuonHistos = NULL;
+  MyCommonHistoManager* myRecoGlbMuonHistos = NULL;
+  MyCommonHistoManager* myRecoTrkMuonHistos = NULL;
 
-  MyCommonHistoManager* myRecoJpsiHistos;
-  MyCommonHistoManager* myRecoJpsiGlbGlbHistos;
-  MyCommonHistoManager* myRecoJpsiGlbTrkHistos;
-  MyCommonHistoManager* myRecoJpsiTrkTrkHistos;
+  MyCommonHistoManager* myRecoJpsiHistos = NULL;
+  MyCommonHistoManager* myRecoJpsiGlbGlbHistos = NULL;
+  MyCommonHistoManager* myRecoJpsiGlbTrkHistos = NULL;
+  MyCommonHistoManager* myRecoJpsiTrkTrkHistos = NULL;
 
   // event counters
-  TH1F* hStats;
+  TH1F* hStats = NULL;
 
   // centrality
-  TH1F *hCent;
+  TH1F *hCent = NULL;
 
   // number of primary vertices
-  TH1F* hPileUp;
+  TH1F* hPileUp = NULL;
 
   // z vertex distribution
-  TH1F* hZVtx;
+  TH1F* hZVtx = NULL;
 
   // centrality
   int centBin;
@@ -386,7 +386,7 @@ private:
 
   // Event Plane variables
   int nEP;   // number of event planes
-  float *hiEvtPlane;
+  //float *hiEvtPlane;
   float rpAng[50];
   float rpCos[50];
   float rpSin[50];
@@ -694,9 +694,49 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
 HiOniaAnalyzer::~HiOniaAnalyzer()
 {
  
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
+  // do anything here that needs to be done at desctruction time
+  // (e.g. close files, deallocate resources etc.)
+  Reco_mu_4mom->Delete();
+  Reco_QQ_4mom->Delete();
+  Reco_QQ_mumi_4mom->Delete();
+  Reco_QQ_mupl_4mom->Delete();
+  Reco_QQ_vtx->Delete();
+  if (_useGeTracks && _fillRecoTracks) {
+    Reco_trk_4mom->Delete();
+    Reco_trk_vtx->Delete();
+  }
+  if(_doTrimuons || _doDimuTrk){
+    Reco_3mu_4mom->Delete();
+    Reco_3mu_vtx->Delete();
+    if(_isMC){
+      Gen_Bc_4mom->Delete();
+      Gen_Bc_nuW_4mom->Delete();
+      Gen_3mu_4mom->Delete();
+    }
+  }
+  if(_isMC){
+    Gen_mu_4mom->Delete();
+    Gen_QQ_4mom->Delete();
+  }
+  myTree->Delete();
 
+  delete hGoodMuonsNoTrig;
+  delete hGoodMuons;
+  delete hL1DoubleMu0;
+
+  delete myRecoMuonHistos;
+  delete myRecoGlbMuonHistos;
+  delete myRecoTrkMuonHistos;
+
+  delete myRecoJpsiHistos;
+  delete myRecoJpsiGlbGlbHistos;
+  delete myRecoJpsiGlbTrkHistos;
+  delete myRecoJpsiTrkTrkHistos;
+
+  delete hStats;
+  delete hCent;
+  delete hPileUp;
+  delete hZVtx;
 }
 
 
@@ -716,7 +756,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   runNb = iEvent.id().run();
   eventNb = iEvent.id().event();
   lumiSection = iEvent.luminosityBlock();
-  
+
   edm::Handle<reco::VertexCollection> privtxs;
   iEvent.getByToken(_thePVsToken, privtxs); 
   reco::VertexCollection::const_iterator privtx;
@@ -927,8 +967,8 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   
   // ---- Fill the tree with this event only if AtLeastOneCand=false OR if there is at least one dimuon candidate in the event (or at least one trimuon cand if doTrimuons=true) ---- 
-  if (_fillTree && oneGoodCand ){
-    myTree->Fill();}
+  if (_fillTree && oneGoodCand )
+    myTree->Fill();
   
   return;
 }
@@ -1888,6 +1928,7 @@ HiOniaAnalyzer::fillRecoJpsi(int count, std::string trigName, std::string centNa
   }
   this->fillHistosAndDS(_thePassedCats.at(count), aJpsiCand); 
 
+  delete aJpsiCand;
   return;
 }
 
@@ -1953,6 +1994,7 @@ HiOniaAnalyzer::makeCuts(bool keepSameSign) {
   math::XYZPoint RefVtx_tmp = RefVtx;
 
   if (collJpsi.isValid()) {
+
     for(std::vector<pat::CompositeCandidate>::const_iterator it=collJpsi->begin();
         it!=collJpsi->end(); ++it) {
       
@@ -2043,7 +2085,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
   math::XYZPoint RefVtx_tmp = RefVtx;
 
   if (collTrimuon.isValid()) {
-    
+
     for(std::vector<pat::CompositeCandidate>::const_iterator it=collTrimuon->begin();
         it!=collTrimuon->end(); ++it) {
 
@@ -2060,7 +2102,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
 	if (muon1==NULL || muon2==NULL || muon3==NULL){
 	  std::cout<<"ERROR: 'muon1' or 'muon2' or 'muon3' pointer in makeBcCuts is NULL ! Return now"<<std::endl; return;
 	} else {  
-
+	
 	  if(!keepWrongSign && (muon1->charge() + muon2->charge() + muon3->charge() != 1) 
 	     && (muon1->charge() + muon2->charge() + muon3->charge() != -1)) continue;
 
@@ -2076,7 +2118,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
 	  if (fabs(RefVtx.Z()) > _iConfig.getParameter< double > ("maxAbsZ")) continue;
       
 	  if (fabs(muon1->eta()) >= etaMax || fabs(muon2->eta()) >= etaMax || fabs(muon3->eta()) >= etaMax ) continue;
-
+      
 	  //Pass muon selection?
 	  if (    ( _muonSel==(std::string)("GlbOrTrk") ) &&
 		  checkBcCuts(cand,muon1,muon2,muon3,&HiOniaAnalyzer::selGlobalOrTrackerMuon,&HiOniaAnalyzer::selGlobalOrTrackerMuon,&HiOniaAnalyzer::selGlobalOrTrackerMuon)
@@ -2089,7 +2131,7 @@ HiOniaAnalyzer::makeBcCuts(bool keepWrongSign) {
 		  checkBcCuts(cand,muon1,muon2,muon3,&HiOniaAnalyzer::selTrackerMuon,&HiOniaAnalyzer::selGlobalMuon,&HiOniaAnalyzer::selGlobalMuon)
 		  ){
 	    _thePassedBcCats.push_back(TwoGlbAmongThree);  _thePassedBcCands.push_back(cand);
-	  if(!_fillSingleMuons){
+	    if(!_fillSingleMuons){
 	      EtaOfWantedMuons.push_back(muon1->eta()); EtaOfWantedMuons.push_back(muon2->eta()); EtaOfWantedMuons.push_back(muon3->eta());}
 	  }
 	  else if(( _muonSel==(std::string)("Glb") ) &&
@@ -2234,7 +2276,7 @@ HiOniaAnalyzer::checkBcCuts(const pat::CompositeCandidate* cand, const pat::Muon
   const auto& mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( HLTLastFilters[(_OneMatchedHLTMu<0)?0:_OneMatchedHLTMu] );
   const auto& mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( HLTLastFilters[(_OneMatchedHLTMu<0)?0:_OneMatchedHLTMu] );
   const auto& mu3HLTMatchesFilter = muon3->triggerObjectMatchesByFilter( HLTLastFilters[(_OneMatchedHLTMu<0)?0:_OneMatchedHLTMu] );
-
+  
   if ( ( ((this->*callFunc1)(muon1) && (this->*callFunc2)(muon2) && (this->*callFunc3)(muon3))
          //symmetrize, assuming arguments functions 2 and 3 are THE SAME ! 
          || ((this->*callFunc1)(muon2) && (this->*callFunc2)(muon1) && (this->*callFunc3)(muon3))
@@ -2355,8 +2397,8 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
 bool
 HiOniaAnalyzer::isSoftMuon(const pat::Muon* aMuon) {
   return (aMuon->isTrackerMuon() &&
-          ( _isHI || (muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
-                         aMuon->innerTrack()->quality(reco::TrackBase::highPurity) ) ) &&
+          // ( _isHI || (muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
+          //                aMuon->innerTrack()->quality(reco::TrackBase::highPurity) ) ) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&
           fabs(aMuon->innerTrack()->dxy(RefVtx)) < 0.3 &&
@@ -3573,12 +3615,10 @@ HiOniaAnalyzer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
 
   //bool init(const edm::Run& iRun, const edm::EventSetup& iSetup, const std::string& processName, bool& changed);
   bool changed = true;
-  hltConfigInit = false;
-  if( hltConfig.init(iRun, iSetup, pro, changed) ) hltConfigInit = true;
+  hltConfigInit = hltConfig.init(iRun, iSetup, pro, changed);
 
   changed = true;
-  hltPrescaleInit = false;
-  if( hltPrescaleProvider.init(iRun, iSetup, pro, changed) ) hltPrescaleInit = true;
+  hltPrescaleInit = hltPrescaleProvider.init(iRun, iSetup, pro, changed);
 
   return;
 }
