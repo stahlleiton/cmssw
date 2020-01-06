@@ -718,25 +718,6 @@ HiOniaAnalyzer::~HiOniaAnalyzer()
     Gen_mu_4mom->Delete();
     Gen_QQ_4mom->Delete();
   }
-  myTree->Delete();
-
-  delete hGoodMuonsNoTrig;
-  delete hGoodMuons;
-  delete hL1DoubleMu0;
-
-  delete myRecoMuonHistos;
-  delete myRecoGlbMuonHistos;
-  delete myRecoTrkMuonHistos;
-
-  delete myRecoJpsiHistos;
-  delete myRecoJpsiGlbGlbHistos;
-  delete myRecoJpsiGlbTrkHistos;
-  delete myRecoJpsiTrkTrkHistos;
-
-  delete hStats;
-  delete hCent;
-  delete hPileUp;
-  delete hZVtx;
 }
 
 

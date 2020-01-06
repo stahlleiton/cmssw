@@ -52,7 +52,7 @@ options.inputFiles =[
   #'/store/hidata/HIRun2018A/HIDoubleMuonPsiPeri/AOD/04Apr2019-v1/260002/657ECBA9-4E31-0448-B23A-980CF9137A25.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
 ]
-options.maxEvents = -1 # -1 means all events
+options.maxEvents = 1000 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -301,7 +301,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxE
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 process.schedule  = cms.Schedule( process.oniaTreeAna )
-process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck", ignoreTotal = cms.untracked.int32(1))
+#process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck", ignoreTotal = cms.untracked.int32(1))
 
 ################ Offline Primary Vertices Recovery
 from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag

@@ -80,6 +80,7 @@ bool
 HiOnia2MuMuPAT::isSoftMuon(const pat::Muon* aMuon) {
   return (
 	  aMuon->isTrackerMuon() &&
+	  //muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&
           //aMuon->innerTrack()->quality(reco::TrackBase::highPurity) && 
@@ -928,8 +929,8 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         ///////////////////////////////////////////////////////
     
       TrimuonCand:
-	if(!doTrimuons_) continue;
 	int passedBcCands = 0;
+	if(!doTrimuons_) goto EndTrimuon;
 	
 	// ---- Create all trimuon combinations (Bc candidates) ----
 	for(int k = ((flipJpsiDirection_==0)?(j+1):0) ; k<ourMuNb; k++){ //when flipping the Jpsi direction, we run over all possible third muons
@@ -1199,6 +1200,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	}//it3 muon
 
+      EndTrimuon:
 	if((!doTrimuons_) || passedBcCands>0){
 	  if(flipJpsiDirection_>0){
 	    userTrack["muon1Track"] = muon1Trk;
