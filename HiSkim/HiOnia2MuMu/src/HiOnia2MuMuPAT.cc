@@ -243,6 +243,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   for(int i=0; i<ourMuNb; i++){
     const pat::Muon& it = ourMuons[i];
     for(int j=i+1; j<ourMuNb; j++){
+      bool goodMu1Mu2 = false;
       const pat::Muon& it2 = ourMuons[j];
       // one muon must pass tight quality
       if (!(higherPuritySelection_(it) || higherPuritySelection_(it2))) continue;
@@ -600,6 +601,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(!LateDimuonSel_(myCand)) 
 	{if (DimuonTrk_ || flipJpsiDirection_>0 || (!doTrimuons_)) continue; //if flipJpsi>0 or we do dimuon+track, then we want this dimuon to be the true Jpsi in the trimuon
 	  else {goto TrimuonCand;}}
+      goodMu1Mu2 = true;
 
       for(; flipJpsi<(1+flipJpsiDirection_); flipJpsi++){ //'int flipJpsi=0' must be declared before the 'goto' statements
 	if(flipJpsiDirection_>0 && flipJpsi==0) continue;
@@ -1201,7 +1203,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}//it3 muon
 
       EndTrimuon:
-	if((!doTrimuons_) || passedBcCands>0){
+	if( (flipJpsiDirection_==0 || passedBcCands>0) && goodMu1Mu2){
 	  if(flipJpsiDirection_>0){
 	    userTrack["muon1Track"] = muon1Trk;
 	    userTrack["muon2Track"] = muon2Trk;
