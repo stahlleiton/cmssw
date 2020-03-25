@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stage2=False, doTrimuons=False):
+def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stage2=False, doTrimuons=False, DimuonTrk=False, flipJpsiDir=0):
     # Setup the process
     process.options = cms.untracked.PSet(
         wantSummary = cms.untracked.bool(True),
@@ -52,6 +52,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         process.muonMatchHLTL1.preselection = cms.string("")
         #process.muonL1Info.matched = cms.InputTag("gtStage2Digis:Muon:RECO")
 
+    #This is NEEDED in PbPb, but should be REMOVED in pp
     process.patTrigger.collections.append("hltIterL3MuonCandidatesPPOnAA")
     process.patTrigger.collections.append("hltL2MuonCandidatesPPOnAA") 
     process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltIterL3MuonCandidatesPPOnAA")') 
@@ -93,31 +94,52 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         # BOTH muons must pass this selection
         lowerPuritySelection     = cms.string("((isGlobalMuon && isTrackerMuon) || (innerTrack.isNonnull && genParticleRef(0).isNonnull)) && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"),
         dimuonSelection          = cms.string(""), ## The dimuon must pass this selection before vertexing
+        DimuTrkSelection         = cms.string(""), ## The dimuon+track must pass this selection before vertexing
         trimuonSelection         = cms.string(""), ## The trimuon must pass this selection before vertexing
         LateDimuonSel            = cms.string(""), ## The dimuon must pass this selection before being written out
+        LateDimuTrkSel           = cms.string(""), ## The dimuon+track must pass this selection before being written out
         LateTrimuonSel           = cms.string(""), ## The trimuon must pass this selection before being written out 
         addCommonVertex          = cms.bool(True), ## Embed the full reco::Vertex out of the common vertex fit
         addMuonlessPrimaryVertex = cms.bool(False), ## Embed the primary vertex re-made from all the tracks except the two muons
         resolvePileUpAmbiguity   = cms.bool(True), ## Order PVs by their vicinity to the J/psi vertex, not by sumPt                            
         onlySoftMuons            = cms.bool(False), ## Keep only the isSoftMuons (without highPurity) for the single muons + the di(tri)muon combinations
-        doTrimuons               = cms.bool(doTrimuons) ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
+        doTrimuons               = cms.bool(doTrimuons), ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
+        DimuonTrk                = cms.bool(DimuonTrk), ## Make collections of Jpsi+track candidates in addition to dimuons, and keep only events with >0 Jpsi+trk
+        flipJpsiDirection        = cms.int32(flipJpsiDir), ## flip the Jpsi direction, before combining it with a third muon
+        particleType             = cms.int32(211), ## pdgInt assigned to the track to be combined with the dimuons
+        trackMass                = cms.double(0.13957018) ## mass assigned to the track to be combined with the dimuons
     )
 
     # check if there is at least one (inclusive) di-muon. BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
-
     process.onia2MuMuPatGlbGlbFilter = cms.EDFilter("CandViewCountFilter",
-        src = cms.InputTag('onia2MuMuPatGlbGlb'),
+        src = cms.InputTag('onia2MuMuPatGlbGlb',''),
+        minNumber = cms.uint32(1),
+    )
+    process.onia2MuMuPatGlbGlbFilterDimutrk = cms.EDFilter("CandViewCountFilter",
+        src = cms.InputTag('onia2MuMuPatGlbGlb','dimutrk'),
         minNumber = cms.uint32(1),
     )
     process.onia2MuMuPatGlbGlbFilterTrimu = cms.EDFilter("CandViewCountFilter",
         src = cms.InputTag('onia2MuMuPatGlbGlb','trimuon'),
         minNumber = cms.uint32(1),
     )
-    process.onia2MuMuPatGlbGlbFilter3mu = cms.EDFilter("CandViewCountFilter",
-        src = cms.InputTag('patMuonsWithTrigger'),
+    process.filter3mu = cms.EDFilter("CandViewCountFilter",
+        src = cms.InputTag('muons'),
         minNumber = cms.uint32(3),
     )
-        
+    process.pseudoDimuon = cms.EDProducer("CandViewShallowCloneCombiner",
+        decay = cms.string('muons@+ muons@-'),
+        cut = cms.string('2.4 < mass < 3.7'),
+    )
+    process.pseudoDimuonFilter = cms.EDFilter("CandViewCountFilter",
+        src = cms.InputTag('pseudoDimuon'),
+        minNumber = cms.uint32(1),
+    )
+    process.pseudoDimuonFilterSequence = cms.Sequence(
+        process.pseudoDimuon *
+        process.pseudoDimuonFilter
+    )
+
     # the onia2MuMu path
     process.Onia2MuMuPAT = cms.Path(
         process.patMuonSequence *
@@ -125,20 +147,27 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         process.onia2MuMuPatGlbGlbFilter
     )
 
+    if DimuonTrk:
+        process.Onia2MuMuPAT.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilterDimutrk)
     if doTrimuons:
         process.Onia2MuMuPAT.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilterTrimu)
      
     process.outOnia2MuMu = cms.OutputModule("PoolOutputModule",
         fileName = cms.untracked.string('onia2MuMuPAT.root'),
         outputCommands =  cms.untracked.vstring(
-            'drop *',                       
+            'drop *',
             'keep *_mergedtruth_*_*',                              # tracking particles and tracking vertices for hit by hit matching
             'keep *_genParticles_*_*',                             # generated particles
             'keep *_genMuons_*_Onia2MuMuPAT',                      # generated muons and parents
             'keep patMuons_patMuonsWithTrigger_*_Onia2MuMuPAT',    # All PAT muons including matches to triggers
             'keep patCompositeCandidates_*__Onia2MuMuPAT',         # PAT di-muons
             'keep patCompositeCandidates_*_trimuon_Onia2MuMuPAT',  # PAT trimuons
+            'keep patCompositeCandidates_*_dimutrk_Onia2MuMuPAT',  # PAT dimuon+track candidates
+            'keep *_dedxHarmonic2_*_*',                            # dE/dx estimator for tracks (to do PID when doDimuTrk)
             'keep *_offlinePrimaryVertices_*_*',                   # Primary vertices: you want these to compute impact parameters
+            'keep *_inclusiveSecondaryVertices_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
+            'keep *_inclusiveSecondaryVerticesLoose_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
+            'keep *_inclusiveCandidateSecondaryVertices_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
             'keep *_offlineBeamSpot_*_*',                          # Beam spot: you want this for the same reason                                   
             'keep edmTriggerResults_TriggerResults_*_*',           # HLT info, per path (cheap)
             'keep *_hltGmtStage2Digis_*_*',                        # Stage2 L1 Muon info

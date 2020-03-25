@@ -11,6 +11,8 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include <CommonTools/RecoAlgos/src/MassiveCandidateConverter.h>
+#include <CommonTools/RecoAlgos/src/TrackToCandidate.h>
 #include "CommonTools/Utils/interface/PtComparator.h"
 
 // DataFormat includes
@@ -49,6 +51,8 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     virtual void produce(edm::Event&, const edm::EventSetup&);
     virtual void endJob() ;
     bool isSoftMuon(const pat::Muon*);
+    const reco::TrackBase::Point rotatePoint(reco::TrackBase::Point PV, reco::TrackBase::Point TrkPoint, int flipJpsi);
+    const reco::TrackBase::Vector rotateMomentum(reco::Track trk, int flipJpsi);
     bool isAbHadron(int pdgID);
     bool isAMixedbHadron(int pdgID, int momPdgID);
     reco::GenParticleRef findMotherRef(reco::GenParticleRef GenParticle, int GenParticlePDG);
@@ -64,13 +68,20 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     StringCutObjectSelector<pat::Muon> higherPuritySelection_;
     StringCutObjectSelector<pat::Muon> lowerPuritySelection_; 
     StringCutObjectSelector<reco::Candidate, true> dimuonSelection_;
+    StringCutObjectSelector<reco::Candidate, true> DimuTrkSelection_;
     StringCutObjectSelector<reco::Candidate, true> trimuonSelection_;
     StringCutObjectSelector<reco::Candidate, true> LateDimuonSel_;
+    StringCutObjectSelector<reco::Candidate, true> LateDimuTrkSel_;
     StringCutObjectSelector<reco::Candidate, true> LateTrimuonSel_;
     bool addCommonVertex_, addMuonlessPrimaryVertex_;
     bool resolveAmbiguity_;
     bool onlySoftMuons_;
     bool doTrimuons_;
+    bool DimuonTrk_;
+    int flipJpsiDirection_;
+    converter::TrackToCandidate Converter_;
+    int trackType_;
+    double trackMass_;
     GreaterByPt<pat::CompositeCandidate> pTComparator_;
     GreaterByVProb<pat::CompositeCandidate> vPComparator_;
 
