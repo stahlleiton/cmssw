@@ -767,8 +767,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::cout<<"ERROR: privtxs is NULL or not isValid ! Return now"<<std::endl; return;
   }
 
-  if(_checkTrigNames)
-    this->hltReport(iEvent, iSetup);
+  this->hltReport(iEvent, iSetup);
 
   for (unsigned int iTr = 1 ; iTr < theTriggerNames.size() ; iTr++) {
     if (mapTriggerNameToIntFired_[theTriggerNames.at(iTr)] == 3) {
@@ -890,14 +889,6 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if(_doTrimuons)
     this->makeBcCuts(_storeSs);
 
-  //GEN info
-  if (_isMC) {
-    iEvent.getByToken(_genParticleToken,collGenParticles);
-    iEvent.getByToken(_genInfoToken,genInfo);
-
-    this->fillGenInfo();
-  }
-
   // APPLY CUTS for Bc (dimuon+track)
   if(_doDimuTrk)
     this->makeDimutrkCuts(_storeSs);
@@ -930,8 +921,13 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
 
-  //MC MATCHING info
   if (_isMC) {
+    //GEN info
+    iEvent.getByToken(_genParticleToken,collGenParticles);
+    iEvent.getByToken(_genInfoToken,genInfo);
+    this->fillGenInfo();
+
+    //MC MATCHING info
     this->fillMuMatchingInfo(); //Needs to be done after fillGenInfo, and the filling of reco muons collections
     this->fillQQMatchingInfo(); //Needs to be done after fillMuMatchingInfo
     if(_doTrimuons || _doDimuTrk){
@@ -1028,9 +1024,9 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
      
       if (!iTrack.isNull()){
 	Reco_mu_highPurity[Reco_mu_size] = iTrack->quality(reco::TrackBase::highPurity);
-	//Reco_mu_nTrkHits[Reco_mu_size] = iTrack->found();
+	Reco_mu_nTrkHits[Reco_mu_size] = iTrack->found();
 	Reco_mu_normChi2_inner[Reco_mu_size] = iTrack->normalizedChi2();
-	//Reco_mu_nPixValHits[Reco_mu_size] = iTrack->hitPattern().numberOfValidPixelHits();
+	Reco_mu_nPixValHits[Reco_mu_size] = iTrack->hitPattern().numberOfValidPixelHits();
 	Reco_mu_nPixWMea[Reco_mu_size] = iTrack->hitPattern().pixelLayersWithMeasurement();
 	Reco_mu_nTrkWMea[Reco_mu_size] = iTrack->hitPattern().trackerLayersWithMeasurement();
 	Reco_mu_dxy[Reco_mu_size] = iTrack->dxy(RefVtx);
@@ -1038,7 +1034,7 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
 	Reco_mu_dz[Reco_mu_size] = iTrack->dz(RefVtx);
 	Reco_mu_dzErr[Reco_mu_size] = iTrack->dzError();
 	//Reco_mu_pt_inner[Reco_mu_size] = iTrack->pt();
-	//Reco_mu_ptErr_inner[Reco_mu_size] = iTrack->ptError();
+	Reco_mu_ptErr_inner[Reco_mu_size] = iTrack->ptError();
       }
       else{
 	std::cout<<"ERROR: 'iTrack' pointer in fillTreeMuon is NULL ! Return now"<<std::endl; return;
@@ -1617,9 +1613,9 @@ HiOniaAnalyzer::fillTreeBc(int count) {
       if(_useSVfinder && SVs.isValid() && SVs->size()>0){
 	Reco_3mu_NbMuInSameSV[Reco_3mu_size] = MuInSV(vMuon1,vMuon2,vMuon3);
       }
-	
+
       Reco_3mu_size++;
-    } 
+    }
   }
 
   return;
@@ -2945,7 +2941,7 @@ HiOniaAnalyzer::fillBcMatchingInfo(){
 	float matchedPhi = 5;
 	
 	//Loop over gen particles
-	//	cout<<"Looking for a (charged track) gen particle matching the fake Reco_muW of pt,eta = "<<recmuW->Pt()<<" "<<recmuW->Eta()<<endl;
+	//cout<<"Looking for a (charged track) gen particle matching the fake Reco_muW of pt,eta = "<<recmuW->Pt()<<" "<<recmuW->Eta()<<endl;
 	for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
 	    it!=collGenParticles->end();++it) {
 	  const reco::GenParticle* gen = &(*it);
@@ -3260,8 +3256,8 @@ HiOniaAnalyzer::InitTree()
   }
   myTree->Branch("Ntracks", &Ntracks, "Ntracks/S");
 
-  myTree->Branch("nTrig", &nTrig, "nTrig/I");
-  //myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
+  //myTree->Branch("nTrig", &nTrig, "nTrig/I");
+  myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
   myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/l");
 
   if ((_isHI || _isPA) && _SumETvariables){
@@ -3394,9 +3390,9 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_mu_highPurity", Reco_mu_highPurity,   "Reco_mu_highPurity[Reco_mu_size]/O");
     // myTree->Branch("Reco_mu_TrkMuArb", Reco_mu_TrkMuArb,   "Reco_mu_TrkMuArb[Reco_mu_size]/O");
     // myTree->Branch("Reco_mu_TMOneStaTight", Reco_mu_TMOneStaTight, "Reco_mu_TMOneStaTight[Reco_mu_size]/O");
-    // myTree->Branch("Reco_mu_nPixValHits", Reco_mu_nPixValHits,   "Reco_mu_nPixValHits[Reco_mu_size]/I");
+    myTree->Branch("Reco_mu_nPixValHits", Reco_mu_nPixValHits,   "Reco_mu_nPixValHits[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_nMuValHits", Reco_mu_nMuValHits,   "Reco_mu_nMuValHits[Reco_mu_size]/I");
-    //myTree->Branch("Reco_mu_nTrkHits",Reco_mu_nTrkHits, "Reco_mu_nTrkHits[Reco_mu_size]/I");
+    myTree->Branch("Reco_mu_nTrkHits",Reco_mu_nTrkHits, "Reco_mu_nTrkHits[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_normChi2_inner",Reco_mu_normChi2_inner, "Reco_mu_normChi2_inner[Reco_mu_size]/F");
     myTree->Branch("Reco_mu_normChi2_global",Reco_mu_normChi2_global, "Reco_mu_normChi2_global[Reco_mu_size]/F");
     myTree->Branch("Reco_mu_nPixWMea",Reco_mu_nPixWMea, "Reco_mu_nPixWMea[Reco_mu_size]/I");
@@ -3408,7 +3404,7 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_mu_dzErr",Reco_mu_dzErr, "Reco_mu_dzErr[Reco_mu_size]/F");
     // myTree->Branch("Reco_mu_pt_inner",Reco_mu_pt_inner, "Reco_mu_pt_inner[Reco_mu_size]/F");
     // myTree->Branch("Reco_mu_pt_global",Reco_mu_pt_global, "Reco_mu_pt_global[Reco_mu_size]/F");
-    // myTree->Branch("Reco_mu_ptErr_inner",Reco_mu_ptErr_inner, "Reco_mu_ptErr_inner[Reco_mu_size]/F");
+    myTree->Branch("Reco_mu_ptErr_inner",Reco_mu_ptErr_inner, "Reco_mu_ptErr_inner[Reco_mu_size]/F");
     // myTree->Branch("Reco_mu_ptErr_global",Reco_mu_ptErr_global, "Reco_mu_ptErr_global[Reco_mu_size]/F");
   }
 
@@ -3672,7 +3668,7 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
       unsigned int triggerIndex= hltConfig.triggerIndex( it->first );
       if (it->first == "NoTrigger") continue;
       if (triggerIndex >= n) {
-              std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << it->first << " not available in config!" << std::endl;
+	if (_checkTrigNames) std::cout << "[HiOniaAnalyzer::hltReport] --- TriggerName " << it->first << " not available in config!" << std::endl;
       }
       else {
         it->second= triggerIndex;
@@ -3715,7 +3711,7 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
             else if (detailedPrescaleInfo.first.size()>1) {
               l1Prescale = 1; // Means it is a complex l1 seed, and for us it is only Mu3 OR Mu5, both of them unprescaled at L1
             }
-            else {
+            else if(_checkTrigNames) {
               std::cout << "[HiOniaAnalyzer::hltReport] --- L1 prescale was NOT found for TriggerName " << triggerPathName  << " , default L1 prescale value set to 1 " <<  std::endl;
             }
             //compute the total prescale = HLT prescale * L1 prescale
@@ -3832,9 +3828,9 @@ std::vector<reco::GenParticleRef> HiOniaAnalyzer::GenBrothers(reco::GenParticleR
   if(!foundJpsi){
     cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!! Incoherence in genealogy: Jpsi not found in the daughters!\n"<<endl;
   }
-  if(!isAbHadron(GenParticleMother->pdgId())){
-    cout<<"\n!!!!!!!!!!!!!!!!!!!!!!!!!!!! Jpsi ancestor is not a b-hadron! pdgID(mother of this ancestor) = "<<findMotherRef(GenParticleMother->motherRef() , GenParticleMother->pdgId())->pdgId()<<endl;
-  }  
+  // if(!isAbHadron(GenParticleMother->pdgId())){
+  //   cout<<"\n!!!!!!!!!!!!!!!!!!!!!!!!!!!! Jpsi ancestor is not a b-hadron! pdgID(mother of this ancestor) = "<<findMotherRef(GenParticleMother->motherRef() , GenParticleMother->pdgId())->pdgId()<<endl;
+  // }  
 
   return res;
 }
