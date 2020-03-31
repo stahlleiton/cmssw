@@ -185,4 +185,29 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('Onia2MuMuPAT') ) if Filter else cms.untracked.PSet()
     )
 
-#    process.e = cms.EndPath(process.outOnia2MuMu)
+
+def changeToMiniAOD(process):
+
+    if hasattr(process, "patMuonsWithTrigger"):
+        from MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff import useExistingPATMuons, addL1UserData
+        useExistingPATMuons(process, newPatMuonTag=cms.InputTag("slimmedMuons"), addL1Info=False)
+
+        process.patTriggerFull = cms.EDProducer("PATTriggerObjectStandAloneUnpacker",
+            patTriggerObjectsStandAlone = cms.InputTag('slimmedPatTrigger'),
+            triggerResults              = cms.InputTag('TriggerResults::HLT'),
+            unpackFilterLabels          = cms.bool(True)
+        )
+        process.load('PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi')
+        process.patMuonSequence.insert(0, process.unpackedTracksAndVertices)
+
+        process.onia2MuMuPatGlbGlb.useMiniAOD = cms.bool(True)
+        process.outOnia2MuMu.outputCommands.append('keep *Vert*_unpackedTracksAndVertices_*_*')
+        process.outOnia2MuMu.outputCommands.append('keep patMuons_onia2MuMuPatGlbGlb_muon_*')
+        process.outOnia2MuMu.outputCommands.append('drop patMuons_patMuonsWith*_*_*')
+
+    if hasattr(process, "hionia"):
+        process.hionia.srcMuon = cms.InputTag("onia2MuMuPatGlbGlb:muon")
+
+    from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
+    process = MassReplaceInputTag(process,"offlinePrimaryVertices","unpackedTracksAndVertices")
+    process = MassReplaceInputTag(process,"generalTracks","unpackedTracksAndVertices")

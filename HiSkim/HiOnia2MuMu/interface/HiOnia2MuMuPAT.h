@@ -65,6 +65,7 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     edm::EDGetTokenT<reco::VertexCollection>        thePVsToken_;
     edm::EDGetTokenT<reco::TrackCollection>         recoTracksToken_;
     edm::EDGetTokenT<reco::GenParticleCollection>   theGenParticlesToken_;
+    edm::EDGetTokenT<edm::TriggerResults>           triggerResultsToken_;
     StringCutObjectSelector<pat::Muon> higherPuritySelection_;
     StringCutObjectSelector<pat::Muon> lowerPuritySelection_; 
     StringCutObjectSelector<reco::Candidate, true> dimuonSelection_;
@@ -78,6 +79,7 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     bool onlySoftMuons_;
     bool doTrimuons_;
     bool DimuonTrk_;
+    bool useMiniAOD_;
     int flipJpsiDirection_;
     converter::TrackToCandidate Converter_;
     int trackType_;

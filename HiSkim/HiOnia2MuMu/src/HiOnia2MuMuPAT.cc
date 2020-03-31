@@ -60,6 +60,11 @@ HiOnia2MuMuPAT::HiOnia2MuMuPAT(const edm::ParameterSet& iConfig):
   produces<pat::CompositeCandidateCollection>("");
   produces<pat::CompositeCandidateCollection>("trimuon");
   produces<pat::CompositeCandidateCollection>("dimutrk");
+  useMiniAOD_ = (iConfig.existsAs<bool>("useMiniAOD") ? iConfig.getParameter<bool>("useMiniAOD") : false);
+  if (useMiniAOD_) {
+    triggerResultsToken_ = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults::HLT"));
+    produces<pat::MuonCollection>("muon");
+  }
 }
 
 
@@ -232,12 +237,25 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
 
   std::vector<pat::Muon> ourMuons;
-  for(View<pat::Muon>::const_iterator it = muons->begin(), itend = muons->end(); it != itend; ++it){
-    if ( lowerPuritySelection_(*it) && (!onlySoftMuons_ || isSoftMuon(&(*it))) ){
-      ourMuons.push_back(*it);}
+  for(const auto& mu : *muons) {
+    if ( lowerPuritySelection_(mu) && (!onlySoftMuons_ || isSoftMuon(&(mu))) ){
+      ourMuons.push_back(mu);}
   }
   int ourMuNb = ourMuons.size();
   //std::cout<<"number of soft muons = "<<ourMuNb<<std::endl;
+
+  // Unpack trigger data for MiniAOD
+  if(useMiniAOD_) {
+    Handle<edm::TriggerResults> collTriggerResults;
+    iEvent.getByToken(triggerResultsToken_,collTriggerResults);
+    if(collTriggerResults.isValid()) {
+      for(auto& mu : ourMuons) {
+        for(auto& obj : mu.triggerObjectMatches()) {
+          const_cast<pat::TriggerObjectStandAlone*>(&obj)->unpackNamesAndLabels(iEvent, *collTriggerResults);
+        }
+      }
+    }
+  }
 
   // JPsi candidates only from muons
   for(int i=0; i<ourMuNb; i++){
@@ -1237,6 +1255,11 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if(DimuonTrk_){
     std::sort(dimutrkOutput->begin(),dimutrkOutput->end(),vPComparator_);
     iEvent.put(std::move(dimutrkOutput),"dimutrk");
+  }
+
+  if(useMiniAOD_){
+    std::unique_ptr<pat::MuonCollection> muonOutput(new pat::MuonCollection(ourMuons));
+    iEvent.put(std::move(muonOutput),"muon");
   }
 
   //smart pointer does not work for this variable

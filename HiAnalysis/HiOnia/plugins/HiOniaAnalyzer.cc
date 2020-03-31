@@ -3257,7 +3257,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Ntracks", &Ntracks, "Ntracks/S");
 
   //myTree->Branch("nTrig", &nTrig, "nTrig/I");
-  myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
+  myTree->Branch("trigPrescale", trigPrescale, Form("trigPrescale[%d]/I",nTrig));
   myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/l");
 
   if ((_isHI || _isPA) && _SumETvariables){
