@@ -76,6 +76,7 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     bool addCommonVertex_, addMuonlessPrimaryVertex_;
     bool resolveAmbiguity_;
     bool onlySoftMuons_;
+    bool onlySingleMuons_;
     bool doTrimuons_;
     bool DimuonTrk_;
     int flipJpsiDirection_;

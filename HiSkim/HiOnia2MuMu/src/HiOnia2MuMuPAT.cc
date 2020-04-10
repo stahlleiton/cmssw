@@ -50,6 +50,7 @@ HiOnia2MuMuPAT::HiOnia2MuMuPAT(const edm::ParameterSet& iConfig):
   addMuonlessPrimaryVertex_(iConfig.getParameter<bool>("addMuonlessPrimaryVertex")),
   resolveAmbiguity_(iConfig.getParameter<bool>("resolvePileUpAmbiguity")),
   onlySoftMuons_(iConfig.getParameter<bool>("onlySoftMuons")),
+  onlySingleMuons_(iConfig.getParameter<bool>("onlySingleMuons")),
   doTrimuons_(iConfig.getParameter<bool>("doTrimuons")),
   DimuonTrk_(iConfig.getParameter<bool>("DimuonTrk")),
   flipJpsiDirection_(iConfig.getParameter<int>("flipJpsiDirection")),
@@ -239,6 +240,8 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   int ourMuNb = ourMuons.size();
   //std::cout<<"number of soft muons = "<<ourMuNb<<std::endl;
 
+  if(onlySingleMuons_) goto skipMuonLoop;
+ 
   // JPsi candidates only from muons
   for(int i=0; i<ourMuNb; i++){
     const pat::Muon& it = ourMuons[i];
@@ -1225,6 +1228,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }//it2 muon
   }//it muon
 
+ skipMuonLoop:
   //  std::sort(oniaOutput->begin(),oniaOutput->end(),pTComparator_);
   std::sort(oniaOutput->begin(),oniaOutput->end(),vPComparator_);
   iEvent.put(std::move(oniaOutput),"");
