@@ -3257,7 +3257,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Ntracks", &Ntracks, "Ntracks/S");
 
   //myTree->Branch("nTrig", &nTrig, "nTrig/I");
-  myTree->Branch("trigPrescale", trigPrescale, "trigPrescale[nTrig]/I");
+  myTree->Branch("trigPrescale", trigPrescale, Form("trigPrescale[%d]/I", nTrig));
   myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/l");
 
   if ((_isHI || _isPA) && _SumETvariables){
@@ -3957,7 +3957,7 @@ int HiOniaAnalyzer::muonIDmask(const pat::Muon* muon)
    int mask = 0;
    int type;
    for (type=muon::All; type<=muon::RPCMuLoose; type++)
-      if (muon::isGoodMuon(*muon,(muon::SelectionType) type))
+      if (muon->hasUserInt(Form("muonID_%d", type)) ? muon->userInt(Form("muonID_%d", type)) : muon::isGoodMuon(*muon, muon::SelectionType(type)))
          mask = mask | (int) pow(2, type);
 
    return mask;

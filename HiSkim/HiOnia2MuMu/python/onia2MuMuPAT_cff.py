@@ -8,10 +8,10 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         wantSummary = cms.untracked.bool(True),
         # fileMode = cms.untracked.string('MERGE'),
     )
-     
+
     # Drop the DQM stuff on input
     '''
-    if hasattr(process, "source") and hasattr(process.source, "inputCommands"): 
+    if hasattr(process, "source") and hasattr(process.source, "inputCommands"):
         process.source.inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
     else:
         process.source = cms.Source("PoolSource",
@@ -42,10 +42,10 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     changeTriggerProcessName(process, HLT)
     switchOffAmbiguityResolution(process) # Switch off ambiguity resolution: allow multiple reco muons to match to the same trigger muon
     addHLTL1Passthrough(process)
-    
+
     if useL1Stage2:
         useL1Stage2Candidates(process)
-        process.patTrigger.collections.append("hltGtStage2Digis:Muon") 
+        process.patTrigger.collections.append("hltGtStage2Digis:Muon")
         process.muonMatchHLTL1.matchedCuts = cms.string('coll("hltGtStage2Digis:Muon")')
         process.muonMatchHLTL1.useMB2InOverlap = cms.bool(True)
         process.muonMatchHLTL1.useStage2L1 = cms.bool(True)
@@ -54,9 +54,9 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
 
     #This is NEEDED in PbPb, but should be REMOVED in pp
     process.patTrigger.collections.append("hltIterL3MuonCandidatesPPOnAA")
-    process.patTrigger.collections.append("hltL2MuonCandidatesPPOnAA") 
-    process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltIterL3MuonCandidatesPPOnAA")') 
-    process.muonMatchHLTL2.matchedCuts = cms.string('coll("hltL2MuonCandidatesPPOnAA")') 
+    process.patTrigger.collections.append("hltL2MuonCandidatesPPOnAA")
+    process.muonMatchHLTL3.matchedCuts = cms.string('coll("hltIterL3MuonCandidatesPPOnAA")')
+    process.muonMatchHLTL2.matchedCuts = cms.string('coll("hltL2MuonCandidatesPPOnAA")')
 
     process.muonL1Info.maxDeltaR = 0.3
     process.muonL1Info.maxDeltaEta   = 0.2
@@ -72,7 +72,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     process.muonMatchHLTCtfTrack.maxDPtRel = 10.0
     process.muonMatchHLTTrackMu.maxDeltaR = 0.1
     process.muonMatchHLTTrackMu.maxDPtRel = 10.0
-      
+
     # Make a sequence
     process.patMuonSequence = cms.Sequence(
         #process.hltOniaHI *
@@ -81,7 +81,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     )
     if not MC:
         process.patMuonSequence.remove(process.genMuons)
-      
+
     # Make dimuon candidates
     process.onia2MuMuPatGlbGlb = cms.EDProducer('HiOnia2MuMuPAT',
         muons                    = cms.InputTag("patMuonsWithTrigger"),
@@ -98,10 +98,10 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         trimuonSelection         = cms.string(""), ## The trimuon must pass this selection before vertexing
         LateDimuonSel            = cms.string(""), ## The dimuon must pass this selection before being written out
         LateDimuTrkSel           = cms.string(""), ## The dimuon+track must pass this selection before being written out
-        LateTrimuonSel           = cms.string(""), ## The trimuon must pass this selection before being written out 
+        LateTrimuonSel           = cms.string(""), ## The trimuon must pass this selection before being written out
         addCommonVertex          = cms.bool(True), ## Embed the full reco::Vertex out of the common vertex fit
         addMuonlessPrimaryVertex = cms.bool(False), ## Embed the primary vertex re-made from all the tracks except the two muons
-        resolvePileUpAmbiguity   = cms.bool(True), ## Order PVs by their vicinity to the J/psi vertex, not by sumPt                            
+        resolvePileUpAmbiguity   = cms.bool(True), ## Order PVs by their vicinity to the J/psi vertex, not by sumPt
         onlySoftMuons            = cms.bool(False), ## Keep only the isSoftMuons (without highPurity) for the single muons + the di(tri)muon combinations
         doTrimuons               = cms.bool(doTrimuons), ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
         DimuonTrk                = cms.bool(DimuonTrk), ## Make collections of Jpsi+track candidates in addition to dimuons, and keep only events with >0 Jpsi+trk
@@ -151,7 +151,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         process.Onia2MuMuPAT.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilterDimutrk)
     if doTrimuons:
         process.Onia2MuMuPAT.replace(process.onia2MuMuPatGlbGlbFilter, process.onia2MuMuPatGlbGlbFilterTrimu)
-     
+
     process.outOnia2MuMu = cms.OutputModule("PoolOutputModule",
         fileName = cms.untracked.string('onia2MuMuPAT.root'),
         outputCommands =  cms.untracked.vstring(
@@ -168,16 +168,16 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
             'keep *_inclusiveSecondaryVertices_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
             'keep *_inclusiveSecondaryVerticesLoose_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
             'keep *_inclusiveCandidateSecondaryVertices_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
-            'keep *_offlineBeamSpot_*_*',                          # Beam spot: you want this for the same reason                                   
+            'keep *_offlineBeamSpot_*_*',                          # Beam spot: you want this for the same reason
             'keep edmTriggerResults_TriggerResults_*_*',           # HLT info, per path (cheap)
             'keep *_hltGmtStage2Digis_*_*',                        # Stage2 L1 Muon info
             'keep *_gmtStage2Digis_*_*',                           # Stage2 L1 Muon info
             'keep *_hltGtStage2Digis_*_*',                         # Stage2 L1 Muon info
             'keep *_gtStage2Digis_*_*',                            # Stage2 L1 Muon info
             'keep *_hltGtStage2ObjectMap_*_*',                     # Stage2 L1 Muon info
-            'keep L1GlobalTriggerReadoutRecord_*_*_*',             # For HLT and L1 prescales (cheap) 
-            'keep L1GlobalTriggerRecord_*_*_*',                    # For HLT and L1 prescales (cheap)        
-            'keep L1GtTriggerMenu_*_*_*',                          # L1 prescales        
+            'keep L1GlobalTriggerReadoutRecord_*_*_*',             # For HLT and L1 prescales (cheap)
+            'keep L1GlobalTriggerRecord_*_*_*',                    # For HLT and L1 prescales (cheap)
+            'keep L1GtTriggerMenu_*_*_*',                          # L1 prescales
             'keep *_centralityBin_*_*',                            # PA Centrality
             'keep *_hiCentrality_*_*',                             # PA Centrality
             'keep *_pACentrality_*_*',                             # PA Centrality
@@ -185,4 +185,28 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('Onia2MuMuPAT') ) if Filter else cms.untracked.PSet()
     )
 
-#    process.e = cms.EndPath(process.outOnia2MuMu)
+
+def changeToMiniAOD(process):
+
+    if hasattr(process, "patMuonsWithTrigger"):
+        from MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff import useExistingPATMuons
+        useExistingPATMuons(process, newPatMuonTag=cms.InputTag("unpackedMuons"), addL1Info=False)
+
+        process.patTriggerFull = cms.EDProducer("PATTriggerObjectStandAloneUnpacker",
+            patTriggerObjectsStandAlone = cms.InputTag('slimmedPatTrigger'),
+            triggerResults              = cms.InputTag('TriggerResults::HLT'),
+            unpackFilterLabels          = cms.bool(True)
+        )
+        process.load('PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi')
+        process.patMuonSequence.insert(0, process.unpackedTracksAndVertices)
+        process.load('HiAnalysis.HiOnia.unpackedMuons_cfi')
+        process.patMuonSequence.insert(1, process.unpackedMuons)
+
+        process.outOnia2MuMu.outputCommands.append('keep *Vert*_unpackedTracksAndVertices_*_*')
+        process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuons_*_*')
+        process.outOnia2MuMu.outputCommands.append('drop patMuons_patMuonsWith*_*_*')
+
+
+    from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
+    process = MassReplaceInputTag(process,"offlinePrimaryVertices","unpackedTracksAndVertices")
+    process = MassReplaceInputTag(process,"generalTracks","unpackedTracksAndVertices")
