@@ -8,12 +8,12 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 HLTProcess     = "HLT" # Name of HLT process
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
-muonSelection  = "GlbOrTrk" # Single muon selection: Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
+muonSelection  = "Glb" # Single muon selection: All, Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
 applyEventSel  = False # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without isGlobal which should be put in 'muonSelection' parameter) from the beginning of HiSkim. If you want the full SoftMuon selection, set this flag false and add 'isSoftMuon' in lowerPuritySelection. In any case, if applyCuts=True, isSoftMuon is required at HiAnalysis level for muons of selected dimuons.
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection, applied at the end of HiSkim)
 SumETvariables = True  # Whether to write out SumET-related variables
-SofterSgMuAcceptance = False # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.5 at high |eta|). Applies when applyCuts=True
+SofterSgMuAcceptance = True # Whether to accept muons with a softer acceptance cuts than the usual (pt>3.5GeV at central eta, pt>1.5 at high |eta|). Applies when applyCuts=True
 doTrimuons     = False # Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons (if atLeastOneCand)
 doDimuonTrk    = False # Make collections of Jpsi+track candidates in addition to dimuons
 atLeastOneCand = False # Keep only events that have one selected dimuon (or at least one trimuon if doTrimuons = true). BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
@@ -21,6 +21,7 @@ OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) ar
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
 useSVfinder    = False # External SV finder to check if the muons are from a resolved SV
+miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -47,7 +48,9 @@ options.outputFile = "Oniatree.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
   #'file:/eos/cms/store/group/phys_heavyions/mnguyen/miniAOD/reMiniAOD_DATA_PAT_HIDoubleMuon.root',
-  'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
+  'file:/home/llr/cms/falmagne/miniAOD/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi_HiDoubleMuPsiPeri.root'
+  #'/store/hidata/HIRun2018A/HIDoubleMuonPsiPeri/AOD/04Apr2019-v1/270007/2DA8EBF0-C0E7-6C42-AE96-8830278F8532.root'
+  #'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/859/00000/9D9FEF75-B31A-9645-9090-0F99D895AED9.root'
 ]
@@ -185,10 +188,12 @@ process.GlobalTag.toGet.extend([
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process,
                  muonTriggerList=triggerList, #HLTProName=HLTProcess,
-                 muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons)
+                 muonSelection=muonSelection, useL1Stage2=True, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons,
+                 miniAODcuts=miniAOD_muonCuts#, OnlySingleMuons=False
+)
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
-#process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("")
+#process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("pt > 5 || isPFMuon || (pt>1.2 && (isGlobalMuon || isStandAloneMuon)) || (isTrackerMuon && track.quality('highPurity'))")
 #process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("") ## No need to repeat lowerPuritySelection in there, already included
 if applyCuts:
   process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.01")

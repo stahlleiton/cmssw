@@ -103,6 +103,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         addMuonlessPrimaryVertex = cms.bool(False), ## Embed the primary vertex re-made from all the tracks except the two muons
         resolvePileUpAmbiguity   = cms.bool(True), ## Order PVs by their vicinity to the J/psi vertex, not by sumPt
         onlySoftMuons            = cms.bool(False), ## Keep only the isSoftMuons (without highPurity) for the single muons + the di(tri)muon combinations
+        onlySingleMuons          = cms.bool(False), ## Do not make dimuons
         doTrimuons               = cms.bool(doTrimuons), ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
         DimuonTrk                = cms.bool(DimuonTrk), ## Make collections of Jpsi+track candidates in addition to dimuons, and keep only events with >0 Jpsi+trk
         flipJpsiDirection        = cms.int32(flipJpsiDir), ## flip the Jpsi direction, before combining it with a third muon

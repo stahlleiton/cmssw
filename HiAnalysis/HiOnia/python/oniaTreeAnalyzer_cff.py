@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0):
+def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", useL1Stage2=True, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAODcuts=False, OnlySingleMuons=False):
 
     if muonTriggerList==[[],[],[],[]]:
         muonTriggerList = {
@@ -100,6 +100,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 
 ##### Onia2MuMuPAT input collections/options
     process.onia2MuMuPatGlbGlb.dimuonSelection          = cms.string("mass > 0")
+    process.onia2MuMuPatGlbGlb.onlySingleMuons          = cms.bool(OnlySingleMuons)
     process.onia2MuMuPatGlbGlb.resolvePileUpAmbiguity   = True
     process.onia2MuMuPatGlbGlb.srcTracks                = cms.InputTag("generalTracks")
     process.onia2MuMuPatGlbGlb.primaryVertexTag         = cms.InputTag("offlinePrimaryVertices")
@@ -115,26 +116,30 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 ##### Dimuon pair selection
     commonP1 = "|| (innerTrack.isNonnull && genParticleRef(0).isNonnull)"
     commonP2 = " && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"
+    miniAODcut = "pt > 5 || isPFMuon || (pt>1.2 && (isGlobalMuon || isStandAloneMuon)) || (isTrackerMuon && track.quality('highPurity'))" if miniAODcuts else ""
     if muonSelection == "Glb":
         highP = "isGlobalMuon"; # At least one muon must pass this selection. No need to repeat the lowerPuritySelection cuts.
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "isGlobalMuon"; # BOTH muons must pass this selection
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif muonSelection == "GlbTrk":
         highP = "(isGlobalMuon && isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "(isGlobalMuon && isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif (muonSelection == "GlbOrTrk" or muonSelection == "TwoGlbAmongThree"):
         highP = "(isGlobalMuon || isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "(isGlobalMuon || isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif muonSelection == "Trk":
         highP = "isTrackerMuon";
-        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "isTrackerMuon";
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
+    elif muonSelection == "All":
+        process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string(miniAODcut)
     else:
         print "ERROR: Incorrect muon selection " + muonSelection + " . Valid options are: Glb, Trk, GlbTrk"
         
@@ -175,6 +180,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     DimuonTrk          = cms.bool(doDimuTrk),  # Whether to produce Jpsi+track objects
                                     flipJpsiDirection  = cms.int32(flipJpsiDir),  # Whether to flip the Jpsi momentum direction
                                     genealogyInfo      = cms.bool(False), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ  
+                                    miniAODcut         = cms.bool(miniAODcuts), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ  
                                     storeSameSign      = cms.bool(True),   # Store/Drop same sign dimuons
                                     AtLeastOneCand     = cms.bool(False),  # If true, store only events that have at least one selected candidate dimuon (or trimuon candidate if doTrimuons=true)
 
@@ -200,6 +206,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     fillHistos        = cms.bool(False),
                                     minimumFlag       = cms.bool(False),
                                     fillSingleMuons   = cms.bool(True),
+                                    onlySingleMuons   = cms.bool(OnlySingleMuons),
                                     fillRecoTracks    = cms.bool(False),
                                     histFileName      = cms.string(outputFileName),		
                                     dataSetName       = cms.string("Jpsi_DataSet.root"),
