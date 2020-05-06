@@ -17,6 +17,7 @@ onia2MuMuPAT = cms.EDProducer('Onia2MuMuPAT',
   addCommonVertex = cms.bool(True), ## Embed the full reco::Vertex out of the common vertex fit
   addMuonlessPrimaryVertex = cms.bool(True), ## Embed the primary vertex re-made from all the tracks except the two muons
   onlySoftMuons = cms.bool(True), ## Keep only the isSoftMuons (without highPurity) for the single muons + the di(tri)muon combinations
+  onlySingleMuons = cms.bool(False), ## Do not make dimuons
   doTrimuons = cms.bool(False), ## Make collections of trimuon candidates in addition to dimuons, and keep only events with >0 trimuons
   DimuonTrk  = cms.bool(False), ## Make collections of Jpsi+track candidates in addition to dimuons, and keep only events with >0 Jpsi+trk 
   flipJpsiDirection = cms.int32(0), ## flip the Jpsi direction, before combining it with a third muon
