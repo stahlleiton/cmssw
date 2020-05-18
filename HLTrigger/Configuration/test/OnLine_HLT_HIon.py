@@ -34090,7 +34090,7 @@ process.HLTSchedule = cms.Schedule( *(process.HLTriggerFirstPath, process.DST_Ph
 
 process.source = cms.Source( "PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:RelVal_Raw_HIon_DATA.root',
+        'file:/data/user/ddesouza/60BEB9FE-7DD9-C247-B9C6-91C90F5D5425.root',
     ),
     inputCommands = cms.untracked.vstring(
         'keep *'
@@ -34139,11 +34139,11 @@ _customInfo['globalTags']= {}
 _customInfo['globalTags'][True ] = "auto:run3_hlt_HIon"
 _customInfo['globalTags'][False] = "auto:run3_mc_HIon"
 _customInfo['inputFiles']={}
-_customInfo['inputFiles'][True]  = "file:RelVal_Raw_HIon_DATA.root"
-_customInfo['inputFiles'][False] = "file:RelVal_Raw_HIon_MC.root"
+_customInfo['inputFiles'][True]  = "file:/data/user/ddesouza/60BEB9FE-7DD9-C247-B9C6-91C90F5D5425.root"
+_customInfo['inputFiles'][False] = "file:/data/user/ddesouza/60BEB9FE-7DD9-C247-B9C6-91C90F5D5425.root"
 _customInfo['maxEvents' ]=  100
 _customInfo['globalTag' ]= "auto:run3_hlt_HIon"
-_customInfo['inputFile' ]=  ['file:RelVal_Raw_HIon_DATA.root']
+_customInfo['inputFile' ]=  ['file:/data/user/ddesouza/60BEB9FE-7DD9-C247-B9C6-91C90F5D5425.root']
 _customInfo['realData'  ]=  True
 from HLTrigger.Configuration.customizeHLTforALL import customizeHLTforAll
 process = customizeHLTforAll(process,"HIon",_customInfo)
@@ -34155,3 +34155,10 @@ process = customizeHLTforCMSSW(process,"HIon")
 from HLTrigger.Configuration.Eras import modifyHLTforEras
 modifyHLTforEras(process)
 
+#GPU
+from HLTrigger.Configuration.customizeHLTforPatatrackHIon import customise_for_Patatrack_on_gpu
+process = customise_for_Patatrack_on_gpu(process)
+
+from FWCore.ParameterSet.MassReplace import massReplaceInputTag
+massReplaceInputTag(process, old="rawDataCollector", new="rawDataRepacker")
+delattr(process, "rawDataRepacker")
