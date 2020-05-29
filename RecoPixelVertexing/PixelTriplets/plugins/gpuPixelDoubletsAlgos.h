@@ -198,7 +198,7 @@ namespace gpuPixelDoublets {
         p += first;
         for (; p < e; p += stride) {
           auto oi = __ldg(p);
-          assert(oi >= offsets[outer]);
+          //assert(oi >= offsets[outer]);
           assert(oi < offsets[outer + 1]);
           auto mo = hh.detectorIndex(oi);
           if (mo > 2000)
