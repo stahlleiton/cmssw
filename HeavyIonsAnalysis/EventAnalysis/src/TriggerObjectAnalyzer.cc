@@ -50,10 +50,10 @@ private:
 
   // ----------member data ---------------------------
 
-  std::string   processName_;
-  std::vector<std::string>   triggerNames_;
-  edm::InputTag triggerResultsTag_;
-  edm::InputTag triggerEventTag_;
+  const std::string processName_;
+  const std::vector<std::string> triggerNames_;
+  const edm::InputTag triggerResultsTag_;
+  const edm::InputTag triggerEventTag_;
   const edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
   const edm::EDGetTokenT<trigger::TriggerEvent> triggerEventToken_;
 
@@ -62,22 +62,24 @@ private:
 
   HLTConfigProvider hltConfig_;
 
-  unsigned int triggerIndex_;
-  unsigned int moduleIndex_;
-  string moduleLabel_;
   vector<string> moduleLabels_;
 
-  edm::Service<TFileService> fs;
+  edm::Service<TFileService> fs_;
   vector<TTree*> nt_;
   int verbose_;
 
-  std::map<std::string, bool> triggerInMenu;
+  std::vector<std::string> triggerNamesInMenu_;
+  std::map<std::string, bool> triggerInMenu_;
 
-  vector<double> id[500];
-  vector<double> pt[500];
-  vector<double> eta[500];
-  vector<double> phi[500];
-  vector<double> mass[500];
+  struct OBJ {
+    vector<short> id;
+    vector<float> pt;
+    vector<float> eta;
+    vector<float> phi;
+    vector<float> mass;
+  };
+
+  vector<OBJ> trgInfo_;
 };
 
 //
@@ -100,15 +102,18 @@ TriggerObjectAnalyzer::TriggerObjectAnalyzer(const edm::ParameterSet& ps):
   triggerEventToken_(consumes<trigger::TriggerEvent>(triggerEventTag_))
 {
   //now do what ever initialization is needed
-  nt_.reserve(triggerNames_.size());
-  for(unsigned int itrig=0; itrig<triggerNames_.size(); itrig++){
-    nt_[itrig] = fs->make<TTree>(triggerNames_.at(itrig).c_str(),Form("trigger %d",itrig));
+  nt_.resize(triggerNames_.size());
+  trgInfo_.resize(triggerNames_.size());
+  triggerNamesInMenu_ = triggerNames_;
+  for(size_t itrig=0; itrig<triggerNames_.size(); itrig++){
+    nt_[itrig] = fs_->make<TTree>(triggerNames_.at(itrig).c_str(),Form("trigger %lud",itrig));
 
-    nt_[itrig]->Branch("TriggerObjID",&(id[itrig]));
-    nt_[itrig]->Branch("pt",&(pt[itrig]));
-    nt_[itrig]->Branch("eta",&(eta[itrig]));
-    nt_[itrig]->Branch("phi",&(phi[itrig]));
-    nt_[itrig]->Branch("mass",&(mass[itrig]));
+    auto& trg = trgInfo_[itrig];
+    nt_[itrig]->Branch("TriggerObjID",&trg.id);
+    nt_[itrig]->Branch("pt",&trg.pt);
+    nt_[itrig]->Branch("eta",&trg.eta);
+    nt_[itrig]->Branch("phi",&trg.phi);
+    nt_[itrig]->Branch("mass",&trg.mass);
   }
 
 
@@ -135,75 +140,53 @@ TriggerObjectAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 {
   if(hltConfig_.size() > 0){
 
-    //float id = -99,pt=-99,eta=-99,phi=-99,mass=-99;
-
     using namespace edm;
     iEvent.getByLabel(triggerEventTag_,triggerEventHandle_);
     iEvent.getByLabel(triggerResultsTag_,triggerResultsHandle_);
 
-    for(unsigned int itrig=0; itrig<triggerNames_.size(); itrig++){
-	std::map<std::string,bool>::iterator inMenu = triggerInMenu.find(triggerNames_[itrig]);
-        if (inMenu==triggerInMenu.end()){ continue; }
-      
-	triggerIndex_ = hltConfig_.triggerIndex(triggerNames_[itrig]);
-      const unsigned int mIndex = triggerResultsHandle_->index(triggerIndex_);
-
-      bool accepted = triggerResultsHandle_->accept(triggerIndex_);
-      if (!accepted) {
-	// do not fill trigger object if the event is not accepted.
-        continue;
-      }
-
-      // start from last modulein the path, iterate back until finding the filter that was run last
-      bool foundLastFilter = false;
-      for (int j = mIndex; j >= 0; --j) {
-        if (foundLastFilter) {
-          break;
+    for(size_t itrig=0; itrig<triggerNames_.size(); itrig++) {
+      auto& trg = trgInfo_[itrig];
+      size_t filterIndex = 999999;
+      const auto& triggerName = triggerNamesInMenu_[itrig];
+      if (triggerName.rfind("HLT_", 0)==0) {
+        if (triggerInMenu_.find(triggerName)==triggerInMenu_.end()) continue;
+	    const auto& triggerIndex_ = hltConfig_.triggerIndex(triggerName);
+        if (!triggerResultsHandle_->accept(triggerIndex_)) continue;
+        const auto& mIndex = hltConfig_.moduleLabels(triggerIndex_).size()-1;
+        // start from last modulein the path, iterate back until finding the filter that was run last
+        for (int j = mIndex; j >= 0; --j) {
+          const auto& filter = hltConfig_.moduleLabels(triggerIndex_).at(j); //this is simple to put into a loop to get all triggers...
+          const auto& filterIdx = triggerEventHandle_->filterIndex(InputTag(filter,"",processName_));
+          if (filterIdx<triggerEventHandle_->sizeFilters()) { filterIndex = filterIdx; break; }
         }
-
-	string trigFilterIndex = hltConfig_.moduleLabels(triggerIndex_).at(j); //this is simple to put into a loop to get all triggers...
-
-        const unsigned int filterIndex(triggerEventHandle_->filterIndex(InputTag(trigFilterIndex,"",processName_)));
-	if (filterIndex<triggerEventHandle_->sizeFilters()) {
-
-          foundLastFilter = true;
-	  const trigger::Vids& VIDS (triggerEventHandle_->filterIds(filterIndex));
-	  const trigger::Keys& KEYS(triggerEventHandle_->filterKeys(filterIndex));
-	  const unsigned int nI(VIDS.size());
-	  const unsigned int nK(KEYS.size());
-	  assert(nI==nK);
-	  const unsigned int n(max(nI,nK));
-
-	  const trigger::TriggerObjectCollection& TOC(triggerEventHandle_->getObjects());
-	  for (unsigned int i=0; i!=n; ++i) {
-	    const trigger::TriggerObject& TO(TOC[KEYS[i]]);
-	    //This check prevents grabbing the L1 trigger object (VIDS < 0), and finds the max trigger pt within all trigger collections
-	    if(VIDS[i]>0){ // && pt<TO.pt()){
-	      if(verbose_){
-		cout << "verbose   " << i << " VID= " << VIDS[i] << "/ KEY= " << KEYS[i] << ": ID= "
-	                    << TO.id() << " " << TO.pt() << " " << TO.et() << " " << TO.eta() << " " << TO.phi() << " " << TO.mass()
-	                              << endl;
-	      }
-	      id[itrig].push_back(TO.id());
-	      pt[itrig].push_back(TO.pt());
-	      eta[itrig].push_back(TO.eta());
-	      phi[itrig].push_back(TO.phi());
-	      mass[itrig].push_back(TO.mass());
+        assert(filterIndex<999999);
+      }
+      else if (triggerName.rfind("hlt", 0)==0) {
+        const auto& filterIdx = triggerEventHandle_->filterIndex(InputTag(triggerName,"",processName_));
+        if (filterIdx<triggerEventHandle_->sizeFilters()) { filterIndex = filterIdx; }
+      }
+      if (filterIndex<999999) {
+	    const auto& VIDS = triggerEventHandle_->filterIds(filterIndex);
+	    const auto& KEYS = triggerEventHandle_->filterKeys(filterIndex);
+	    const auto& nI = VIDS.size();
+	    const auto& nK = KEYS.size();
+	    assert(nI==nK);
+	    const auto& TOC = triggerEventHandle_->getObjects();
+	    for (size_t i=0; i<nI; i++) {
+	      const auto& TO = TOC[KEYS[i]];
+	      trg.id.push_back(TO.id());
+	      trg.pt.push_back(TO.pt());
+	      trg.eta.push_back(TO.eta());
+	      trg.phi.push_back(TO.phi());
+	      trg.mass.push_back(TO.mass());
 	    }
 	  }
 	}
-      }
-    }
-
-    //nt_[0]->Fill(id,pt,eta,phi,mass);
   }
-  for(unsigned int itrig=0; itrig<triggerNames_.size(); itrig++){
-	  nt_[itrig]->Fill();
-	  id[itrig].clear();
-	  pt[itrig].clear();
-	  eta[itrig].clear();
-	  phi[itrig].clear();
-	  mass[itrig].clear();
+
+  for(size_t itrig=0; itrig<nt_.size(); itrig++){
+	nt_[itrig]->Fill();
+    trgInfo_[itrig] = OBJ();
   }
 }
 
@@ -227,32 +210,34 @@ TriggerObjectAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
   bool changed(true);
   if (hltConfig_.init(iRun,iSetup,processName_,changed)) {
     if (changed) {
-      std::vector<std::string> activeHLTPathsInThisEvent = hltConfig_.triggerNames();
-     
-      triggerInMenu.clear(); 
-      for(unsigned int itrig=0; itrig<triggerNames_.size(); itrig++){
-	for (std::vector<std::string>::const_iterator iHLT = activeHLTPathsInThisEvent.begin(); iHLT != activeHLTPathsInThisEvent.end(); ++iHLT){
-              //matching with regexp filter name. More than 1 matching filter is allowed so trig versioning is transparent to analyzer
-              if (TString(*iHLT).Contains(TRegexp(TString(triggerNames_[itrig])))){
-                  triggerInMenu[*iHLT] = true;
-                  triggerNames_[itrig] = TString(*iHLT);
-              }
+      const auto& activeHLTPathsInThisEvent = hltConfig_.triggerNames();
+      triggerInMenu_.clear();
+      for(size_t itrig=0; itrig<triggerNames_.size(); itrig++){
+        auto& triggerName = triggerNamesInMenu_[itrig];
+	    for (const auto& iHLT : activeHLTPathsInThisEvent) {
+          //matching with regexp filter name. More than 1 matching filter is allowed so trig versioning is transparent to analyzer
+          if (TString(iHLT).Contains(TRegexp(TString(triggerNames_[itrig])))){
+            triggerInMenu_[iHLT] = true;
+            triggerName = iHLT;
           }
-      }
-      for(unsigned int itrig=0; itrig<triggerNames_.size(); itrig++){
-        std::map<std::string,bool>::iterator inMenu = triggerInMenu.find(triggerNames_[itrig]);
-	if (inMenu==triggerInMenu.end()) {
-            cout << "<HLT Object Analyzer> Warning! Trigger " << triggerNames_[itrig] << " not found in HLTMenu. Skipping..." << endl;
+        }
+        if (triggerName.rfind("HLT_",0)==0) {
+	      if (triggerInMenu_.find(triggerName)==triggerInMenu_.end()) {
+            cout << "<HLT Object Analyzer> Warning! Trigger " << triggerName << " not found in HLTMenu. Skipping..." << endl;
+          }
+        }
+        else if (triggerName.rfind("hlt",0)!=0) {
+          cout << "<HLT Object Analyzer> Warning! Trigger name " << triggerName << " is not valid. Skipping..." << endl;
         }
       }
       if(verbose_){
-	hltConfig_.dump("ProcessName");
-	hltConfig_.dump("GlobalTag");
-	hltConfig_.dump("TableName");
-	hltConfig_.dump("Streams");
-	hltConfig_.dump("Datasets");
-	hltConfig_.dump("PrescaleTable");
-	hltConfig_.dump("ProcessPSet");
+	    hltConfig_.dump("ProcessName");
+	    hltConfig_.dump("GlobalTag");
+	    hltConfig_.dump("TableName");
+	    hltConfig_.dump("Streams");
+	    hltConfig_.dump("Datasets");
+	    hltConfig_.dump("PrescaleTable");
+	    hltConfig_.dump("ProcessPSet");
       }
     }
   } else {
