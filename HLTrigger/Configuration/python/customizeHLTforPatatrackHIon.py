@@ -518,9 +518,9 @@ def customise_gpu_hcal(process):
         maxChannelsF01HE = cms.uint32(10000),
         maxChannelsF5HB = cms.uint32(10000),
         maxChannelsF3HB = cms.uint32(10000),
-        nsamplesF01HE = cms.uint32(8),
-        nsamplesF5HB = cms.uint32(8),
-        nsamplesF3HB = cms.uint32(8)
+        #nsamplesF01HE = cms.uint32(8),
+        #nsamplesF5HB = cms.uint32(8),
+        #nsamplesF3HB = cms.uint32(8)
     )
 
     from RecoLocalCalo.HcalRecProducers.hbheRecHitProducerGPU_cfi import hbheRecHitProducerGPU as _hbheRecHitProducerGPU

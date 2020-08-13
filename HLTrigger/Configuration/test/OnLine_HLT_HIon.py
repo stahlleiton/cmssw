@@ -34504,7 +34504,7 @@ process.HLTSchedule = cms.Schedule( *(process.HLTriggerFirstPath, process.DST_Ph
 
 process.source = cms.Source( "PoolSource",
     fileNames = cms.untracked.vstring(
-        'root://xrootd.cmsaf.mit.edu//store/hidata/HIRun2018A/HIHardProbes/RAW/v1/000/327/400/00000/FDC57498-08AF-0D48-A6A6-FD3CA3393F77.root',
+        'file:/data/user/ddesouza/HP_PD.root'
     ),
     inputCommands = cms.untracked.vstring(
         'keep *'
@@ -34513,7 +34513,7 @@ process.source = cms.Source( "PoolSource",
 
 # limit the number of events to be processed
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32( 100 )
+    input = cms.untracked.int32( -1 )
 )
 
 # enable TrigReport, TimeReport and MultiThreading
