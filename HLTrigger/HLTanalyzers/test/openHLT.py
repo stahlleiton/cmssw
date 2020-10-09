@@ -24,7 +24,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-        fileNames = cms.untracked.vstring('root://xrootd.cmsaf.mit.edu//store/hidata/HIRun2018A/HIZeroBiasReducedFormat/RAW/v1/000/327/466/00000/EE35AF29-16D2-F346-B579-F467BCDE2E34.root')
+        fileNames = cms.untracked.vstring('root://xrootd.cmsaf.mit.edu//store/hidata/HIRun2018A/HIMinimumBias2/RAW/v1/000/326/303/00000/31CB3585-DC3A-814D-BC55-029B07DE798C.root')
 )
 
 process.options = cms.untracked.PSet(
@@ -50,6 +50,7 @@ process = ProcessName(process)
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '112X_dataRun2_v4', '')
 
+'''
 process.load("HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi")
 process.hltbitanalysis.RunParameters.isData = cms.untracked.bool(True)
 process.hltbitanalysis.HLTProcessName = cms.string('HLT')
@@ -64,3 +65,20 @@ process.hltbitanalysis.getL1InfoFromEventSetup = cms.untracked.bool(False)
 process.hltBitAnalysis = cms.EndPath(process.hltbitanalysis)
 process.TFileService = cms.Service("TFileService",
                                    fileName=cms.string("openHLT.root"))
+'''
+
+
+process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
+process.hltanalysis.HLTProcessName = cms.string('HLT')
+process.hltanalysis.hltresults = cms.InputTag('TriggerResults::HLT')
+process.hltanalysis.l1results = cms.InputTag('gtStage2Digis::HLT')
+
+process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
+process.hltobject.processName = cms.string('HLT')
+process.hltobject.triggerResults = cms.InputTag('TriggerResults::HLT')
+process.hltobject.triggerEvent = cms.InputTag('hltTriggerSummaryAOD::HLT')
+from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_data
+process.hltobject.triggerNames = trigger_list_data
+
+process.hltAnalysis = cms.EndPath(process.hltanalysis + process.hltobject)
+process.TFileService = cms.Service("TFileService", fileName=cms.string("openHLT.root"))
