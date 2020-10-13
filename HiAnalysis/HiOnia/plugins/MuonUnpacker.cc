@@ -27,12 +27,11 @@ namespace pat {
           muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
           trackToken_(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("tracks"))),
           primaryVertexToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertices"))),
-          beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"))),
-          triggerResultToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults")))
+          beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot")))
       {
         for (const auto& sel: muonSelectors_) {
           candidateMuonIDToken_["packedPFCandidate"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "pfCandidates"+sel));
-          candidateMuonIDToken_["lostTracks"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "lostTracks"+sel));
+          candidateMuonIDToken_["lostTrack"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "lostTracks"+sel));
         }
         produces<pat::MuonCollection>();
       }
@@ -130,12 +129,9 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
   auto output = std::make_unique<pat::MuonCollection>(muons);
   for (const auto& candMuon : candMuons) { output->push_back(candMuon); }
   
-  // unpack trigger data for MiniAOD
-  const auto& triggerResults = iEvent.get(triggerResultToken_);
+  // clear trigger data from MiniAOD
   for (auto& muon : *output) {
-    for(auto& o : muon.triggerObjectMatches()) {
-      const_cast<pat::TriggerObjectStandAlone*>(&o)->unpackNamesAndLabels(iEvent, triggerResults);
-    }
+    const_cast<TriggerObjectStandAloneCollection*>(&muon.triggerObjectMatches())->clear();
   }
 
   iEvent.put(std::move(output));
@@ -241,7 +237,6 @@ void pat::MuonUnpacker::fillDescriptions(edm::ConfigurationDescriptions& descrip
   desc.add<edm::InputTag>("tracks", edm::InputTag("unpackedTracksAndVertices"))->setComment("track input collection");
   desc.add<edm::InputTag>("primaryVertices", edm::InputTag("unpackedTracksAndVertices"))->setComment("primary vertex input collection");
   desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot"))->setComment("beam spot collection");
-  desc.add<edm::InputTag>("triggerResults", edm::InputTag("TriggerResults::HLT"))->setComment("trigger result collection");
   desc.add<std::vector<std::string> >("muonSelectors", {"AllTrackerMuons", "TMOneStationTight"})->setComment("muon selectors");
   descriptions.add("unpackedMuons", desc);
 }
