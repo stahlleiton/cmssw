@@ -73,6 +73,14 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     process.muonMatchHLTTrackMu.maxDeltaR = 0.1
     process.muonMatchHLTTrackMu.maxDPtRel = 10.0
 
+    # MiniAOD pat filter selection
+    process.patTriggerAll = process.patTriggerFull.clone()
+    process.patTriggerFull = cms.EDFilter("PATTriggerObjectStandAloneSelector",
+        src = cms.InputTag("patTriggerAll"),
+        cut = cms.string("!filterLabels.empty()")
+    )
+    process.patMuonsWithTriggerSequence.replace(process.patTriggerFull, process.patTriggerAll * process.patTriggerFull)
+
     # Make a sequence
     process.patMuonSequence = cms.Sequence(
         #process.hltOniaHI *
@@ -198,6 +206,7 @@ def changeToMiniAOD(process):
             triggerResults              = cms.InputTag('TriggerResults::HLT'),
             unpackFilterLabels          = cms.bool(True)
         )
+        process.patMuonsWithTriggerSequence.remove(process.patTriggerAll)
         process.load('PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi')
         process.patMuonSequence.insert(0, process.unpackedTracksAndVertices)
         process.load('HiAnalysis.HiOnia.unpackedMuons_cfi')
