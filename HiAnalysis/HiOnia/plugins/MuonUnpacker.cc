@@ -131,6 +131,7 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
   
   // clear trigger data from MiniAOD
   for (auto& muon : *output) {
+    if (!muon.hasUserInt("candType")) muon.addUserInt("candType", 0);
     const_cast<TriggerObjectStandAloneCollection*>(&muon.triggerObjectMatches())->clear();
   }
 
@@ -142,7 +143,7 @@ void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidate& can
                                 const reco::Vertex& primaryVertex, const reco::BeamSpot& beamSpot,
                                 std::map<std::string, bool> selMap) {
   // add basic information
-  muon.setP4(cand.p4());
+  muon.setP4(math::PtEtaPhiMLorentzVector(track->pt(), track->eta(), track->phi(), cand.mass()));
   muon.setCharge(cand.charge());
   muon.setVertex(cand.vertex());
   muon.setPdgId(-13 * cand.charge());
