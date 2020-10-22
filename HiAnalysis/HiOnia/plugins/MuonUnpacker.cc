@@ -150,11 +150,8 @@ void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidate& can
 
   // add track information
   muon.setInnerTrack(track);
-  muon.setMuonTrack(reco::Muon::InnerTrack, track);
-  muon.setTrack(track);
   muon.setBestTrack(reco::Muon::InnerTrack);
   muon.embedTrack();
-  muon.embedMuonBestTrack();
   muon.setNumberOfValidHits(track->numberOfValidHits());
   const auto& muonTrack = *muon.track();
 
