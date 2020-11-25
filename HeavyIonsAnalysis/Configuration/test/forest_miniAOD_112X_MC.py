@@ -77,6 +77,7 @@ process.TFileService = cms.Service("TFileService",
 # process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 # process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_mc_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 ################################
 # electrons, photons, muons
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
@@ -102,3 +103,14 @@ process.forest = cms.Path(
 
 #customisation
 #process.akCs4PFJetAnalyzer.doLifeTimeTagging = False
+
+#########################
+# Event Selection -> add the needed filters here
+#########################
+
+process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
+process.pclusterCompatibilityFilter = cms.Path(process.clusterCompatibilityFilter)
+process.pprimaryVertexFilter = cms.Path(process.primaryVertexFilter)
+process.pAna = cms.EndPath(process.skimanalysis)
+
+

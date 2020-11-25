@@ -26,6 +26,8 @@
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
+#include "DataFormats/HeavyIonEvent/interface/HFFilterInfo.h" //this line is needed to access the HF Filters
+
 #include <HepMC/PdfInfo.h>
 
 #include "TTree.h"
@@ -57,10 +59,12 @@ private:
   edm::EDGetTokenT<edm::GenHIEvent> HiMCTag_;
   edm::EDGetTokenT<std::vector<reco::Vertex>> VertexTag_;
 
+  edm::EDGetTokenT<reco::HFFilterInfo> HFfilters_;
+
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
   edm::EDGetTokenT<LHEEventProduct> generatorlheToken_;
-  
+
   bool doEvtPlane_;
   bool doEvtPlaneFlat_;
   bool doCentrality_;
@@ -118,6 +122,8 @@ private:
   std::vector<int> npus;    //number of pileup interactions
   std::vector<float> tnpus; //true number of interactions
 
+  int numMinHFTower2, numMinHFTower3, numMinHFTower4, numMinHFTower5;
+
   float vx,vy,vz;
 
   unsigned long long event;
@@ -144,6 +150,7 @@ HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig) :
   EvtPlaneFlatTag_(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag>("EvtPlaneFlat"))),
   HiMCTag_(consumes<edm::GenHIEvent>(iConfig.getParameter<edm::InputTag>("HiMC"))),
   VertexTag_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("Vertex"))),
+  HFfilters_(consumes<reco::HFFilterInfo>(iConfig.getParameter<edm::InputTag>("HFfilters"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
   generatorlheToken_(consumes<LHEEventProduct>(edm::InputTag("externalLHEProducer",""))),
@@ -345,6 +352,14 @@ HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     vz=vertex->begin()->z();
   }
 
+  edm::Handle<reco::HFFilterInfo> HFfilter;
+  iEvent.getByToken(HFfilters_, HFfilter);
+
+  numMinHFTower2 = HFfilter->numMinHFTowers2;
+  numMinHFTower3 = HFfilter->numMinHFTowers3;
+  numMinHFTower4 = HFfilter->numMinHFTowers4;
+  numMinHFTower5 = HFfilter->numMinHFTowers5;
+
   thi_->Fill();
 }
 
@@ -387,6 +402,11 @@ HiEvtAnalyzer::beginJob()
   vx = -100;
   vy = -100;
   vz = -100;
+
+  numMinHFTower2 = -1;
+  numMinHFTower3 = -1;
+  numMinHFTower4 = -1;
+  numMinHFTower5 = -1;
 
   // Run info
   thi_->Branch("run",&run,"run/i");
@@ -470,6 +490,12 @@ HiEvtAnalyzer::beginJob()
     thi_->Branch("hiNevtPlane",&nEvtPlanes,"hiNevtPlane/I");
     thi_->Branch("hiEvtPlanes",hiEvtPlane,"hiEvtPlanes[hiNevtPlane]/F");
   }
+
+  thi_->Branch("numMinHFTower2",&numMinHFTower2,"numMinHFTower2/I");
+  thi_->Branch("numMinHFTower3",&numMinHFTower3,"numMinHFTower3/I");
+  thi_->Branch("numMinHFTower4",&numMinHFTower4,"numMinHFTower4/I");
+  thi_->Branch("numMinHFTower5",&numMinHFTower5,"numMinHFTower5/I");
+
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

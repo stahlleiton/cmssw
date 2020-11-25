@@ -97,7 +97,7 @@ process.TFileService = cms.Service("TFileService",
 # process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi')
 #process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
-#process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 #process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 #process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
 
@@ -132,3 +132,12 @@ process.forest = cms.Path(
     )
 
 #customisation
+
+#########################
+# Event Selection -> add the needed filters here
+#########################
+
+process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
+process.pclusterCompatibilityFilter = cms.Path(process.clusterCompatibilityFilter)
+process.pprimaryVertexFilter = cms.Path(process.primaryVertexFilter)
+process.pAna = cms.EndPath(process.skimanalysis)
