@@ -13,17 +13,18 @@ process.load("FWCore.MessageService.test.Services_cff")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
 process.MessageLogger.destinations = ['warnings', 'infos']
-process.MessageLogger.statistics = ['warnings', 'infos']
-process.MessageLogger.fwkJobReports = ['job_report']
+del process.MessageLogger.statistics
+process.MessageLogger.categories.append('FwkTest')
 process.MessageLogger.default = cms.untracked.PSet(
     noTimeStamps = cms.untracked.bool(False),
-    FwkJob = cms.untracked.PSet(
+    FwkTest = cms.untracked.PSet(
         limit = cms.untracked.int32(0)
     ),
     limit = cms.untracked.int32(-1)
 )
 process.MessageLogger.warnings = cms.untracked.PSet(
     threshold = cms.untracked.string('WARNING'),
+    enableStatistics = cms.untracked.bool(True),
     default = cms.untracked.PSet(
         limit = cms.untracked.int32(3)
     ),
@@ -34,7 +35,8 @@ process.MessageLogger.infos = cms.untracked.PSet(
         limit = cms.untracked.int32(2)
     ),
     noTimeStamps = cms.untracked.bool(True),
-    FwkJob = cms.untracked.PSet(
+    enableStatistics = cms.untracked.bool(True),
+    FwkTest = cms.untracked.PSet(
         limit = cms.untracked.int32(0)
     )
 )

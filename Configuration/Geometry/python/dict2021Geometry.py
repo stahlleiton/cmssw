@@ -314,7 +314,7 @@ trackerDict = {
             'Geometry/TrackerSimData/data/trackerProdCutsBEAM.xml',
         ],
         "sim" : [
-            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cfi import *',
+            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cff import *',
         ],
         "reco" : [
             'from Geometry.CommonTopologies.globalTrackingGeometry_cfi import *',
@@ -516,7 +516,7 @@ trackerDict = {
             'Geometry/TrackerSimData/data/trackerProdCutsBEAM.xml',
         ],
         "sim" : [
-            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cfi import *',
+            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cff import *',
         ],
         "reco" : [
             'from Geometry.CommonTopologies.globalTrackingGeometry_cfi import *',
@@ -719,7 +719,7 @@ trackerDict = {
             'Geometry/TrackerSimData/data/trackerProdCutsBEAM.xml',
         ],
         "sim" : [
-            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cfi import *',
+            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cff import *',
         ],
         "reco" : [
             'from Geometry.CommonTopologies.globalTrackingGeometry_cfi import *',
@@ -921,7 +921,7 @@ trackerDict = {
             'Geometry/TrackerSimData/data/trackerProdCutsBEAM.xml',
         ],
         "sim" : [
-            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cfi import *',
+            'from Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cff import *',
         ],
         "reco" : [
             'from Geometry.CommonTopologies.globalTrackingGeometry_cfi import *',
@@ -983,12 +983,26 @@ caloDict = {
         ],
         "reco" : [
             'from Geometry.CaloEventSetup.CaloTopology_cfi import *',
-            'from Geometry.CaloEventSetup.CaloGeometry_cff import *',
+            'from Geometry.CaloEventSetup.CaloGeometryBuilder_cfi import *',
+            'CaloGeometryBuilder = cms.ESProducer("CaloGeometryBuilder",',
+            '    SelectedCalos = cms.vstring("HCAL",',
+            '                                "ZDC",',
+            '                                "EcalBarrel",',
+            '                                "EcalEndcap",',
+            '                                "EcalPreshower",',
+            '                                "TOWER",',
+            '    )',
+            ')',
+            'from Geometry.EcalAlgo.EcalGeometry_cfi import *',
+            'from Geometry.HcalEventSetup.HcalGeometry_cfi import *',
+            'from Geometry.HcalEventSetup.CaloTowerGeometry_cfi import *',
+            'from Geometry.HcalEventSetup.CaloTowerTopology_cfi import *',
+            'from Geometry.HcalCommonData.hcalDDDRecConstants_cfi import *',
+            'from Geometry.HcalEventSetup.hcalTopologyIdeal_cfi import *',
+            'from Geometry.ForwardGeometry.ForwardGeometry_cfi import *',
             'from Geometry.CaloEventSetup.EcalTrigTowerConstituents_cfi import *',
             'from Geometry.EcalMapping.EcalMapping_cfi import *',
             'from Geometry.EcalMapping.EcalMappingRecord_cfi import *',
-            'from Geometry.HcalCommonData.hcalDDDRecConstants_cfi import *',
-            'from Geometry.HcalEventSetup.hcalTopologyIdeal_cfi import *',
         ],
         "era" : "run3_HB",
     }
@@ -1000,22 +1014,22 @@ muonDict = {
     "default" : 1,
     "M1" : {
         1 : [
-            'Geometry/MuonCommonData/data/mbCommon/2021/v1/mbCommon.xml',
-            'Geometry/MuonCommonData/data/mb1/2015/v2/mb1.xml',
-            'Geometry/MuonCommonData/data/mb2/2015/v2/mb2.xml',
-            'Geometry/MuonCommonData/data/mb3/2015/v2/mb3.xml',
+            'Geometry/MuonCommonData/data/mbCommon/2021/v2/mbCommon.xml',
+            'Geometry/MuonCommonData/data/mb1/2021/v1/mb1.xml',
+            'Geometry/MuonCommonData/data/mb2/2021/v1/mb2.xml',
+            'Geometry/MuonCommonData/data/mb3/2021/v1/mb3.xml',
             'Geometry/MuonCommonData/data/mb4/2015/v2/mb4.xml',
             'Geometry/MuonCommonData/data/mb4Shield/2021/v1/mb4Shield.xml',
-            'Geometry/MuonCommonData/data/muonYoke/2021/v4/muonYoke.xml',
+            'Geometry/MuonCommonData/data/muonYoke/2021/v5/muonYoke.xml',
             'Geometry/MuonCommonData/data/mf/2021/v2/mf.xml',
             'Geometry/MuonCommonData/data/rpcf/2015/v1/rpcf.xml',
             'Geometry/MuonCommonData/data/gemf/TDR_BaseLine/gemf.xml',
             'Geometry/MuonCommonData/data/gem11/TDR_BaseLine/gem11.xml',
-            'Geometry/MuonCommonData/data/csc/2021/v2/csc.xml',
+            'Geometry/MuonCommonData/data/csc/2021/v3/csc.xml',
             'Geometry/MuonCommonData/data/mfshield/2017/v2/mfshield.xml',
         ],
         2 : [
-            'Geometry/MuonCommonData/data/muonNumbering/2021/v2/muonNumbering.xml',
+            'Geometry/MuonCommonData/data/muonNumbering/2021/v3/muonNumbering.xml',
         ],
         3 : [
             'Geometry/MuonSimData/data/v2/muonSens.xml',
@@ -1031,11 +1045,12 @@ muonDict = {
         ],
         "sim" : [
             'from Geometry.MuonNumbering.muonGeometryConstants_cff import *',
+            'from Geometry.MuonNumbering.muonOffsetESProducer_cff import *',
         ],
         "reco" : [
             'from Geometry.MuonNumbering.muonNumberingInitialization_cfi import *',
             'from RecoMuon.DetLayers.muonDetLayerGeometry_cfi import *',
-            'from Geometry.GEMGeometryBuilder.gemGeometry_cfi import *',
+            'from Geometry.GEMGeometryBuilder.gemGeometry_cff import *',
             'from Geometry.CSCGeometryBuilder.idealForDigiCscGeometry_cff import *',
             'from Geometry.DTGeometryBuilder.idealForDigiDtGeometry_cff import *',
         ],
@@ -1054,12 +1069,12 @@ forwardDict = {
             'Geometry/ForwardCommonData/data/forwardshield/2021/v1/forwardshield.xml',
             'Geometry/ForwardCommonData/data/brmrotations.xml',
             'Geometry/ForwardCommonData/data/brm/2021/v1/brm.xml',
-            'Geometry/ForwardCommonData/data/zdcmaterials.xml',
+            'Geometry/ForwardCommonData/data/zdcmaterials/2021/v1/zdcmaterials.xml',
             'Geometry/ForwardCommonData/data/lumimaterials.xml',
             'Geometry/ForwardCommonData/data/zdcrotations.xml',
             'Geometry/ForwardCommonData/data/lumirotations.xml',
             'Geometry/ForwardCommonData/data/zdc/2021/v1/zdc.xml',
-            'Geometry/ForwardCommonData/data/zdclumi/2021/v1/zdclumi.xml',
+            'Geometry/ForwardCommonData/data/zdclumi/2021/v2/zdclumi.xml',
             'Geometry/ForwardCommonData/data/cmszdc.xml',
         ],
         3 : [
