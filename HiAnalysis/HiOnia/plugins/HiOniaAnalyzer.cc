@@ -1039,7 +1039,7 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
       if (!iTrack.isNull()){
 	Reco_mu_highPurity[Reco_mu_size] = iTrack->quality(reco::TrackBase::highPurity);
 	Reco_mu_nTrkHits[Reco_mu_size] = iTrack->found();
-	Reco_mu_normChi2_inner[Reco_mu_size] = iTrack->normalizedChi2();
+	Reco_mu_normChi2_inner[Reco_mu_size] = (muon->hasUserFloat("trackChi2") ? muon->userFloat("trackChi2")/iTrack->ndof() : iTrack->normalizedChi2());
 	Reco_mu_nPixValHits[Reco_mu_size] = iTrack->hitPattern().numberOfValidPixelHits();
 	Reco_mu_nPixWMea[Reco_mu_size] = iTrack->hitPattern().pixelLayersWithMeasurement();
 	Reco_mu_nTrkWMea[Reco_mu_size] = iTrack->hitPattern().trackerLayersWithMeasurement();

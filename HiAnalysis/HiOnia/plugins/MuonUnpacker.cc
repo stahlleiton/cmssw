@@ -33,6 +33,8 @@ namespace pat {
           candidateMuonIDToken_["packedPFCandidate"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "pfCandidates"+sel));
           candidateMuonIDToken_["lostTrack"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "lostTracks"+sel));
         }
+        trackChi2Token_["packedPFCandidate"] = consumes<edm::ValueMap<float> >(edm::InputTag("packedPFCandidateTrackChi2"));
+        trackChi2Token_["lostTrack"] = consumes<edm::ValueMap<float> >(edm::InputTag("lostTrackChi2"));
         produces<pat::MuonCollection>();
       }
       ~MuonUnpacker() override {};
@@ -41,7 +43,7 @@ namespace pat {
 
       void addMuon(pat::Muon&, const pat::PackedCandidate&, const std::string&,
                    const reco::TrackRef&, const edm::ESHandle<TransientTrackBuilder>&,
-                   const reco::Vertex&, const reco::BeamSpot&, std::map<std::string, bool>);
+                   const reco::Vertex&, const reco::BeamSpot&, const float& trackChi2, std::map<std::string, bool>);
 
       static void fillDescriptions(edm::ConfigurationDescriptions&);
 
@@ -54,6 +56,7 @@ namespace pat {
       const edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
       const edm::EDGetTokenT<edm::TriggerResults> triggerResultToken_;
       std::map<std::string, std::map<std::string, edm::EDGetTokenT<pat::PackedCandidateRefVector> > > candidateMuonIDToken_;
+      std::map<std::string, edm::EDGetTokenT<edm::ValueMap<float> > > trackChi2Token_;
 
   };
 
@@ -81,6 +84,13 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
     const auto& trk = reco::TrackRef(tracks, i);
     const auto& tuple = std::make_tuple(trk->pt(), trk->eta(), trk->phi(), trk->charge(), trk->numberOfValidHits());
     candTrackMap[tuple] = trk;
+  }
+
+  // extract candidate track chi2 map
+  std::map<std::string, edm::ValueMap<float> > trackChi2Map;
+  for (const auto& n : trackChi2Token_) {
+    const auto& valueMap = iEvent.getHandle(n.second);
+    if (valueMap.isValid()) trackChi2Map.emplace(n.first, *valueMap);
   }
 
   // extract primary vertex and beamspot
@@ -118,9 +128,15 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       }
       if (isIncluded) continue;
 
+      // extract track chi2
+      float trackChi2(-1);
+      if (trackChi2Map[n.first].contains(cand.id())) {
+        trackChi2 = trackChi2Map[n.first][cand];
+      }
+
       // create and add the muon object
       pat::Muon muon;
-      addMuon(muon, *cand, n.first, track, trackBuilder, primaryVertex, beamSpot, selMap);
+      addMuon(muon, *cand, n.first, track, trackBuilder, primaryVertex, beamSpot, trackChi2, selMap);
       candMuons.push_back(muon);
     }
   }
@@ -141,7 +157,7 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidate& cand, const std::string& lbl,
                                 const reco::TrackRef& track, const edm::ESHandle<TransientTrackBuilder>& trackBuilder,
                                 const reco::Vertex& primaryVertex, const reco::BeamSpot& beamSpot,
-                                std::map<std::string, bool> selMap) {
+                                const float& trackChi2, std::map<std::string, bool> selMap) {
   // add basic information
   muon.setP4(math::PtEtaPhiMLorentzVector(track->pt(), track->eta(), track->phi(), cand.mass()));
   muon.setCharge(cand.charge());
@@ -154,6 +170,7 @@ void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidate& can
   muon.embedTrack();
   muon.setNumberOfValidHits(track->numberOfValidHits());
   const auto& muonTrack = *muon.track();
+  muon.addUserFloat("trackChi2", trackChi2);
 
   // add vertex information
   auto tt = trackBuilder->build(muonTrack);
