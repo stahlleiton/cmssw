@@ -19,7 +19,7 @@ namespace CAConstants {
 #ifdef GPU_SMALL_EVENTS
   constexpr uint32_t maxNumberOfTuples() { return 3 * 1024; }
 #else
-  constexpr uint32_t maxNumberOfTuples() { return 24 * 1024; }
+  constexpr uint32_t maxNumberOfTuples() { return 32 * 1024; }
 #endif
 #else
   constexpr uint32_t maxNumberOfTuples() { return 48 * 1024; }
@@ -28,7 +28,7 @@ namespace CAConstants {
 #ifndef ONLY_PHICUT
 #ifndef GPU_SMALL_EVENTS
   constexpr uint32_t maxNumberOfDoublets() { return 512 * 1024; }
-  constexpr uint32_t maxCellsPerHit() { return 128; }
+  constexpr uint32_t maxCellsPerHit() { return 2 * 128; }
 #else
   constexpr uint32_t maxNumberOfDoublets() { return 128 * 1024; }
   constexpr uint32_t maxCellsPerHit() { return 128 / 2; }
