@@ -116,30 +116,30 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 ##### Dimuon pair selection
     commonP1 = "|| (innerTrack.isNonnull && genParticleRef(0).isNonnull)"
     commonP2 = " && abs(innerTrack.dxy)<4 && abs(innerTrack.dz)<35"
-    miniAODcut = "(pt > 5 || isPFMuon || (pt>1.2 && (isGlobalMuon || isStandAloneMuon)) || (isTrackerMuon && track.quality('highPurity')))" if miniAODcuts else ""
+    miniAODcut = "&& (pt > 5 || isPFMuon || (pt>1.2 && (isGlobalMuon || isStandAloneMuon)) || (isTrackerMuon && track.quality('highPurity')))" if miniAODcuts else ""
     if muonSelection == "Glb":
         highP = "isGlobalMuon"; # At least one muon must pass this selection. No need to repeat the lowerPuritySelection cuts.
         process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "isGlobalMuon"; # BOTH muons must pass this selection
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+" && "+miniAODcut)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif muonSelection == "GlbTrk":
         highP = "(isGlobalMuon && isTrackerMuon)";
         process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "(isGlobalMuon && isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+" && "+miniAODcut)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif (muonSelection == "GlbOrTrk" or muonSelection == "TwoGlbAmongThree"):
         highP = "(isGlobalMuon || isTrackerMuon)";
         process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "(isGlobalMuon || isTrackerMuon)";
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+" && "+miniAODcut)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif muonSelection == "Trk":
         highP = "isTrackerMuon";
         process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
         lowP = "isTrackerMuon";
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+" && "+miniAODcut)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("("+lowP+commonP1+")"+commonP2+miniAODcut)
     elif muonSelection == "All":
         process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("")#("+highP+commonP1+")"+commonP2+miniAODcut)
-        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string(miniAODcut)
+        process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("pt > 0 "+miniAODcut)
     else:
         print "ERROR: Incorrect muon selection " + muonSelection + " . Valid options are: Glb, Trk, GlbTrk"
         
