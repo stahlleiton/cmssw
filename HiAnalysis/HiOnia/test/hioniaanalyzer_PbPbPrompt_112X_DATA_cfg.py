@@ -45,13 +45,17 @@ process = cms.Process("HIOnia", eras.Run2_2018)
 options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Names
-options.outputFile = "Oniatree.root"
+options.outputFile = "Oniatree_miniAOD.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
   #'file:/eos/cms/store/group/phys_heavyions/mnguyen/miniAOD/reMiniAOD_DATA_PAT_HIDoubleMuon.root',
   #'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
-  'file:/eos/cms/store/group/phys_heavyions/jaebeom/step2_DoubleMuonPD_PAT_1.root'
-  'file:/home/llr/cms/falmagne/miniAOD/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi_HiDoubleMuPsiPeri.root'
+  #'file:/home/llr/cms/falmagne/miniAOD/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi_HiDoubleMuPsiPeri.root'
+  'file:/home/llr/cms/falmagne/miniAOD/CMSSW_11_2_0_pre9/src/step2_miniAOD_DoubleMuonPD_11_2_0_pre9_1.root'
+  #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FC3997EF-7B96-7947-81B0-96EEEA53AA60.root',
+  #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FE775A7B-0F67-A14E-AAEE-1E00D4EE0BC9.root',
+  #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FECEBB19-DB3E-AB40-B807-458134ABEEA3.root',
+  #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuonPsiPeri/AOD/04Apr2019-v1/270007/2DA8EBF0-C0E7-6C42-AE96-8830278F8532.root'
   #'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
@@ -156,9 +160,9 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = '103X_upgrade2018_realistic_HI_v11'
+  globalTag = 'auto:phase1_2018_realistic_hi' 
 else:
-  globalTag = '103X_dataRun2_Prompt_v3'
+  globalTag = 'auto:run2_data'
 
 #----------------------------------------------------------------------------
 
@@ -171,7 +175,7 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 # Global Tag:
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '')
 ### For Centrality
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
 process.centralityBin.Centrality = cms.InputTag("hiCentrality")
@@ -180,7 +184,7 @@ print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
+        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
         label = cms.untracked.string("HFtowers")
         ),
@@ -193,7 +197,7 @@ from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process,
                  muonTriggerList=triggerList, #HLTProName=HLTProcess,
                  muonSelection=muonSelection, L1Stage=2, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons,
-                 miniAODcuts=miniAOD_muonCuts#, OnlySingleMuons=False
+                 miniAOD=miniAOD, miniAODcuts=miniAOD_muonCuts#, OnlySingleMuons=False
 )
 
 #process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")

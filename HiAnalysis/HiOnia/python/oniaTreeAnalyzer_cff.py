@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", L1Stage=2, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAODcuts=False, OnlySingleMuons=False):
+def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", L1Stage=2, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAOD=True, miniAODcuts=False, OnlySingleMuons=False):
 
     if muonTriggerList==[[],[],[],[]]:
         muonTriggerList = {
@@ -85,7 +85,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 ###################### Onia Skim Producer #################################################
 
     from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import onia2MuMuPAT
-    onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=(L1Stage==2), doTrimuons=doTrimu, DimuonTrk=doDimuTrk, flipJpsiDir=flipJpsiDir)
+    onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=(L1Stage==2), doTrimuons=doTrimu, DimuonTrk=doDimuTrk, flipJpsiDir=flipJpsiDir, miniAOD=miniAOD)
 
 ### Temporal fix for the PAT Trigger prescale warnings.
     if (HLTProName == 'HLT') :
@@ -108,8 +108,8 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 # Adding muonLessPV gives you lifetime values wrt. muonLessPV only
     process.onia2MuMuPatGlbGlb.addMuonlessPrimaryVertex = muonlessPV
     if isMC:
-        process.genMuons.src = "genParticles"
-        process.onia2MuMuPatGlbGlb.genParticles = "genParticles"
+        process.genMuons.src = "prunedGenParticles" if miniAOD else "genParticles"
+        process.onia2MuMuPatGlbGlb.genParticles = "prunedGenParticles" if miniAOD else "genParticles"
         
     #process.patMuonSequence.remove(process.hltOniaHI)
 
@@ -222,7 +222,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     #stage2L1Trigger.toModify(process.hionia, stageL1Trigger = 2)
 
     process.hionia.primaryVertexTag = cms.InputTag("offlinePrimaryVertices")
-    process.hionia.genParticles     = cms.InputTag("genParticles")
+    process.hionia.genParticles     = cms.InputTag("prunedGenParticles" if miniAOD else "genParticles")
     process.hionia.muonLessPV       = cms.bool(muonlessPV)
     process.hionia.CentralitySrc    = cms.InputTag("")
     process.hionia.CentralityBinSrc = cms.InputTag("")
