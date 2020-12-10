@@ -213,8 +213,13 @@ def changeToMiniAOD(process):
         process.load('HiAnalysis.HiOnia.unpackedMuons_cfi')
         process.patMuonSequence.insert(1, process.unpackedMuons)
 
+        useExistingPATMuons(process, newPatMuonTag=cms.InputTag("unpackedMuonsWithGenMatch"), addL1Info=False)
+        process.load('HiAnalysis.HiOnia.unpackedMuonsWithGenMatch_cfi')
+        process.patMuonsWithTriggerSequence.insert(1, process.unpackedMuonsWithGenMatch)
+
         process.outOnia2MuMu.outputCommands.append('keep *Vert*_unpackedTracksAndVertices_*_*')
         process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuons_*_*')
+        process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuonsWithGenMatch_*_*')
         process.outOnia2MuMu.outputCommands.append('drop patMuons_patMuonsWith*_*_*')
 
 
