@@ -5,17 +5,6 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
-#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-#include "DataFormats/BeamSpot/interface/BeamSpot.h"
-#include "DataFormats/MuonReco/interface/MuonSelectors.h"
-#include "DataFormats/MuonReco/interface/Muon.h"
-#include "DataFormats/MuonReco/interface/MuonFwd.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
-#include "TrackingTools/IPTools/interface/IPTools.h"
 
 namespace pat {
 
@@ -24,13 +13,9 @@ namespace pat {
   public:
     
     explicit EmbedMCinMuons(const edm::ParameterSet & iConfig):
-      muonGenMatchToken_(consumes(iConfig.getParameter<edm::InputTag>("matchedGen"))),//type from CommonTools/UtilAlgos/interface/PhysObjectMatcher.h //not mentionning the type <edm::Association<reco::GenParticleCollection>> to consumes works from 11_2_0_pre6
+      muonGenMatchToken_(consumes(iConfig.getParameter<edm::InputTag>("matchedGen"))),
       muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons")))
     {
-      //for (const auto& sel: muonSelectors_) {
-      //candidateMuonIDToken_["packedPFCandidate"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "pfCandidates"+sel));
-      //candidateMuonIDToken_["lostTrack"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "lostTracks"+sel));
-      //}
       produces<pat::MuonCollection>();
     }
     ~EmbedMCinMuons() override {};
@@ -53,22 +38,19 @@ void pat::EmbedMCinMuons::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(muonGenMatchToken_, matches);
 
   // extract muons from packedCandidate collections
-  edm::Handle<edm::View<pat::Muon> > muonCands;
+  edm::Handle<pat::MuonCollection> muonCands;
   iEvent.getByToken(muonToken_, muonCands);
-  unsigned int ncand = muonCands->size();
 
   pat::MuonCollection outMuons;
 
   auto output = std::make_unique<pat::MuonCollection>();
   //loop over muons to grab and add the matched gen muon
-  for (size_t i=0; i<ncand; i++) {
-    edm::RefToBase<pat::Muon> muonref(muonCands, i);
-    reco::GenParticleRef genPRef = (*matches)[muonref]; //PhysicsTools/NanoAOD/plugins/CandMCMatchTableProducer.cc, source mcMap is like muonMatch
+  for (size_t i=0; i<muonCands->size(); i++) {
+    pat::MuonRef muonref(muonCands, i);
+    const auto& genPRef = (*matches)[muonref];
 
-    //replacing the associated gen particle
     pat::Muon outmuon = *muonref;
-    outmuon.setGenParticleRef(genPRef, true); //2nd argument is for embedding the particle
-    
+    outmuon.setGenParticleRef(genPRef, true);
     output->push_back(outmuon);
   }
 

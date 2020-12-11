@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stage2=False, doTrimuons=False, DimuonTrk=False, flipJpsiDir=0, miniAOD=True):
+def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stage2=False, doTrimuons=False, DimuonTrk=False, flipJpsiDir=0):
     # Setup the process
     process.options = cms.untracked.PSet(
         wantSummary = cms.untracked.bool(True),
@@ -21,7 +21,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
     '''
     # Prune generated particles to muons and their parents
     process.genMuons = cms.EDProducer("GenParticlePruner",
-        src = cms.InputTag("prunedGenParticles" if miniAOD else "genParticles"),
+        src = cms.InputTag("genParticles"),
         select = cms.vstring(
             "drop  *  ",                      # this is the default
             "++keep abs(pdgId) = 13"          # keep muons and their parents
@@ -38,8 +38,8 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         # since we match inner tracks, keep the matching tight and make it one-to-one
         process.muonMatch.maxDeltaR = cms.double(0.05)
         process.muonMatch.resolveByMatchQuality = True
-        process.muonMatch.matched = "prunedGenParticles" if miniAOD else "genMuons"
-        process.muonMatch.src = "unpackedMuons" if miniAOD else "muons"
+        process.muonMatch.matched = "genMuons"
+        process.muonMatch.src = "muons"
     changeTriggerProcessName(process, HLT)
     switchOffAmbiguityResolution(process) # Switch off ambiguity resolution: allow multiple reco muons to match to the same trigger muon
     addHLTL1Passthrough(process)
@@ -97,7 +97,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         beamSpotTag              = cms.InputTag("offlineBeamSpot"),
         primaryVertexTag         = cms.InputTag("offlinePrimaryVertices"),
         srcTracks                = cms.InputTag("generalTracks"),
-        genParticles             = cms.InputTag("prunedGenParticles" if miniAOD else "genParticles"),
+        genParticles             = cms.InputTag("genParticles"),
         # At least one muon must pass this selection
         higherPuritySelection    = cms.string(""), ## No need to repeat lowerPuritySelection in there, already included
         # BOTH muons must pass this selection
@@ -167,7 +167,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
         outputCommands =  cms.untracked.vstring(
             'drop *',
             'keep *_mergedtruth_*_*',                              # tracking particles and tracking vertices for hit by hit matching
-            'keep *_prunedGenParticles_*_*' if miniAOD else 'keep *_genParticles_*_*',# generated particles
+            'keep *_genParticles_*_*',                             # generated particles
             'keep *_genMuons_*_Onia2MuMuPAT',                      # generated muons and parents
             'keep patMuons_patMuonsWithTrigger_*_Onia2MuMuPAT',    # All PAT muons including matches to triggers
             'keep patCompositeCandidates_*__Onia2MuMuPAT',         # PAT di-muons
@@ -213,16 +213,24 @@ def changeToMiniAOD(process):
         process.load('HiAnalysis.HiOnia.unpackedMuons_cfi')
         process.patMuonSequence.insert(1, process.unpackedMuons)
 
-        useExistingPATMuons(process, newPatMuonTag=cms.InputTag("unpackedMuonsWithGenMatch"), addL1Info=False)
-        process.load('HiAnalysis.HiOnia.unpackedMuonsWithGenMatch_cfi')
-        process.patMuonsWithTriggerSequence.insert(1, process.unpackedMuonsWithGenMatch)
-
         process.outOnia2MuMu.outputCommands.append('keep *Vert*_unpackedTracksAndVertices_*_*')
         process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuons_*_*')
-        process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuonsWithGenMatch_*_*')
         process.outOnia2MuMu.outputCommands.append('drop patMuons_patMuonsWith*_*_*')
 
+        if hasattr(process, "muonMatch"):
+            from MuonAnalysis.MuonAssociators.patMuonsWithTrigger_cff import changeRecoMuonInput
+            changeRecoMuonInput(process, recoMuonCollectionTag=cms.InputTag("unpackedMuonsWithGenMatch"), oldRecoMuonCollectionTag=cms.InputTag("unpackedMuons"))
+            process.load('HiAnalysis.HiOnia.unpackedMuonsWithGenMatch_cfi')
+            process.patMuonsWithTriggerSequence.insert(1, process.unpackedMuonsWithGenMatch)
+
+            #process.muonMatch.matched = "prunedGenParticles"
+            process.muonMatch.src = "unpackedMuons"
+
+            process.outOnia2MuMu.outputCommands.append('keep *_prunedGenParticles_*_*')
+            process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuonsWithGenMatch_*_*')
+            process.outOnia2MuMu.outputCommands.append('drop patMuons_unpackedMuons_*_*')
 
     from HLTrigger.Configuration.CustomConfigs import MassReplaceInputTag
     process = MassReplaceInputTag(process,"offlinePrimaryVertices","unpackedTracksAndVertices")
     process = MassReplaceInputTag(process,"generalTracks","unpackedTracksAndVertices")
+    process = MassReplaceInputTag(process,"genParticles","prunedGenParticles")

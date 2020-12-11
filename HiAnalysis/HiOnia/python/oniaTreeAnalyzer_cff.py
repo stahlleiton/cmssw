@@ -74,7 +74,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     process.MessageLogger.cerr.FwkReport.reportEvery = 1000
     process.MessageLogger.categories.extend(["HiOnia2MuMuPAT_muonLessSizeORpvTrkSize"])
     process.MessageLogger.cerr.HiOnia2MuMuPAT_muonLessSizeORpvTrkSize = cms.untracked.PSet( limit = cms.untracked.int32(5) )
-    
+
     process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
     # load the Modules for the PATMuonsWithTrigger
     process.load('RecoMuon.Configuration.RecoMuon_cff')
@@ -85,7 +85,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
 ###################### Onia Skim Producer #################################################
 
     from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import onia2MuMuPAT
-    onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=(L1Stage==2), doTrimuons=doTrimu, DimuonTrk=doDimuTrk, flipJpsiDir=flipJpsiDir, miniAOD=miniAOD)
+    onia2MuMuPAT(process, GlobalTag=process.GlobalTag.globaltag, MC=isMC, HLT=HLTProName, Filter=False, useL1Stage2=(L1Stage==2), doTrimuons=doTrimu, DimuonTrk=doDimuTrk, flipJpsiDir=flipJpsiDir)
 
 ### Temporal fix for the PAT Trigger prescale warnings.
     if (HLTProName == 'HLT') :
@@ -110,7 +110,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     if isMC:
         process.genMuons.src = "prunedGenParticles" if miniAOD else "genParticles"
         process.onia2MuMuPatGlbGlb.genParticles = "prunedGenParticles" if miniAOD else "genParticles"
-        
+
     #process.patMuonSequence.remove(process.hltOniaHI)
 
 ##### Dimuon pair selection
@@ -142,7 +142,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
         process.onia2MuMuPatGlbGlb.lowerPuritySelection = cms.string("pt > 0 "+miniAODcut)
     else:
         print "ERROR: Incorrect muon selection " + muonSelection + " . Valid options are: Glb, Trk, GlbTrk"
-        
+
 ###################### HiOnia Analyzer #################################################
 
     process.hionia = cms.EDAnalyzer('HiOniaAnalyzer',
@@ -154,33 +154,33 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     srcDimuTrk          = cms.InputTag("onia2MuMuPatGlbGlb","dimutrk"),      # Name of Onia Skim Collection for Jpsi+track
                                     EvtPlane            = cms.InputTag("hiEvtPlane",""),           # Name of Event Plane Collection. For RECO use: hiEventPlane,recoLevel
                                     srcSV               = cms.InputTag("inclusiveSecondaryVerticesLoose",""), # Name of SV collection
-                                    
+
                                     triggerResultsLabel = cms.InputTag("TriggerResults","",HLTProName), # Label of Trigger Results
-                                    
+
                                     #-- Reco Details
-                                    useBeamSpot = cms.bool(False),  
+                                    useBeamSpot = cms.bool(False),
                                     useRapidity = cms.bool(True),
-                                    
+
                                     #--
                                     maxAbsZ = cms.double(24.0),
-                                    
+
                                     pTBinRanges      = cms.vdouble(0.0, 6.0, 8.0, 9.0, 10.0, 12.0, 15.0, 40.0),
                                     etaBinRanges     = cms.vdouble(0.0, 2.5),
                                     centralityRanges = cms.vdouble(20,40,100),
 
-                                    onlyTheBest        = cms.bool(False),	
+                                    onlyTheBest        = cms.bool(False),
                                     applyCuts          = cms.bool(False),
                                     selTightGlobalMuon = cms.bool(False),
                                     storeEfficiency    = cms.bool(False),
                                     SofterSgMuAcceptance = cms.bool(False),
                                     SumETvariables     = cms.bool(True),
-                                    OneMatchedHLTMu    = cms.int32(-1),  # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to-1 for no matching. 
+                                    OneMatchedHLTMu    = cms.int32(-1),  # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to-1 for no matching.
                                     checkTrigNames     = cms.bool(True),  # Whether to names of the triggers given in the config
                                     doTrimuons         = cms.bool(doTrimu),  # Whether to produce trimuon objects
                                     DimuonTrk          = cms.bool(doDimuTrk),  # Whether to produce Jpsi+track objects
                                     flipJpsiDirection  = cms.int32(flipJpsiDir),  # Whether to flip the Jpsi momentum direction
-                                    genealogyInfo      = cms.bool(False), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ  
-                                    miniAODcut         = cms.bool(miniAODcuts), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ  
+                                    genealogyInfo      = cms.bool(False), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ
+                                    miniAODcut         = cms.bool(miniAODcuts), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ
                                     storeSameSign      = cms.bool(True),   # Store/Drop same sign dimuons
                                     AtLeastOneCand     = cms.bool(False),  # If true, store only events that have at least one selected candidate dimuon (or trimuon candidate if doTrimuons=true)
 
@@ -198,7 +198,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     useEvtPlane = cms.untracked.bool(False),
                                     useGeTracks = cms.untracked.bool(False),
                                     runVersionChange = cms.untracked.uint32(182133),
-                                    
+
                                     #-- Histogram configuration
                                     combineCategories = cms.bool(False),
                                     fillRooDataSet    = cms.bool(False),
@@ -208,9 +208,9 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     fillSingleMuons   = cms.bool(True),
                                     onlySingleMuons   = cms.bool(OnlySingleMuons),
                                     fillRecoTracks    = cms.bool(False),
-                                    histFileName      = cms.string(outputFileName),		
+                                    histFileName      = cms.string(outputFileName),
                                     dataSetName       = cms.string("Jpsi_DataSet.root"),
-                                    
+
                                     dblTriggerPathNames = muonTriggerList['DoubleMuonTrigger'],
                                     dblTriggerFilterNames = muonTriggerList['DoubleMuonFilter'],
                                     sglTriggerPathNames = muonTriggerList['SingleMuonTrigger'],
