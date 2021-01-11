@@ -20,8 +20,7 @@ atLeastOneCand = False # Keep only events that have one selected dimuon (or at l
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
-useSVfinder    = False # External SV finder to check if the muons are from a resolved SV
-miniAOD        = False # whether the input file is in miniAOD format (default is AOD)
+miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 #----------------------------------------------------------------------------
 
@@ -45,11 +44,11 @@ process = cms.Process("HIOnia", eras.Run2_2018)
 options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Name
-options.outputFile = "Oniatree_MC_AOD.root"
+options.outputFile = "Oniatree_MC_miniAOD.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-'/store/himc/HINPbPbAutumn18DR/JPsi_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/AODSIM/mva98_103X_upgrade2018_realistic_HI_v11-v1/120000/06BA15D4-3041-D54E-AB6D-F32A05C95948.root'
-  #'file:/home/llr/cms/falmagne/miniAOD/step2_miniAOD_MC_JPsiEmb.root'
+  #'/store/himc/HINPbPbAutumn18DR/JPsi_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/AODSIM/mva98_103X_upgrade2018_realistic_HI_v11-v1/120000/06BA15D4-3041-D54E-AB6D-F32A05C95948.root'
+  'file:/home/llr/cms/falmagne/miniAOD/step2_miniAOD_MC_JPsiEmb.root'
 ]
 options.maxEvents = 1689 # -1 means all events
 
@@ -206,7 +205,6 @@ process.hionia.SumETvariables   = cms.bool(SumETvariables)
 process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
-process.hionia.useSVfinder      = cms.bool(useSVfinder)
 process.hionia.checkTrigNames   = cms.bool(False)#change this to get the event-level trigger info in hStats output (but creates lots of warnings when fake trigger names are used)
 
 '''
