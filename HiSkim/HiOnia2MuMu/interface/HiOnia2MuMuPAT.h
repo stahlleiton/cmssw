@@ -50,7 +50,7 @@ class HiOnia2MuMuPAT : public edm::EDProducer {
     virtual void beginJob() ;
     virtual void produce(edm::Event&, const edm::EventSetup&);
     virtual void endJob() ;
-    bool isSoftMuon(const pat::Muon*);
+    bool isSoftMuonBase(const pat::Muon*);
     const reco::TrackBase::Point rotatePoint(reco::TrackBase::Point PV, reco::TrackBase::Point TrkPoint, int flipJpsi);
     const reco::TrackBase::Vector rotateMomentum(reco::Track trk, int flipJpsi);
     bool isAbHadron(int pdgID);

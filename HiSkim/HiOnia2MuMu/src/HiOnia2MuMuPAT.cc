@@ -78,13 +78,11 @@ HiOnia2MuMuPAT::~HiOnia2MuMuPAT()
 //
 
 bool
-HiOnia2MuMuPAT::isSoftMuon(const pat::Muon* aMuon) {
+HiOnia2MuMuPAT::isSoftMuonBase(const pat::Muon* aMuon) {
   return (
 	  aMuon->isTrackerMuon() &&
-	  //muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&
-          //aMuon->innerTrack()->quality(reco::TrackBase::highPurity) && 
           fabs(aMuon->innerTrack()->dxy(RefVtx)) < 0.3 &&
           fabs(aMuon->innerTrack()->dz(RefVtx)) < 20.
           );
@@ -234,7 +232,7 @@ HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::vector<pat::Muon> ourMuons;
   for(View<pat::Muon>::const_iterator it = muons->begin(), itend = muons->end(); it != itend; ++it){
-    if ( lowerPuritySelection_(*it) && (!onlySoftMuons_ || isSoftMuon(&(*it))) ){
+    if ( lowerPuritySelection_(*it) && (!onlySoftMuons_ || isSoftMuonBase(&(*it))) ){
       ourMuons.push_back(*it);}
   }
   int ourMuNb = ourMuons.size();

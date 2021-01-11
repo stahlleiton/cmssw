@@ -107,7 +107,9 @@ private:
   bool isMuonInAccept(const pat::Muon* aMuon, std::string muonType);
   bool isTrkInMuonAccept(TLorentzVector trk4mom, std::string muonType);
 
+  bool isSoftMuonBase(const pat::Muon* aMuon);
   bool isSoftMuon(const pat::Muon* aMuon);
+  bool isHybridSoftMuon(const pat::Muon* aMuon);
   bool isTightMuon(const pat::Muon* aMuon);
   Short_t MuInSV(TLorentzVector v1, TLorentzVector v2, TLorentzVector v3);
 
@@ -905,7 +907,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       this->makeDimutrkCuts(_storeSs);
   }
 
-  if(!_doTrimuons || !_isMC || _thePassedBcCands.size()>0){ //not storing the mu reconstructed info if we do a trimuon MC and there is no reco trimuon
+  if(_fillSingleMuons || !_AtLeastOneCand || !_doTrimuons || !_isMC || _thePassedBcCands.size()>0){ //not storing the mu reconstructed info if we do a trimuon MC and there is no reco trimuon
     //_fillSingleMuons is checked within the fillRecoMuons function: the info on the wanted muons was stored in the makeCuts function
     this->fillRecoMuons(theCentralityBin);
 
@@ -2347,11 +2349,11 @@ HiOniaAnalyzer::isTrkInMuonAccept(TLorentzVector trk4mom, std::string muonType){
              (1.2 <= fabs(trk4mom.Eta()) && fabs(trk4mom.Eta()) < 2.1 && trk4mom.Pt() >= 5.47-1.89*fabs(trk4mom.Eta())) ||
              (2.1 <= fabs(trk4mom.Eta()) && trk4mom.Pt() >= 1.5)));
   }
-  else if (muonType == (std::string)("TRK")) {
+  else if (muonType == (std::string)("TRK") || muonType == (std::string)("TRKSOFT")) {
     return (fabs(trk4mom.Eta()) < 2.4 &&
-            ((fabs(trk4mom.Eta()) < 1. && trk4mom.Pt() >= 3.3) ||
-             (1. <= fabs(trk4mom.Eta()) && fabs(trk4mom.Eta()) < 2.2 && trk4mom.P() >= 2.9) ||
-             (2.2 <= fabs(trk4mom.Eta()) && trk4mom.Pt() >= 0.8)));
+            ((fabs(trk4mom.Eta()) < 1.1 && trk4mom.Pt() >= 3.3) ||
+             (1.1 <= fabs(trk4mom.Eta()) && fabs(trk4mom.Eta()) < 1.3 && trk4mom.Pt() >= 13.2-9.0*fabs(trk4mom.Eta()) ) ||
+             (1.3 <= fabs(trk4mom.Eta()) && trk4mom.Pt() >= 0.8 && trk4mom.Pt() >= 3.02-1.17*fabs(trk4mom.Eta()) )));
   }
   else if (muonType == (std::string)("GLBSOFT")) {
     return (fabs(trk4mom.Eta()) < 2.4 &&
@@ -2399,9 +2401,9 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
   }
   else if (muonType == (std::string)("TRKSOFT")) {
     return (fabs(aMuon->eta()) < 2.4 &&
-            ((fabs(aMuon->eta()) < 1.1 && aMuon->pt() >= 3.3) ||
-             (1.1 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 13.2-9.0*fabs(aMuon->eta()) ) ||
-             (1.3 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8 && aMuon->pt() >= 3.02-1.17*fabs(aMuon->eta()) )));
+	    ((fabs(aMuon->eta()) < 1.1 && aMuon->pt() >= 3.3) ||
+	     (1.1 <= fabs(aMuon->eta()) && fabs(aMuon->eta()) < 1.3 && aMuon->pt() >= 13.2-9.0*fabs(aMuon->eta()) ) ||
+	     (1.3 <= fabs(aMuon->eta()) && aMuon->pt() >= 0.8 && aMuon->pt() >= 3.02-1.17*fabs(aMuon->eta()) )));
   }
   else  std::cout << "ERROR: Incorrect Muon Type" << std::endl;
   
@@ -2409,14 +2411,27 @@ HiOniaAnalyzer::isMuonInAccept(const pat::Muon* aMuon, const std::string muonTyp
 }
 
 bool
-HiOniaAnalyzer::isSoftMuon(const pat::Muon* aMuon) {
+HiOniaAnalyzer::isSoftMuonBase(const pat::Muon* aMuon) {
   return (aMuon->isTrackerMuon() &&
-          // ( _isHI || (muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
-          //                aMuon->innerTrack()->quality(reco::TrackBase::highPurity) ) ) &&
           aMuon->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5   &&
           aMuon->innerTrack()->hitPattern().pixelLayersWithMeasurement()   > 0   &&
           fabs(aMuon->innerTrack()->dxy(RefVtx)) < 0.3 &&
-          fabs(aMuon->innerTrack()->dz(RefVtx)) < 20. 
+          fabs(aMuon->innerTrack()->dz(RefVtx)) < 20.
+          );
+}
+
+bool
+HiOniaAnalyzer::isSoftMuon(const pat::Muon* aMuon) {
+  return (isSoftMuonBase(aMuon) &&
+          muon::isGoodMuon(*aMuon, muon::TMOneStationTight) &&
+          aMuon->innerTrack()->quality(reco::TrackBase::highPurity)
+          );
+}
+
+bool
+HiOniaAnalyzer::isHybridSoftMuon(const pat::Muon* aMuon) {
+  return (isSoftMuonBase(aMuon) &&
+          aMuon->isGlobalMuon()
           );
 }
 
@@ -2448,7 +2463,7 @@ HiOniaAnalyzer::selGlobalMuon(const pat::Muon* aMuon) {
     return true;
   
   bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"GLBSOFT":"GLB"));
-  bool isGood = (_selTightGlobalMuon ? isTightMuon(aMuon) : isSoftMuon(aMuon) );
+  bool isGood = (_selTightGlobalMuon ? isTightMuon(aMuon) : isSoftMuonBase(aMuon) );
 
   return ( isInAcc && isGood && (!_miniAODcut || PassMiniAODcut(aMuon)) );
 }
@@ -2463,7 +2478,7 @@ HiOniaAnalyzer::selTrackerMuon(const pat::Muon* aMuon) {
     return true;
 
   bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRKSOFT":"TRK"));
-  bool isGood = isSoftMuon(aMuon);
+  bool isGood = isSoftMuonBase(aMuon);
 
   return ( isInAcc && isGood && (!_miniAODcut || PassMiniAODcut(aMuon)));
 }
@@ -2478,7 +2493,7 @@ HiOniaAnalyzer::selGlobalOrTrackerMuon(const pat::Muon* aMuon) {
     return true;
 
   bool isInAcc = isMuonInAccept(aMuon, (std::string)(_SofterSgMuAcceptance?"TRKSOFT":"TRK"));
-  bool isGood = isSoftMuon(aMuon);
+  bool isGood = isSoftMuonBase(aMuon);
 
   return ( isInAcc && isGood && (!_miniAODcut || PassMiniAODcut(aMuon)) );
 }
@@ -3308,7 +3323,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Ntracks", &Ntracks, "Ntracks/S");
 
   //myTree->Branch("nTrig", &nTrig, "nTrig/I");
-  myTree->Branch("trigPrescale", trigPrescale, Form("trigPrescale[%d]/I", nTrig));
+  myTree->Branch("trigPrescale", trigPrescale, Form("trigPrescale[%d]/I",nTrig));
   myTree->Branch("HLTriggers", &HLTriggers, "HLTriggers/l");
 
   if ((_isHI || _isPA) && _SumETvariables){

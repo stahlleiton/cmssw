@@ -21,7 +21,7 @@ OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) ar
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
 useSVfinder    = False # External SV finder to check if the muons are from a resolved SV
-miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
+miniAOD        = False # whether the input file is in miniAOD format (default is AOD)
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 #----------------------------------------------------------------------------
 
@@ -45,12 +45,13 @@ process = cms.Process("HIOnia", eras.Run2_2018)
 options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Name
-options.outputFile = "Oniatree_MC_miniAOD.root"
+options.outputFile = "Oniatree_MC_AOD.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-  'file:/afs/cern.ch/work/j/jaebeom/public/step2_miniAOD_MC_JPsiEmb.root'
+'/store/himc/HINPbPbAutumn18DR/JPsi_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/AODSIM/mva98_103X_upgrade2018_realistic_HI_v11-v1/120000/06BA15D4-3041-D54E-AB6D-F32A05C95948.root'
+  #'file:/home/llr/cms/falmagne/miniAOD/step2_miniAOD_MC_JPsiEmb.root'
 ]
-options.maxEvents = -1 # -1 means all events
+options.maxEvents = 1689 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()

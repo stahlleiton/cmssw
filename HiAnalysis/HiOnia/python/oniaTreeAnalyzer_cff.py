@@ -183,6 +183,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     miniAODcut         = cms.bool(miniAODcuts), #gen-level info on QQ mother, and charged-track brothers/nephews of QQ
                                     storeSameSign      = cms.bool(True),   # Store/Drop same sign dimuons
                                     AtLeastOneCand     = cms.bool(False),  # If true, store only events that have at least one selected candidate dimuon (or trimuon candidate if doTrimuons=true)
+                                    useSVfinder        = cms.bool(False), #whether to use the standard secondary vertex finder (with some parameters tweaked to loosen it)
 
                                     removeSignalEvents = cms.untracked.bool(False),  # Remove/Keep signal events
                                     removeTrueMuons    = cms.untracked.bool(False),  # Remove/Keep gen Muons
