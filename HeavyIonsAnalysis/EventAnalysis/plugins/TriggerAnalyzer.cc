@@ -60,7 +60,7 @@ private:
 };
 
 static constexpr int kMaxHLTFlag = 1000;
-static constexpr int kMaxL1Flag = 1000;
+static constexpr int kMaxL1Flag = 1000.;
 
 TriggerAnalyzer::TriggerAnalyzer(edm::ParameterSet const& conf)
     : fEvent(0),
@@ -217,7 +217,7 @@ void TriggerAnalyzer::analyze(edm::Event const& iEvent, edm::EventSetup const& i
       bool accept = result.getAlgoDecisionFinal(l1index);
       l1flag[index] = accept;
 
-      l1GtUtils.getPrescaleByBit(l1index, l1Prescl[index]);
+      l1GtUtils.getPrescaleByBit(l1index, (double &)l1Prescl[index]);
     }
 
     // l1results.isValid
