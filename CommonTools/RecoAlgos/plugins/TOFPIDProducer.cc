@@ -123,8 +123,7 @@ void TOFPIDProducer::fillValueMap(edm::Event& iEvent, const edm::Handle<H>& hand
 }
 
 void TOFPIDProducer::produce( edm::Event& ev, const edm::EventSetup& es ) {
-  constexpr double m_k = 0.493677; //[GeV]
-  constexpr double m_p = 0.9382720813; //[GeV]
+  constexpr ::std::array<double,7> m_h {{0.13957018, 0.493677, 0.9382720813, 1.87561, 2.80925, 2.80923/2., 3.72742/2.}};
   constexpr double c_cm_ns = CLHEP::c_light*CLHEP::ns/CLHEP::cm; //[cm/ns]
   constexpr double c_inv = 1.0/c_cm_ns;
   
@@ -179,9 +178,8 @@ void TOFPIDProducer::produce( edm::Event& ev, const edm::EventSetup& es ) {
     float sigmatmtd = (sigmatmtdIn[trackref] > 0. && fixedT0Error_>0.) ? fixedT0Error_ : sigmatmtdIn[trackref]; 
     float sigmat0 = sigmatmtd;
     
-    float prob_pi = -1.;
-    float prob_k = -1.;
-    float prob_p = -1.;
+    std::array<float, m_h.size()> prob_h;
+    for (size_t i=0; i<m_h.size(); i++) prob_h[i] = -1.;
     
     if (sigmat0>0.) {
       
@@ -254,19 +252,17 @@ void TOFPIDProducer::produce( edm::Event& ev, const edm::EventSetup& es ) {
         double pathlength = pathLengthIn[trackref];
         double magp = pIn[trackref];
         
-        double gammasq_k = 1. + magp*magp/m_k/m_k;
-        double beta_k = std::sqrt(1.-1./gammasq_k);
-        double t0_k = tmtd - pathlength/beta_k*c_inv;
-        
-        double gammasq_p = 1. + magp*magp/m_p/m_p;
-        double beta_p = std::sqrt(1.-1./gammasq_p);
-        double t0_p = tmtd - pathlength/beta_p*c_inv;
+        std::array<double, m_h.size()> gammasq_h, beta_h, t0_h;
+        for (size_t i=0; i<m_h.size(); i++) {
+          gammasq_h[i] = 1. + magp*magp/m_h[i]/m_h[i];
+          beta_h[i] = std::sqrt(1.-1./gammasq_h[i]);
+          t0_h[i] = tmtd - pathlength/beta_h[i]*c_inv;
+        }
         
         double chisqmin = chisqnom;
-        
-        double chisqmin_pi = chisqnom;
-        double chisqmin_k = std::numeric_limits<double>::max();
-        double chisqmin_p = std::numeric_limits<double>::max();
+
+        std::array<double, m_h.size()> chisqmin_h;
+        for (size_t i=0; i<m_h.size(); i++) chisqmin_h[i] = std::numeric_limits<double>::max();
         //loop through vertices and check for better matches
         for (const reco::Vertex &vtx : vtxs) {
           if (!(vtx.tError()>0. && vtx.tError()<vtxMaxSigmaT_)) {
@@ -279,51 +275,40 @@ void TOFPIDProducer::produce( edm::Event& ev, const edm::EventSetup& es ) {
           }
           
           double chisqdz = dz*dz*rsigmazsq;
+
+          std::array<double, m_h.size()> dt_h, dtsig_h, chisq_h;
+          for (size_t i=0; i<m_h.size(); i++) {
+            dt_h[i] = std::abs(t0_h[i] - vtx.t());
+            dtsig_h[i] = dt_h[i]*rsigmat;
+            chisq_h[i] = chisqdz + dtsig_h[i]*dtsig_h[i];
+            
+            if (dtsig_h[i] < maxDtSignificance_ && chisq_h[i]<chisqmin_h[i]) {
+              chisqmin_h[i] = chisq_h[i];
+            }
           
-          double dt_k = std::abs(t0_k - vtx.t());
-          double dtsig_k = dt_k*rsigmat;
-          double chisq_k = chisqdz + dtsig_k*dtsig_k;
-          
-          if (dtsig_k < maxDtSignificance_ && chisq_k<chisqmin_k) {
-            chisqmin_k = chisq_k;
-          }
-          
-          double dt_p = std::abs(t0_p - vtx.t());
-          double dtsig_p = dt_p*rsigmat;
-          double chisq_p = chisqdz + dtsig_p*dtsig_p;
-          
-          if (dtsig_p < maxDtSignificance_ && chisq_p<chisqmin_p) {
-            chisqmin_p = chisq_p;
-          }
-          
-          if (dtsig_k < maxDtSignificance_ && chisq_k<chisqmin) {
-            chisqmin = chisq_k;
-            t0_best = t0_k;
-            t0safe = t0_k;
-            sigmat0safe = sigmatmtd;
-          }
-          if (dtsig_p < maxDtSignificance_ && chisq_p<chisqmin) {
-            chisqmin = chisq_p;
-            t0_best = t0_p;
-            t0safe = t0_p;
-            sigmat0safe = sigmatmtd;
+            if (dtsig_h[i] < maxDtSignificance_ && chisq_h[i]<chisqmin) {
+              chisqmin = chisq_h[i];
+              t0_best = t0_h[i];
+              t0safe = t0_h[i];
+              sigmat0safe = sigmatmtd;
+            }
           }
           
         }
         
         //compute PID probabilities
         //*TODO* deal with heavier nucleons and/or BSM case here?
-        double rawprob_pi = exp(-0.5*chisqmin_pi);
-        double rawprob_k = exp(-0.5*chisqmin_k);
-        double rawprob_p = exp(-0.5*chisqmin_p);
+        double normprob = 0.;
+        std::array<double, m_h.size()> rawprob_h;
+        for (size_t i=0; i<m_h.size(); i++) {
+          rawprob_h[i] = exp(-0.5*chisqmin_h[i]);
+          normprob += rawprob_h[i];
+        }
+        normprob = 1./normprob;
         
-        double normprob = 1./(rawprob_pi + rawprob_k + rawprob_p);
-        
-        prob_pi = rawprob_pi*normprob;
-        prob_k = rawprob_k*normprob;
-        prob_p = rawprob_p*normprob;
+        for (size_t i=0; i<m_h.size(); i++) prob_h[i] = rawprob_h[i]*normprob;
 
-        double prob_heavy = 1.-prob_pi;
+        double prob_heavy = 1.-prob_h[0];
         
         if (prob_heavy>minProbHeavy_) {
           t0 = t0_best;
@@ -337,9 +322,9 @@ void TOFPIDProducer::produce( edm::Event& ev, const edm::EventSetup& es ) {
     sigmat0OutRaw.push_back(sigmat0);
     t0safeOutRaw.push_back(t0safe);
     sigmat0safeOutRaw.push_back(sigmat0safe);
-    probPiOutRaw.push_back(prob_pi);
-    probKOutRaw.push_back(prob_k);
-    probPOutRaw.push_back(prob_p);
+    probPiOutRaw.push_back(prob_h[0]);
+    probKOutRaw.push_back(prob_h[1]);
+    probPOutRaw.push_back(prob_h[2]);
   }
 
   fillValueMap(ev, tracksH, t0OutRaw, t0Name);

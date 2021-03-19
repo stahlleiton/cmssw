@@ -19,11 +19,9 @@ options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Names
 options.outputFile = "HiMTDTree.root"
-options.inputFiles = "/store/user/anstahll/MTD/MC/PY8EGun_TuneCP5_Deuteron_p12_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007/MTD/PY8EGun_TuneCP5_Deuteron_p12_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007/201010_183358/0000/step3_PY8EGun_TuneCP5_Deuteron_p12_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007_1.root"
-#options.inputFiles = "file:/afs/cern.ch/user/a/anstahll/work/MTD/Analyzer/2020/CMSSW_10_4_0_mtd5/src/RECO.root"
-#options.inputFiles = "/store/user/anstahll/MTD/MC/20201103/PY8EGun_TuneCP5_3LambdaH_p12_eta3p2_To3HePi_Pythia8_pp_14TeV_RECO_20201103/MTD/PY8EGun_TuneCP5_3LambdaH_p12_eta3p2_To3HePi_Pythia8_pp_14TeV_RECO_20201103/201103_075516/0000/step3_PY8EGun_TuneCP5_3LambdaH_p12_eta3p2_To3HePi_Pythia8_pp_14TeV_RECO_20201103_1.root"
-#options.inputFiles = "file:/afs/cern.ch/user/a/anstahll/work/MTD/Analyzer/2020/CMSSW_10_4_0_mtd5/src/test.root"
-options.maxEvents  = -1 # -1 means all events
+options.inputFiles = "/store/user/anstahll/MTD/MC/PY8PtGun_TuneCP5_Helium4_pt10_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007/MTD/PY8PtGun_TuneCP5_Helium4_pt10_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007/201005_114530/0000/step3_PY8PtGun_TuneCP5_Helium4_pt10_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007_1.root"
+#"/store/mc/PhaseIIMTDTDRAutumn18DR/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/FEVT/NoPU_103X_upgrade2023_realistic_v2-v2/270000/34287DCD-AB1B-E744-A25A-856341BC4393.root"
+options.maxEvents  = -1#8 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -67,32 +65,53 @@ process.hiCentrality.srcEEhits = cms.InputTag("HGCalRecHit","HGCEERecHits")
 
 process.cent_seq = cms.Sequence(process.hiCentrality * process.centralityBin)
 
-# Define SIM-RECO association
-process.load('SimTracker.TrackAssociation.trackingParticleRecoTrackAsssociation_cff')
-process.quickTrackAssociatorByHits.ComponentName = cms.string('quickTrackAssociatorByHits')
-process.simAssocSeq = cms.Sequence(process.tpClusterProducer * process.quickTrackAssociatorByHits * process.trackingParticleRecoTrackAsssociation)
-
 # Path and EndPath definitions
 process.load('HiMTDAnalysis.TrackAnalysis.timeAnalyzer_cfi')
-process.timeAnaOld = process.timeAna.clone()
-process.timeAnaSeq = cms.Sequence( process.timeAna * process.timeAnaOld )
-process.anaPath = cms.Path( process.cent_seq * process.simAssocSeq * process.timeAnaSeq )
+#process.timeAnaOld = process.timeAna.clone()
+process.timeAna.primaryVertexTag = cms.InputTag("offlinePrimaryVertices4D")
+process.timeAna.dEdxTags = cms.VInputTag(["dedxPixelHarmonic2", "dedxPixelHarmonic2T40", "dedxPixelMeanT40"])
+process.timeAnaSeq = cms.Sequence( process.timeAna )
+process.anaPath = cms.Path( process.cent_seq * process.timeAnaSeq )
 ###############################################################################################
 
 # MTD RE-RECO
 process.reconstruction_step = cms.Path()
 process.load("Configuration.StandardSequences.Reconstruction_cff")
-process.pfPileUpIso.PFCandidates = cms.InputTag("particleFlowPtrs")
-process.pfNoPileUpIso.bottomCollection = cms.InputTag("particleFlowPtrs")
-process.reconstruction_step += process.mtdClusters
-process.reconstruction_step += process.mtdTrackingRecHits
+process.reconstruction_step += cms.Sequence(process.mtdClusters * process.mtdTrackingRecHits)
+
+# PV RE-RECO
+fixedT0Error = cms.double(0.035) #put a constant 0.035 [ns] error for each track
+process.trackExtenderWithMTDnoPID = process.trackExtenderWithMTD.clone(UseVertex = cms.bool(False),
+                                                                       fixedT0Error = fixedT0Error)
+process.offlinePrimaryVertices4DnoPID = process.unsortedOfflinePrimaryVertices4D.clone(TrackTimesLabel = cms.InputTag("trackExtenderWithMTDnoPID:generalTrackt0"),
+                                                                                       TrackTimeResosLabel = cms.InputTag("trackExtenderWithMTDnoPID:generalTracksigmat0"))
+process.offlinePrimaryVertices4DnoPID.TkClusParameters.TkDAClusParameters.tmerge = cms.double(1.0)
+process.tofPIDnoPID = process.tofPID.clone(vtxsSrc = cms.InputTag('offlinePrimaryVertices4DnoPID'),
+                                           t0Src = cms.InputTag("trackExtenderWithMTDnoPID:generalTrackt0"),
+                                           tmtdSrc = cms.InputTag("trackExtenderWithMTDnoPID:generalTracktmtd"),
+                                           sigmat0Src = cms.InputTag("trackExtenderWithMTDnoPID:generalTracksigmat0"),
+                                           sigmatmtdSrc = cms.InputTag("trackExtenderWithMTDnoPID:generalTracksigmatmtd"),
+                                           pathLengthSrc = cms.InputTag("trackExtenderWithMTDnoPID:generalTrackPathLength"),
+                                           pSrc = cms.InputTag("trackExtenderWithMTDnoPID:generalTrackp"),
+                                           fixedT0Error = fixedT0Error)
+process.offlinePrimaryVertices4D = process.offlinePrimaryVertices4DnoPID.clone(TrackTimesLabel = cms.InputTag("tofPIDnoPID:t0safe"),
+                                                                               TrackTimeResosLabel = cms.InputTag("tofPIDnoPID:sigmat0safe"))
+process.offlinePrimaryVertices4D.TkClusParameters.TkDAClusParameters.tmerge = cms.double(0.1)
+process.reconstruction_step += cms.Sequence(process.trackExtenderWithMTDnoPID * process.offlinePrimaryVertices4DnoPID * process.tofPIDnoPID * process.offlinePrimaryVertices4D)
+
+# TOF RE-RECO
+process.trackExtenderWithMTD.vtxSrc = cms.InputTag('offlinePrimaryVertices4D')
 process.trackExtenderWithMTD.UseVertex = cms.bool(True) #run trackExtender using vertex constrain
 process.trackExtenderWithMTD.DZCut = 0.3
-process.trackExtenderWithMTD.fixedT0Error = cms.double(0.035)
-process.reconstruction_step += process.trackExtenderWithMTD
+process.trackExtenderWithMTD.fixedT0Error = fixedT0Error
 process.tofPID.vtxsSrc = cms.InputTag('offlinePrimaryVertices4D')
-process.tofPID.fixedT0Error = cms.double(0.035) #put a constant 0.035 [ns] error for each track (cannot
-process.reconstruction_step += process.tofPID
+process.tofPID.fixedT0Error = fixedT0Error
+process.reconstruction_step += cms.Sequence(process.trackExtenderWithMTD * process.tofPID)
+
+# DEDX RE-RECO
+process.dedxPixelHarmonic2T40 = process.dedxPixelHarmonic2.clone(estimator = 'genericTruncated', fraction  = -0.4)
+process.dedxPixelMeanT40 = process.dedxPixelHarmonic2.clone(estimator = 'genericTruncated', fraction  = -0.4, exponent = 1.0)
+process.reconstruction_step += cms.Sequence(process.dedxPixelHarmonic2T40 * process.dedxPixelMeanT40)
 
 process.timeAna.trackBetaTag       = cms.InputTag("trackExtenderWithMTD:generalTrackBeta:MTDAnalysis")
 process.timeAna.trackT0Tag         = cms.InputTag("trackExtenderWithMTD:generalTrackt0:MTDAnalysis")

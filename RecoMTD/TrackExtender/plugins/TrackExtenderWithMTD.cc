@@ -118,7 +118,7 @@ class TrackExtenderWithMTDT : public edm::stream::EDProducer<> {
 							     const MagneticField* field,
 							     const Propagator* prop,
 							     const reco::BeamSpot& bs,
-							     const double& vtxTime,
+							     const std::pair<double,double>& vtxTime,
 							     const bool  matchVertex,
 							     MTDHitMatchingInfo& bestHit) const;
 
@@ -129,7 +129,7 @@ class TrackExtenderWithMTDT : public edm::stream::EDProducer<> {
 							     const MagneticField* field,
 							     const Propagator* prop,
 							     const reco::BeamSpot& bs,
-							     const double& vtxTime,
+							     const std::pair<double,double>& vtxTime,
 							     const bool matchVertex,
 							     MTDHitMatchingInfo& bestHit) const;
   
@@ -150,7 +150,7 @@ class TrackExtenderWithMTDT : public edm::stream::EDProducer<> {
     return RefitDirection::undetermined;
   }
 
-  reco::Track buildTrack(const reco::Track&, const Trajectory&, const Trajectory &, const reco::BeamSpot&, const MagneticField* field,const Propagator* prop, bool hasMTD, float& pathLength, float& tmtdOut, float& sigmatmtdOut) const;
+  reco::Track buildTrack(const reco::Track&, const Trajectory&, const Trajectory &, const reco::BeamSpot&, const MagneticField* field,const Propagator* prop, bool hasMTD, const std::pair<double,double>& vtxTime, float& pathLength, float& tmtdOut, float& sigmatmtdOut) const;
   reco::TrackExtra buildTrackExtra(const Trajectory& trajectory) const;
 
   string dumpLayer(const DetLayer* layer) const;
@@ -197,6 +197,9 @@ class TrackExtenderWithMTDT : public edm::stream::EDProducer<> {
   bool  useVertex_;
   bool  useSimVertex_;
   double dzCut_;
+  double fixedT0Error_;
+
+  static constexpr std::pair<double,double> bsTime_ = {0.0, 0.2};
 
   std::default_random_engine randomGenerator_;
 };
@@ -221,15 +224,15 @@ TrackExtenderWithMTDT<TrackCollection>::TrackExtenderWithMTDT(const ParameterSet
   etlTimeChi2Cut_(iConfig.getParameter<double>("ETLTimeChi2Cut")),
   useVertex_(iConfig.getParameter<bool>("UseVertex")),
   useSimVertex_(iConfig.getParameter<bool>("UseSimVertex")),
-  dzCut_(iConfig.getParameter<double>("DZCut")) 
-  {
-    if (useVertex_)
-      {
+  dzCut_(iConfig.getParameter<double>("DZCut")),
+  fixedT0Error_(iConfig.getParameter<double>("fixedT0Error"))
+{
+  if (useVertex_) {
 	if (useSimVertex_)
 	  genVtxToken_=consumes<vector<SimVertex>>(iConfig.getParameter<edm::InputTag>("genVtxSrc"));
 	else
 	  vtxToken_=consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vtxSrc"));
-      }
+  }
 
   theEstimator = std::make_unique<Chi2MeasurementEstimator>(estMaxChi2_,estMaxNSigma_);
   theTransformer = std::make_unique<TrackTransformer>(iConfig.getParameterSet("TrackTransformer"));
@@ -284,12 +287,13 @@ void TrackExtenderWithMTDT<TrackCollection>::fillDescriptions(edm::Configuration
   desc.add<double>("EstimatorMaxChi2",500.);  
   desc.add<double>("EstimatorMaxNSigma",10.); 
   desc.add<double>("BTLChi2Cut",50.);   
-  desc.add<double>("BTLTimeChi2Cut",5.);   
+  desc.add<double>("BTLTimeChi2Cut",25.);   
   desc.add<double>("ETLChi2Cut",50.);   
-  desc.add<double>("ETLTimeChi2Cut",5.);   
+  desc.add<double>("ETLTimeChi2Cut",25.);   
   desc.add<bool>("UseVertex",false);   
   desc.add<bool>("UseSimVertex",false);   
-  desc.add<double>("DZCut",0.1);   
+  desc.add<double>("DZCut",0.1);
+  desc.add<double>("fixedT0Error",-1.);
   descriptions.add("trackExtenderWithMTDBase", desc);
 }
 
@@ -364,76 +368,77 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
   ev.getByToken(bsToken_,bsH);
   const auto& bs = *bsH;
 
-
   const Vertex* PV = nullptr;
-  if (useVertex_ && !useSimVertex_)
-    {
-      edm::Handle<VertexCollection> vtxH;  
-      ev.getByToken(vtxToken_,vtxH);
-      if (vtxH.isValid())
-	PV = &(vtxH.product()->at(0));
-    }
+  if (useVertex_ && !useSimVertex_) {
+    edm::Handle<VertexCollection> vtxH;  
+    ev.getByToken(vtxToken_,vtxH);
+    if (vtxH.isValid())
+	  PV = &(vtxH.product()->at(0));
+  }
 
   const SimVertex* genPV = nullptr;
-  if (useVertex_ && useSimVertex_)
-    {
-      edm::Handle<vector<SimVertex>> genVtxH;  
-      ev.getByToken(genVtxToken_,genVtxH);
-      if(genVtxH.isValid())
-	genPV = &(genVtxH.product()->at(0));
-    }
+  if (useVertex_ && useSimVertex_) {
+    edm::Handle<vector<SimVertex>> genVtxH;  
+    ev.getByToken(genVtxToken_,genVtxH);
+    if(genVtxH.isValid())
+	  genPV = &(genVtxH.product()->at(0));
+  }
 
-  double vtxTime=0.;
-  if (useVertex_)
-    {
-      if (useSimVertex_ && genPV)
-	{
-	  vtxTime=genPV->position().t()*1E9;//convert to ns
-	  std::normal_distribution<double> vtx_smearer(vtxTime,0.008);//assign 8ps resolution from reco studies
-	  vtxTime=vtx_smearer(randomGenerator_); 
+  auto vtxTime=bsTime_;
+  if (useVertex_) {
+    if (useSimVertex_ && genPV) {
+      vtxTime.second=0.008; //assign 8ps resolution from reco studies
+	  vtxTime.first=genPV->position().t()*1E9;//convert to ns
+	  std::normal_distribution<double> vtx_smearer(vtxTime.first,vtxTime.second);
+	  vtxTime.first=vtx_smearer(randomGenerator_);
 	}
-      else if (PV)
-	vtxTime=PV->t(); //already in ns
+    else if (PV && PV->tError()>0.) {
+	  vtxTime.first=PV->t(); //already in ns
+      vtxTime.second=PV->tError();
     }
+  }
 
   std::vector<unsigned> track_indices;
   unsigned itrack = 0;
 
   for( const auto& track : tracks ) { 
 
-    double trackVtxTime=0.;
-    if (useVertex_) 
-      {
-	double dz;
-	if (useSimVertex_)
-	  dz = std::abs(track.dz(math::XYZPoint(genPV->position().x(),genPV->position().y(),genPV->position().z())));
-	else
-	  dz = std::abs(track.dz(math::XYZPoint(PV->position().x(),PV->position().y(),PV->position().z())));
+    auto trackVtxTime=bsTime_;
+    if (useVertex_) {
+	  double dz;
+	  if (useSimVertex_)
+	    dz = std::abs(track.dz(math::XYZPoint(genPV->position().x(),genPV->position().y(),genPV->position().z())));
+	  else
+	    dz = std::abs(track.dz(math::XYZPoint(PV->position().x(),PV->position().y(),PV->position().z())));
 	
-	if (dz<dzCut_)
-	  trackVtxTime=vtxTime;
-      }
+	  if (dz<dzCut_)
+	    trackVtxTime=vtxTime;
+    }
+    else
+      trackVtxTime.second = 0;
+
+    bool matchVertex = useVertex_ && trackVtxTime!=bsTime_;;
 
     reco::TransientTrack ttrack(track,magfield.product(),gtg);
     const auto& trajs = theTransformer->transform(track);
     auto thits = theTransformer->getTransientRecHits(ttrack);
     TransientTrackingRecHit::ConstRecHitContainer mtdthits;
     MTDHitMatchingInfo mBTL,mETL;
-    if (trajs.size() > 0 )
-      {
-	const auto& btlhits = tryBTLLayers(track,trajs.front(),hits,geo.product(),magfield.product(),prop.product(),bs,trackVtxTime,trackVtxTime!=0.,mBTL);
-	mtdthits.insert(mtdthits.end(),btlhits.begin(),btlhits.end());
+    if (trajs.size() > 0) {
+	  const auto& btlhits = tryBTLLayers(track,trajs.front(),hits,geo.product(),magfield.product(),prop.product(),bs,trackVtxTime,matchVertex,mBTL);
+	  mtdthits.insert(mtdthits.end(),btlhits.begin(),btlhits.end());
 	
-	// in the future this should include an intermediate refit before propagating to the ETL
-	// for now it is ok
-	const auto& etlhits = tryETLLayers(track,trajs.front(),hits,geo.product(),magfield.product(),prop.product(),bs,trackVtxTime,trackVtxTime!=0.,mETL);
-	mtdthits.insert(mtdthits.end(),etlhits.begin(),etlhits.end());
-      }
+	  // in the future this should include an intermediate refit before propagating to the ETL
+	  // for now it is ok
+	  const auto& etlhits = tryETLLayers(track,trajs.front(),hits,geo.product(),magfield.product(),prop.product(),bs,trackVtxTime,matchVertex,mETL);
+	  mtdthits.insert(mtdthits.end(),etlhits.begin(),etlhits.end());
+    }
 
     auto ordering = checkRecHitsOrdering(thits);
     if( ordering == RefitDirection::insideOut) {
       thits.insert(thits.end(),mtdthits.begin(),mtdthits.end());
-    } else {
+    }
+    else {
       std::reverse(mtdthits.begin(),mtdthits.end());
       mtdthits.insert(mtdthits.end(),thits.begin(),thits.end());
       thits.swap(mtdthits);
@@ -447,7 +452,7 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
       const auto& thetrj = (updateTraj_ ? trj : trajs.front());
       float pathLength = 0.f, tmtd = 0.f, sigmatmtd = -1.f;
       reco::Track result = buildTrack(track, thetrj, trj, bs, magfield.product(), 
-				      prop.product(), !mtdthits.empty(),pathLength,tmtd,sigmatmtd);
+				      prop.product(), !mtdthits.empty(), trackVtxTime, pathLength,tmtd,sigmatmtd);
       if( result.ndof() >= 0 ) {
         /// setup the track extras
         reco::TrackExtra::TrajParams trajParams;
@@ -455,31 +460,32 @@ void TrackExtenderWithMTDT<TrackCollection>::produce( edm::Event& ev,
         size_t hitsstart = outhits->size();
         if( updatePattern_ ) {
           t2t(trj,*outhits,trajParams,chi2s); // this fills the output hit collection
-        } else {
+        }
+        else {
           t2t(thetrj,*outhits,trajParams,chi2s);
         }
         size_t hitsend = outhits->size();
         extras->push_back(buildTrackExtra(trj)); // always push back the fully built extra, update by setting in track
         extras->back().setHits(hitsRefProd,hitsstart,hitsend-hitsstart);	
         extras->back().setTrajParams(trajParams,chi2s);        
-	//create the track
-	output->push_back(result);
-	btlMatchChi2.push_back(mBTL.hit ? mBTL.estChi2 : -1);
-	etlMatchChi2.push_back(mETL.hit ? mETL.estChi2 : -1);
-	btlMatchTimeChi2.push_back(mBTL.hit ? mBTL.timeChi2 : -1);
-	etlMatchTimeChi2.push_back(mETL.hit ? mETL.timeChi2 : -1);
-	pathLengthsRaw.push_back(pathLength);
-	tmtdRaw.push_back(tmtd);
-	sigmatmtdRaw.push_back(sigmatmtd);
-	pathLengthMap = pathLength;
-	tmtdMap = tmtd;
-	sigmatmtdMap = sigmatmtd;
+	    //create the track
+	    output->push_back(result);
+	    btlMatchChi2.push_back(mBTL.hit ? mBTL.estChi2 : -1);
+	    etlMatchChi2.push_back(mETL.hit ? mETL.estChi2 : -1);
+	    btlMatchTimeChi2.push_back(mBTL.hit ? mBTL.timeChi2 : -1);
+	    etlMatchTimeChi2.push_back(mETL.hit ? mETL.timeChi2 : -1);
+	    pathLengthsRaw.push_back(pathLength);
+	    tmtdRaw.push_back(tmtd);
+	    sigmatmtdRaw.push_back(sigmatmtd);
+	    pathLengthMap = pathLength;
+	    tmtdMap = tmtd;
+	    sigmatmtdMap = sigmatmtd;
         auto& backtrack = output->back();
-	iMap=output->size()-1;
-	pMap = backtrack.p();
-	betaMap = backtrack.beta();
-	t0Map = backtrack.t0();
-	sigmat0Map = std::copysign(std::sqrt(std::abs(backtrack.covt0t0())),backtrack.covt0t0());
+	    iMap=output->size()-1;
+	    pMap = backtrack.p();
+	    betaMap = backtrack.beta();
+	    t0Map = backtrack.t0();
+	    sigmat0Map = std::copysign(std::sqrt(std::abs(backtrack.covt0t0())),backtrack.covt0t0());
         reco::TrackExtraRef extraRef(extrasRefProd,extras->size()-1);
         backtrack.setExtra( (updateExtra_ ? extraRef : track.extra()) );
         for(unsigned ihit = hitsstart; ihit < hitsend; ++ihit) {
@@ -595,88 +601,72 @@ namespace {
 
   struct TrackTofPidInfo
   {
-    TrackTofPidInfo(const double& magp2, const double& length, const double& t_mtd, const double& t_mtderr, const double& t_vtx,  const double& t_vtx_err,  bool addPIDError=true)
+    TrackTofPidInfo(const double& magp2, const double& length, const double& t_mtd, const double& t_mtderr, const double& t_vtx,  const double& t_vtx_err)
     {
 
       tmtd=t_mtd;
       tmtderror=t_mtderr;
 
       pathlength = length;
-      
-      gammasq_pi = 1. + magp2*m_pi_inv2;
-      beta_pi = std::sqrt(1.-1./gammasq_pi);
-      dt_pi = pathlength/beta_pi*c_inv;
 
-      gammasq_k = 1. + magp2*m_k_inv2;
-      beta_k = std::sqrt(1.-1./gammasq_k);
-      dt_k = pathlength/beta_k*c_inv;
-    
-      gammasq_p = 1. + magp2*m_p_inv2;
-      beta_p = std::sqrt(1.-1./gammasq_p);
-      dt_p = pathlength/beta_p*c_inv;
+      for (size_t i=0; i<m_h.size(); i++) {
+        gammasq_h[i] = 1. + magp2*m_h_inv2[i];
+        beta_h[i] = std::sqrt(1.-1./gammasq_h[i]);
+        dt_h[i] = pathlength/beta_h[i]*c_inv;
+      }
 
-      dt = tmtd - dt_pi - t_vtx; //assume by default the pi hypothesis
-      dterror= sqrt(tmtderror*tmtderror + t_vtx_err*t_vtx_err); 
-      betaerror=0;
-      if (addPIDError)
-	{
-	  dterror = sqrt(dterror*dterror + (dt_p-dt_pi)*(dt_p-dt_pi));
-	  betaerror = beta_p - beta_pi;
-	}
+      dt = tmtd - dt_h[0] - t_vtx; //assume by default the pi hypothesis
+      dterror= sqrt(tmtderror*tmtderror + t_vtx_err*t_vtx_err);
+      beta = beta_h[0];
+      betaerror = beta_h[0] - beta_h[2];
+
+      if (t_vtx_err<=0) {
+        dterror = sqrt(dterror*dterror + (dt_h[2] - dt_h[0])*(dt_h[2] - dt_h[0]));
+        return;
+      }
 
       dtchi2 = (dt*dt)/(dterror*dterror);
 
-      dt_best = dt;
-      dterror_best = dterror;
-      dtchi2_best = dtchi2;
+      for (size_t i=0; i<m_h.size(); i++) prob_h[i] = -1.;
 
-      prob_pi = -1.;
-      prob_k = -1.;
-      prob_p = -1.;
-
-      if (!addPIDError)
-	{
 	  //*TODO* deal with heavier nucleons and/or BSM case here?
-	  double chi2_pi=dtchi2;
-	  double chi2_k=(tmtd-dt_k-t_vtx)*(tmtd-dt_k-t_vtx)/(dterror*dterror);
-	  double chi2_p=(tmtd-dt_p-t_vtx)*(tmtd-dt_p-t_vtx)/(dterror*dterror);
+      double normprob = 0.;
+      std::array<double, m_h.size()> chi2, rawprob;
+      for (size_t i=0; i<m_h.size(); i++) {
+        chi2[i] = (tmtd-dt_h[i]-t_vtx)*(tmtd-dt_h[i]-t_vtx)/(dterror*dterror);
+        rawprob[i] = exp(-0.5*chi2[i]);
+        normprob += rawprob[i];
+      }
+      normprob = 1./normprob;
 	  
-	  double rawprob_pi = exp(-0.5*chi2_pi);
-	  double rawprob_k = exp(-0.5*chi2_k);
-	  double rawprob_p = exp(-0.5*chi2_p);
-	  double normprob = 1./(rawprob_pi + rawprob_k + rawprob_p);
+      for (size_t i=0; i<m_h.size(); i++) prob_h[i] = rawprob[i]*normprob;
 	  
-	  prob_pi = rawprob_pi*normprob;
-	  prob_k = rawprob_k*normprob;
-	  prob_p = rawprob_p*normprob;
-	  
-	  double prob_heavy = 1.-prob_pi;
-	  
+	  double prob_heavy = 1.-prob_h[0];
+
 	  if (prob_heavy>0.75) {
-	    if (chi2_k < chi2_p)
-	      {
-		dt_best = (tmtd-dt_k-t_vtx);
-		dtchi2_best = chi2_k;
-	      }
-	    else
-	      {
-		dt_best = (tmtd-dt_p-t_vtx);
-		dtchi2_best = chi2_p;
-	      }
+        dtchi2 = 1.E12;
+        for (size_t i=0; i<m_h.size(); i++) {
+          if (chi2[i] < dtchi2) {
+            dt = (tmtd-dt_h[i]-t_vtx);
+            dtchi2 = chi2[i];
+            beta = beta_h[i];
+          }
+        }
 	  }
-	}
+
+      betaerror=beta*dterror/std::abs(tmtd-t_vtx);
     }
 
-    static constexpr double m_pi = 0.13957018;
-    static constexpr double m_pi_inv2 = 1.0/m_pi/m_pi;
-    static constexpr double m_k = 0.493677; 
-    static constexpr double m_k_inv2 = 1.0/m_k/m_k;
-    static constexpr double m_p = 0.9382720813;
-    static constexpr double m_p_inv2 = 1.0/m_p/m_p;
+    static constexpr ::std::array<double,7> m_h {{0.13957018, 0.493677, 0.9382720813, 1.87561, 2.80925, 2.80923/2., 3.72742/2.}};
+    static constexpr ::std::array<double, 7> fillMassInv2()
+    {
+      ::std::array<double, 7> res = {};
+      for (size_t i=0; i<m_h.size(); i++) res[i] = 1.0/m_h[i]/m_h[i];
+      return res;
+    }
+    const ::std::array<double, 7> m_h_inv2 = fillMassInv2();
     static constexpr double c_cm_ns = CLHEP::c_light*CLHEP::ns/CLHEP::cm; //[cm/ns]
     static constexpr double c_inv = 1.0/c_cm_ns;
-    //this should come from BeamSpot in principle
-    static constexpr double bserror = 0.18;
 
     double tmtd;
     double tmtderror;
@@ -687,37 +677,24 @@ namespace {
     double dterror;
     double dtchi2;
 
-    double dt_best;
-    double dterror_best;
-    double dtchi2_best;
+    std::array<double, m_h.size()> gammasq_h;
+    std::array<double, m_h.size()> beta_h;
+    std::array<double, m_h.size()> dt_h;
 
-    double gammasq_pi;
-    double beta_pi;
-    double dt_pi;
+    std::array<double, m_h.size()> prob_h;
 
-    double gammasq_k;
-    double beta_k;
-    double dt_k;
-    
-    double gammasq_p;
-    double beta_p;
-    double dt_p;
-
-    double prob_pi;
-    double prob_k;
-    double prob_p;
-
+    double beta;
     double betaerror;
   };
 
 
   void find_hits_in_dets(const MTDTrackingDetSetVector& hits, const Trajectory& traj, const DetLayer* layer,
 			 const TrajectoryStateOnSurface& tsos, 
-			 const double& vtxTime,   
+			 const std::pair<double,double>& vtxTime,   
 			 const reco::BeamSpot& bs, const Propagator* prop,
 			 const MeasurementEstimator& theEstimator,		       
 			 const TransientTrackingRecHitBuilder& hitbuilder,
-			 bool  useVtxConstraint,
+             const double& t0Error,
 			 std::set<MTDHitMatchingInfo>& out) {
 
     TrajectoryStateClosestToBeamLine tscbl;
@@ -735,30 +712,28 @@ namespace {
     if( comp.first ) {    
       vector<DetLayer::DetWithState> compDets = layer->compatibleDets(tsos,*prop,theEstimator);
       if (!compDets.empty()) {
-	for( const auto& detWithState : compDets ) {	
-	  auto range = hits.equal_range(detWithState.first->geographicalId(),cmp_for_detset);	  
-	  for( auto detitr = range.first; detitr != range.second; ++detitr ) {
-	    for( auto itr = detitr->begin(); itr != detitr->end(); ++itr ) {
+	    for( const auto& detWithState : compDets ) {	
+	      auto range = hits.equal_range(detWithState.first->geographicalId(),cmp_for_detset);	  
+	      for( auto detitr = range.first; detitr != range.second; ++detitr ) {
+	        for( auto itr = detitr->begin(); itr != detitr->end(); ++itr ) {
 
-	      auto est =  theEstimator.estimate(detWithState.second,*itr);
-	      auto pl = prop->propagateWithPath(tsos,detWithState.second.surface());
+	          auto est =  theEstimator.estimate(detWithState.second,*itr);
+	          auto pl = prop->propagateWithPath(tsos,detWithState.second.surface());
 
-	      if (!est.first || std::abs(pl.second) == 0.)
-		continue;
+	          if (!est.first || std::abs(pl.second) == 0.)
+                continue;
 	      
-	      double tot_pl = pathlength + std::abs(pl.second); //
-	      double t_vtx = useVtxConstraint ? vtxTime : 0.;
-	      double t_vtx_err = useVtxConstraint ? 0.008 : 0.18; //should use beam spot in the future
-	      TrackTofPidInfo tof(p.mag2(), tot_pl, itr->time(), 0.035, t_vtx, t_vtx_err, false); //put hit error by hand for the moment	      
-	      MTDHitMatchingInfo mi;
-	      mi.hit=&(*itr);
-	      mi.estChi2=est.second;
-	      mi.timeChi2=tof.dtchi2_best; //use the chi2 for the best matching hypothesis 
-
-	      out.insert(mi);	      
+	          double tot_pl = pathlength + std::abs(pl.second); //
+              auto tmtderror = (t0Error>0. ? t0Error : itr->timeError());
+	          TrackTofPidInfo tof(p.mag2(), tot_pl, itr->time(), tmtderror, vtxTime.first, vtxTime.second); //put hit error by hand for the moment 
+	          MTDHitMatchingInfo mi;
+	          mi.hit=&(*itr);
+	          mi.estChi2=est.second;
+	          mi.timeChi2=tof.dtchi2; //use the chi2 for the best matching hypothesis
+	          out.insert(mi);	      
+	        }
+	      }
 	    }
-	  }
-	}
       }
     }
   }
@@ -773,7 +748,7 @@ TrackExtenderWithMTDT<TrackCollection>::tryBTLLayers(const TrackType& track,
 						     const MagneticField* field,
 						     const Propagator* prop,
 						     const reco::BeamSpot& bs,
-						     const double& vtxTime,
+						     const std::pair<double,double>& vtxTime,
 						     const bool  matchVertex,
 						     MTDHitMatchingInfo& bestHit) const {
   
@@ -790,43 +765,35 @@ TrackExtenderWithMTDT<TrackCollection>::tryBTLLayers(const TrackType& track,
     std::set<MTDHitMatchingInfo> hitsInLayer;
     bool hitMatched=false;
 
-    if (useVertex_ && matchVertex) 
-      find_hits_in_dets(hits,traj,ilay,tsos,vtxTime,bs,prop,*theEstimator,*hitbuilder,true,hitsInLayer);
-    else
-      find_hits_in_dets(hits,traj,ilay,tsos,0.,bs,prop,*theEstimator,*hitbuilder,false,hitsInLayer);
-    
+    auto vTime = (useVertex_ && matchVertex ? vtxTime : bsTime_);
+    find_hits_in_dets(hits,traj,ilay,tsos,vTime,bs,prop,*theEstimator,*hitbuilder,fixedT0Error_,hitsInLayer);
+ 
     //just take the first hit because the hits are sorted on their matching quality
-    if (!hitsInLayer.empty())
-      {
-	//check hits to pass minimum quality matching requirements
-      	if ( hitsInLayer.begin()->estChi2<btlChi2Cut_ && hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_ )
-	{
-	  hitMatched=true;
-	  output.push_back(hitbuilder->build(hitsInLayer.begin()->hit));    
-	  if (*(hitsInLayer.begin())<bestHit)
-	    bestHit=*(hitsInLayer.begin());
-	}
-      }
+    if (!hitsInLayer.empty()) {
+	  //check hits to pass minimum quality matching requirements
+      if (hitsInLayer.begin()->estChi2<btlChi2Cut_ && hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_) {
+	    hitMatched=true;
+	    output.push_back(hitbuilder->build(hitsInLayer.begin()->hit));   
+	    if (*(hitsInLayer.begin())<bestHit)
+	      bestHit=*(hitsInLayer.begin());
+	  }
+    }
 
-    if (useVertex_ && matchVertex && !hitMatched)
-      {
-    	//try a second search with beamspot hypothesis
-	hitsInLayer.clear();
-    	find_hits_in_dets(hits,traj,ilay,tsos,0.,bs,prop,*theEstimator,*hitbuilder,false,hitsInLayer);
-    	if (!hitsInLayer.empty())
-    	  {
-	    if ( hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_ )
-	      {
-		if ( hitsInLayer.begin()->estChi2<btlChi2Cut_ )
-		  {
+    if (useVertex_ && matchVertex && !hitMatched) {
+      //try a second search with beamspot hypothesis
+	  hitsInLayer.clear();
+      find_hits_in_dets(hits,traj,ilay,tsos,bsTime_,bs,prop,*theEstimator,*hitbuilder,fixedT0Error_,hitsInLayer);
+      if (!hitsInLayer.empty()) {
+	    if (hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_) {
+		  if (hitsInLayer.begin()->estChi2<btlChi2Cut_) {
 		    hitMatched=true;
 		    output.push_back(hitbuilder->build(hitsInLayer.begin()->hit));
 		    if ((*hitsInLayer.begin())<bestHit)
 		      bestHit=*(hitsInLayer.begin());
 		  }
-	      }	
+	    }	
 	  }
-      }
+    }
   }
   return output;
 }
@@ -840,7 +807,7 @@ TrackExtenderWithMTDT<TrackCollection>::tryETLLayers(const TrackType& track,
 						     const MagneticField* field,
 						     const Propagator* prop,
 						     const reco::BeamSpot& bs,
-						     const double& vtxTime,
+						     const std::pair<double,double>& vtxTime,
 						     const bool matchVertex,
 						     MTDHitMatchingInfo& bestHit) const {
 
@@ -861,43 +828,35 @@ TrackExtenderWithMTDT<TrackCollection>::tryETLLayers(const TrackType& track,
     std::set<MTDHitMatchingInfo> hitsInLayer;
     bool hitMatched=false;
 
-    if (useVertex_ && matchVertex) 
-      find_hits_in_dets(hits,traj,ilay,tsos,vtxTime,bs,prop,*theEstimator,*hitbuilder,true,hitsInLayer);
-    else
-      find_hits_in_dets(hits,traj,ilay,tsos,0.,bs,prop,*theEstimator,*hitbuilder,false,hitsInLayer);
-    
-    //just take the first hit because the hits are sorted on their matching quality
-    if (!hitsInLayer.empty())
-      {
-	//check hits to pass minimum quality matching requirements
-      	if ( hitsInLayer.begin()->estChi2<btlChi2Cut_ && hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_ )
-	{
-	  hitMatched=true;
-	  output.push_back(hitbuilder->build(hitsInLayer.begin()->hit));    
-	  if (*(hitsInLayer.begin())<bestHit)
-	    bestHit=*(hitsInLayer.begin());
-	}
-      }
+    auto vTime = (useVertex_ && matchVertex ? vtxTime : bsTime_);
+    find_hits_in_dets(hits,traj,ilay,tsos,vTime,bs,prop,*theEstimator,*hitbuilder,fixedT0Error_,hitsInLayer);
 
-    if (useVertex_ && matchVertex && !hitMatched)
-      {
-    	//try a second search with beamspot hypothesis
-	hitsInLayer.clear();
-    	find_hits_in_dets(hits,traj,ilay,tsos,0.,bs,prop,*theEstimator,*hitbuilder,false,hitsInLayer);
-    	if (!hitsInLayer.empty())
-    	  {
-	    if ( hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_ )
-	      {
-		if ( hitsInLayer.begin()->estChi2<btlChi2Cut_ )
-		  {
+    //just take the first hit because the hits are sorted on their matching quality
+    if (!hitsInLayer.empty()) {
+	  //check hits to pass minimum quality matching requirements
+      if (hitsInLayer.begin()->estChi2<btlChi2Cut_ && hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_) {
+	    hitMatched=true;
+	    output.push_back(hitbuilder->build(hitsInLayer.begin()->hit));    
+	    if (*(hitsInLayer.begin())<bestHit)
+	      bestHit=*(hitsInLayer.begin());
+	  }
+    }
+
+    if (useVertex_ && matchVertex && !hitMatched) {
+      //try a second search with beamspot hypothesis
+	  hitsInLayer.clear();
+      find_hits_in_dets(hits,traj,ilay,tsos,bsTime_,bs,prop,*theEstimator,*hitbuilder,fixedT0Error_,hitsInLayer);
+      if (!hitsInLayer.empty()) {
+	    if (hitsInLayer.begin()->timeChi2<btlTimeChi2Cut_) {
+		  if (hitsInLayer.begin()->estChi2<btlChi2Cut_) {
 		    hitMatched=true;
 		    output.push_back(hitbuilder->build(hitsInLayer.begin()->hit));
 		    if ((*hitsInLayer.begin())<bestHit)
 		      bestHit=*(hitsInLayer.begin());
 		  }
-	      }	
+	    }	
 	  }
-      }
+    }
     
   }
   return output;
@@ -914,6 +873,7 @@ reco::Track TrackExtenderWithMTDT<TrackCollection>::buildTrack(const reco::Track
 							       const MagneticField* field,
 							       const Propagator* thePropagator,
 							       bool hasMTD,
+                                   const std::pair<double,double>& vtxTime,
 							       float& pathLengthOut,
 							       float& tmtdOut,
 							       float& sigmatmtdOut) const {  
@@ -954,27 +914,26 @@ reco::Track TrackExtenderWithMTDT<TrackCollection>::buildTrack(const reco::Track
     for (auto it=trajWithMtd.measurements().begin(); it!=trajWithMtd.measurements().end(); ++it) {
       bool ismtd = it->recHit()->geographicalId().det() == DetId::Forward && ForwardSubdetector(it->recHit()->geographicalId().subdetId()) == FastTime;
       if (ismtd) {
-	const MTDTrackingRecHit *mtdhit = static_cast<const MTDTrackingRecHit*>(it->recHit()->hit());
-	thit = mtdhit->time();
-	thiterror = mtdhit->timeError();
-	validmtd = true;
-	break;          
+	    const MTDTrackingRecHit *mtdhit = static_cast<const MTDTrackingRecHit*>(it->recHit()->hit());
+	    thit = mtdhit->time();
+	    thiterror = (fixedT0Error_>0. ? fixedT0Error_ : mtdhit->timeError());
+	    validmtd = true;
+	    break;          
       }
     }
-        
-    if (validmtd && validpropagation) 
-      {
-	TrackTofPidInfo tofInfo( p.mag2() , pathlength, thit, thiterror, 0., 0., true); //here add the PID uncertainty for later use in the 1st step of 4D vtx reconstruction
-	pathLengthOut = pathlength; // set path length if we've got a timing hit
-	tmtdOut = thit;
-	sigmatmtdOut = thiterror;
-	t0 = tofInfo.dt;
-	covt0t0 = tofInfo.dterror*tofInfo.dterror;
-	betaOut = tofInfo.beta_pi;
-	covbetabeta  = tofInfo.betaerror*tofInfo.betaerror;
-      }
+
+    if (validmtd && validpropagation) {
+      TrackTofPidInfo tofInfo(p.mag2(), pathlength, thit, thiterror, vtxTime.first, vtxTime.second);
+	  pathLengthOut = pathlength; // set path length if we've got a timing hit
+	  tmtdOut = thit;
+	  sigmatmtdOut = thiterror;
+	  t0 = tofInfo.dt + vtxTime.first;
+	  covt0t0 = tofInfo.dterror*tofInfo.dterror;
+	  betaOut = tofInfo.beta;
+	  covbetabeta  = tofInfo.betaerror*tofInfo.betaerror;
+    }
   }
-  
+
   return reco::Track(traj.chiSquared(),
 		     int(ndof),
 		     pos, mom, tscbl.trackStateAtPCA().charge(), 

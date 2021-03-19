@@ -16,6 +16,7 @@
 <use   name="RecoTracker/TkTrackingRegions"/>
 <use   name="RecoHI/HiJetAlgos"/>
 <use   name="HLTrigger/HLTcore"/>
+<use   name="SimTracker/TrackAssociation"/>
 
 
 <export>
