@@ -27,9 +27,9 @@ namespace CAConstants {
   constexpr uint32_t maxCellsPerHit() { return 128 / 2; }
 #else
   // tested on MC events with 55-75 pileup events
-  constexpr uint32_t maxNumberOfTuples() { return 24 * 1024; }
+  constexpr uint32_t maxNumberOfTuples() { return 32 * 1024; }
   constexpr uint32_t maxNumberOfDoublets() { return 512 * 1024; }
-  constexpr uint32_t maxCellsPerHit() { return 128; }
+  constexpr uint32_t maxCellsPerHit() { return 2 * 128; }
 #endif
 #endif  // ONLY_PHICUT
   constexpr uint32_t maxNumOfActiveDoublets() { return maxNumberOfDoublets() / 8; }

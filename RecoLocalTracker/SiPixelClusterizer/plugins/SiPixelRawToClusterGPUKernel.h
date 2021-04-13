@@ -52,7 +52,7 @@ namespace pixelgpudetails {
   const uint32_t numRowsInRoc = 80;
   const uint32_t numColsInRoc = 52;
 
-  const uint32_t MAX_WORD = 2000;
+  const uint32_t MAX_WORD = 4 * 2000;
 
   const uint32_t ADC_shift = 0;
   const uint32_t PXID_shift = ADC_shift + ADC_bits;
