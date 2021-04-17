@@ -12,6 +12,8 @@ namespace triggerExpression {
     UnaryOperator(Evaluator* arg) : m_arg(arg) {}
 
     // initialize the depending modules
+    void init(edm::ConsumesCollector&& iC) override { m_arg->init(std::move(iC)); }
+
     void init(const Data& data) override { m_arg->init(data); }
 
   protected:
@@ -24,6 +26,11 @@ namespace triggerExpression {
     BinaryOperator(Evaluator* arg1, Evaluator* arg2) : m_arg1(arg1), m_arg2(arg2) {}
 
     // initialize the depending modules
+    void init(edm::ConsumesCollector&& iC) override {
+      m_arg1->init(std::move(iC));
+      m_arg2->init(std::move(iC));
+    }
+
     void init(const Data& data) override {
       m_arg1->init(data);
       m_arg2->init(data);

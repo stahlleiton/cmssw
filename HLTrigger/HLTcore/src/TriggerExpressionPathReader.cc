@@ -12,6 +12,9 @@ namespace triggerExpression {
 
   // define the result of the module from the HLT reults
   bool PathReader::operator()(const Data& data) const {
+    if (data.usePathStatus())
+      return data.event().get(m_token).accept();
+
     if (not data.hasHLT())
       return false;
 
@@ -35,8 +38,17 @@ namespace triggerExpression {
     }
   }
 
+  // initialize the module
+  void PathReader::init(edm::ConsumesCollector&& iC) {
+    m_token = iC.consumes<edm::PathStatus>(edm::InputTag(m_pattern));
+    m_triggers.emplace_back(m_pattern, 0);
+  }
+
   // (re)initialize the module
   void PathReader::init(const Data& data) {
+    if (data.usePathStatus())
+      return;
+
     // clear the previous configuration
     m_triggers.clear();
 

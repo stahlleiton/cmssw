@@ -31,12 +31,16 @@ TriggerResultsFilter::TriggerResultsFilter(const edm::ParameterSet& config)
     : m_expression(nullptr), m_eventCache(config, consumesCollector()) {
   const std::vector<std::string>& expressions = config.getParameter<std::vector<std::string>>("triggerConditions");
   parse(expressions);
+  if (m_expression && m_eventCache.usePathStatus())
+    m_expression->init(consumesCollector());
 }
 
 TriggerResultsFilter::~TriggerResultsFilter() { delete m_expression; }
 
 void TriggerResultsFilter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
+  // # use HLTPathStatus results
+  desc.add<bool>("usePathStatus", false);
   // # HLT results   - set to empty to ignore HLT
   desc.add<edm::InputTag>("hltResults", edm::InputTag("TriggerResults"));
   // # L1 uGT results - set to empty to ignore L1T

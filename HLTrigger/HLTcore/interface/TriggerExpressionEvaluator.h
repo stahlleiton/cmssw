@@ -1,6 +1,8 @@
 #ifndef HLTrigger_HLTfilters_TriggerExpressionEvaluator_h
 #define HLTrigger_HLTfilters_TriggerExpressionEvaluator_h
 
+#include "FWCore/Framework/interface/ConsumesCollector.h"
+
 #include <iostream>
 
 namespace triggerExpression {
@@ -13,6 +15,9 @@ namespace triggerExpression {
 
     // pure virtual, need a concrete implementation
     virtual bool operator()(const Data& data) const = 0;
+
+    // virtual function, do nothing unless overridden
+    virtual void init(edm::ConsumesCollector&& iC) {}
 
     // virtual function, do nothing unless overridden
     virtual void init(const Data& data) {}

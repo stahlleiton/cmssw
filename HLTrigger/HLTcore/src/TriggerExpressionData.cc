@@ -12,6 +12,7 @@
 namespace triggerExpression {
 
   bool Data::setEvent(const edm::Event& event, const edm::EventSetup& setup) {
+    m_event = &event;
     // cache the event number
     m_eventNumber = event.id().event();
 
@@ -40,7 +41,7 @@ namespace triggerExpression {
     }
 
     // access HLT objects only if HLT is used
-    if (hasHLT()) {
+    if (hasHLT() && not usePathStatus()) {
       // cache the HLT TriggerResults
       m_hltResults = &edm::get(event, m_hltResultsToken);
       if (not m_hltResults)

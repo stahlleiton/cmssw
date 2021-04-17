@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 
+#include "DataFormats/Common/interface/PathStatus.h"
+#include "FWCore/Utilities/interface/EDGetToken.h"
+
 #include "HLTrigger/HLTcore/interface/TriggerExpressionEvaluator.h"
 
 namespace triggerExpression {
@@ -14,6 +17,8 @@ namespace triggerExpression {
 
     bool operator()(const Data& data) const override;
 
+    void init(edm::ConsumesCollector&& iC) override;
+
     void init(const Data& data) override;
 
     void dump(std::ostream& out) const override;
@@ -21,6 +26,7 @@ namespace triggerExpression {
   private:
     std::string m_pattern;
     std::vector<std::pair<std::string, unsigned int> > m_triggers;
+    edm::EDGetTokenT<edm::PathStatus> m_token;
   };
 
 }  // namespace triggerExpression
