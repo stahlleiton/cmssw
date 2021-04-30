@@ -5,6 +5,12 @@ from HLTrigger.Configuration.customizeHLTforPatatrack import consumeCPULegacyPro
 
 # customisation for running the "Patatrack" pixel local reconstruction
 def customisePixelLocalReconstructionHIon(process):
+    process.HLTDoLocalPixelSequence = cms.Sequence()
+    from HLTrigger.Configuration.HLT_FULL_cff import fragment
+    process.hltSiPixelDigis = fragment.hltSiPixelDigis.clone()
+    process.hltSiPixelClusters = fragment.hltSiPixelClusters.clone()
+    process.hltSiPixelClustersCache = fragment.hltSiPixelClustersCache.clone()
+    process.hltSiPixelRecHits = fragment.hltSiPixelRecHits.clone()
     process = customisePixelLocalReconstruction(process)
 
     if not 'HLTDoLocalPixelSequence' in process.__dict__:
@@ -15,6 +21,7 @@ def customisePixelLocalReconstructionHIon(process):
 
     process.HLTDoLocalPixelSequencePPOnAA = cms.Sequence()
     process.HLTDoLocalPixelSequencePPOnAAForLowPt = cms.Sequence()
+    process.HLTHIDoLocalPixelSequence = cms.Sequence()
 
 
     # Modules and EDAliases
@@ -24,20 +31,31 @@ def customisePixelLocalReconstructionHIon(process):
     # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
     process.hltSiPixelClustersPPOnAA = process.hltSiPixelClusters.clone(cpu = process.hltSiPixelClustersPPOnAA)
     process.hltSiPixelClustersPPOnAAForLowPt = process.hltSiPixelClusters.clone(cpu = process.hltSiPixelClustersPPOnAAForLowPt)
+    process.hltHISiPixelDigis = SwitchProducerCUDA(
+        # legacy producer
+        cpu = process.hltHISiPixelDigis,
+        # alias used to access products from multiple conversion modules
+        cuda = cms.EDAlias(
+            hltSiPixelDigisClusters = cms.VPSet(
+                cms.PSet(type = cms.string("PixelDigiedmDetSetVector"))
+            )
+        )
+    )
+    process.hltHISiPixelClusters = process.hltSiPixelClusters.clone(cpu = process.hltHISiPixelClusters)
 
     # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
     process.hltSiPixelRecHitsPPOnAA = process.hltSiPixelRecHits.clone(cpu = process.hltSiPixelRecHitsPPOnAA)
     process.hltSiPixelRecHitsPPOnAA.cuda.src = "hltSiPixelClustersPPOnAA"
     process.hltSiPixelRecHitsPPOnAAForLowPt = process.hltSiPixelRecHits.clone(cpu = process.hltSiPixelRecHitsPPOnAAForLowPt)
     process.hltSiPixelRecHitsPPOnAAForLowPt.cuda.src = "hltSiPixelClustersPPOnAAForLowPt"
+    process.hltHISiPixelRecHits = process.hltSiPixelRecHits.clone(cpu = process.hltHISiPixelRecHits)
+    process.hltHISiPixelRecHits.cuda.src = "hltHISiPixelClusters"
 
 
     # Tasks and Sequences
 
-    process.HLTDoLocalPixelTaskPP = process.HLTDoLocalPixelTask.clone()
-
     process.HLTDoLocalPixelTaskPPOnAA = cms.Task(
-          process.HLTDoLocalPixelTaskPP,
+          process.HLTDoLocalPixelTask,
           process.hltSiPixelClustersPPOnAA,                 # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
           process.hltSiPixelClustersCachePPOnAA,            # legacy module, used by the legacy pixel quadruplet producer
           process.hltSiPixelRecHitsPPOnAA)                  # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
@@ -45,17 +63,19 @@ def customisePixelLocalReconstructionHIon(process):
     process.HLTDoLocalPixelSequencePPOnAA = cms.Sequence(process.HLTDoLocalPixelTaskPPOnAA)
 
     process.HLTDoLocalPixelTaskPPOnAAForLowPt = cms.Task(
-          process.HLTDoLocalPixelTaskPP,
+          process.HLTDoLocalPixelTask,
           process.hltSiPixelClustersPPOnAAForLowPt,         # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
           process.hltSiPixelClustersCachePPOnAAForLowPt,    # legacy module, used by the legacy pixel quadruplet producer
           process.hltSiPixelRecHitsPPOnAAForLowPt)          # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
 
     process.HLTDoLocalPixelSequencePPOnAAForLowPt = cms.Sequence(process.HLTDoLocalPixelTaskPPOnAAForLowPt)
 
-    process.HLTDoLocalPixelTask = cms.Task(
-        process.HLTDoLocalPixelTaskPPOnAA,
-        process.HLTDoLocalPixelTaskPPOnAAForLowPt
-    )
+    process.HLTHIDoLocalPixelSequence = cms.Sequence(
+          process.hltHISiPixelDigis *                       # SwitchProducer wrapping the legacy pixel digis producer or an alias combining the pixel digis information converted from SoA
+          process.hltHISiPixelClusters *                    # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
+          process.hltHISiPixelClustersCache *               # legacy module, used by the legacy pixel quadruplet producer
+          process.hltHISiPixelRecHits,			    # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
+          process.HLTDoLocalPixelTask)
 
 
     # done
@@ -64,6 +84,10 @@ def customisePixelLocalReconstructionHIon(process):
 
 # customisation for running the "Patatrack" pixel track reconstruction
 def customisePixelTrackReconstructionHIon(process):
+    process.HLTRecoPixelTracksSequence = cms.Sequence()
+    from HLTrigger.Configuration.HLT_FULL_cff import fragment
+    process.hltPixelTracksTrackingRegions = fragment.hltPixelTracksTrackingRegions.clone()
+    process.hltTrimmedPixelVertices = fragment.hltTrimmedPixelVertices.clone()
     process = customisePixelTrackReconstruction(process)
 
     if not 'HLTRecoPixelTracksSequence' in process.__dict__:
