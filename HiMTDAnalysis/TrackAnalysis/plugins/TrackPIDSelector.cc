@@ -34,7 +34,7 @@ private:
   // Cut info
   const std::string particle_;
   const double maxInvBetaSignificance_;
-  const double maxDeDxSignificance_;
+  const double maxDeDxSignificanceInMTD_, maxDeDxSignificanceOutMTD_;
 
   // Input info
   const edm::EDGetTokenT< reco::TrackCollection  > recoTracksToken_;
@@ -60,7 +60,8 @@ private:
 TrackPIDSelector::TrackPIDSelector(const edm::ParameterSet& iConfig) :
   particle_(iConfig.getParameter<std::string>("particle")),
   maxInvBetaSignificance_(iConfig.getParameter<double>("maxInvBetaSignificance")),
-  maxDeDxSignificance_(iConfig.getParameter<double>("maxDeDxSignificance")),
+  maxDeDxSignificanceInMTD_(iConfig.getParameter<double>("maxDeDxSignificanceInMTD")),
+  maxDeDxSignificanceOutMTD_(iConfig.getParameter<double>("maxDeDxSignificanceOutMTD")),
   recoTracksToken_(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("recoTracksTag"))),
   primaryVertexToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertexTag"))),
   beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpotTag"))),
@@ -152,6 +153,7 @@ void TrackPIDSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     const bool hasMTD = (tMTDErr > 0) && (absEta < 1.4 ? pT > 0.8 : p > 0.7);
 
     // Select tracks based on dEdx PID
+    const auto maxDeDxSignificance_ = (hasMTD ? maxDeDxSignificanceInMTD_ : maxDeDxSignificanceOutMTD_);
     if (maxDeDxSignificance_ > 0) {
       const auto dEdx = dEdxData[track].dEdx();
       const auto dEdx_Mean = (absEta < 1.6 ? cutFunction_["BTL"] : cutFunction_["ETL"])["dEdx"]["Mean"].Eval(p);

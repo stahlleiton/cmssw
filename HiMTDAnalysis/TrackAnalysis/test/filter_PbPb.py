@@ -19,7 +19,7 @@ options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Names
 options.outputFile = "HiMTDTree.root"
-options.inputFiles = "/store/user/anstahll/MTD/MC/PY8PtGun_TuneCP5_Helium4_pt10_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007/MTD/PY8PtGun_TuneCP5_Helium4_pt10_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007/201005_114530/0000/step3_PY8PtGun_TuneCP5_Helium4_pt10_eta3p2_Hydjet_PbPb_5p02TeV_RECO_20201007_1.root"
+options.inputFiles = "/store/user/anstahll/MTD/MC/20210306/PY8PtGun_TuneCP5_Helium3_pt8_eta3p1_Hydjet_PbPb_5p5TeV_RECO_20210306/MTD/PY8PtGun_TuneCP5_Helium3_pt8_eta3p1_Hydjet_PbPb_5p5TeV_RECO_20210306/210305_205312/0000/step3_PY8PtGun_TuneCP5_Helium3_pt8_eta3p1_Hydjet_PbPb_5p5TeV_RECO_20210306_1.root"
 #"/store/mc/PhaseIIMTDTDRAutumn18DR/MinBias_Hydjet_Drume5_5p5TeV_TuneCP5_Pythia8/FEVT/NoPU_103X_upgrade2023_realistic_v2-v2/270000/34287DCD-AB1B-E744-A25A-856341BC4393.root"
 options.maxEvents  = 5#8 # -1 means all events
 
@@ -36,7 +36,7 @@ process.options = cms.untracked.PSet(
 
 # Path and EndPath definitions
 process.load('HiMTDAnalysis.TrackAnalysis.trackPIDSelector_cfi')
-process.anaPath = cms.Path( process.kaon + process.pion + process.proton )
+process.anaPath = cms.Path( process.proton )
 ###############################################################################################
 
 # MTD RE-RECO
