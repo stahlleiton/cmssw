@@ -4,7 +4,7 @@ trackPIDSelector = cms.EDProducer(
     'TrackPIDSelector',
     particle           = cms.string(""),
     maxInvBetaSignificance = cms.double(1),
-    maxDeDxSignificance = cms.double(0),
+    maxDeDxSignificance = cms.double(1),
     trackSelection     = cms.string(""),
     recoTracksTag      = cms.InputTag("generalTracks"),
     primaryVertexTag   = cms.InputTag("offlinePrimaryVertices4D"),

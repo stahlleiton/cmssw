@@ -146,7 +146,10 @@ void TrackPIDSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     if (!trackSelection_(*track)) continue;
 
     const auto p = track->p();
+    const auto pT = p / std::cosh(track->eta());
     const auto absEta = std::abs(track->eta());
+    const auto tMTDErr = trackInfoMap["SigmaTMTD"][track];
+    const bool hasMTD = (tMTDErr > 0) && (absEta < 1.4 ? pT > 0.8 : p > 0.7);
 
     // Select tracks based on dEdx PID
     if (maxDeDxSignificance_ > 0) {
@@ -156,14 +159,13 @@ void TrackPIDSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
       const auto dEdxSignificance = std::abs(dEdx - dEdx_Mean)/dEdx_Error;
       if (dEdxSignificance > maxDeDxSignificance_) continue;
     }
+    else if (maxInvBetaSignificance_ > 0 && !hasMTD) continue;
 
     // Select tracks based on MTD PID
-    if (maxInvBetaSignificance_ > 0) {
+    if (maxInvBetaSignificance_ > 0 && hasMTD) {
       // Extract MTD information
       const auto tMTD = trackInfoMap["TMTD"][track];
-      const auto tMTDErr = trackInfoMap["SigmaTMTD"][track];
       const auto pathLength = trackInfoMap["PathLength"][track];
-      if (tMTDErr <= 0) continue;
 
       // Associate primary vertex
       reco::Vertex vertex;
