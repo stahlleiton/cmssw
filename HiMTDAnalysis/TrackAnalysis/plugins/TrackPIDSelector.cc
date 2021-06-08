@@ -150,10 +150,11 @@ void TrackPIDSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     const auto pT = p / std::cosh(track->eta());
     const auto absEta = std::abs(track->eta());
     const auto tMTDErr = trackInfoMap["SigmaTMTD"][track];
-    const bool hasMTD = (tMTDErr > 0) && (absEta < 1.4 ? pT > 0.8 : p > 0.7);
+    const bool hasMTD = (tMTDErr > 0) && (absEta < 1.4 ? pT > 0.8 : p > 0.7) && absEta < 3.;
+    const bool outMTD = (absEta < 1.4 && pT < 0.8);
 
     // Select tracks based on dEdx PID
-    const auto maxDeDxSignificance_ = (hasMTD ? maxDeDxSignificanceInMTD_ : maxDeDxSignificanceOutMTD_);
+    const auto maxDeDxSignificance_ = (outMTD ? maxDeDxSignificanceOutMTD_ : (hasMTD ? maxDeDxSignificanceInMTD_ : 0));
     if (maxDeDxSignificance_ > 0) {
       const auto dEdx = dEdxData[track].dEdx();
       const auto dEdx_Mean = (absEta < 1.6 ? cutFunction_["BTL"] : cutFunction_["ETL"])["dEdx"]["Mean"].Eval(p);
