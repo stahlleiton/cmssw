@@ -11,7 +11,7 @@ namespace pixelGPUConstants {
 #else
   // data at pileup 50 has 18300 +/- 3500 hits; 40000 is around 6 sigma away
   // tested on MC events with 55-75 pileup events
-  constexpr uint32_t maxNumberOfHits = 48 * 1024;
+  constexpr uint32_t maxNumberOfHits = 4 * 48 * 1024;
 #endif
 }  // namespace pixelGPUConstants
 
