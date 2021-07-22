@@ -202,6 +202,7 @@ def changeToMiniAOD(process):
         process.patMuonSequence.insert(0, process.unpackedTracksAndVertices)
         process.load('HiAnalysis.HiOnia.unpackedMuons_cfi')
         process.patMuonSequence.insert(1, process.unpackedMuons)
+	process.unpackedMuons.propToMuon = cms.bool(True)
 
         process.outOnia2MuMu.outputCommands.append('keep *Vert*_unpackedTracksAndVertices_*_*')
         process.outOnia2MuMu.outputCommands.append('keep patMuons_unpackedMuons_*_*')

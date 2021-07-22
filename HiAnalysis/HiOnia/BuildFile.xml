@@ -9,6 +9,7 @@
 <use   name="HLTrigger/HLTcore"/>
 <use   name="CommonTools/UtilAlgos"/>
 <use   name="TrackingTools/IPTools"/>
+<use   name="MuonAnalysis/MuonAssociators"/>
 <export>
   <lib   name="1"/>
 </export>
