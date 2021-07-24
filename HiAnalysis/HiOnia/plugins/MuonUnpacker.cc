@@ -15,6 +15,8 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "TrackingTools/IPTools/interface/IPTools.h"
+#include "MuonAnalysis/MuonAssociators/interface/PropagateToMuon.h"
+
 
 namespace pat {
 
@@ -29,6 +31,16 @@ namespace pat {
           primaryVertexToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertices"))),
           beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot")))
       {
+        if (iConfig.getParameter<bool>("propToMuon")) {
+          edm::ParameterSet conf;
+          conf.addParameter("useSimpleGeometry", true);
+          conf.addParameter("useTrack", std::string("none"));
+          conf.addParameter("useState", std::string("atVertex"));
+          conf.addParameter("fallbackToME1", true);
+          conf.addParameter("useMB2InOverlap", true);
+          conf.addParameter("useStation2", true);
+          propToMuon_.reset(new PropagateToMuon(conf));
+        }
         for (const auto& sel: muonSelectors_) {
           candidateMuonIDToken_["packedPFCandidate"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "pfCandidates"+sel));
           candidateMuonIDToken_["lostTrack"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "lostTracks"+sel));
@@ -57,6 +69,9 @@ namespace pat {
       const edm::EDGetTokenT<edm::TriggerResults> triggerResultToken_;
       std::map<std::string, std::map<std::string, edm::EDGetTokenT<pat::PackedCandidateRefVector> > > candidateMuonIDToken_;
       std::map<std::string, edm::EDGetTokenT<edm::ValueMap<float> > > trackChi2Token_;
+
+      std::unique_ptr<PropagateToMuon> propToMuon_;
+
 
   };
 
@@ -141,9 +156,21 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
     }
   }
 
+
   // create output and add extra muons from packedCandidate collections
   auto output = std::make_unique<pat::MuonCollection>(muons);
   for (const auto& candMuon : candMuons) { output->push_back(candMuon); }
+  
+  if (propToMuon_) {
+    propToMuon_->init(iSetup);
+    for (auto& muon : *output) {
+      if (muon.track().isNull()) continue;
+      const auto& fts = propToMuon_->extrapolate(*muon.track());
+      if (!fts.isValid()) continue;
+      muon.addUserFloat("l1Eta", fts.globalPosition().eta());
+      muon.addUserFloat("l1Phi", fts.globalPosition().phi());
+    }
+  }
   
   // clear trigger data from MiniAOD
   for (auto& muon : *output) {
@@ -253,6 +280,7 @@ void pat::MuonUnpacker::fillDescriptions(edm::ConfigurationDescriptions& descrip
   desc.add<edm::InputTag>("primaryVertices", edm::InputTag("unpackedTracksAndVertices"))->setComment("primary vertex input collection");
   desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot"))->setComment("beam spot collection");
   desc.add<std::vector<std::string> >("muonSelectors", {"AllTrackerMuons", "TMOneStationTight"})->setComment("muon selectors");
+  desc.add<bool>("propToMuon", false)->setComment("propagate muon kinematic to muon station");
   descriptions.add("unpackedMuons", desc);
 }
 
