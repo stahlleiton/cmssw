@@ -99,10 +99,10 @@ void EcalRawToDigiGPU::acquire(edm::Event const& event,
       cms::cuda::make_host_unique<int[]>(ecal::raw::nfeds_max, ctx.stream())};
 
   // input data gpu
-  ecal::raw::InputDataGPU inputGPU = {cms::cuda::make_device_unique<unsigned char[]>(
-                                          ecal::raw::nfeds_max * nbytes_per_fed_max_, ctx.stream()),
-                                      cms::cuda::make_device_unique<uint32_t[]>(ecal::raw::nfeds_max, ctx.stream()),
-                                      cms::cuda::make_device_unique<int[]>(ecal::raw::nfeds_max, ctx.stream())};
+  ecal::raw::InputDataGPU inputGPU = {
+      cms::cuda::make_device_unique<unsigned char[]>(ecal::raw::nfeds_max * nbytes_per_fed_max_, ctx.stream()),
+      cms::cuda::make_device_unique<uint32_t[]>(ecal::raw::nfeds_max, ctx.stream()),
+      cms::cuda::make_device_unique<int[]>(ecal::raw::nfeds_max, ctx.stream())};
 
   // output cpu
   outputCPU_ = {cms::cuda::make_host_unique<uint32_t[]>(2, ctx.stream())};
