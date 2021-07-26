@@ -262,7 +262,7 @@ int main(void) {
               << " threads\n";
     cudaCheck(cudaMemset(d_clusInModule.get(), 0, maxNumModules * sizeof(uint32_t)));
 
-    cms::cuda::launch(findClus,
+    cms::cuda::launch(findClus<0>,
                       {blocksPerGrid, threadsPerBlock},
                       d_id.get(),
                       d_x.get(),
@@ -304,7 +304,7 @@ int main(void) {
     h_moduleStart[0] = nModules;
     countModules(h_id.get(), h_moduleStart.get(), h_clus.get(), n);
     memset(h_clusInModule.get(), 0, maxNumModules * sizeof(uint32_t));
-    findClus(
+    findClus<0>(
         h_id.get(), h_x.get(), h_y.get(), h_moduleStart.get(), h_clusInModule.get(), h_moduleId.get(), h_clus.get(), n);
 
     nModules = h_moduleStart[0];
