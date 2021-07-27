@@ -76,7 +76,7 @@ namespace gpuClustering {
       }
 
       //init hist  (ymax=416 < 512 : 9bits)
-      constexpr uint32_t maxPixInModule = isHIon ? 10000 : 4000;
+      constexpr uint32_t maxPixInModule = isHIon ? 6000 : 4000;
       constexpr auto nbins = phase1PixelTopology::numColsInModule + 2;  //2+2;
       using Hist = cms::cuda::HistoContainer<uint16_t, nbins, maxPixInModule, 9, uint16_t>;
       __shared__ Hist hist;
