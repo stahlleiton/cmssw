@@ -69,11 +69,11 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
             }
 
     process.load("FWCore.MessageService.MessageLogger_cfi")
-    process.MessageLogger.categories.extend(["GetManyWithoutRegistration","GetByLabelWithoutRegistration"])
-    process.MessageLogger.destinations = ['cout', 'cerr']
+#    process.MessageLogger.destinations = ['cout', 'cerr']
+#    process.MessageLogger.categories.extend(["GetManyWithoutRegistration","GetByLabelWithoutRegistration"])
     process.MessageLogger.cerr.FwkReport.reportEvery = 1000
-    process.MessageLogger.categories.extend(["HiOnia2MuMuPAT_muonLessSizeORpvTrkSize"])
-    process.MessageLogger.cerr.HiOnia2MuMuPAT_muonLessSizeORpvTrkSize = cms.untracked.PSet( limit = cms.untracked.int32(5) )
+#    process.MessageLogger.categories.extend(["HiOnia2MuMuPAT_muonLessSizeORpvTrkSize"])
+#    process.MessageLogger.cerr.HiOnia2MuMuPAT_muonLessSizeORpvTrkSize = cms.untracked.PSet( limit = cms.untracked.int32(5) )
 
     process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
     # load the Modules for the PATMuonsWithTrigger
