@@ -1,4 +1,3 @@
-#include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -16,93 +15,102 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "TrackingTools/IPTools/interface/IPTools.h"
+#include "MuonAnalysis/MuonAssociators/interface/PropagateToMuon.h"
+
 
 namespace pat {
 
   class MuonUnpacker : public edm::stream::EDProducer<> {
 
-  public:
+    public:
 
-    explicit MuonUnpacker(const edm::ParameterSet & iConfig):
-      muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
-      trackToken_(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("tracks"))),
-      primaryVertexToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertices"))),
-      beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"))),
-      triggerResultToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults"))),
-      candidateToken_({
-	  {"packedPFCandidate", consumes<edm::View<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("packedPFCandidates"))},
-	    {"lostTrack", consumes<edm::View<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks"))}
-	}),
-      candidateMuonIDLabel_({
-	  {"packedPFCandidate", iConfig.getParameter<std::string>("packedPFCandidateMuonIDLabel")},
-	    {"lostTrack", iConfig.getParameter<std::string>("lostTrackMuonIDLabel")}
-	}),
-      muonSelectors_(iConfig.getParameter<std::vector<std::string> >("muonSelectors"))
-    {
-      for (const auto& c: candidateMuonIDLabel_) {
-	for (const auto& sel: muonSelectors_) {
-	  candidateMuonIDToken_[c.first][sel] = consumes<edm::ValueMap<bool> >(edm::InputTag(c.second, sel));
-	}
+      explicit MuonUnpacker(const edm::ParameterSet & iConfig):
+          muonSelectors_(iConfig.getParameter<std::vector<std::string> >("muonSelectors")),
+          muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
+          trackToken_(consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("tracks"))),
+          primaryVertexToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertices"))),
+          beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot")))
+      {
+        if (iConfig.getParameter<bool>("propToMuon")) {
+          edm::ParameterSet conf;
+          conf.addParameter("useSimpleGeometry", true);
+          conf.addParameter("useTrack", std::string("none"));
+          conf.addParameter("useState", std::string("atVertex"));
+          conf.addParameter("fallbackToME1", true);
+          conf.addParameter("useMB2InOverlap", true);
+          conf.addParameter("useStation2", true);
+          propToMuon_.reset(new PropagateToMuon(conf));
+        }
+        for (const auto& sel: muonSelectors_) {
+          candidateMuonIDToken_["packedPFCandidate"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "pfCandidates"+sel));
+          candidateMuonIDToken_["lostTrack"][sel] = consumes<pat::PackedCandidateRefVector>(edm::InputTag("packedCandidateMuonID", "lostTracks"+sel));
+        }
+        trackChi2Token_["packedPFCandidate"] = consumes<edm::ValueMap<float> >(edm::InputTag("packedPFCandidateTrackChi2"));
+        trackChi2Token_["lostTrack"] = consumes<edm::ValueMap<float> >(edm::InputTag("lostTrackChi2"));
+        produces<pat::MuonCollection>();
       }
-      produces<pat::MuonCollection>();
-    }
-    ~MuonUnpacker() override {};
+      ~MuonUnpacker() override {};
 
-    void produce(edm::Event&, const edm::EventSetup&) override;
+      void produce(edm::Event&, const edm::EventSetup&) override;
 
-    void addMuon(pat::Muon&, const pat::PackedCandidate&, const std::string&,
-		 const reco::TrackRef&, const edm::ESHandle<TransientTrackBuilder>&,
-		 const reco::Vertex&, const reco::BeamSpot&, std::map<std::string, bool>);
+      void addMuon(pat::Muon&, const pat::PackedCandidate&, const std::string&,
+                   const reco::TrackRef&, const edm::ESHandle<TransientTrackBuilder>&,
+                   const reco::Vertex&, const reco::BeamSpot&, const float& trackChi2, std::map<std::string, bool>);
 
-    static void fillDescriptions(edm::ConfigurationDescriptions&);
+      static void fillDescriptions(edm::ConfigurationDescriptions&);
 
-  private:
+    private:
 
-    edm::EDGetTokenT<pat::MuonCollection> muonToken_;
-    edm::EDGetTokenT<reco::TrackCollection> trackToken_;
-    edm::EDGetTokenT<reco::VertexCollection> primaryVertexToken_;
-    edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
-    edm::EDGetTokenT<edm::TriggerResults> triggerResultToken_;
-    std::map<std::string, edm::EDGetTokenT<edm::View<pat::PackedCandidate> > > candidateToken_;
-    std::map<std::string, std::map<std::string, edm::EDGetTokenT<edm::ValueMap<bool> > > > candidateMuonIDToken_;
+      const std::vector<std::string> muonSelectors_;
+      const edm::EDGetTokenT<pat::MuonCollection> muonToken_;
+      const edm::EDGetTokenT<reco::TrackCollection> trackToken_;
+      const edm::EDGetTokenT<reco::VertexCollection> primaryVertexToken_;
+      const edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
+      const edm::EDGetTokenT<edm::TriggerResults> triggerResultToken_;
+      std::map<std::string, std::map<std::string, edm::EDGetTokenT<pat::PackedCandidateRefVector> > > candidateMuonIDToken_;
+      std::map<std::string, edm::EDGetTokenT<edm::ValueMap<float> > > trackChi2Token_;
 
-    const std::map<std::string, std::string> candidateMuonIDLabel_;
-    const std::vector<std::string> muonSelectors_;
+      std::unique_ptr<PropagateToMuon> propToMuon_;
+
 
   };
 
 }
 
 void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  edm::Handle<pat::MuonCollection> muons;
-  edm::Handle<reco::TrackCollection> tracks;
-  edm::Handle<reco::VertexCollection> primaryVertices;
-  edm::Handle<reco::BeamSpot> beamSpotH;
-  edm::Handle<edm::TriggerResults> triggerResults;
-  std::map<std::string, edm::Handle<edm::View<pat::PackedCandidate> > > candidates;
-  std::map<std::string, std::map<std::string, edm::ValueMap<bool> > > candidateMuonIDs;
-
-  iEvent.getByToken(muonToken_, muons);
-  iEvent.getByToken(trackToken_, tracks);
-  iEvent.getByToken(primaryVertexToken_, primaryVertices);
-  iEvent.getByToken(beamSpotToken_, beamSpotH);
-  iEvent.getByToken(triggerResultToken_, triggerResults);
-  for (auto& c : candidateToken_) {
-    for (const auto& s: candidateMuonIDToken_[c.first]) {
-      edm::Handle<edm::ValueMap<bool> > coll;
-      iEvent.getByToken(s.second, coll);
+  // extract candidate map
+  std::map<std::string, std::map<pat::PackedCandidateRef, std::map<std::string, bool> > > candidateMuonIDs;
+  for (const auto& n : candidateMuonIDToken_) {
+    for (const auto& s: n.second) {
+      const auto& coll = iEvent.getHandle(s.second);
       if (coll.isValid()) {
-        candidateMuonIDs[c.first][s.first] = *coll;
+        for (const auto& c : *coll) { 
+          candidateMuonIDs[n.first][c][s.first] = true;
+        }
       }
-    }
-    if (candidateMuonIDs.count(c.first)>0) {
-      iEvent.getByToken(c.second, candidates[c.first]);
     }
   }
 
+  // extract candidate track map
+  typedef std::tuple<float, float, float, char, unsigned short> TUPLE;
+  std::map<TUPLE, reco::TrackRef> candTrackMap;
+  const auto& tracks = iEvent.getHandle(trackToken_);
+  for (size_t i=0; i<tracks->size(); i++) {
+    const auto& trk = reco::TrackRef(tracks, i);
+    const auto& tuple = std::make_tuple(trk->pt(), trk->eta(), trk->phi(), trk->charge(), trk->numberOfValidHits());
+    candTrackMap[tuple] = trk;
+  }
+
+  // extract candidate track chi2 map
+  std::map<std::string, edm::ValueMap<float> > trackChi2Map;
+  for (const auto& n : trackChi2Token_) {
+    const auto& valueMap = iEvent.getHandle(n.second);
+    if (valueMap.isValid()) trackChi2Map.emplace(n.first, *valueMap);
+  }
+
   // extract primary vertex and beamspot
-  const auto& primaryVertex = primaryVertices->at(0);
-  const auto& beamSpot = *beamSpotH;
+  const auto& primaryVertex = iEvent.get(primaryVertexToken_)[0];
+  const auto& beamSpot = iEvent.get(beamSpotToken_);
 
   // extract the transient track builder
   edm::ESHandle<TransientTrackBuilder> trackBuilder;
@@ -110,66 +118,64 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 
   // extract muons from packedCandidate collections
   pat::MuonCollection candMuons;
-  for (auto& c : candidates) {
-    for (size_t i=0; i<c.second->size(); i++) {
-      auto cand = c.second->ptrAt(i);
-      // ignore neutral candidates or without track
+  const auto& muons = iEvent.get(muonToken_);
+  for (const auto& n : candidateMuonIDs) {
+    for (const auto& c : n.second) {
+      const auto& cand = c.first;
+      const auto& selMap = c.second;
+
+      // extract candidate track
       if (cand->charge()==0 || !cand->hasTrackDetails()) continue;
-      const auto& candTrack = cand->pseudoTrack();
+      const auto& trk = cand->pseudoTrack();
+      const auto& tuple = std::make_tuple(trk.pt(), trk.eta(), trk.phi(), trk.charge(), trk.numberOfValidHits());
+      const auto& track = candTrackMap.at(tuple);
 
-      // check if candidate is muon
-      bool isMuon = false;
-      std::map<std::string, bool> selMap;
-      for (const auto& s: candidateMuonIDs[c.first]) {
-        selMap[s.first] = s.second[cand];
-        isMuon = isMuon || selMap[s.first];
-      }
-      if (!isMuon) continue;
-
-      // find track in track collection associated to candidate
-      reco::TrackRef track;
-      for (size_t j=0; j<tracks->size(); j++) {
-        const auto& trk = tracks->at(j);
-        if (trk.charge()==candTrack.charge() && trk.pt()==candTrack.pt() && trk.eta()==candTrack.eta() && trk.phi()==candTrack.phi()) {
-          track = reco::TrackRef(tracks, j);
+      // check if candidate is in muon collection
+      bool isIncluded = false;
+      for (const auto& muon : muons) {
+        const auto& mtrk = muon.innerTrack();
+        if (mtrk.isNull() || !mtrk->quality(reco::TrackBase::qualityByName("highPurity"))) continue;
+        if (mtrk->charge()==track->charge() && mtrk->numberOfValidHits()==track->numberOfValidHits() &&
+            std::abs(mtrk->eta()-track->eta())<1E-3 && std::abs(mtrk->phi()-track->phi())<1E-3 && std::abs((mtrk->pt()-track->pt())/mtrk->pt())<1E-2) {
+          isIncluded = true;
           break;
         }
+      }
+      if (isIncluded) continue;
+
+      // extract track chi2
+      float trackChi2(-1);
+      if (trackChi2Map[n.first].contains(cand.id())) {
+        trackChi2 = trackChi2Map[n.first][cand];
       }
 
       // create and add the muon object
       pat::Muon muon;
-      addMuon(muon, *cand, c.first, track, trackBuilder, primaryVertex, beamSpot, selMap);
+      addMuon(muon, *cand, n.first, track, trackBuilder, primaryVertex, beamSpot, trackChi2, selMap);
       candMuons.push_back(muon);
     }
   }
 
-  std::unique_ptr<pat::MuonCollection> output(new pat::MuonCollection(*muons));
 
-  // add the extra muons from packedCandidate collections
-  for (const auto& candMuon : candMuons) {
-    const auto& candTrack = *candMuon.innerTrack();
-    bool isIncluded = false;
-    for (const auto& muon : *muons) {
-      if (muon.innerTrack().isNull()) continue;
-      // ignore muons without high purity inner track
-      if (muon.innerTrack().isNull() || !muon.innerTrack()->quality(reco::TrackBase::qualityByName("highPurity"))) continue;
-      const auto& muonTrack = *muon.innerTrack();
-      if (muonTrack.charge()==candTrack.charge() && muonTrack.numberOfValidHits()==candTrack.numberOfValidHits() &&
-          std::abs(muonTrack.eta()-candTrack.eta())<1E-3 && std::abs(muonTrack.phi()-candTrack.phi())<1E-3 && std::abs((muonTrack.pt()-candTrack.pt())/muonTrack.pt())<1E-2) {
-        isIncluded = true;
-        break;
-      }
-    }
-    if (!isIncluded) {
-      output->push_back(candMuon);
-    }
-  } 
+  // create output and add extra muons from packedCandidate collections
+  auto output = std::make_unique<pat::MuonCollection>(muons);
+  for (const auto& candMuon : candMuons) { output->push_back(candMuon); }
   
-  // unpack trigger data for MiniAOD
-  for (auto& muon : *output) {
-    for(auto& o : muon.triggerObjectMatches()) {
-      const_cast<pat::TriggerObjectStandAlone*>(&o)->unpackNamesAndLabels(iEvent, *triggerResults);
+  if (propToMuon_) {
+    propToMuon_->init(iSetup);
+    for (auto& muon : *output) {
+      if (muon.track().isNull()) continue;
+      const auto& fts = propToMuon_->extrapolate(*muon.track());
+      if (!fts.isValid()) continue;
+      muon.addUserFloat("l1Eta", fts.globalPosition().eta());
+      muon.addUserFloat("l1Phi", fts.globalPosition().phi());
     }
+  }
+  
+  // clear trigger data from MiniAOD
+  for (auto& muon : *output) {
+    if (!muon.hasUserInt("candType")) muon.addUserInt("candType", 0);
+    const_cast<TriggerObjectStandAloneCollection*>(&muon.triggerObjectMatches())->clear();
   }
 
   iEvent.put(std::move(output));
@@ -178,22 +184,20 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidate& cand, const std::string& lbl,
                                 const reco::TrackRef& track, const edm::ESHandle<TransientTrackBuilder>& trackBuilder,
                                 const reco::Vertex& primaryVertex, const reco::BeamSpot& beamSpot,
-                                std::map<std::string, bool> selMap) {
+                                const float& trackChi2, std::map<std::string, bool> selMap) {
   // add basic information
-  muon.setP4(cand.p4());
+  muon.setP4(math::PtEtaPhiMLorentzVector(track->pt(), track->eta(), track->phi(), cand.mass()));
   muon.setCharge(cand.charge());
   muon.setVertex(cand.vertex());
   muon.setPdgId(-13 * cand.charge());
 
   // add track information
   muon.setInnerTrack(track);
-  muon.setMuonTrack(reco::Muon::InnerTrack, track);
-  muon.setTrack(track);
   muon.setBestTrack(reco::Muon::InnerTrack);
   muon.embedTrack();
-  muon.embedMuonBestTrack();
   muon.setNumberOfValidHits(track->numberOfValidHits());
   const auto& muonTrack = *muon.track();
+  muon.addUserFloat("trackChi2", trackChi2);
 
   // add vertex information
   auto tt = trackBuilder->build(muonTrack);
@@ -213,12 +217,12 @@ void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidate& can
   bool isGlobalMuon = selMap["AllGlobalMuons"] || cand.isGlobalMuon();
   bool isStandAloneMuon = selMap["AllStandAloneMuons"] || cand.isStandAloneMuon();
   bool isPFMuon = (lbl=="packedPFCandidate" && std::abs(cand.pdgId())==13);
-  bool isHPMuon = (lbl=="lostTrack" ? true : muonTrack.quality(reco::Track::highPurity));
+  bool isHPMuon = muonTrack.quality(reco::Track::highPurity);
   bool isLooseMuon = isPFMuon || isGlobalMuon || isTrackerMuon;
   bool isTMOneStationTight = selMap["TMOneStationTight"];
   bool isSoftMuon = isTMOneStationTight && isHPMuon &&
-    muonTrack.hitPattern().trackerLayersWithMeasurement()>5 && muonTrack.hitPattern().pixelLayersWithMeasurement()>0 &&
-    fabs(muonTrack.dxy(primaryVertex.position()))<0.3 && fabs(muonTrack.dz(primaryVertex.position()))<20.;
+                    muonTrack.hitPattern().trackerLayersWithMeasurement()>5 && muonTrack.hitPattern().pixelLayersWithMeasurement()>0 &&
+                    fabs(muonTrack.dxy(primaryVertex.position()))<0.3 && fabs(muonTrack.dz(primaryVertex.position()))<20.;
 
   // add muon selectors
   unsigned int type = 0;
@@ -275,12 +279,8 @@ void pat::MuonUnpacker::fillDescriptions(edm::ConfigurationDescriptions& descrip
   desc.add<edm::InputTag>("tracks", edm::InputTag("unpackedTracksAndVertices"))->setComment("track input collection");
   desc.add<edm::InputTag>("primaryVertices", edm::InputTag("unpackedTracksAndVertices"))->setComment("primary vertex input collection");
   desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot"))->setComment("beam spot collection");
-  desc.add<edm::InputTag>("triggerResults", edm::InputTag("TriggerResults::HLT"))->setComment("trigger result collection");
-  desc.add<edm::InputTag>("packedPFCandidates", edm::InputTag("packedPFCandidates"))->setComment("packed PF candidates input collection");
-  desc.add<edm::InputTag>("lostTracks", edm::InputTag("lostTracks"))->setComment("lost tracks input collection");
-  desc.add<std::string>("packedPFCandidateMuonIDLabel", "packedPFCandidateMuonID")->setComment("packed PF candidate Muon ID label");
-  desc.add<std::string>("lostTrackMuonIDLabel", "lostTrackMuonID")->setComment("lost track Muon ID label");
   desc.add<std::vector<std::string> >("muonSelectors", {"AllTrackerMuons", "TMOneStationTight"})->setComment("muon selectors");
+  desc.add<bool>("propToMuon", false)->setComment("propagate muon kinematic to muon station");
   descriptions.add("unpackedMuons", desc);
 }
 

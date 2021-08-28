@@ -12,9 +12,9 @@
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -99,7 +99,7 @@ private:
   edm::EDGetTokenT<double> rhoToken_;
   edm::EDGetTokenT<edm::View<reco::GsfElectron>> electronsToken_;
   edm::EDGetTokenT<edm::View<pat::Photon>> photonsToken_;
-  edm::EDGetTokenT<edm::View<reco::Muon>> muonsToken_;
+  edm::EDGetTokenT<edm::View<pat::Muon>> muonsToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
   edm::EDGetTokenT<reco::ConversionCollection> conversionsToken_;
   edm::EDGetTokenT<edm::View<pat::PackedCandidate>> packedPFCandToken_;
@@ -139,6 +139,8 @@ private:
   std::vector<float> mcPt_;
   std::vector<float> mcEta_;
   std::vector<float> mcPhi_;
+  std::vector<float> muL1Eta_;
+  std::vector<float> muL1Phi_;
   std::vector<float> mcE_;
   std::vector<float> mcEt_;
   std::vector<float> mcMass_;
@@ -486,6 +488,11 @@ private:
   std::vector<int> muCharge_;
   std::vector<int> muType_;
   std::vector<int> muIsGood_;
+
+  std::vector<int> muIsGlobal_;
+  std::vector<int> muIsTracker_;
+  std::vector<int> muIsPF_;
+  std::vector<int> muIsSTA_;
 
   std::vector<float> muD0_;
   std::vector<float> muDz_;

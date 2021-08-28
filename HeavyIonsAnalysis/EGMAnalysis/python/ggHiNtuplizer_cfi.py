@@ -23,7 +23,7 @@ ggHiNtuplizer = cms.EDAnalyzer("ggHiNtuplizer",
     rhoSrc = cms.InputTag("fixedGridRhoFastjetAll"),
     electronSrc = cms.InputTag("slimmedElectrons"),
     photonSrc = cms.InputTag("slimmedPhotons"),
-    muonSrc = cms.InputTag("slimmedMuons"),
+    muonSrc = cms.InputTag("unpackedMuons"),
     beamSpotSrc = cms.InputTag('offlineBeamSpot'),
     conversionsSrc = cms.InputTag('reducedEgamma:reducedConversions'),
 
