@@ -26,7 +26,7 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 112X, data")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-        "file:/afs/cern.ch/work/m/mnguyen/public/devel/forest/CMSSW_11_2_0_pre9/src/HeavyIonsAnalysis/Configuration/test/step2_PAT.root"
+        "/store/hidata/HIRun2018A/HISingleMuon/MINIAOD/PbPb18_MiniAODv1-v1/00000/00345f79-641f-4002-baf1-19ae8e83c48b.root"
     ), 
 )
 #input file produced from:
@@ -96,17 +96,16 @@ process.TFileService = cms.Service("TFileService",
 ###############################################################################
 
 # event analysis
-# process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi')
-#process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 #process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 #process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
 
-#from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_mc
-#process.hltobject.triggerNames = trigger_list_mc
+#from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_data
+#process.hltobject.triggerNames = trigger_list_data
 
-# process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 ################################
 # electrons, photons, muons
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
@@ -125,9 +124,10 @@ process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
 # main forest sequence
 process.forest = cms.Path(
     process.HiForestInfo + 
-    # process.hltanalysis +
+    process.hltanalysis +
+    #process.hltobject +
     process.trackSequencePbPb +
-    # process.particleFlowAnalyser +
+    process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
     process.ggHiNtuplizer +
     process.akCs4PFJetAnalyzer

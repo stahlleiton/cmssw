@@ -77,7 +77,8 @@ process.TFileService = cms.Service("TFileService",
 ###############################################################################
 
 # event analysis
-# process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
+process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_mc_cfi')
 #process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
@@ -110,10 +111,10 @@ process.load("HeavyIonsAnalysis.MuonAnalysis.hltMuTree_cfi")
 ###############################################################################
 # main forest sequence
 process.forest = cms.Path(
-    process.HiForestInfo + 
-    # process.hltanalysis +
+    process.HiForestInfo +
+    process.hltanalysis +
     process.trackSequencePbPb +
-    # process.particleFlowAnalyser +
+    process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
     process.ggHiNtuplizer +
     process.akCs4PFJetAnalyzer +
