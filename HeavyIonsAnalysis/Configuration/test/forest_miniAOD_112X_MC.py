@@ -27,7 +27,7 @@ process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
         'file:/afs/cern.ch/work/m/mnguyen/public/integration/CMSSW_11_2_4_patch4/src/step3_inMINIAODSIM.root'
-    ), 
+    ),
 )
 
 # number of events to process, set to -1 to process all events
@@ -51,8 +51,8 @@ process.HiForestInfo.GlobalTagLabel = process.GlobalTag.globaltag
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("BTagTrackProbability3DRcd"),
-             tag = cms.string("JPcalib_MC103X_2018PbPb_v4"), 
-             connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS")             
+             tag = cms.string("JPcalib_MC103X_2018PbPb_v4"),
+             connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS")
          )
 ])
 
@@ -116,9 +116,9 @@ process.forest = cms.Path(
     process.trackSequencePbPb +
     process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
+    process.unpackedMuons +
     process.ggHiNtuplizer +
     process.akCs4PFJetAnalyzer +
-    process.unpackedMuons +
     process.hltMuTree
     )
 
@@ -130,11 +130,11 @@ if addR3Jets :
     process.load("HeavyIonsAnalysis.JetAnalysis.extraJets_cff")
     from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupHeavyIonJets
     setupHeavyIonJets('akCs3PF', process.extraJetsMC, process, 1)
-    
+
     process.akCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(
         jetTag = "akCs3PFpatJets",
     )
-    
+
     process.forest += process.extraJetsMC * process.akCs3PFJetAnalyzer
 
 
@@ -144,7 +144,7 @@ addCandidateTagging = True
 
 if addCandidateTagging:
     process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
-    
+
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     updateJetCollection(
         process,
@@ -153,7 +153,7 @@ if addCandidateTagging:
         btagDiscriminators = ['pfCombinedSecondaryVertexV2BJetTags', 'pfDeepCSVDiscriminatorsJetTags:BvsAll', 'pfDeepCSVDiscriminatorsJetTags:CvsB', 'pfDeepCSVDiscriminatorsJetTags:CvsL'], ## to add discriminators,
         btagPrefix = 'TEST',
     )
-    
+
     process.updatedPatJets.addJetCorrFactors = False
     process.updatedPatJets.discriminatorSources = cms.VInputTag(
         cms.InputTag('pfDeepCSVJetTags:probb'),
@@ -161,7 +161,7 @@ if addCandidateTagging:
         cms.InputTag('pfDeepCSVJetTags:probudsg'),
         cms.InputTag('pfDeepCSVJetTags:probbb'),
     )
-    
+
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
 
     process.forest.insert(1,process.candidateBtagging*process.updatedPatJets)

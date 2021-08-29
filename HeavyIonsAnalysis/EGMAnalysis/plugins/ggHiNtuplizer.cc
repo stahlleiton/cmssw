@@ -84,7 +84,7 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) {
   }
 
   if (doMuons_) {
-    muonsToken_ = consumes<edm::View<reco::Muon>>(ps.getParameter<edm::InputTag>("muonSrc"));
+    muonsToken_ = consumes<edm::View<pat::Muon>>(ps.getParameter<edm::InputTag>("muonSrc"));
   }
 
   // initialize output TTree
@@ -468,9 +468,16 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps) {
     tree_->Branch("muPt", &muPt_);
     tree_->Branch("muEta", &muEta_);
     tree_->Branch("muPhi", &muPhi_);
+    tree_->Branch("muL1Eta", &muL1Eta_);
+    tree_->Branch("muL1Phi", &muL1Phi_);
     tree_->Branch("muCharge", &muCharge_);
     tree_->Branch("muType", &muType_);
     tree_->Branch("muIsGood", &muIsGood_);
+
+    tree_->Branch("muIsGlobal", &muIsGlobal_);
+    tree_->Branch("muIsTracker", &muIsTracker_);
+    tree_->Branch("muIsPF", &muIsPF_);
+    tree_->Branch("muIsSTA", &muIsSTA_);
 
     tree_->Branch("muD0", &muD0_);
     tree_->Branch("muDz", &muDz_);
@@ -876,9 +883,16 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es) {
     muPt_.clear();
     muEta_.clear();
     muPhi_.clear();
+    muL1Eta_.clear();
+    muL1Phi_.clear();
     muCharge_.clear();
     muType_.clear();
     muIsGood_.clear();
+
+    muIsGlobal_.clear();
+    muIsTracker_.clear();
+    muIsPF_.clear();
+    muIsSTA_.clear();
 
     muD0_.clear();
     muDz_.clear();
@@ -1803,7 +1817,7 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
 
 void ggHiNtuplizer::fillMuons(const edm::Event& e, const edm::EventSetup& es, reco::Vertex& pv) {
   // Fills tree branches with muons.
-  edm::Handle<edm::View<reco::Muon>> recoMuons;
+  edm::Handle<edm::View<pat::Muon>> recoMuons;
   e.getByToken(muonsToken_, recoMuons);
 
   for (const auto& mu : *recoMuons) {
@@ -1815,9 +1829,16 @@ void ggHiNtuplizer::fillMuons(const edm::Event& e, const edm::EventSetup& es, re
     muPt_.push_back(mu.pt());
     muEta_.push_back(mu.eta());
     muPhi_.push_back(mu.phi());
+    muL1Eta_.push_back(mu.hasUserFloat("l1Eta") ? mu.userFloat("l1Eta") : -99);
+    muL1Phi_.push_back(mu.hasUserFloat("l1Phi") ? mu.userFloat("l1Phi") : -99);
     muCharge_.push_back(mu.charge());
     muType_.push_back(mu.type());
     muIsGood_.push_back(muon::isGoodMuon(mu, muon::selectionTypeFromString("TMOneStationTight")));
+
+    muIsGlobal_.push_back((int)mu.isGlobalMuon());
+    muIsTracker_.push_back((int)mu.isTrackerMuon());
+    muIsPF_.push_back((int)mu.isPFMuon());
+    muIsSTA_.push_back((int)mu.isStandAloneMuon());
 
     muD0_.push_back(mu.muonBestTrack()->dxy(pv.position()));
     muDz_.push_back(mu.muonBestTrack()->dz(pv.position()));

@@ -27,7 +27,7 @@ process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
         "/store/hidata/HIRun2018A/HISingleMuon/MINIAOD/PbPb18_MiniAODv1-v1/00000/00345f79-641f-4002-baf1-19ae8e83c48b.root"
-    ), 
+    ),
 )
 #input file produced from:
 #"file:/afs/cern.ch/work/r/rbi/public/forest/HIHardProbes_HIRun2018A-PromptReco-v2_AOD.root"
@@ -108,6 +108,7 @@ process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 ################################
 # electrons, photons, muons
+process.load('HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi')
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
@@ -123,12 +124,13 @@ process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
 ###############################################################################
 # main forest sequence
 process.forest = cms.Path(
-    process.HiForestInfo + 
+    process.HiForestInfo +
     process.hltanalysis +
     #process.hltobject +
     process.trackSequencePbPb +
     process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
+    process.unpackedMuons +
     process.ggHiNtuplizer +
     process.akCs4PFJetAnalyzer
     )
@@ -141,11 +143,11 @@ if addR3Jets :
     process.load("HeavyIonsAnalysis.JetAnalysis.extraJets_cff")
     from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupHeavyIonJets
     setupHeavyIonJets('akCs3PF', process.extraJetsData, process, 0)
-    
+
     process.akCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(
         jetTag = "akCs3PFpatJets",
     )
-    
+
     process.forest += process.extraJetsData * process.akCs3PFJetAnalyzer
 
 
@@ -155,7 +157,7 @@ addCandidateTagging = True
 
 if addCandidateTagging:
     process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
-    
+
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     updateJetCollection(
         process,
@@ -164,7 +166,7 @@ if addCandidateTagging:
         btagDiscriminators = ['pfCombinedSecondaryVertexV2BJetTags', 'pfDeepCSVDiscriminatorsJetTags:BvsAll', 'pfDeepCSVDiscriminatorsJetTags:CvsB', 'pfDeepCSVDiscriminatorsJetTags:CvsL'], ## to add discriminators,
         btagPrefix = 'TEST',
     )
-    
+
     process.updatedPatJets.addJetCorrFactors = False
     process.updatedPatJets.discriminatorSources = cms.VInputTag(
         cms.InputTag('pfDeepCSVJetTags:probb'),
@@ -172,7 +174,7 @@ if addCandidateTagging:
         cms.InputTag('pfDeepCSVJetTags:probudsg'),
         cms.InputTag('pfDeepCSVJetTags:probbb'),
     )
-    
+
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
 
     process.forest.insert(1,process.candidateBtagging*process.updatedPatJets)
