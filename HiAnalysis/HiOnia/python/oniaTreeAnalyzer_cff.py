@@ -184,6 +184,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     storeSameSign      = cms.bool(True),   # Store/Drop same sign dimuons
                                     AtLeastOneCand     = cms.bool(False),  # If true, store only events that have at least one selected candidate dimuon (or trimuon candidate if doTrimuons=true)
                                     useSVfinder        = cms.bool(False), #whether to use the standard secondary vertex finder (with some parameters tweaked to loosen it)
+                                    useL1MuonProp      = cms.bool(False),
 
                                     removeSignalEvents = cms.untracked.bool(False),  # Remove/Keep signal events
                                     removeTrueMuons    = cms.untracked.bool(False),  # Remove/Keep gen Muons
@@ -222,7 +223,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     #from Configuration.Eras.Modifier_stage2L1Trigger_cff import stage2L1Trigger
     #stage2L1Trigger.toModify(process.hionia, stageL1Trigger = 2)
 
-    process.hionia.primaryVertexTag = cms.InputTag("offlinePrimaryVertices")
+    process.hionia.primaryVertexTag = cms.InputTag("offlineSlimmedPrimaryVerticesRecovery" if miniAOD else "offlinePrimaryVertices")
     process.hionia.genParticles     = cms.InputTag("prunedGenParticles" if miniAOD else "genParticles")
     process.hionia.muonLessPV       = cms.bool(muonlessPV)
     process.hionia.CentralitySrc    = cms.InputTag("")

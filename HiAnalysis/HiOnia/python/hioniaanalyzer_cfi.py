@@ -27,7 +27,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         
                         onlyTheBest = cms.bool(False),		
                         applyCuts = cms.bool(True),
-			selTightGlobalMuon = cms.bool(False), 
+                        selTightGlobalMuon = cms.bool(False), 
                         storeEfficiency = cms.bool(False),
                         SofterSgMuAcceptance = cms.bool(False),
                         SumETvariables = cms.bool(True),
@@ -44,6 +44,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         
                         muonLessPV = cms.bool(False),
                         useSVfinder = cms.bool(False),
+                        useL1MuonProp = cms.bool(False),
                         
                         #-- Gen Details
                         BcPDG = cms.int32(541),

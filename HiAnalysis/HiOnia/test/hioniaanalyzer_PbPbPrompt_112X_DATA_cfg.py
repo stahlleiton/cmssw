@@ -9,7 +9,7 @@ from Configuration.StandardSequences.Eras import eras
 HLTProcess     = "HLT" # Name of HLT process
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "Glb" # Single muon selection: All, Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
-applyEventSel  = False # Only apply Event Selection if the required collections are present
+applyEventSel  = True # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without isGlobal which should be put in 'muonSelection' parameter) from the beginning of HiSkim. If you want the full SoftMuon selection, set this flag false and add 'isSoftMuon' in lowerPuritySelection. In any case, if applyCuts=True, isSoftMuon is required at HiAnalysis level for muons of selected dimuons.
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection, applied at the end of HiSkim)
 SumETvariables = True  # Whether to write out SumET-related variables
@@ -23,6 +23,7 @@ keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon c
 useSVfinder    = False # External SV finder to check if the muons are from a resolved SV
 miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
+useL1MuonProp = False # whether use of eta, phi information at L1 propagated from PV. Only use for offline-online matching studies
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -51,7 +52,7 @@ options.inputFiles =[
   #'file:/eos/cms/store/group/phys_heavyions/mnguyen/miniAOD/reMiniAOD_DATA_PAT_HIDoubleMuon.root',
   #'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
   #'file:/home/llr/cms/falmagne/miniAOD/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi_HiDoubleMuPsiPeri.root'
-  'file:/home/llr/cms/falmagne/miniAOD/CMSSW_11_2_0_pre9/src/step2_miniAOD_DoubleMuonPD_11_2_0_pre9_1.root'
+  '/store/hidata/HIRun2018A/HIDoubleMuon/MINIAOD/PbPb18_MiniAODv1-v1/120000/00137f14-f84b-4f1b-ad37-0717a01c981b.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FC3997EF-7B96-7947-81B0-96EEEA53AA60.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FE775A7B-0F67-A14E-AAEE-1E00D4EE0BC9.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FECEBB19-DB3E-AB40-B807-458134ABEEA3.root',
@@ -160,9 +161,9 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = 'auto:phase1_2018_realistic_hi' 
+  globalTag = '112X_upgrade2018_realistic_HI_v9' 
 else:
-  globalTag = 'auto:run2_data'
+  globalTag = '112X_dataRun2_PromptLike_HI_v7'
 
 #----------------------------------------------------------------------------
 
@@ -184,7 +185,7 @@ print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
+        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_update2018HIrun_v0_offline"),
         connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
         label = cms.untracked.string("HFtowers")
         ),
@@ -218,16 +219,15 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 process.hionia.useSVfinder      = cms.bool(useSVfinder)
+process.hionia.useL1MuonProp    = cms.bool(useL1MuonProp)
 process.hionia.checkTrigNames   = cms.bool(False)#change this to get the event-level trigger info in hStats output (but creates lots of warnings when fake trigger names are used)
 
 process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 
 if applyEventSel:
-  process.load('HeavyIonsAnalysis.Configuration.collisionEventSelection_cff')
-  process.load('HeavyIonsAnalysis.EventAnalysis.clusterCompatibilityFilter_cfi')
-  process.load('HeavyIonsAnalysis.Configuration.hfCoincFilter_cff')
-  process.load("RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesRecovery_cfi")
-  process.oniaTreeAna.replace(process.hionia, process.hfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
+  process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
+  process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
+  process.oniaTreeAna.replace(process.hionia, process.clusterCompatibilityFilter * process.primaryVertexFilter * process.phfCoincFilter2Th4 * process.hionia )
 
 if atLeastOneCand:
   if doTrimuons:
