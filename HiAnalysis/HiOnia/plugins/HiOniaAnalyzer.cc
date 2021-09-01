@@ -449,6 +449,7 @@ private:
   bool           _storeefficiency;
   bool           _muonLessPrimaryVertex;
   bool           _useSVfinder;
+  bool           _useL1MuonProp;
   bool           _useBS;
   bool           _useRapidity;
   bool           _removeSignal;
@@ -582,6 +583,7 @@ HiOniaAnalyzer::HiOniaAnalyzer(const edm::ParameterSet& iConfig):
   _storeefficiency(iConfig.getParameter<bool>("storeEfficiency")),      
   _muonLessPrimaryVertex(iConfig.getParameter<bool>("muonLessPV")),
   _useSVfinder(iConfig.getParameter<bool>("useSVfinder")),
+  _useL1MuonProp(iConfig.getParameter<bool>("useL1MuonProp")),
   _useBS(iConfig.getParameter<bool>("useBeamSpot")),
   _useRapidity(iConfig.getParameter<bool>("useRapidity")),
   _removeSignal(iConfig.getUntrackedParameter<bool>("removeSignalEvents",false)),
@@ -710,7 +712,7 @@ HiOniaAnalyzer::~HiOniaAnalyzer()
   // do anything here that needs to be done at desctruction time
   // (e.g. close files, deallocate resources etc.)
   Reco_mu_4mom->Delete();
-  Reco_mu_L1_4mom->Delete();
+  if(_useL1MuonProp) Reco_mu_L1_4mom->Delete();
   Reco_QQ_4mom->Delete();
   Reco_QQ_mumi_4mom->Delete();
   Reco_QQ_mupl_4mom->Delete();
@@ -793,6 +795,7 @@ HiOniaAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<reco::Centrality> centrality;
   edm::Handle<int> cbin_;
+
   if (_isHI || _isPA)  {
     iEvent.getByToken(_centralityTagToken, centrality); 
     iEvent.getByToken(_centralityBinTagToken, cbin_);
@@ -1026,14 +1029,16 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
     new((*Reco_mu_4mom)[Reco_mu_size])TLorentzVector(vMuon);
 
 
-    TLorentzVector vMuonL1;
-    if(muon->hasUserFloat("l1Eta") && muon->hasUserFloat("l1Phi")){
-      vMuonL1.SetPtEtaPhiM(vMuon.Pt(), muon->userFloat("l1Eta"), muon->userFloat("l1Phi"), vMuon.M());
+    if(_useL1MuonProp){
+      TLorentzVector vMuonL1;
+      if(muon->hasUserFloat("l1Eta") && muon->hasUserFloat("l1Phi")){
+        vMuonL1.SetPtEtaPhiM(vMuon.Pt(), muon->userFloat("l1Eta"), muon->userFloat("l1Phi"), vMuon.M());
+      }
+      else{
+        vMuonL1.SetPtEtaPhiM(0,0,0,0);
+      }
+      new((*Reco_mu_L1_4mom)[Reco_mu_size])TLorentzVector(vMuonL1);
     }
-    else{
-      vMuonL1.SetPtEtaPhiM(0,0,0,0);
-    }
-    new((*Reco_mu_L1_4mom)[Reco_mu_size])TLorentzVector(vMuonL1);
 
     //Fill map of the muon indices. Use long int keys, to avoid rounding errors on a float key. Implies a precision of 10^-6
     mapMuonMomToIndex_[ FloatToIntkey(vMuon.Pt()) ] = Reco_mu_size;
@@ -2554,7 +2559,7 @@ HiOniaAnalyzer::InitEvent()
   Reco_QQ_mumi_4mom->Clear();
   Reco_QQ_vtx->Clear();
   Reco_mu_4mom->Clear();
-  Reco_mu_L1_4mom->Clear();
+  if(_useL1MuonProp) Reco_mu_L1_4mom->Clear();
 
   if (_useGeTracks && _fillRecoTracks) {
     Reco_trk_4mom->Clear();
@@ -3293,7 +3298,7 @@ HiOniaAnalyzer::InitTree()
 {
 
   Reco_mu_4mom = new TClonesArray("TLorentzVector", Max_mu_size);
-  Reco_mu_L1_4mom = new TClonesArray("TLorentzVector", Max_mu_size);
+  if(_useL1MuonProp) Reco_mu_L1_4mom = new TClonesArray("TLorentzVector", Max_mu_size);
   Reco_QQ_4mom = new TClonesArray("TLorentzVector", Max_QQ_size);
   Reco_QQ_mumi_4mom = new TClonesArray("TLorentzVector", Max_QQ_size);
   Reco_QQ_mupl_4mom = new TClonesArray("TLorentzVector", Max_QQ_size);
@@ -3464,7 +3469,7 @@ HiOniaAnalyzer::InitTree()
   myTree->Branch("Reco_mu_SelectionType", Reco_mu_SelectionType,   "Reco_mu_SelectionType[Reco_mu_size]/I");
   myTree->Branch("Reco_mu_charge", Reco_mu_charge,   "Reco_mu_charge[Reco_mu_size]/S");
   myTree->Branch("Reco_mu_4mom", "TClonesArray", &Reco_mu_4mom, 32000, 0);
-  myTree->Branch("Reco_mu_L1_4mom", "TClonesArray", &Reco_mu_L1_4mom, 32000, 0);
+  if(_useL1MuonProp) myTree->Branch("Reco_mu_L1_4mom", "TClonesArray", &Reco_mu_L1_4mom, 32000, 0);
   myTree->Branch("Reco_mu_trig", Reco_mu_trig,   "Reco_mu_trig[Reco_mu_size]/l");
 
   if (!_theMinimumFlag) {
