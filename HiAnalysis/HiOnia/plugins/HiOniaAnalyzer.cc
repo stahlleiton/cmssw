@@ -57,7 +57,6 @@
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "DataFormats/HeavyIonEvent/interface/HFFilterInfo.h"
 
 //
 // class declaration
@@ -393,8 +392,6 @@ private:
   Short_t Npix, NpixelTracks, Ntracks;
   int NtracksPtCut, NtracksEtaCut, NtracksEtaPtCut;
   float SumET_HF, SumET_HFplus, SumET_HFminus, SumET_HFplusEta4, SumET_HFminusEta4,SumET_HFhit, SumET_HFhitPlus, SumET_HFhitMinus, SumET_EB, SumET_ET, SumET_EE, SumET_EEplus, SumET_EEminus, SumET_ZDC, SumET_ZDCplus, SumET_ZDCminus;
-
-
 
   // Event Plane variables
   int nEP;   // number of event planes
