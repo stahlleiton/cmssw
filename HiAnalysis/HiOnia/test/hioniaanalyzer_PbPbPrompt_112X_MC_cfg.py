@@ -18,6 +18,7 @@ doTrimuons     = False # Make collections of trimuon candidates in addition to d
 doDimuonTrk    = False # Make collections of Jpsi+track candidates in addition to dimuons
 atLeastOneCand = False # Keep only events that have one selected dimuon (or at least one trimuon if doTrimuons = true). BEWARE this can cause trouble in .root output if no event is selected by onia2MuMuPatGlbGlbFilter!
 OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) are matched to the HLT Filter of this number. You can get the desired number in the output of oniaTree. Set to -1 for no matching.
+pdgIDSel = 553   # Jpsi 443, Y(1S) 553
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
 miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
@@ -50,7 +51,7 @@ options.inputFiles =[
   #'/store/himc/HINPbPbAutumn18DR/JPsi_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/AODSIM/mva98_103X_upgrade2018_realistic_HI_v11-v1/120000/06BA15D4-3041-D54E-AB6D-F32A05C95948.root'
   'file:/home/llr/cms/falmagne/miniAOD/step2_miniAOD_MC_JPsiEmb.root'
 ]
-options.maxEvents = 1689 # -1 means all events
+options.maxEvents = -1 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -76,6 +77,10 @@ triggerList    = {
                         "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L1step",#15
                         "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L2step",#16
                         "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1_L3step",#17
+                        "HLT_HIL3Mu2p5NHitQ10_L2Mu2_M7toinf_v1_L1step",#18
+                        "HLT_HIL3Mu2p5NHitQ10_L2Mu2_M7toinf_v1_L2step",#19
+                        "HLT_HIL3Mu2p5NHitQ10_L2Mu2_M7toinf_v1_L3step",#20
+
                         ),
 		# Double Muon Filter List
 		'DoubleMuonFilter'  : cms.vstring(
@@ -96,7 +101,10 @@ triggerList    = {
                         "hltL3fL1sL1DoubleMuOpenL1fN3L2f0L3Filtered3",
                         "hltL1fL1sL1DoubleMuOpenMAXdR3p5L1Filtered0",#L1 step for Jpsi trigger
                         "hltL2fDoubleMuOpenL2DR3p5PreFiltered0",#L2 step
-                        "hltL3f0L3Mu0L2Mu0DR3p5FilteredNHitQ10M1to5"#"hltL3f0DR3p5L3FilteredNHitQ10"#L3 step
+                        "hltL3f0L3Mu0L2Mu0DR3p5FilteredNHitQ10M1to5",#"hltL3f0DR3p5L3FilteredNHitQ10"#L3 step
+                        "hltL1fL1sL1DoubleMuOpenL1Filtered0",
+                        "hltL2fDoubleMuOpenL2PreFiltered0",
+                        "hltL3f0L3Filtered2p5NHitQ10",
 			),
                 # Single Muon Trigger List
                 'SingleMuonTrigger' : cms.vstring(
@@ -148,9 +156,10 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = 'auto:phase1_2018_realistic_hi'
+  globalTag = '112X_upgrade2018_realistic_HI_v9' 
 else:
-  globalTag = 'auto:run2_data'
+  globalTag = '112X_dataRun2_PromptLike_HI_v7'
+
 
 #----------------------------------------------------------------------------
 
@@ -166,13 +175,13 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '')
 ### For Centrality
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
-#process.centralityBin.Centrality = cms.InputTag("hiCentrality")
-#process.centralityBin.centralityVariable = cms.string("HFtowers")
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
 print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
+        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_update2018HIrun_v0_offline"),
        connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
         label = cms.untracked.string("HFtowers")
         ),
@@ -184,7 +193,7 @@ process.GlobalTag.toGet.extend([
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process,
                  muonTriggerList=triggerList, #HLTProName=HLTProcess,
-                 muonSelection=muonSelection, L1Stage=2, isMC=isMC, outputFileName=options.outputFile, doTrimu=doTrimuons,
+                 muonSelection=muonSelection, L1Stage=2, isMC=isMC, pdgID=pdgIDSel, outputFileName=options.outputFile, doTrimu=doTrimuons,
                  miniAOD=miniAOD, miniAODcuts=miniAOD_muonCuts#, OnlySingleMuons=True
 )
 

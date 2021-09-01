@@ -222,7 +222,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
     #from Configuration.Eras.Modifier_stage2L1Trigger_cff import stage2L1Trigger
     #stage2L1Trigger.toModify(process.hionia, stageL1Trigger = 2)
 
-    process.hionia.primaryVertexTag = cms.InputTag("offlinePrimaryVertices")
+    process.hionia.primaryVertexTag = cms.InputTag("offlineSlimmedPrimaryVerticesRecovery" if miniAOD else "offlinePrimaryVertices")
     process.hionia.genParticles     = cms.InputTag("prunedGenParticles" if miniAOD else "genParticles")
     process.hionia.muonLessPV       = cms.bool(muonlessPV)
     process.hionia.CentralitySrc    = cms.InputTag("")
