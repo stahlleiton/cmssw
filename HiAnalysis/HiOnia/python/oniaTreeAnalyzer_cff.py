@@ -184,6 +184,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     storeSameSign      = cms.bool(True),   # Store/Drop same sign dimuons
                                     AtLeastOneCand     = cms.bool(False),  # If true, store only events that have at least one selected candidate dimuon (or trimuon candidate if doTrimuons=true)
                                     useSVfinder        = cms.bool(False), #whether to use the standard secondary vertex finder (with some parameters tweaked to loosen it)
+                                    useL1MuonProp      = cms.bool(False),
 
                                     removeSignalEvents = cms.untracked.bool(False),  # Remove/Keep signal events
                                     removeTrueMuons    = cms.untracked.bool(False),  # Remove/Keep gen Muons

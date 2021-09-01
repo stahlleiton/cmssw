@@ -23,6 +23,7 @@ keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon c
 useSVfinder    = False # External SV finder to check if the muons are from a resolved SV
 miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
+useL1MuonProp = False # whether use of eta, phi information at L1 propagated from PV. Only use for offline-online matching studies
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -218,6 +219,7 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 process.hionia.useSVfinder      = cms.bool(useSVfinder)
+process.hionia.useL1MuonProp    = cms.bool(useL1MuonProp)
 process.hionia.checkTrigNames   = cms.bool(False)#change this to get the event-level trigger info in hStats output (but creates lots of warnings when fake trigger names are used)
 
 process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
