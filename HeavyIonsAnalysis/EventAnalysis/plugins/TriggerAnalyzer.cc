@@ -79,7 +79,7 @@ TriggerAnalyzer::TriggerAnalyzer(edm::ParameterSet const& conf)
       l1dummies(conf.getParameter<std::vector<std::string>>("l1dummybranches")),
       hltresultsToken_(consumes<edm::TriggerResults>(conf.getParameter<edm::InputTag>("hltresults"))),
       l1resultsToken_(consumes<GlobalAlgBlkBxCollection>(conf.getParameter<edm::InputTag>("l1results"))),
-      hltPrescaleProvider_(new HLTPrescaleProvider(conf, consumesCollector(), *this)) {
+      hltPrescaleProvider_(new HLTPrescaleProvider(conf.getParameter<edm::ParameterSet>("hltPSProvCfg"), consumesCollector(), *this)) {
   // open the tree file and initialize the tree
   edm::Service<TFileService> fs;
   t_ = fs->make<TTree>("HltTree", "");
