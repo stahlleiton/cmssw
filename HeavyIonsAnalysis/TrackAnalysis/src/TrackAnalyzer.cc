@@ -118,6 +118,10 @@ TrackAnalyzer::fillTracks(const edm::Event& iEvent, const edm::EventSetup& iSetu
       highPurity.push_back( t.quality(reco::TrackBase::qualityByName("highPurity")));
       trkNormChi2.push_back( (*chi2Map)[cands->ptrAt(it)] );
 
+      pfEnergy.push_back( c.energy() );
+      pfEcal.push_back( c.energy() * (c.caloFraction() - c.hcalFraction()) );
+      pfHcal.push_back( c.energy() * c.hcalFraction() );
+
       //DCA info for associated vtx
       trkAssociatedVtxIndx.push_back( c.vertexRef().key() );
       trkAssociatedVtxQuality.push_back( c.fromPV(c.vertexRef().key() ));
@@ -135,6 +139,15 @@ TrackAnalyzer::fillTracks(const edm::Event& iEvent, const edm::EventSetup& iSetu
         trkDxyFirstVtx.push_back( c.dxy( v ) );
         trkDxyErrFirstVtx.push_back( sqrt( c.dxyError()*c.dxyError() + xErrVtx.at(0) * yErrVtx.at(0) ) );
       }
+      else {
+        trkFirstVtxQuality.push_back( -999999 );
+        trkDzFirstVtx.push_back( -999999 );
+        trkDzErrFirstVtx.push_back( -999999 );
+        trkDxyFirstVtx.push_back( -999999 );
+        trkDxyErrFirstVtx.push_back( -999999 );
+      }
+
+      nTrk++;
     }
   }
 }
@@ -164,17 +177,23 @@ void TrackAnalyzer::beginJob()
   trackTree_->Branch("ptSumVtx",&ptSumVtx);
 
   // Tracks
+  trackTree_->Branch("nTrk",&nTrk);
   trackTree_->Branch("trkPt",&trkPt);
   trackTree_->Branch("trkPtError",&trkPtError);
   trackTree_->Branch("trkEta",&trkEta);
   trackTree_->Branch("trkPhi",&trkPhi);
   trackTree_->Branch("trkCharge",&trkCharge);
-  trackTree_->Branch("trkPDFId",&trkPDGId);
+  trackTree_->Branch("trkPDGId",&trkPDGId);
   trackTree_->Branch("trkNHits",&trkNHits);
   trackTree_->Branch("trkNPixHits",&trkNPixHits);
   trackTree_->Branch("trkNLayers",&trkNLayers);
   trackTree_->Branch("trkNormChi2",&trkNormChi2);
   trackTree_->Branch("highPurity",&highPurity);
+
+  trackTree_->Branch("pfEnergy",&pfEnergy);
+  trackTree_->Branch("pfEcal",&pfEcal);
+  trackTree_->Branch("pfHcal",&pfHcal);
+
   trackTree_->Branch("trkAssociatedVtxIndx",&trkAssociatedVtxIndx);
   trackTree_->Branch("trkAssociatedVtxQuality",&trkAssociatedVtxQuality);
   trackTree_->Branch("trkDzAssociatedVtx",&trkDzAssociatedVtx);
