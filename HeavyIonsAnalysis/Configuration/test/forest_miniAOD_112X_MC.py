@@ -105,6 +105,7 @@ process.correctedElectrons.correctionFile = SS2018PbPbMC
 
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
 process.ggHiNtuplizer.doGenParticles = cms.bool(True)
+process.ggHiNtuplizer.doMuons = cms.bool(False)
 process.ggHiNtuplizer.electronSrc = "correctedElectrons"
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
@@ -115,7 +116,8 @@ process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_mc_cff')
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
 #muons
 process.load("HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi")
-process.load("HeavyIonsAnalysis.MuonAnalysis.hltMuTree_cfi")
+process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
+process.muonAnalyzer.doGen = cms.bool(True)
 
 ###############################################################################
 
@@ -136,7 +138,7 @@ process.forest = cms.Path(
     process.correctedElectrons +
     process.ggHiNtuplizer +
     process.akCs4PFJetAnalyzer +
-    process.hltMuTree
+    process.muonAnalyzer
     )
 
 #customisation

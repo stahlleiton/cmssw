@@ -113,7 +113,9 @@ process.load('HeavyIonsAnalysis.EGMAnalysis.correctedElectronProducer_cfi')
 process.correctedElectrons.correctionFile = SSHIRun2018A
 
 process.load('HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi')
+process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
+process.ggHiNtuplizer.doMuons = cms.bool(False)
 process.ggHiNtuplizer.electronSrc = "correctedElectrons"
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
@@ -139,7 +141,8 @@ process.forest = cms.Path(
     process.unpackedMuons +
     process.correctedElectrons +
     process.ggHiNtuplizer +
-    process.akCs4PFJetAnalyzer
+    process.akCs4PFJetAnalyzer +
+    process.muonAnalyzer
     )
 
 #customisation
