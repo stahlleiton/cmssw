@@ -20,12 +20,17 @@ class TreePFCandEventData
     void Clear();
 
     Int_t nPFpart_;
+    std::vector<unsigned long> pfKey_;   // key for this PF cand, ref https://github.com/cms-sw/cmssw/blob/master/DataFormats/Common/interface/Ptr.h#L163
     std::vector<Int_t> pfId_;
     std::vector<Float_t> pfPt_;
     std::vector<Float_t> pfEnergy_;
     std::vector<Float_t> pfEta_;
     std::vector<Float_t> pfPhi_;
     std::vector<Float_t> pfM_;
+
+    std::vector<Float_t> pfvx_;
+    std::vector<Float_t> pfvy_;
+    std::vector<Float_t> pfvz_;
 
     std::vector<Float_t> pfEcalE_;
     std::vector<Float_t> pfEcalEraw_;

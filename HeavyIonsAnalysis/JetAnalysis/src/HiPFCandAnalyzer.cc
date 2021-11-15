@@ -84,12 +84,24 @@ HiPFCandAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     int id = pfcand.particleId();
     if (skipCharged_ && (abs(id) == 1 || abs(id) == 3)) continue;
 
+    pfEvt_.pfKey_.push_back( pfcand.sourceCandidatePtr(0).key() );
     pfEvt_.pfId_.push_back( id );
     pfEvt_.pfPt_.push_back( pt );
     pfEvt_.pfEnergy_.push_back( pfcand.energy() );
     pfEvt_.pfEta_.push_back( pfcand.eta() );
     pfEvt_.pfPhi_.push_back( pfcand.phi() );
     pfEvt_.pfM_.push_back( pfcand.mass() );
+
+    if (id == 1 || id == 3) {
+      pfEvt_.pfvx_.push_back( pfcand.vx() );
+      pfEvt_.pfvy_.push_back( pfcand.vy() );
+      pfEvt_.pfvz_.push_back( pfcand.vz() );
+    }
+    else {
+      pfEvt_.pfvx_.push_back(-999);
+      pfEvt_.pfvy_.push_back(-999);
+      pfEvt_.pfvz_.push_back(-999);
+    }
     
     if (doCaloEnergy_) {
       pfEvt_.pfEcalE_.push_back( pfcand.ecalEnergy() );
@@ -195,12 +207,17 @@ void TreePFCandEventData::SetBranches(bool doJets, bool doMC, bool doCaloEnergy,
 {
   // -- particle info --
   tree_->Branch("nPFpart", &nPFpart_, "nPFpart/I");
+  tree_->Branch("pfKey", &pfKey_);
   tree_->Branch("pfId", &pfId_);
   tree_->Branch("pfPt", &pfPt_);
   tree_->Branch("pfEnergy", &pfEnergy_);
   tree_->Branch("pfEta", &pfEta_);
   tree_->Branch("pfPhi", &pfPhi_);
   tree_->Branch("pfM", &pfM_);
+
+  tree_->Branch("pfvx", &pfvx_);
+  tree_->Branch("pfvy", &pfvy_);
+  tree_->Branch("pfvz", &pfvz_);
 
   // -- ecal/hcal energy info --
   if (doCaloEnergy) {
@@ -239,12 +256,17 @@ void TreePFCandEventData::SetBranches(bool doJets, bool doMC, bool doCaloEnergy,
 void TreePFCandEventData::Clear()
 {
   nPFpart_ = 0;
+  pfKey_.clear();
   pfId_.clear();
   pfPt_.clear();
   pfEnergy_.clear();
   pfEta_.clear();
   pfPhi_.clear();
   pfM_.clear();
+
+  pfvx_.clear();
+  pfvy_.clear();
+  pfvz_.clear();
 
   pfEcalE_.clear();
   pfEcalEraw_.clear();
