@@ -46,7 +46,8 @@ ggHiNtuplizer = cms.EDAnalyzer("ggHiNtuplizer",
     saveAssociatedPFcands = cms.bool(False),
     doEvtPlane = cms.bool(False),
     evtPlane = cms.InputTag("hiEvtPlane"),
-    indexEvtPlane = cms.int32(2),
+    indexEvtPlane = cms.int32(8),
+    calcEvtPlanePF = cms.bool(False),
 )
 
 ggHiNtuplizerGED = ggHiNtuplizer.clone(
