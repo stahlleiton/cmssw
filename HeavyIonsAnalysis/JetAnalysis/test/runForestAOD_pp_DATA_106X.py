@@ -27,7 +27,7 @@ process.HiForest.HiForestVersion = cms.string(version)
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        ''
+        '/store/data/Run2017G/DoubleMuon/AOD/09Aug2019_UL2017-v1/20000/0289BB4C-C440-D24B-A77F-FFD3334705CC.root'
     )
 )
 
@@ -113,6 +113,11 @@ process.load('HeavyIonsAnalysis.JetAnalysis.TrkAnalyzers_cff')
 # Photons
 #####################
 process.load('HeavyIonsAnalysis.PhotonAnalysis.ggHiNtuplizer_cfi')
+process.load('RecoHI.HiEgammaAlgos.photonIsolationHIProducer_cfi')
+process.photonIsolationHIProducerpp.ebRecHitCollection = cms.InputTag("reducedEcalRecHitsEB")
+process.photonIsolationHIProducerpp.eeRecHitCollection = cms.InputTag("reducedEcalRecHitsEE")
+process.photonIsolationHIProducerppGED.ebRecHitCollection = cms.InputTag("reducedEcalRecHitsEB")
+process.photonIsolationHIProducerppGED.eeRecHitCollection = cms.InputTag("reducedEcalRecHitsEE")
 process.ggHiNtuplizer.doGenParticles = False
 process.ggHiNtuplizerGED.doGenParticles = False
 
@@ -149,6 +154,8 @@ process.ana_step = cms.Path(
     process.jetSequence +
     # Should be added in the path for VID module
     # process.egmGsfElectronIDSequence +
+    process.photonIsolationHIProducerpp +
+    process.photonIsolationHIProducerppGED +
     process.ggHiNtuplizer +
     process.ggHiNtuplizerGED +
     process.pfcandAnalyzer +

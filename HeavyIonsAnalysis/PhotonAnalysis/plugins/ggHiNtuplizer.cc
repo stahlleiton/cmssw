@@ -1058,11 +1058,9 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es)
   es.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
   tb = trackBuilder.product();
 
-  if (doRecHitsEB_ || doRecHitsEE_ || doEleEReg_) {
-    edm::ESHandle<CaloGeometry> pGeo;
-    es.get<CaloGeometryRecord>().get(pGeo);
-    geo = pGeo.product();
-  }
+  edm::ESHandle<CaloGeometry> pGeo;
+  es.get<CaloGeometryRecord>().get(pGeo);
+  geo = pGeo.product();
   if (doEleEReg_) {
     edm::ESHandle<CaloTopology> pTopo;
     es.get<CaloTopologyRecord>().get(pTopo);
