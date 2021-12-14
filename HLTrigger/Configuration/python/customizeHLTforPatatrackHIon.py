@@ -41,32 +41,91 @@ def customisePixelLocalReconstructionHIon(process):
 
     # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
     if 'HLTDoLocalPixelSequencePPOnAA' in process.__dict__:
-    	process.hltSiPixelClustersPPOnAA = process.hltSiPixelClusters.clone(cpu = process.hltSiPixelClustersPPOnAA)
-    if 'HLTDoLocalPixelSequencePPOnAAForLowPt' in process.__dict__:
-    	process.hltSiPixelClustersPPOnAAForLowPt = process.hltSiPixelClusters.clone(cpu = process.hltSiPixelClustersPPOnAAForLowPt)
-    if 'HLTHIDoLocalPixelSequence' in process.__dict__:
-        process.hltHISiPixelDigis = SwitchProducerCUDA(
-            # legacy producer
-            cpu = process.hltHISiPixelDigis,
-            # alias used to access products from multiple conversion modules
-            cuda = cms.EDAlias(
-                hltSiPixelDigisClusters = cms.VPSet(
-                    cms.PSet(type = cms.string("PixelDigiedmDetSetVector"))
+        process.hltSiPixelClustersPPOnAALegacy = process.hltSiPixelClustersPPOnAA.clone(src = "hltSiPixelDigisLegacy")
+        process.hltSiPixelClustersPPOnAA = process.hltSiPixelClusters.clone(
+	    # legacy producer
+            cpu = cms.EDAlias(
+                hltSiPixelClustersPPOnAALegacy = cms.VPSet(
+		    cms.PSet(type = cms.string("SiPixelClusteredmNewDetSetVector"))
                 )
             )
 	)
-        process.hltHISiPixelClusters = process.hltSiPixelClusters.clone(cpu = process.hltHISiPixelClusters)
+	# use the same thresholds as the legacy module
+        process.hltSiPixelClustersPPOnAA.cuda.clusterThreshold_layer1 = process.hltSiPixelClustersPPOnAALegacy.ClusterThreshold_L1
+        process.hltSiPixelClustersPPOnAA.cuda.clusterThreshold_otherLayers = process.hltSiPixelClustersPPOnAALegacy.ClusterThreshold
+
+    if 'HLTDoLocalPixelSequencePPOnAAForLowPt' in process.__dict__:
+        process.hltSiPixelClustersPPOnAAForLowPtLegacy = process.hltSiPixelClustersPPOnAAForLowPt.clone(src = "hltSiPixelDigisLegacy")
+        process.hltSiPixelClustersPPOnAAForLowPt = process.hltSiPixelClusters.clone(
+	    # legacy producer
+            cpu = cms.EDAlias(
+                hltSiPixelClustersPPOnAAForLowPtLegacy = cms.VPSet(
+                    cms.PSet(type = cms.string("SiPixelClusteredmNewDetSetVector"))
+                )
+            )
+	)
+	# use the same thresholds as the legacy module
+        process.hltSiPixelClustersPPOnAAForLowPt.cuda.clusterThreshold_layer1 = process.hltSiPixelClustersPPOnAAForLowPtLegacy.ClusterThreshold_L1
+        process.hltSiPixelClustersPPOnAAForLowPt.cuda.clusterThreshold_otherLayers = process.hltSiPixelClustersPPOnAAForLowPtLegacy.ClusterThreshold
+
+    if 'HLTHIDoLocalPixelSequence' in process.__dict__:
+        process.hltHISiPixelDigisLegacy = process.hltHISiPixelDigis.clone()
+        process.hltHISiPixelDigis = process.hltSiPixelDigis.clone()
+        process.hltHISiPixelClustersLegacy = process.hltHISiPixelClusters.clone(src = "hltHISiPixelDigisLegacy")
+        process.hltHISiPixelClusters = process.hltSiPixelClusters.clone(
+            # legacy producer
+            cpu = cms.EDAlias(
+                hltHISiPixelClustersLegacy = cms.VPSet(
+                    cms.PSet(type = cms.string("SiPixelClusteredmNewDetSetVector"))
+                )
+            )
+	)
+	# use the same thresholds as the legacy module
+        process.hltHISiPixelClusters.cuda.clusterThreshold_layer1 = process.hltHISiPixelClustersLegacy.ClusterThreshold_L1
+        process.hltHISiPixelClusters.cuda.clusterThreshold_otherLayers = process.hltHISiPixelClustersLegacy.ClusterThreshold
+
+    # cpu only: convert the pixel rechits from legacy to SoA format
+    process.hltSiPixelRecHitSoA.src = "hltSiPixelClustersPPOnAA"
 
     # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
     if 'HLTDoLocalPixelSequencePPOnAA' in process.__dict__:
-    	process.hltSiPixelRecHitsPPOnAA = process.hltSiPixelRecHits.clone(cpu = process.hltSiPixelRecHitsPPOnAA)
-    	process.hltSiPixelRecHitsPPOnAA.cuda.src = "hltSiPixelClustersPPOnAA"
+        process.hltSiPixelRecHitSoAPPOnAA = process.hltSiPixelRecHitSoA.clone(src = "hltSiPixelClustersPPOnAA")
+        process.hltSiPixelRecHitsPPOnAA = process.hltSiPixelRecHits.clone(
+	    # legacy producer
+            cpu = cms.EDAlias(
+                hltSiPixelRecHitSoAPPOnAA = cms.VPSet(
+                    cms.PSet(type = cms.string("SiPixelRecHitedmNewDetSetVector")),
+                    cms.PSet(type = cms.string("uintAsHostProduct"))
+                )
+            )
+	)
+        process.hltSiPixelRecHitsPPOnAA.cuda.src = "hltSiPixelClustersPPOnAA"
+
     if 'HLTDoLocalPixelSequencePPOnAAForLowPt' in process.__dict__:
-    	process.hltSiPixelRecHitsPPOnAAForLowPt = process.hltSiPixelRecHits.clone(cpu = process.hltSiPixelRecHitsPPOnAAForLowPt)
-    	process.hltSiPixelRecHitsPPOnAAForLowPt.cuda.src = "hltSiPixelClustersPPOnAAForLowPt"
+        process.hltSiPixelRecHitSoAPPOnAAForLowPt = process.hltSiPixelRecHitSoA.clone(src = "hltSiPixelClustersPPOnAAForLowPt")
+        process.hltSiPixelRecHitsPPOnAAForLowPt = process.hltSiPixelRecHits.clone(
+            # legacy producer
+            cpu = cms.EDAlias(
+                hltSiPixelRecHitSoAPPOnAAForLowPt = cms.VPSet(
+                    cms.PSet(type = cms.string("SiPixelRecHitedmNewDetSetVector")),
+                    cms.PSet(type = cms.string("uintAsHostProduct"))
+                )
+            )
+        )
+        process.hltSiPixelRecHitsPPOnAAForLowPt.cuda.src = "hltSiPixelClustersPPOnAAForLowPt"
+
     if 'HLTHIDoLocalPixelSequence' in process.__dict__:
-    	process.hltHISiPixelRecHits = process.hltSiPixelRecHits.clone(cpu = process.hltHISiPixelRecHits)
-    	process.hltHISiPixelRecHits.cuda.src = "hltHISiPixelClusters"
+        process.hltHISiPixelRecHitSoA = process.hltSiPixelRecHitSoA.clone(src = "hltHISiPixelClusters")
+        process.hltHISiPixelRecHits = process.hltSiPixelRecHits.clone(
+            # legacy producer
+            cpu = cms.EDAlias(
+                hltHISiPixelRecHitSoA = cms.VPSet(
+                    cms.PSet(type = cms.string("SiPixelRecHitedmNewDetSetVector")),
+                    cms.PSet(type = cms.string("uintAsHostProduct"))
+                )
+            )
+        )
+        process.hltHISiPixelRecHits.cuda.src = "hltHISiPixelClusters"
 
 
     # Tasks and Sequences
@@ -74,8 +133,10 @@ def customisePixelLocalReconstructionHIon(process):
     if 'HLTDoLocalPixelSequencePPOnAA' in process.__dict__:
     	process.HLTDoLocalPixelTaskPPOnAA = cms.Task(
               process.HLTDoLocalPixelTask,
+              process.hltSiPixelClustersPPOnAALegacy,           # legacy pixel cluster producer
               process.hltSiPixelClustersPPOnAA,                 # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
               process.hltSiPixelClustersCachePPOnAA,            # legacy module, used by the legacy pixel quadruplet producer
+              process.hltSiPixelRecHitSoAPPOnAA,                # pixel rechits on cpu, in SoA & legacy format
               process.hltSiPixelRecHitsPPOnAA)                  # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
 
     	process.HLTDoLocalPixelSequencePPOnAA = cms.Sequence(process.HLTDoLocalPixelTaskPPOnAA)
@@ -83,20 +144,46 @@ def customisePixelLocalReconstructionHIon(process):
     if 'HLTDoLocalPixelSequencePPOnAAForLowPt' in process.__dict__:
     	process.HLTDoLocalPixelTaskPPOnAAForLowPt = cms.Task(
               process.HLTDoLocalPixelTask,
+              process.hltSiPixelClustersPPOnAAForLowPtLegacy,   # legacy pixel cluster producer
               process.hltSiPixelClustersPPOnAAForLowPt,         # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
               process.hltSiPixelClustersCachePPOnAAForLowPt,    # legacy module, used by the legacy pixel quadruplet producer
+              process.hltSiPixelRecHitSoAPPOnAAForLowPt,        # pixel rechits on cpu, in SoA & legacy format
               process.hltSiPixelRecHitsPPOnAAForLowPt)          # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
 
     	process.HLTDoLocalPixelSequencePPOnAAForLowPt = cms.Sequence(process.HLTDoLocalPixelTaskPPOnAAForLowPt)
 
     if 'HLTHIDoLocalPixelSequence' in process.__dict__:
-    	process.HLTHIDoLocalPixelSequence = cms.Sequence(
-              process.hltHISiPixelDigis*                        # SwitchProducer wrapping the legacy pixel digis producer or an alias combining the pixel digis information converted from SoA
-              process.hltHISiPixelClusters*                     # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
-              process.hltHISiPixelClustersCache*                # legacy module, used by the legacy pixel quadruplet producer
-              process.hltHISiPixelRecHits,     		        # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
-              process.HLTDoLocalPixelTask)
+        #process.HLTHIDoLocalPixelSequence = cms.Sequence(
+        #      process.hltHISiPixelDigisLegacy*                  # legacy pixel digis producer
+        #      process.hltHISiPixelDigis*                        # SwitchProducer wrapping the legacy pixel digis producer or an alias combining the pixel digis information converted from SoA
+         #     process.hltHISiPixelClustersLegacy*               # legacy pixel cluster producer
+         #     process.hltHISiPixelClusters*                     # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
+         #     process.hltHISiPixelClustersCache*                # legacy module, used by the legacy pixel quadruplet producer
+         #     process.hltHISiPixelRecHitSoA*                    # pixel rechits on cpu, in SoA & legacy format
+         #     process.hltHISiPixelRecHits,			# SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
+         #     process.HLTDoLocalPixelTask)
 
+        process.HLTHIDoLocalPixelByPassTask = cms.Task(
+              process.HLTDoLocalPixelTask,
+              process.hltHISiPixelDigisLegacy,                  # legacy pixel digis producer
+              process.hltHISiPixelDigis,                        # SwitchProducer wrapping the legacy pixel digis producer or an alias combining the pixel digis information converted from SoA
+              process.hltHISiPixelClustersLegacy,               # legacy pixel cluster producer
+              process.hltHISiPixelClusters)                     # SwitchProducer wrapping the legacy pixel cluster producer or an alias for the pixel clusters information converted from SoA
+
+        process.HLTHIDoLocalPixelByPassSequence = cms.Sequence(process.HLTHIDoLocalPixelByPassTask)
+
+        process.HLTHIDoLocalPixelTask = cms.Task(
+              process.HLTHIDoLocalPixelByPassTask,
+              process.hltHISiPixelClustersCache,                # legacy module, used by the legacy pixel quadruplet producer
+              process.hltHISiPixelRecHitSoA,                    # pixel rechits on cpu, in SoA & legacy format
+              process.hltHISiPixelRecHits)                      # SwitchProducer wrapping the legacy pixel rechit producer or the transfer of the pixel rechits to the host and the conversion from SoA
+
+        process.HLTHIDoLocalPixelSequence = cms.Sequence(process.HLTHIDoLocalPixelTask)
+
+        for path in process.paths.values():
+              if "hltHISiPixelDigis+hltHISiPixelClusters+" in str(path):
+                    path.remove(process.hltHISiPixelClusters)
+                    path.replace(process.hltHISiPixelDigis, process.HLTHIDoLocalPixelByPassSequence)
 
     # done
     return process
@@ -124,10 +211,6 @@ def customisePixelTrackReconstructionHIon(process):
 
     process = customisePixelTrackReconstruction(process)
 
-    # apply customisation for PbPb collisions
-    pp_on_AA_2018.toModify(process.hltPixelTracksCUDA, idealConditions = False)
-    pp_on_AA_2018.toModify(process.hltPixelTracksSoA.cpu, idealConditions = False)
-
     if not hasHIHLTPixelTracksSeq:
         return process
 
@@ -146,8 +229,13 @@ def customisePixelTrackReconstructionHIon(process):
 
     # referenced in process.HLTRecoPixelTracksTask
 
-    # cpu only: convert the pixel rechits from legacy to SoA format
-    process.hltSiPixelRecHitSoA.src = "hltSiPixelClustersPPOnAA"
+    # use quality cuts tuned for Run 2 conditions for all Run 2 workflows
+    pp_on_AA_2018.toModify(process.hltPixelTracksCUDA, idealConditions = False)
+
+    # SwitchProducer providing the pixel tracks in SoA format on cpu
+    process.hltPixelTracksSoA.cpu.pixelRecHitSrc = "hltSiPixelRecHitSoAPPOnAA"
+    # use quality cuts tuned for Run 2 conditions for all Run 2 workflows
+    pp_on_AA_2018.toModify(process.hltPixelTracksSoA.cpu, idealConditions = False)
 
     # convert the pixel tracks from SoA to legacy format
     process.hltPixelTracksPPOnAA = process.hltPixelTracks.clone(pixelRecHitLegacySrc = "hltSiPixelRecHitsPPOnAA")
@@ -164,7 +252,6 @@ def customisePixelTrackReconstructionHIon(process):
 
     process.HLTRecoPixelTracksTask = cms.Task(
           process.hltPixelTracksTrackingRegionsPPOnAA,      # from the original sequence
-          process.hltSiPixelRecHitSoA,                      # pixel rechits on cpu, converted to SoA
           process.hltPixelTracksCUDA,                       # pixel ntuplets on gpu, in SoA format
           process.hltPixelTracksSoA,                        # pixel ntuplets on cpu, in SoA format
           process.hltPixelTracksPPOnAA)                     # pixel tracks on cpu, in legacy format
