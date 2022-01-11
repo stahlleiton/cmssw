@@ -1,0 +1,4 @@
+<library   file="*.cc" name="TimeAnalyzerPlugins">
+  <use   name="HiMTDAnalysis/TrackAnalysis"/>
+  <flags   EDM_PLUGIN="1"/>
+</library>
