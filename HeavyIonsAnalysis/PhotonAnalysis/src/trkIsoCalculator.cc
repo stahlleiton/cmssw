@@ -167,7 +167,7 @@ bool trkIsoCalculator::passedTrkSelection(const reco::Track & trk, unsigned inde
 
         if (trk.pt() > 20) {
 
-          std::cout << "trk pt,eta,phi = " << trk.pt() << " , " << trk.eta() << " , " << trk.phi() << std::endl;
+          //std::cout << "trk pt,eta,phi = " << trk.pt() << " , " << trk.eta() << " , " << trk.phi() << std::endl;
           int iPF = getMatchedPfCand(index);
           if (iPF >= 0) {
             float Et = (((*pfCands)[iPF]).ecalEnergy() + ((*pfCands)[iPF]).hcalEnergy()) / std::cosh(trk.eta());
