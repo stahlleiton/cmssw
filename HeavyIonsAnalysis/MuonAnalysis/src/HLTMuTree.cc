@@ -236,7 +236,7 @@ void HLTMuTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //Get vertex position
     edm::Handle<vector<reco::Vertex> > vertex;
     iEvent.getByToken(tagVtx, vertex);
-    if (!vertex->->empty()) {
+    if (!vertex->empty()) {
       vx = vertex->begin()->x();
       vy = vertex->begin()->y();
       vz = vertex->begin()->z();

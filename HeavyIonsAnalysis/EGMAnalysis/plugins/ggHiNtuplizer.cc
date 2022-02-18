@@ -1516,10 +1516,10 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
     phoSigmaEtaEta_.push_back(pho->sigmaEtaEta());
 
     if (doPhoEReg_) {
-      phoHadTowerOverEm1_.push_back(pho->hadronicOverEm(1));
-      phoHadTowerOverEm2_.push_back(pho->hadronicOverEm(2));
-      phoHoverE1_.push_back(pho->hcalOverEcal(1));
-      phoHoverE2_.push_back(pho->hcalOverEcal(2));
+      phoHadTowerOverEm1_.push_back(pho->hadTowOverEm(1));
+      phoHadTowerOverEm2_.push_back(pho->hadTowOverEm(2));
+      phoHoverE1_.push_back(pho->hadronicOverEm(1));
+      phoHoverE2_.push_back(pho->hadronicOverEm(2));
 
       phoSigmaIEtaIPhi_.push_back(pho->showerShapeVariables().sigmaIetaIphi);
       phoSigmaIPhiIPhi_.push_back(pho->showerShapeVariables().sigmaIphiIphi);
