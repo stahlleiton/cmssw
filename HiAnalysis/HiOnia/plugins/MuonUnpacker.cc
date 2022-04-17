@@ -2,6 +2,7 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
@@ -120,6 +121,7 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       const auto& selMap = c.second;
       const auto& track = pc2Track.get(cand.id(), cand.key());
       const bool isEGamma = (std::abs(cand->pdgId())==11 || cand->pdgId()==22);
+      if (track.isNull()) { edm::LogWarning("MuonUnpacker") << "Failed to extract " << n.first << " track!"; continue; }
 
       // check if candidate is in muon collection
       bool isIncluded(false);
