@@ -1,6 +1,8 @@
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
@@ -59,16 +61,8 @@ namespace pat {
 
       PropagateToMuon* getMuonPropagator(const edm::ParameterSet& iConfig, edm::ConsumesCollector iC)
       {
-        if (iConfig.getParameter<bool>("addPropToMuonSt")) {
-          edm::ParameterSet conf;
-          conf.addParameter("useSimpleGeometry", true);
-          conf.addParameter("useTrack", std::string("none"));
-          conf.addParameter("useState", std::string("atVertex"));
-          conf.addParameter("fallbackToME1", true);
-          conf.addParameter("useMB2InOverlap", true);
-          conf.addParameter("useStation2", true);
-          return new PropagateToMuon(conf, iC);
-        }
+        if (iConfig.getParameter<bool>("addPropToMuonSt"))
+          return new PropagateToMuon(iConfig, iC);
         return nullptr;
       };
 
@@ -119,6 +113,7 @@ void pat::MuonUnpacker::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       const auto& selMap = c.second;
       const auto& track = pc2Track.get(cand.id(), cand.key());
       const bool isEGamma = (std::abs(cand->pdgId())==11 || cand->pdgId()==22);
+      if (track.isNull()) { edm::LogWarning("MuonUnpacker") << "Failed to extract " << n.first << " track!"; continue; }
 
       // check if candidate is in muon collection
       bool isIncluded(false);
@@ -255,6 +250,12 @@ void pat::MuonUnpacker::fillDescriptions(edm::ConfigurationDescriptions& descrip
   desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot"))->setComment("beam spot collection");
   desc.add<std::vector<std::string> >("muonSelectors", {"AllTrackerMuons", "TMOneStationTight"})->setComment("muon selectors");
   desc.add<bool>("addPropToMuonSt", false)->setComment("add eta/phi propagated to 2nd muon station for L1 matching");
+  desc.add<std::string>("useTrack", "tracker");
+  desc.add<std::string>("useState", "atVertex");
+  desc.add<bool>("useSimpleGeometry", true);
+  desc.add<bool>("useStation2", true);
+  desc.add<bool>("fallbackToME1", true);
+  desc.add<bool>("useMB2InOverlap", true);
   descriptions.add("unpackedMuons", desc);
 }
 
