@@ -64,7 +64,7 @@ void pat::TrackAndVertexUnpacker::produce(edm::StreamID, edm::Event& iEvent, con
     pcAssoc[isPF] = std::vector<int>(cands->size(), -1);
     for (size_t iC = 0; iC < cands->size(); iC++) {
       const auto& cand = (*cands)[iC];
-      if (cand.charge() == 0) continue; 
+      if (cand.charge() == 0) continue;
       const auto& normChi2 = normChi2Map.get(cands.id(), iC);
       // case: track from packed candidate with track information
       if (cand.hasTrackDetails()) {

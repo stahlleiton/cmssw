@@ -51,7 +51,7 @@ options.inputFiles =[
   #'file:/eos/cms/store/group/phys_heavyions/mnguyen/miniAOD/reMiniAOD_DATA_PAT_HIDoubleMuon.root',
   #'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
   #'file:/home/llr/cms/falmagne/miniAOD/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi_HiDoubleMuPsiPeri.root'
-  'file:/home/llr/cms/falmagne/miniAOD/CMSSW_11_2_0_pre9/src/step2_miniAOD_DoubleMuonPD_11_2_0_pre9_1.root'
+  #'file:/home/llr/cms/falmagne/miniAOD/CMSSW_11_2_0_pre9/src/step2_miniAOD_DoubleMuonPD_11_2_0_pre9_1.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FC3997EF-7B96-7947-81B0-96EEEA53AA60.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FE775A7B-0F67-A14E-AAEE-1E00D4EE0BC9.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FECEBB19-DB3E-AB40-B807-458134ABEEA3.root',
@@ -60,6 +60,7 @@ options.inputFiles =[
   #'file:/afs/cern.ch/user/a/anstahll/work/MiniAOD/OniaTree/TRY2/CMSSW_10_3_3_patch1/src/reMiniAOD_DATA_PAT_JPsi.root',
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/859/00000/9D9FEF75-B31A-9645-9090-0F99D895AED9.root'
+  '/store/hidata/HIRun2018A/HIDoubleMuon/MINIAOD/PbPb18_MiniAODv1-v1/120000/00137f14-f84b-4f1b-ad37-0717a01c981b.root'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -160,7 +161,7 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = 'auto:phase1_2018_realistic_hi' 
+  globalTag = 'auto:phase1_2018_realistic_hi'
 else:
   globalTag = 'auto:run2_data'
 
