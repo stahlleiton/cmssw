@@ -61,16 +61,8 @@ namespace pat {
 
       PropagateToMuon* getMuonPropagator(const edm::ParameterSet& iConfig, edm::ConsumesCollector iC)
       {
-        if (iConfig.getParameter<bool>("addPropToMuonSt")) {
-          edm::ParameterSet conf;
-          conf.addParameter("useSimpleGeometry", true);
-          conf.addParameter("useTrack", std::string("none"));
-          conf.addParameter("useState", std::string("atVertex"));
-          conf.addParameter("fallbackToME1", true);
-          conf.addParameter("useMB2InOverlap", true);
-          conf.addParameter("useStation2", true);
-          return new PropagateToMuon(conf);
-        }
+        if (iConfig.getParameter<bool>("addPropToMuonSt"))
+          return new PropagateToMuon(iConfig);
         return nullptr;
       };
 
@@ -258,6 +250,12 @@ void pat::MuonUnpacker::fillDescriptions(edm::ConfigurationDescriptions& descrip
   desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot"))->setComment("beam spot collection");
   desc.add<std::vector<std::string> >("muonSelectors", {"AllTrackerMuons", "TMOneStationTight"})->setComment("muon selectors");
   desc.add<bool>("addPropToMuonSt", false)->setComment("add eta/phi propagated to 2nd muon station for L1 matching");
+  desc.add<std::string>("useTrack", "tracker");
+  desc.add<std::string>("useState", "atVertex");
+  desc.add<bool>("useSimpleGeometry", true);
+  desc.add<bool>("useStation2", true);
+  desc.add<bool>("fallbackToME1", true);
+  desc.add<bool>("useMB2InOverlap", true);
   descriptions.add("unpackedMuons", desc);
 }
 
