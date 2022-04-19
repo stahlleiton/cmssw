@@ -103,8 +103,7 @@ SSHIRun2018A = "HeavyIonsAnalysis/EGMAnalysis/data/SSHIRun2018A.dat"
 process.load('HeavyIonsAnalysis.EGMAnalysis.correctedElectronProducer_cfi')
 process.correctedElectrons.correctionFile = SSHIRun2018A
 
-#process.load('HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi')
-#process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
+process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
 process.ggHiNtuplizer.doMuons = cms.bool(False)
 process.ggHiNtuplizer.electronSrc = "correctedElectrons"
@@ -143,9 +142,8 @@ process.forest = cms.Path(
     process.ggHiNtuplizer +
     process.zdcdigi +
     process.QWzdcreco +
-    process.zdcanalyzer #+
-    #process.unpackedMuons +
-    #process.muonAnalyzer
+    process.zdcanalyzer +
+    process.muonSequence
     )
 
 #customisation

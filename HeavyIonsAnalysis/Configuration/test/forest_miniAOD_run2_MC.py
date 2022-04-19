@@ -108,9 +108,8 @@ process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_mc_cff')
 # tracks
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
 #muons
-#process.load("HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi")
-#process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
-#process.muonAnalyzer.doGen = cms.bool(True)
+process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
+process.muonAnalyzer.doGen = cms.bool(True)
 
 ###############################################################################
 
@@ -128,9 +127,8 @@ process.forest = cms.Path(
     process.hiEvtAnalyzer +
     process.HiGenParticleAna +
     process.correctedElectrons +
-    process.ggHiNtuplizer #+
-    #process.unpackedMuons +
-    #process.muonAnalyzer
+    process.ggHiNtuplizer +
+    process.muonSequence
     )
 
 #customisation
@@ -147,7 +145,7 @@ if addR3Jets or addR4Jets :
         setupHeavyIonJets('akCs3PF', process.jetsR3, process, isMC = 1, radius = 0.30, JECTag = 'AK3PF')
         process.akCs3PFpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
         process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
-        process.akCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = "akCs3PFpatJets", jetName = 'akCs3PF', genjetTag = "ak3GenJetsNoNu")      
+        process.akCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = "akCs3PFpatJets", jetName = 'akCs3PF', genjetTag = "ak3GenJetsNoNu")
         process.forest += process.extraJetsMC * process.jetsR3 * process.akCs3PFJetAnalyzer
 
     if addR4Jets :
