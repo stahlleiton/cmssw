@@ -35,7 +35,7 @@ void pat::EmbedMCinMuons::produce(edm::StreamID, edm::Event& iEvent, const edm::
 
   // add gen information to muons
   for (size_t i = 0; i < muons->size(); i++) {
-    (*output)[i].setGenParticle(*matches.get(muons.id(), i));
+    (*output)[i].setGenParticleRef(matches.get(muons.id(), i), true);
   }
 
   iEvent.put(std::move(output));
