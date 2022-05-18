@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 onia2MuMuPAT = cms.EDProducer('Onia2MuMuPAT',
   muons = cms.InputTag("patMuons"),
   beamSpotTag = cms.InputTag("offlineBeamSpot"),
-  primaryVertexTag = cms.InputTag("offlinePrimaryVertices"),
+  primaryVertexTag = cms.InputTag("offlineSlimmedPrimaryVerticesRecovery"),
   srcTracks = cms.InputTag("generalTracks"),
   genParticles = cms.InputTag("genParticles"),
   higherPuritySelection = cms.string(""), ## At least one muon must pass this selection. No need to repeat lowerPuritySelection in there, already included
