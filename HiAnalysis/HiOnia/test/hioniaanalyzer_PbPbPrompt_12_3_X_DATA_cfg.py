@@ -23,6 +23,7 @@ keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon c
 useSVfinder    = False # External SV finder to check if the muons are from a resolved SV
 miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
+UsePropToMuonSt = True # whether to use L1 propagated muons (works only for miniAOD now)
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -30,12 +31,19 @@ print( " " )
 print( "[INFO] Settings used for ONIA TREE: " )
 print( "[INFO] isMC                 = " + ("True" if isMC else "False") )
 print( "[INFO] applyEventSel        = " + ("True" if applyEventSel else "False") )
+print( "[INFO] applyCuts            = " + ("True" if applyCuts else "False") )
 print( "[INFO] keepExtraColl        = " + ("True" if keepExtraColl else "False") )
 print( "[INFO] SumETvariables       = " + ("True" if SumETvariables else "False") )
 print( "[INFO] SofterSgMuAcceptance = " + ("True" if SofterSgMuAcceptance else "False") )
 print( "[INFO] muonSelection        = " + muonSelection )
 print( "[INFO] onlySoftMuons        = " + ("True" if OnlySoftMuons else "False") )
 print( "[INFO] doTrimuons           = " + ("True" if doTrimuons else "False") )
+print( "[INFO] doDimuonTrk          = " + ("True" if doDimuonTrk else "False") )
+print( "[INFO] atLeastOneCand       = " + ("True" if atLeastOneCand else "False") )
+print( "[INFO] OneMatchedHLTMu      = " + ("True" if OneMatchedHLTMu else "False") )
+print( "[INFO] miniAOD              = " + ("True" if miniAOD else "False") )
+print( "[INFO] miniAOD_muonCuts     = " + ("True" if miniAOD_muonCuts else "False") )
+print( "[INFO] UsePropToMuonSt      = " + ("True" if UsePropToMuonSt else "False") )
 print( " " )
 
 # set up process
@@ -248,6 +256,8 @@ process.oniaTreeAna = cms.Path(process.oniaTreeAna)
 if miniAOD:
   from HiSkim.HiOnia2MuMu.onia2MuMuPAT_cff import changeToMiniAOD
   changeToMiniAOD(process)
+  process.unpackedMuons.addPropToMuonSt = cms.bool(UsePropToMuonSt)
+
 
 #----------------------------------------------------------------------------
 #Options:

@@ -10,7 +10,7 @@ config.General.transferLogs = False
 
 config.section_("JobType")
 config.JobType.pluginName = "Analysis"
-config.JobType.psetName = "hioniaanalyzer_PbPbPrompt_112X_DATA_cfg.py"
+config.JobType.psetName = "hioniaanalyzer_PbPbPrompt_12_3_X_DATA_cfg.py"
 #config.JobType.maxMemoryMB = 2500         # request high memory machines.
 #config.JobType.numCores = 4
 config.JobType.allowUndistributedCMSSW = True #Problems with slc7
@@ -19,7 +19,7 @@ config.JobType.allowUndistributedCMSSW = True #Problems with slc7
 config.section_("Data")
 config.Data.inputDataset = '/HIMinimumBias2/HIRun2018A-PbPb18_MiniAODv1-v1/MINIAOD'
 config.Data.inputDBS = 'global'
-#config.Data.unitsPerJob = 'Automatic'
+#config.Data.unitsPerJob = 10
 #config.Data.totalUnits = -1
 config.Data.splitting = "Automatic"
 config.Data.allowNonValidInputDataset = True

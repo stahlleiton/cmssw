@@ -25,7 +25,7 @@ namespace pat {
           beamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"))),
           trackBuilderToken_(esConsumes(edm::ESInputTag("", "TransientTrackBuilder"))),
           candidateMuonIDToken_(getPackedCandidateMap(muonSelectors_)),
-          propToMuonSetup_(iConfig, consumesCollector()),
+          propToMuonSetup_(getMuonPropagator(iConfig, consumesCollector())),
           patMuonPutToken_(produces<pat::MuonCollection>())
       {
       };
@@ -46,7 +46,7 @@ namespace pat {
       const edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
       const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> trackBuilderToken_;
       const PackedCandidateRefVectorMap candidateMuonIDToken_;
-      const PropagateToMuonSetup propToMuonSetup_;
+      const std::unique_ptr<PropagateToMuonSetup> propToMuonSetup_;
       const edm::EDPutTokenT<pat::MuonCollection> patMuonPutToken_;
 
       PackedCandidateRefVectorMap getPackedCandidateMap(const std::vector<std::string>& v)
@@ -145,8 +145,8 @@ void pat::MuonUnpacker::produce(edm::StreamID, edm::Event& iEvent, const edm::Ev
   }
 
   // propagate muon position to 2nd muon station (used for L1 muon matching)
-//  if (propToMuonSetup_) {
-    const auto propToMuon = propToMuonSetup_.init(iSetup);
+  if (propToMuonSetup_) {
+    const auto propToMuon = propToMuonSetup_->init(iSetup);
     for (auto& muon : output) {
       if (muon.track().isNull()) continue;
       const auto& fts = propToMuon.extrapolate(*muon.track());
@@ -154,7 +154,7 @@ void pat::MuonUnpacker::produce(edm::StreamID, edm::Event& iEvent, const edm::Ev
       muon.addUserFloat("l1Eta", fts.globalPosition().eta());
       muon.addUserFloat("l1Phi", fts.globalPosition().phi());
     }
-//  }
+  }
   
   iEvent.emplace(patMuonPutToken_, std::move(output));
 }
