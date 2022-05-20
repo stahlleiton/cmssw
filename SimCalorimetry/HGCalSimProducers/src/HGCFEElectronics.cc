@@ -25,6 +25,7 @@ HGCFEElectronics<DFr>::HGCFEElectronics(const edm::ParameterSet& ps)
       targetMIPvalue_ADC_{},
       jitterNoise2_ns_{},
       jitterConstant2_ns_{},
+      eventTimeOffset_ns_{{0.02, 0.02, 0.02}},
       noise_fC_{},
       toaMode_(WEIGHTEDBYE) {
   edm::LogVerbatim("HGCFE") << "[HGCFEElectronics] running with version " << fwVersion_ << std::endl;
@@ -211,6 +212,7 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr& dataFrame,
                                              float maxADC,
                                              int thickness,
                                              float tdcOnsetAuto,
+                                             float noiseWidth,
                                              const hgc_digi::FEADCPulseShape& adcPulse) {
   busyFlags.fill(false);
   totFlags.fill(false);
@@ -248,7 +250,9 @@ void HGCFEElectronics<DFr>::runShaperWithToT(DFr& dataFrame,
   //to be done properly with realistic ToA shaper and jitter for the moment accounted in the smearing
   if (toaColl[fireBX] != 0.f) {
     timeToA = toaColl[fireBX];
-    float jitter = getTimeJitter(chargeColl[fireBX], thickness);
+    const auto& sensor_noise = noiseWidth <= 0 ? noise_fC_.at(thickness - 1) : noiseWidth;
+    float jitter = std::sqrt(jitterNoise2_ns_.at(thickness - 1) / (chargeColl[fireBX] / sensor_noise)) +
+                   eventTimeOffset_ns_.at(thickness - 1);
     if (jitter != 0)
       timeToA = CLHEP::RandGaussQ::shoot(engine, timeToA, jitter);
     else if (tdcResolutionInNs_ != 0)
