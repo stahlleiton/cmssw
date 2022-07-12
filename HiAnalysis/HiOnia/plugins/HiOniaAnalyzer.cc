@@ -318,17 +318,28 @@ private:
   bool Reco_mu_highPurity[Max_mu_size];    // Vector of high purity flag  
   bool Reco_mu_TrkMuArb[Max_mu_size];      // Vector of TrackerMuonArbitrated
   bool Reco_mu_TMOneStaTight[Max_mu_size]; // Vector of TMOneStationTight
-  bool Reco_mu_isPF[Max_mu_size]; // Vector of isParticleFlow muon
   Short_t Reco_mu_candType[Max_mu_size]; // candidate type of muon. 0 (or not present): muon collection, 1: packedPFCandidate, 2: lostTrack collection
+  bool Reco_mu_isPF[Max_mu_size];           // Vector of isParticleFlow muon
+  bool Reco_mu_isTracker[Max_mu_size];
+  bool Reco_mu_isGlobal[Max_mu_size];
+  bool Reco_mu_isSoft[Max_mu_size];
+  bool Reco_mu_isHybridSoft[Max_mu_size];
+  bool Reco_mu_isMedium[Max_mu_size];
   bool Reco_mu_InTightAcc[Max_mu_size];  // Is in the tight acceptance for global muons
   bool Reco_mu_InLooseAcc[Max_mu_size];  // Is in the loose acceptance for global muons
 
   int Reco_mu_nPixValHits[Max_mu_size];  // Number of valid pixel hits in sta muons
   int Reco_mu_nMuValHits[Max_mu_size];  // Number of valid muon hits in sta muons
+  int Reco_mu_nMuValHits_inner[Max_mu_size];       // Number of valid muon hits in Inner sta muons
+  int Reco_mu_nMuValHits_bestTracker[Max_mu_size];       // Number of valid muon hits in best trcaker
   int Reco_mu_nTrkHits[Max_mu_size];  // track hits global muons
   int Reco_mu_nPixWMea[Max_mu_size];  // pixel layers with measurement for inner track muons
   int Reco_mu_nTrkWMea[Max_mu_size];  // track layers with measurement for inner track muons
   int Reco_mu_StationsMatched[Max_mu_size];  // number of stations matched for inner track muons
+  float Reco_mu_segmentComp[Max_mu_size];
+  float Reco_mu_kink[Max_mu_size];
+  float Reco_mu_localChi2[Max_mu_size];
+  float Reco_mu_normChi2_bestTracker[Max_mu_size];
   float Reco_mu_normChi2_inner[Max_mu_size];  // chi2/ndof for inner track muons
   float Reco_mu_normChi2_global[Max_mu_size];  // chi2/ndof for global muons
   float Reco_mu_dxy[Max_mu_size];  // dxy for inner track muons
@@ -340,6 +351,7 @@ private:
   float Reco_mu_ptErr_inner[Max_mu_size];  // pT error for inner track muons
   float Reco_mu_ptErr_global[Max_mu_size];  // pT error for global muons
   float Reco_mu_pTrue[Max_mu_size];  // P of the associated generated muon, used to match the Reco_mu with the Gen_mu
+  float Reco_mu_validFraction[Max_mu_size];
   int Reco_mu_simExtType[Max_Bc_size]; //
 
   Short_t muType; // type of muon (GlbTrk=0, Trk=1, Glb=2, none=-1) 
@@ -1043,6 +1055,7 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
     Reco_mu_trig[Reco_mu_size] = trigBits;
 
     reco::TrackRef iTrack = muon->innerTrack();
+    reco::TrackRef bestTrack = muon->muonBestTrack();
   
     if (!_theMinimumFlag) {
       Reco_mu_InTightAcc[Reco_mu_size] = isMuonInAccept(muon,"GLB");
@@ -1050,38 +1063,55 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
       Reco_mu_SelectionType[Reco_mu_size] = muonIDmask(muon);
       Reco_mu_StationsMatched[Reco_mu_size] = muon->numberOfMatchedStations();
       Reco_mu_isPF[Reco_mu_size] = muon->isPFMuon();
+      Reco_mu_isTracker[Reco_mu_size] = muon->isTrackerMuon();
+      Reco_mu_isGlobal[Reco_mu_size] = muon->isGlobalMuon();
+      Reco_mu_isSoft[Reco_mu_size] = isSoftMuon(muon);
+      Reco_mu_isHybridSoft[Reco_mu_size] = isHybridSoftMuon(muon);
+      Reco_mu_isMedium[Reco_mu_size] = muon->isMediumMuon();
       Reco_mu_candType[Reco_mu_size] = (Short_t)(muon->hasUserInt("candType"))?(muon->userInt("candType")):(-1);
-     
+      
+      Reco_mu_TMOneStaTight[Reco_mu_size] = muon::isGoodMuon(*muon, muon::TMOneStationTight);
+
+      Reco_mu_localChi2[Reco_mu_size] = muon->combinedQuality().chi2LocalPosition;
+      Reco_mu_kink[Reco_mu_size] = muon->combinedQuality().trkKink;
+      Reco_mu_segmentComp[Reco_mu_size] = muon->segmentCompatibility(reco::Muon::SegmentAndTrackArbitration);
+
+      Reco_mu_normChi2_bestTracker[Reco_mu_size] = bestTrack->normalizedChi2();
+      Reco_mu_nMuValHits_bestTracker[Reco_mu_size] = bestTrack->hitPattern().numberOfValidMuonHits();
+
+
       if (!iTrack.isNull()){
-	Reco_mu_highPurity[Reco_mu_size] = iTrack->quality(reco::TrackBase::highPurity);
-	Reco_mu_nTrkHits[Reco_mu_size] = iTrack->found();
-	Reco_mu_normChi2_inner[Reco_mu_size] = (muon->hasUserFloat("trackChi2") ? muon->userFloat("trackChi2") : iTrack->normalizedChi2());
-	Reco_mu_nPixValHits[Reco_mu_size] = iTrack->hitPattern().numberOfValidPixelHits();
-	Reco_mu_nPixWMea[Reco_mu_size] = iTrack->hitPattern().pixelLayersWithMeasurement();
-	Reco_mu_nTrkWMea[Reco_mu_size] = iTrack->hitPattern().trackerLayersWithMeasurement();
-	Reco_mu_dxy[Reco_mu_size] = iTrack->dxy(RefVtx);
-	Reco_mu_dxyErr[Reco_mu_size] = iTrack->dxyError();
-	Reco_mu_dz[Reco_mu_size] = iTrack->dz(RefVtx);
-	Reco_mu_dzErr[Reco_mu_size] = iTrack->dzError();
-	//Reco_mu_pt_inner[Reco_mu_size] = iTrack->pt();
-	Reco_mu_ptErr_inner[Reco_mu_size] = iTrack->ptError();
+        Reco_mu_highPurity[Reco_mu_size] = iTrack->quality(reco::TrackBase::highPurity);
+        Reco_mu_nTrkHits[Reco_mu_size] = iTrack->found();
+        Reco_mu_normChi2_inner[Reco_mu_size] = (muon->hasUserFloat("trackChi2") ? muon->userFloat("trackChi2") : iTrack->normalizedChi2());
+        Reco_mu_nPixValHits[Reco_mu_size] = iTrack->hitPattern().numberOfValidPixelHits();
+        Reco_mu_nPixWMea[Reco_mu_size] = iTrack->hitPattern().pixelLayersWithMeasurement();
+        Reco_mu_nTrkWMea[Reco_mu_size] = iTrack->hitPattern().trackerLayersWithMeasurement();
+        Reco_mu_dxy[Reco_mu_size] = iTrack->dxy(RefVtx);
+        Reco_mu_dxyErr[Reco_mu_size] = iTrack->dxyError();
+        Reco_mu_dz[Reco_mu_size] = iTrack->dz(RefVtx);
+        Reco_mu_dzErr[Reco_mu_size] = iTrack->dzError();
+        //Reco_mu_pt_inner[Reco_mu_size] = iTrack->pt();
+        Reco_mu_ptErr_inner[Reco_mu_size] = iTrack->ptError();
+        Reco_mu_nMuValHits_inner[Reco_mu_size] = iTrack->hitPattern().numberOfValidMuonHits();
+        Reco_mu_validFraction[Reco_mu_size] = iTrack->validFraction();
       }
       else if(_muonSel!=(std::string)("All")){
 	std::cout<<"ERROR: 'iTrack' pointer in fillTreeMuon is NULL ! Return now"<<std::endl; return;
       }
-    
+
       if (muon->isGlobalMuon()) {
-	reco::TrackRef gTrack = muon->globalTrack();
-	Reco_mu_nMuValHits[Reco_mu_size] = gTrack->hitPattern().numberOfValidMuonHits();
-	Reco_mu_normChi2_global[Reco_mu_size] = gTrack->normalizedChi2();
-	//Reco_mu_pt_global[Reco_mu_size] = gTrack->pt();
-	//Reco_mu_ptErr_global[Reco_mu_size] = gTrack->ptError();
+        reco::TrackRef gTrack = muon->globalTrack();
+        Reco_mu_nMuValHits[Reco_mu_size] = gTrack->hitPattern().numberOfValidMuonHits();
+        Reco_mu_normChi2_global[Reco_mu_size] = gTrack->normalizedChi2();
+        //Reco_mu_pt_global[Reco_mu_size] = gTrack->pt();
+        //Reco_mu_ptErr_global[Reco_mu_size] = gTrack->ptError();
       }
       else {
-	Reco_mu_nMuValHits[Reco_mu_size] = -1;
-	Reco_mu_normChi2_global[Reco_mu_size] = 999;
-	//Reco_mu_pt_global[Reco_mu_size] = -1;
-	//Reco_mu_ptErr_global[Reco_mu_size] = -1;
+        Reco_mu_nMuValHits[Reco_mu_size] = -1;
+        Reco_mu_normChi2_global[Reco_mu_size] = 999;
+        //Reco_mu_pt_global[Reco_mu_size] = -1;
+        //Reco_mu_ptErr_global[Reco_mu_size] = -1;
       }
     }
 
@@ -3475,10 +3505,23 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_mu_highPurity", Reco_mu_highPurity,   "Reco_mu_highPurity[Reco_mu_size]/O");
     // myTree->Branch("Reco_mu_TrkMuArb", Reco_mu_TrkMuArb,   "Reco_mu_TrkMuArb[Reco_mu_size]/O");
     myTree->Branch("Reco_mu_isPF", Reco_mu_isPF, "Reco_mu_isPF[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_isTracker", Reco_mu_isTracker, "Reco_mu_isTracker[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_isGlobal", Reco_mu_isGlobal, "Reco_mu_isGlobal[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_isSoft", Reco_mu_isSoft, "Reco_mu_isSoft[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_isHybridSoft", Reco_mu_isHybridSoft, "Reco_mu_isHybridSoft[Reco_mu_size]/O");
+    myTree->Branch("Reco_mu_isMedium", Reco_mu_isMedium, "Reco_mu_isMedium[Reco_mu_size]/O");
+
     myTree->Branch("Reco_mu_candType", Reco_mu_candType, "Reco_mu_candType[Reco_mu_size]/S");
     myTree->Branch("Reco_mu_nPixValHits", Reco_mu_nPixValHits,   "Reco_mu_nPixValHits[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_nMuValHits", Reco_mu_nMuValHits,   "Reco_mu_nMuValHits[Reco_mu_size]/I");
+    myTree->Branch("Reco_mu_nMuValHits_inner", Reco_mu_nMuValHits_inner, "Reco_mu_nMuValHits_inner[Reco_mu_size]/I");
+    myTree->Branch("Reco_mu_nMuValHits_bestTracker", Reco_mu_nMuValHits_bestTracker, "Reco_mu_nMuValHits_bestTracker[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_nTrkHits",Reco_mu_nTrkHits, "Reco_mu_nTrkHits[Reco_mu_size]/I");
+    myTree->Branch("Reco_mu_segmentComp", Reco_mu_segmentComp, "Reco_mu_segmentComp[Reco_mu_size]/F");
+    myTree->Branch("Reco_mu_kink", Reco_mu_kink, "Reco_mu_kink[Reco_mu_size]/F");
+    myTree->Branch("Reco_mu_localChi2", Reco_mu_localChi2, "Reco_mu_localChi2[Reco_mu_size]/F");
+    myTree->Branch("Reco_mu_validFraction", Reco_mu_validFraction, "Reco_mu_validFraction[Reco_mu_size]/F");
+    myTree->Branch("Reco_mu_normChi2_bestTracker", Reco_mu_normChi2_bestTracker, "Reco_mu_normChi2_bestTracker[Reco_mu_size]/F");
     myTree->Branch("Reco_mu_normChi2_inner",Reco_mu_normChi2_inner, "Reco_mu_normChi2_inner[Reco_mu_size]/F");
     myTree->Branch("Reco_mu_normChi2_global",Reco_mu_normChi2_global, "Reco_mu_normChi2_global[Reco_mu_size]/F");
     myTree->Branch("Reco_mu_nPixWMea",Reco_mu_nPixWMea, "Reco_mu_nPixWMea[Reco_mu_size]/I");
