@@ -135,12 +135,12 @@ public:
   explicit RecHitTreeProducer(const edm::ParameterSet&);
   ~RecHitTreeProducer();
 
-  math::XYZPoint getPosition(const DetId &id, reco::Vertex::Point& vtx);
-  double getEt(math::XYZPoint& pos, double energy);
-  double getEt(const DetId &id, double energy);
-  double getEta(const DetId &id);
-  double getPhi(const DetId &id);
-  double getPerp(const DetId &id);
+  math::XYZPoint getPosition(const DetId &id, reco::Vertex::Point& vtx, const CaloGeometry& geo);
+  double getEt(math::XYZPoint& pos, double energy, const CaloGeometry& geo);
+  double getEt(const DetId &id, double energy, const CaloGeometry& geo);
+  double getEta(const DetId &id, const CaloGeometry& geo);
+  double getPhi(const DetId &id, const CaloGeometry& geo);
+  double getPerp(const DetId &id, const CaloGeometry& geo);
 
   reco::Vertex::Point getVtx(const edm::Event& ev);
 
@@ -194,7 +194,8 @@ private:
   bool calZDCDigi_;
 
   edm::Service<TFileService> fs;
-  edm::ESHandle<CaloGeometry> geo;
+  //edm::ESHandle<CaloGeometry> geo;
+  edm::ESGetToken<CaloGeometry, CaloGeometryRecord> geoToken_;
 
   edm::EDGetTokenT<HFRecHitCollection> HcalRecHitHFSrc_;
   edm::EDGetTokenT<HBHERecHitCollection> HcalRecHitHBHESrc_;
@@ -306,6 +307,8 @@ RecHitTreeProducer::RecHitTreeProducer(const edm::ParameterSet& iConfig) {
 
   nZdcTs_ = iConfig.getParameter<int>("nZdcTs");
   calZDCDigi_ = iConfig.getParameter<bool>("calZDCDigi");
+
+  geoToken_ = esConsumes<CaloGeometry, CaloGeometryRecord>();
 }
 
 
@@ -334,7 +337,8 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
   myTowers.n = 0;
   bkg.n = 0;
 
-  iSetup.get<CaloGeometryRecord>().get(geo);
+  //iSetup.get<CaloGeometryRecord>().get(geo);
+  auto const& geo = iSetup.getData(geoToken_);
 
   // get vertex
   reco::Vertex::Point vtx(0,0,0);
@@ -367,7 +371,7 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
     ev.getByToken(HcalRecHitHFSrc_, hfHits);
 
     for (auto const& hit : *hfHits) {
-      if (getEt(hit.id(), hit.energy()) < hfPtMin_) continue;
+      if (getEt(hit.id(), hit.energy(), geo) < hfPtMin_) continue;
 
       const HcalDetId & id = hit.id();
       hfRecHit.rawId[hfRecHit.n] = id.rawId();
@@ -377,16 +381,16 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
       hfRecHit.e[hfRecHit.n] = hit.energy();
 
       if(!saveBothVtx_){
-        math::XYZPoint pos = getPosition(id,vtx);
-        hfRecHit.et[hfRecHit.n] = getEt(pos,hit.energy());
+        math::XYZPoint pos = getPosition(id,vtx, geo);
+        hfRecHit.et[hfRecHit.n] = getEt(pos,hit.energy(), geo);
         hfRecHit.eta[hfRecHit.n] = pos.eta();
         hfRecHit.phi[hfRecHit.n] = pos.phi();
         hfRecHit.perp[hfRecHit.n] = pos.rho();
       }else{
-        hfRecHit.et[hfRecHit.n] = getEt(id,hit.energy());
-        hfRecHit.eta[hfRecHit.n] = getEta(id);
-        hfRecHit.phi[hfRecHit.n] = getPhi(id);
-        hfRecHit.perp[hfRecHit.n] = getPerp(id);
+        hfRecHit.et[hfRecHit.n] = getEt(id,hit.energy(), geo);
+        hfRecHit.eta[hfRecHit.n] = getEta(id, geo);
+        hfRecHit.phi[hfRecHit.n] = getPhi(id, geo);
+        hfRecHit.perp[hfRecHit.n] = getPerp(id, geo);
       }
 
       hfRecHit.depth[hfRecHit.n] = id.depth();
@@ -416,7 +420,7 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
     ev.getByToken(HcalRecHitHBHESrc_, hbheHits);
 
     for (auto const& hit : *hbheHits) {
-      if (getEt(hit.id(), hit.energy()) < hbhePtMin_) continue;
+      if (getEt(hit.id(), hit.energy(), geo) < hbhePtMin_) continue;
 
       const HcalDetId & id = hit.id();
       hbheRecHit.rawId[hbheRecHit.n] = id.rawId();
@@ -427,16 +431,16 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
       hbheRecHit.eraw[hbheRecHit.n] = hit.eraw();
 
       if(!saveBothVtx_){
-        math::XYZPoint pos = getPosition(id,vtx);
-        hbheRecHit.et[hbheRecHit.n] = getEt(pos,hit.energy());
+        math::XYZPoint pos = getPosition(id,vtx, geo);
+        hbheRecHit.et[hbheRecHit.n] = getEt(pos,hit.energy(), geo);
         hbheRecHit.eta[hbheRecHit.n] = pos.eta();
         hbheRecHit.phi[hbheRecHit.n] = pos.phi();
         hbheRecHit.perp[hbheRecHit.n] = pos.rho();
       }else{
-        hbheRecHit.et[hbheRecHit.n] = getEt(id,hit.energy());
-        hbheRecHit.eta[hbheRecHit.n] = getEta(id);
-        hbheRecHit.phi[hbheRecHit.n] = getPhi(id);
-        hbheRecHit.perp[hbheRecHit.n] = getPerp(id);
+        hbheRecHit.et[hbheRecHit.n] = getEt(id,hit.energy(), geo);
+        hbheRecHit.eta[hbheRecHit.n] = getEta(id, geo);
+        hbheRecHit.phi[hbheRecHit.n] = getPhi(id, geo);
+        hbheRecHit.perp[hbheRecHit.n] = getPerp(id, geo);
       }
 
       hbheRecHit.depth[hbheRecHit.n] = id.depth();
@@ -460,7 +464,7 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
 
     for(unsigned int i = 0; i < ebHits->size(); ++i){
       const EcalRecHit & hit= (*ebHits)[i];
-      if (getEt(hit.id(),hit.energy())<ebPtMin_) continue;
+      if (getEt(hit.id(),hit.energy(),geo)<ebPtMin_) continue;
 
       const DetId & id = hit.id();
       ebRecHit.rawId[ebRecHit.n] = id.rawId();
@@ -468,18 +472,18 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
       ebRecHit.iphi[ebRecHit.n] = EBDetId(id).iphi();
 
       ebRecHit.e[ebRecHit.n] = hit.energy();
-      math::XYZPoint pos = getPosition(id,vtx);
+      math::XYZPoint pos = getPosition(id,vtx, geo);
 
       if(!saveBothVtx_){
-        ebRecHit.et[ebRecHit.n] = getEt(pos,hit.energy());
+        ebRecHit.et[ebRecHit.n] = getEt(pos,hit.energy(), geo);
         ebRecHit.eta[ebRecHit.n] = pos.eta();
         ebRecHit.phi[ebRecHit.n] = pos.phi();
         ebRecHit.perp[ebRecHit.n] = pos.rho();
       }else{
-        ebRecHit.et[ebRecHit.n] = getEt(id,hit.energy());
-        ebRecHit.eta[ebRecHit.n] = getEta(id);
-        ebRecHit.phi[ebRecHit.n] = getPhi(id);
-        ebRecHit.perp[ebRecHit.n] = getPerp(id);
+        ebRecHit.et[ebRecHit.n] = getEt(id,hit.energy(), geo);
+        ebRecHit.eta[ebRecHit.n] = getEta(id, geo);
+        ebRecHit.phi[ebRecHit.n] = getPhi(id, geo);
+        ebRecHit.perp[ebRecHit.n] = getPerp(id, geo);
       }
       ebRecHit.chi2[ebRecHit.n] = hit.chi2();
       ebRecHit.eError[ebRecHit.n] = hit.energyError();
@@ -502,7 +506,7 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
 
     for(unsigned int i = 0; i < eeHits->size(); ++i){
       const EcalRecHit & hit= (*eeHits)[i];
-      if (getEt(hit.id(),hit.energy())<eePtMin_) continue;
+      if (getEt(hit.id(),hit.energy(),geo)<eePtMin_) continue;
 
       const DetId &id = hit.id();
       eeRecHit.rawId[eeRecHit.n] = id.rawId();
@@ -512,18 +516,18 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
       // positive (negative) eeRecHit.iy will correspond to EE+ (EE-)
 
       eeRecHit.e[eeRecHit.n] = hit.energy();
-      math::XYZPoint pos = getPosition(id,vtx);
+      math::XYZPoint pos = getPosition(id,vtx,geo);
 
       if(!saveBothVtx_){
-        eeRecHit.et[eeRecHit.n] = getEt(pos,hit.energy());
+        eeRecHit.et[eeRecHit.n] = getEt(pos,hit.energy(),geo);
         eeRecHit.eta[eeRecHit.n] = pos.eta();
         eeRecHit.phi[eeRecHit.n] = pos.phi();
         eeRecHit.perp[eeRecHit.n] = pos.rho();
       }else{
-        eeRecHit.et[eeRecHit.n] = getEt(id,hit.energy());
-        eeRecHit.eta[eeRecHit.n] = getEta(id);
-        eeRecHit.phi[eeRecHit.n] = getPhi(id);
-        eeRecHit.perp[eeRecHit.n] = getPerp(id);
+        eeRecHit.et[eeRecHit.n] = getEt(id,hit.energy(), geo);
+        eeRecHit.eta[eeRecHit.n] = getEta(id, geo);
+        eeRecHit.phi[eeRecHit.n] = getPhi(id,geo);
+        eeRecHit.perp[eeRecHit.n] = getPerp(id, geo);
       }
       eeRecHit.chi2[eeRecHit.n] = hit.chi2();
       eeRecHit.eError[eeRecHit.n] = hit.energyError();
@@ -566,9 +570,9 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
         myTowers.eta[myTowers.n] = hit.p4(vtx).Eta();
         myTowers.phi[myTowers.n] = hit.p4(vtx).Phi();
       } else {
-        myTowers.et[myTowers.n] = getEt(id,hit.energy());
-        myTowers.eta[myTowers.n] = getEta(id);
-        myTowers.phi[myTowers.n] = getPhi(id);
+        myTowers.et[myTowers.n] = getEt(id,hit.energy(),geo);
+        myTowers.eta[myTowers.n] = getEta(id,geo);
+        myTowers.phi[myTowers.n] = getPhi(id,geo);
 
         myTowers.etVtx[myTowers.n] = hit.p4(vtx).Et();
         myTowers.etaVtx[myTowers.n] = hit.p4(vtx).Eta();
@@ -648,7 +652,7 @@ RecHitTreeProducer::analyze(const edm::Event& ev, const edm::EventSetup& iSetup)
         castorRecHit.e[nhits] = rh.energy();
         castorRecHit.iphi[nhits] = castorid.sector();
         castorRecHit.depth[nhits] = castorid.module();
-        castorRecHit.phi[nhits] = getPhi(castorid);
+        castorRecHit.phi[nhits] = getPhi(castorid,geo);
         castorRecHit.saturation[nhits] = static_cast<int>( rh.flagField(HcalCaloFlagLabels::ADCSaturationBit) );
       }
 
@@ -888,32 +892,33 @@ void
 RecHitTreeProducer::endJob() {
 }
 
-math::XYZPoint RecHitTreeProducer::getPosition(const DetId &id, reco::Vertex::Point& vtx) {
-  const GlobalPoint& pos = geo->getPosition(id);
+
+math::XYZPoint RecHitTreeProducer::getPosition(const DetId &id, reco::Vertex::Point& vtx, const CaloGeometry& geo) {
+  const GlobalPoint& pos = geo.getPosition(id);
   return math::XYZPoint(pos.x() - vtx.x(), pos.y() - vtx.y(), pos.z() - vtx.z());
 }
 
-inline double RecHitTreeProducer::getEt(math::XYZPoint& pos, double energy) {
+inline double RecHitTreeProducer::getEt(math::XYZPoint& pos, double energy, const CaloGeometry& geo) {
   return energy * sin(pos.theta());
 }
 
-inline double RecHitTreeProducer::getEt(const DetId &id, double energy) {
-  const GlobalPoint& pos = geo->getPosition(id);
+inline double RecHitTreeProducer::getEt(const DetId &id, double energy, const CaloGeometry& geo) {
+  const GlobalPoint& pos = geo.getPosition(id);
   return energy * sin(pos.theta());
 }
 
-inline double RecHitTreeProducer::getEta(const DetId &id) {
-  const GlobalPoint& pos = geo->getPosition(id);
+inline double RecHitTreeProducer::getEta(const DetId &id, const CaloGeometry& geo) {
+  const GlobalPoint& pos = geo.getPosition(id);
   return pos.eta();
 }
 
-inline double RecHitTreeProducer::getPhi(const DetId &id) {
-  const GlobalPoint& pos = geo->getPosition(id);
+inline double RecHitTreeProducer::getPhi(const DetId &id, const CaloGeometry& geo) {
+  const GlobalPoint& pos = geo.getPosition(id);
   return pos.phi();
 }
 
-inline double RecHitTreeProducer::getPerp(const DetId &id) {
-  const GlobalPoint& pos = geo->getPosition(id);
+inline double RecHitTreeProducer::getPerp(const DetId &id, const CaloGeometry& geo) {
+  const GlobalPoint& pos = geo.getPosition(id);
   return pos.perp();
 }
 

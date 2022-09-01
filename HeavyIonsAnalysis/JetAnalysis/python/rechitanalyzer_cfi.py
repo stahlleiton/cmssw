@@ -4,11 +4,11 @@ rechitanalyzer = cms.EDAnalyzer("RecHitTreeProducer",
     doEbyEonly = cms.bool(False),
     doBasicClusters = cms.bool(False),
     doTowers = cms.bool(True),
-    doEcal = cms.bool(False),
-    doHBHE = cms.bool(False),
+                                doEcal = cms.bool(True),
+                                doHBHE = cms.bool(True),
     doHF = cms.bool(True),
     doFastJet = cms.bool(False),
-    doCASTOR = cms.bool(True),
+                                doCASTOR = cms.bool(False),
     doZDCRecHit = cms.bool(False),
     doZDCDigi = cms.bool(False),
 
@@ -28,18 +28,18 @@ rechitanalyzer = cms.EDAnalyzer("RecHitTreeProducer",
     calZDCDigi = cms.bool(True),
 
     hasVtx = cms.bool(True),
-    vtxSrc = cms.InputTag("hiSelectedVertex"),
+    vtxSrc = cms.InputTag("offlinePrimaryVertices"),
     useJets = cms.bool(False),
     JetSrc = cms.InputTag("iterativeConePu5CaloJets"),
     saveBothVtx = cms.bool(False),
 
-    HFtowerMin = cms.untracked.double(3),
+                                HFtowerMin = cms.untracked.double(0),
     HFlongMin = cms.untracked.double(0.5),
     HFshortMin = cms.untracked.double(0.85),     
-    HBHETreePtMin = cms.untracked.double(15),
-    HFTreePtMin = cms.untracked.double(15),
-    EBTreePtMin = cms.untracked.double(15),
-    EETreePtMin = cms.untracked.double(15),
+                                HBHETreePtMin = cms.untracked.double(0),
+                                HFTreePtMin = cms.untracked.double(0),
+                                EBTreePtMin = cms.untracked.double(0),
+                                EETreePtMin = cms.untracked.double(0),
     TowerTreePtMin = cms.untracked.double(-9999),
     )
 
@@ -52,12 +52,12 @@ pfTowers = rechitanalyzer.clone(
 
 rechitanalyzerpp = rechitanalyzer.clone(
     doHF = cms.bool(False),
-    vtxSrc = cms.InputTag("offlinePrimaryVerticesWithBS"),
+    vtxSrc = cms.InputTag("offlinePrimaryVertices"),
     JetSrc = cms.InputTag("ak4CaloJets"),
     )
 
 pfTowerspp = pfTowers.clone(
     doHF = cms.bool(False),
-    vtxSrc = cms.InputTag("offlinePrimaryVerticesWithBS"),
+    vtxSrc = cms.InputTag("offlinePrimaryVertices"),
     JetSrc = cms.InputTag("ak4CaloJets"),
     )
