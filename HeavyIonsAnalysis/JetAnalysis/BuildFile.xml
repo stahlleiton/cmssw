@@ -15,4 +15,5 @@
 <use name="DataFormats/HeavyIonEvent"/>
 <use name="CondFormats/JetMETObjects"/>
 <use name="SimDataFormats/GeneratorProducts"/>
+<use name="CalibFormats/HcalObjects"/>
 <flags EDM_PLUGIN="1"/>
