@@ -129,7 +129,7 @@ void pat::MuonUnpacker::produce(edm::StreamID, edm::Event& iEvent, const edm::Ev
             isIncluded = (mtrk->numberOfValidHits()==track->numberOfValidHits() && std::abs(deltaPhi(mtrk->phi(), track->phi()))<1E-3 && std::abs((mtrk->pt()-track->pt())/mtrk->pt())<1E-2);
           else
             isIncluded = (std::abs(mtrk->dz()-track->dz())<2E-2 && std::abs(deltaPhi(mtrk->phi(), track->phi()))<2E-2);
-          // if found, assing candidate reference to muon
+          // if found, assign candidate reference to muon
           if (isIncluded)
             const_cast<reco::CandidatePtr&>(obj) = reco::CandidatePtr(cand.id(), cand.get(), cand.key());
         }
@@ -236,8 +236,8 @@ void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidateRef& 
     seg.hasZed_ = true; seg.hasPhi_ = true; seg.t0 = 0;
     seg.mask = (reco::MuonSegmentMatch::BelongsToTrackByDR | reco::MuonSegmentMatch::BestInStationByDR | reco::MuonSegmentMatch::BestInChamberByDR);
     // temporary omit
-    //reco::MuonChamberMatch match({{seg}, {}, {}, {}, {}, 1E9, 1E9, 0, 0, -1, -1, 1E9, 1E9, -1, -1, DTChamberId(0, 1, 0), -1});
-    //muon.setMatches({match});
+    reco::MuonChamberMatch match({{seg}, {}, {}, {}, {}, {}, 1E9, 1E9, 0, 0, -1, -1, 1E9, 1E9, -1, -1, DTChamberId(0, 1, 0), -1});
+    muon.setMatches({match});
     if (!muon::isGoodMuon(muon, muon::TMOneStationTight)) throw(cms::Exception("MuonUnpacker") << "Failed to add TMOneStationTight!");
   }
 }
