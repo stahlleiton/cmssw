@@ -55,6 +55,9 @@ void configureIt(const edm::ParameterSet& conf, HGCalUncalibRecHitRecWeightsAlgo
   } else {
     maker.set_fCPerMIP(std::vector<double>({1.0}));
   }
+
+  maker.set_tofDelay(conf.exists("tofDelay") ? conf.getParameter<double>("tofDelay") : 0);
+  maker.set_timeOffset(conf.exists("timeOffset") ? conf.getParameter<double>("timeOffset") : 0);
 }
 
 HGCalUncalibRecHitWorkerWeights::HGCalUncalibRecHitWorkerWeights(const edm::ParameterSet& ps, edm::ConsumesCollector iC)

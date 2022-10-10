@@ -27,6 +27,8 @@ HGCalUncalibRecHit = cms.EDProducer(
         tdcSaturation = hgceeDigitizer.digiCfg.feCfg.tdcSaturation_fC,
         tdcOnset      = hgceeDigitizer.digiCfg.feCfg.tdcOnset_fC,
         toaLSB_ns     = hgceeDigitizer.digiCfg.feCfg.toaLSB_ns,
+        tofDelay      = hgceeDigitizer.tofDelay,
+        timeOffset    = cms.double(5),
         fCPerMIP      = fCPerMIP_mpv
         ),
     
@@ -40,6 +42,8 @@ HGCalUncalibRecHit = cms.EDProducer(
         tdcSaturation = hgchefrontDigitizer.digiCfg.feCfg.tdcSaturation_fC,
         tdcOnset      = hgchefrontDigitizer.digiCfg.feCfg.tdcOnset_fC,
         toaLSB_ns     = hgchefrontDigitizer.digiCfg.feCfg.toaLSB_ns,
+        tofDelay      = hgchefrontDigitizer.tofDelay,
+        timeOffset    = cms.double(5),
         fCPerMIP      = fCPerMIP_mpv
         ),
 
@@ -53,6 +57,8 @@ HGCalUncalibRecHit = cms.EDProducer(
         tdcSaturation = hgchebackDigitizer.digiCfg.feCfg.tdcSaturation_fC,
         tdcOnset      = hgchebackDigitizer.digiCfg.feCfg.tdcOnset_fC,
         toaLSB_ns     = hgchebackDigitizer.digiCfg.feCfg.toaLSB_ns,
+        tofDelay      = hgchebackDigitizer.tofDelay,
+        timeOffset    = cms.double(1),
         fCPerMIP      = cms.vdouble(1.0,1.0,1.0) #dummy values, it's scintillator
         ),
 
@@ -66,6 +72,8 @@ HGCalUncalibRecHit = cms.EDProducer(
         tdcSaturation = hfnoseDigitizer.digiCfg.feCfg.tdcSaturation_fC,
         tdcOnset      = hfnoseDigitizer.digiCfg.feCfg.tdcOnset_fC,
         toaLSB_ns     = hfnoseDigitizer.digiCfg.feCfg.toaLSB_ns,
+        tofDelay      = hfnoseDigitizer.tofDelay,
+        timeOffset    = cms.double(5),
         fCPerMIP      = fCPerMIP_mpv
         ),
 

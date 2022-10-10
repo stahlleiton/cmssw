@@ -33,6 +33,10 @@ public:
 
   void set_tdcOnsetfC(const double tdcOnset) { tdcOnsetfC_ = tdcOnset; }
 
+  void set_tofDelay(const double tofDelay) { tofDelay_ = tofDelay; }
+
+  void set_timeOffset(const double timeOffset) { timeOffset_ = timeOffset; }
+
   void set_fCPerMIP(const std::vector<double>& fCPerMIP) {
     if (std::any_of(fCPerMIP.cbegin(), fCPerMIP.cend(), [](double conv) { return conv <= 0.0; })) {
       throw cms::Exception("BadConversionFactor") << "At least one of fCPerMIP is zero!" << std::endl;
@@ -45,6 +49,7 @@ public:
       ddd_ = &(geom->topology().dddConstants());
     else
       ddd_ = nullptr;
+    geom_ = geom;
   }
 
   /// Compute HGCUncalibratedRecHit from DataFrame
@@ -68,16 +73,14 @@ public:
         // LG (11/04/2016):
         // offset the TDC upwards to reflect the bin center
         amplitude_ = (std::floor(tdcOnsetfC_ / adcLSB_) + 1.0) * adcLSB_ + (double(sample.data()) + 0.5) * tdcLSB_;
-
-        if (sample.getToAValid()) {
-          jitter_ = double(sample.toa()) * toaLSBToNS_;
-        }
       } else {
         amplitude_ = double(sample.data()) * adcLSB_;  // why do we not have +0.5 here ?
-        if (sample.getToAValid()) {
-          jitter_ = double(sample.toa()) * toaLSBToNS_;
-        }
       }  //isSiFESim_
+      if (sample.getToAValid()) {
+        auto toa = double(sample.toa()) * toaLSBToNS_ - tofDelay_;
+        auto dist2center = geom_ ? geom_->getPosition(dataFrame.id()).mag() : 0;
+        jitter_ = toa - dist2center / c_cm_ns + timeOffset_;
+      }
     }    //mode()
 
     // trivial digitization, i.e. no signal shape
@@ -100,9 +103,11 @@ public:
   }
 
 private:
-  double adcLSB_, tdcLSB_, toaLSBToNS_, tdcOnsetfC_;
+  static constexpr float c_cm_ns = CLHEP::c_light * CLHEP::ns / CLHEP::cm;
+  double adcLSB_, tdcLSB_, toaLSBToNS_, tdcOnsetfC_, tofDelay_, timeOffset_;
   bool isSiFESim_;
   std::vector<double> fCPerMIP_;
   const HGCalDDDConstants* ddd_;
+  const HGCalGeometry* geom_;
 };
 #endif
