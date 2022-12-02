@@ -235,7 +235,7 @@ void pat::MuonUnpacker::addMuon(pat::Muon& muon, const pat::PackedCandidateRef& 
     reco::MuonSegmentMatch seg;
     seg.hasZed_ = true; seg.hasPhi_ = true; seg.t0 = 0;
     seg.mask = (reco::MuonSegmentMatch::BelongsToTrackByDR | reco::MuonSegmentMatch::BestInStationByDR | reco::MuonSegmentMatch::BestInChamberByDR);
-    reco::MuonChamberMatch match({{seg}, {}, {}, {}, {}, 1E9, 1E9, 0, 0, -1, -1, 1E9, 1E9, -1, -1, DTChamberId(0, 1, 0), -1});
+    reco::MuonChamberMatch match({{seg}, {}, {}, {}, {}, {}, 1E9, 1E9, 0, 0, -1, -1, 1E9, 1E9, -1, -1, DTChamberId(0, 1, 0), -1});
     muon.setMatches({match});
     if (!muon::isGoodMuon(muon, muon::TMOneStationTight)) throw(cms::Exception("MuonUnpacker") << "Failed to add TMOneStationTight!");
   }

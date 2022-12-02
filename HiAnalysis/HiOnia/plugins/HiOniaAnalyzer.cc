@@ -3827,7 +3827,8 @@ HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& iSetu
         } else {
           //-------prescale factor------------
           if ( hltPrescaleInit && hltPrescaleProvider.prescaleSet(iEvent,iSetup)>=0 ) {
-            std::pair<std::vector<std::pair<std::string,int> >,int> detailedPrescaleInfo = hltPrescaleProvider.prescaleValuesInDetail(iEvent, iSetup, triggerPathName);
+            auto const detailedPrescaleInfo = hltPrescaleProvider.prescaleValuesInDetail<double,double>(iEvent, iSetup, triggerPathName);
+            //std::pair<std::vector<std::pair<std::string,int> >,int> detailedPrescaleInfo = hltPrescaleProvider.prescaleValuesInDetail(iEvent, iSetup, triggerPathName);
             //get HLT prescale info from hltPrescaleProvider     
             const int hltPrescale = detailedPrescaleInfo.second;
             //get L1 prescale info from hltPrescaleProvider
