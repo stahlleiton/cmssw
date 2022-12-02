@@ -71,7 +71,7 @@ options.inputFiles =[
   #'/store/hidata/HIRun2018A/HIDoubleMuon/MINIAOD/PbPb18_MiniAODv1-v1/120000/00137f14-f84b-4f1b-ad37-0717a01c981b.root'
   '/store/hidata/HIRun2018A/HIMinimumBias2/MINIAOD/PbPb18_MiniAODv1-v1/120000/001d624b-c9ef-4516-96fe-680f903b16bf.root'
 ]
-options.maxEvents = -1 # -1 means all events
+options.maxEvents = 100 # -1 means all events
 
 # Get and parse the command line arguments
 options.parseArguments()
@@ -170,9 +170,9 @@ triggerList    = {
 
 ## Global tag
 if isMC:
-  globalTag = 'auto:phase1_2018_realistic_hi'
+  globalTag = 'auto:phase1_2022_realistic_hi' #for Run3 MC : phase1_2022_realistic_hi
 else:
-  globalTag = 'auto:run2_data'
+  globalTag = 'auto:run3_data_prompt' # for Run3 data (test run) : 124X_dataRun3_Prompt_v10
 
 #----------------------------------------------------------------------------
 
