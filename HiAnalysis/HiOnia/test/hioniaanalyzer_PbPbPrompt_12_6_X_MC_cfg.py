@@ -23,7 +23,7 @@ keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon c
 miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 UsePropToMuonSt = True # whether to use L1 propagated muons (works only for miniAOD now)
-pdgId = 553 # J/Psi : 443, Y(1S) : 553
+pdgId = 443 # J/Psi : 443, Y(1S) : 553
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -58,8 +58,8 @@ options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
   #'/store/himc/HINPbPbAutumn18DR/JPsi_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/AODSIM/mva98_103X_upgrade2018_realistic_HI_v11-v1/120000/06BA15D4-3041-D54E-AB6D-F32A05C95948.root'
   #'/store/himc/HINPbPbSpring21MiniAOD/Upsilon1S_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/MINIAODSIM/mva98_112X_upgrade2018_realistic_HI_v9_ext1-v1/240000/00176f40-5946-4de6-b0c1-dfedf55ec258.root'
-  '/store/himc/HINPbPbSpring21MiniAOD/Upsilon1S_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/MINIAODSIM/mva98_112X_upgrade2018_realistic_HI_v9_ext1-v1/240000/00176f40-5946-4de6-b0c1-dfedf55ec258.root'
-  #'/store/user/subehera/MB_Hydjet_Run3_GENSIM/MB_pbpb_MINIAODSIM/220911_134333/0000/PbPb_MINIAODSIM_mb_PAT_10.root'
+  #'/store/himc/HINPbPbSpring21MiniAOD/Upsilon1S_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/MINIAODSIM/mva98_112X_upgrade2018_realistic_HI_v9_ext1-v1/240000/00176f40-5946-4de6-b0c1-dfedf55ec258.root'
+  '/store/user/subehera/MB_Hydjet_Run3_GENSIM/MB_pbpb_MINIAODSIM/220911_134333/0000/PbPb_MINIAODSIM_mb_PAT_10.root'
 ]
 options.maxEvents = -1 # -1 means all events
 

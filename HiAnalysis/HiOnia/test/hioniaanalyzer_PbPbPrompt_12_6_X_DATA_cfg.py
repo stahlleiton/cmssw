@@ -69,7 +69,8 @@ options.inputFiles =[
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/04Apr2019-v1/310001/FED19720-0CE4-5B4D-91E0-DB230A5046EB.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuon/AOD/PromptReco-v1/000/326/859/00000/9D9FEF75-B31A-9645-9090-0F99D895AED9.root'
   #'/store/hidata/HIRun2018A/HIDoubleMuon/MINIAOD/PbPb18_MiniAODv1-v1/120000/00137f14-f84b-4f1b-ad37-0717a01c981b.root'
-  '/store/hidata/HIRun2018A/HIMinimumBias2/MINIAOD/PbPb18_MiniAODv1-v1/120000/001d624b-c9ef-4516-96fe-680f903b16bf.root'
+  #'/store/hidata/HIRun2018A/HIMinimumBias2/MINIAOD/PbPb18_MiniAODv1-v1/120000/001d624b-c9ef-4516-96fe-680f903b16bf.root'
+  'file:/eos/home-s/soohwan/HLT-Dev_Run3/CMSSW_126X_build_v1/CMSSW_12_6_0/src/HLTrigger/Configuration/test/workstation/output_126.root',
 ]
 options.maxEvents = 100 # -1 means all events
 
