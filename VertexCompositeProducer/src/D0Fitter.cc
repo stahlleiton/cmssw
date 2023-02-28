@@ -39,7 +39,6 @@
 #include <TVector3.h>
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
-#include "CondFormats/DataRecord/interface/GBRWrapperRcd.h"
 
 // yousen-begin
 #include <fstream>
@@ -88,7 +87,9 @@ float kaonMassD0_sigma = 1.6E-5f;
 float d0MassD0_sigma = d0MassD0*1.e-6;
 
 // Constructor and (empty) destructor
-D0Fitter::D0Fitter(const edm::ParameterSet& theParameters,  edm::ConsumesCollector && iC) {
+D0Fitter::D0Fitter(const edm::ParameterSet& theParameters,  edm::ConsumesCollector && iC) :
+    bField_esToken_(iC.esConsumes<MagneticField, IdealMagneticFieldRecord>())
+{
 //		   const edm::Event& iEvent, const edm::EventSetup& iSetup, edm::ConsumesCollector && iC) {
   using std::string;
 
@@ -156,6 +157,7 @@ D0Fitter::D0Fitter(const edm::ParameterSet& theParameters,  edm::ConsumesCollect
     }
 
     mvaType_ = type;
+    mvaToken_ = iC.esConsumes<GBRForest, GBRWrapperRcd>(edm::ESInputTag("", forestLabel_));
   }
 
   std::vector<std::string> qual = theParameters.getParameter<std::vector<std::string> >("trackQualities");
@@ -211,7 +213,7 @@ void D0Fitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   ///cesar-end
 
   if( !theTrackHandle->size() ) return;
-  iSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
+  bFieldHandle = iSetup.getHandle(bField_esToken_);
 
   magField = bFieldHandle.product();
 
@@ -628,8 +630,7 @@ void D0Fitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
             GBRForest const * forest = forest_;
             if(useForestFromDB_){
-              edm::ESHandle<GBRForest> forestHandle;
-              iSetup.get<GBRWrapperRcd>().get(forestLabel_,forestHandle);
+              const auto& forestHandle = iSetup.getHandle<GBRForest, GBRWrapperRcd>(mvaToken_);
               forest = forestHandle.product();
             }
 

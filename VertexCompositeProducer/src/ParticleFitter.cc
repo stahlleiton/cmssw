@@ -52,6 +52,7 @@ ParticleFitter::ParticleFitter(const edm::ParameterSet& theParameters, edm::Cons
   }
 
   // get input tags
+  bField_esToken_ = iC.esConsumes<MagneticField, IdealMagneticFieldRecord>();
   token_beamSpot_ = iC.consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   token_vertices_ = iC.consumes<reco::VertexCollection>(theParameters.getParameter<edm::InputTag>("primaryVertices"));
   token_electrons_ = iC.consumes<pat::ElectronCollection>(theParameters.getParameter<edm::InputTag>("electrons"));
@@ -84,7 +85,7 @@ ParticleFitter::~ParticleFitter()
 void ParticleFitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   // get the magnetic field
-  iSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle_);
+  bFieldHandle_ = iSetup.getHandle(bField_esToken_);
   // fill daughters particles
   fillDaughters(iEvent, iSetup);
   // create candidates
@@ -566,7 +567,8 @@ bool ParticleFitter::fitCandidate(pat::GenericParticle& cand, const pat::Generic
   // measure distance between daughter tracks at their point of closest approach
   if (daughters.size()==2 && daughters[0].first.size()==1 && daughters[1].first.size()==1 &&
       daughters[0].first[0].first.isValid() && daughters[0].first[0].first.impactPointTSCP().isValid() &&
-      daughters[1].first[0].first.isValid() && daughters[1].first[0].first.impactPointTSCP().isValid()) {
+      daughters[1].first[0].first.isValid() && daughters[1].first[0].first.impactPointTSCP().isValid() &&
+      daughters[0].first[0].first.ndof()>0  && daughters[1].first[0].first.ndof()>0) {
     ClosestApproachInRPhi cApp;
     const auto& stateDau1 = daughters[0].first[0].first.impactPointTSCP().theState();
     const auto& stateDau2 = daughters[1].first[0].first.impactPointTSCP().theState();
@@ -755,7 +757,7 @@ ParticleDaughter::ParticleDaughter()
   selection_ = "";
   finalSelection_ = "";
   particles_ = {};
-  propToMuon_ = 0;
+  propToMuonSetup_ = 0;
 };
 
 
@@ -768,7 +770,7 @@ ParticleDaughter::ParticleDaughter(const edm::ParameterSet& pSet, const edm::Par
 
 ParticleDaughter::~ParticleDaughter()
 {
-  if (propToMuon_) delete propToMuon_;
+  if (propToMuonSetup_) delete propToMuonSetup_;
 };
 
 
@@ -792,7 +794,9 @@ void ParticleDaughter::fillInfo(const edm::ParameterSet& pSet, const edm::Parame
   else if (MASS_.find(pdgId_)!=MASS_.end()) {
     mass_ = MASS_.at(pdgId_);
   }
-  else { throw std::logic_error(Form("[ERROR] No mass parameter provided for daughter with pdgId: %d", pdgId_)); }
+  else if (!pSet.existsAs<edm::InputTag>("source")) {
+    throw std::logic_error(Form("[ERROR] No mass parameter provided for daughter with pdgId: %d", pdgId_));
+  }
   if (pSet.existsAs<double>("width")) {
     width_ = pSet.getParameter<double>("width");
   }
@@ -818,22 +822,23 @@ void ParticleDaughter::fillInfo(const edm::ParameterSet& pSet, const edm::Parame
       tokens_dedx_.insert( std::make_pair(input, iC.consumes<edm::ValueMap<reco::DeDxData> >(edm::InputTag(input))));
     }
   }
-  if (std::abs(pdgId_)==13 && (!pSet.existsAs<bool>("propToMuon") || pSet.getParameter<bool>("propToMuon"))) {
-    conf_.addParameter("useSimpleGeometry", (pSet.existsAs<bool>("useSimpleGeometry") ? pSet.getParameter<bool>("useSimpleGeometry") : true)); // default: true
-    conf_.addParameter("useTrack", (pSet.existsAs<std::string>("useTrack") ? pSet.getParameter<std::string>("useTrack") : "none")); // default: none
-    conf_.addParameter("useState", (pSet.existsAs<std::string>("useState") ? pSet.getParameter<std::string>("useState") : "atVertex")); // default: atVertex
-    conf_.addParameter("fallbackToME1", (pSet.existsAs<bool>("fallbackToME1") ? pSet.getParameter<bool>("fallbackToME1") : true)); // default: true
-    conf_.addParameter("useMB2InOverlap", (pSet.existsAs<bool>("useMB2InOverlap") ? pSet.getParameter<bool>("useMB2InOverlap") : true)); // default: true
-    conf_.addParameter("useStation2", (pSet.existsAs<bool>("useStation2") ? pSet.getParameter<bool>("useStation2") : true)); // default: true
+  if (std::abs(pdgId_)==13 && (pSet.existsAs<bool>("propToMuon") && pSet.getParameter<bool>("propToMuon"))) {
+    edm::ParameterSet conf;
+    conf.addParameter("useSimpleGeometry", (pSet.existsAs<bool>("useSimpleGeometry") ? pSet.getParameter<bool>("useSimpleGeometry") : true)); // default: true
+    conf.addParameter("useTrack", (pSet.existsAs<std::string>("useTrack") ? pSet.getParameter<std::string>("useTrack") : "none")); // default: none
+    conf.addParameter("useState", (pSet.existsAs<std::string>("useState") ? pSet.getParameter<std::string>("useState") : "atVertex")); // default: atVertex
+    conf.addParameter("fallbackToME1", (pSet.existsAs<bool>("fallbackToME1") ? pSet.getParameter<bool>("fallbackToME1") : true)); // default: true
+    conf.addParameter("useMB2InOverlap", (pSet.existsAs<bool>("useMB2InOverlap") ? pSet.getParameter<bool>("useMB2InOverlap") : true)); // default: true
+    conf.addParameter("useStation2", (pSet.existsAs<bool>("useStation2") ? pSet.getParameter<bool>("useStation2") : true)); // default: true
+    propToMuonSetup_ = new PropagateToMuonSetup(conf, iC);
   }
 };
 
 
 void ParticleDaughter::init(const edm::EventSetup& iSetup)
 {
-  if (conf_.existsAs<bool>("useStation2")) {
-    if (!propToMuon_) { propToMuon_ = new PropagateToMuon(conf_); }
-    propToMuon_->init(iSetup);
+  if (propToMuonSetup_) {
+    propToMuon_ = propToMuonSetup_->init(iSetup);
   }
 };
 
@@ -991,8 +996,8 @@ void ParticleDaughter::addData(pat::GenericParticle& c, const pat::MuonRef& p, c
   if (embedInfo && track.id().isValid()) c.addUserData<reco::TrackRef>("trackRef", track);
   c.addUserData<pat::Muon>("src", *p);
   // propagate inner track to 2nd muon station (for L1 trigger matching)
-  if (!p->hasUserInt("prop") && propToMuon_ && track.isNonnull()) {
-    const auto& fts = propToMuon_->extrapolate(*track);
+  if (!p->hasUserInt("prop") && propToMuonSetup_ && track.isNonnull()) {
+    const auto& fts = propToMuon_.extrapolate(*track);
     if (fts.isValid()) {
       const_cast<pat::Muon*>(&*p)->addUserFloat("l1Eta", fts.globalPosition().eta());
       const_cast<pat::Muon*>(&*p)->addUserFloat("l1Phi", fts.globalPosition().phi());

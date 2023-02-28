@@ -27,8 +27,8 @@ ParticleProducer::ParticleProducer(const edm::ParameterSet& iConfig) :
   produces<pat::GenericParticleCollection>();
   if (!fitter_.hasNoDaughters()) {
     produces<pat::GenericParticleCollection>("daughters");
-    produces<reco::VertexCollection>("vertices");
   }
+  produces<reco::VertexCollection>("vertices");
 }
 
 // dDestructor
@@ -68,11 +68,9 @@ void ParticleProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.put(std::move(daughters), "daughters");
   }
   // store vertices
-  if (!fitter_.hasNoDaughters()) {
-    auto vertices = std::make_unique<reco::VertexCollection>(fitter_.vertices());
-    vertices->shrink_to_fit();
-    iEvent.put(std::move(vertices), "vertices");
-  }
+  auto vertices = std::make_unique<reco::VertexCollection>(fitter_.vertices());
+  vertices->shrink_to_fit();
+  iEvent.put(std::move(vertices), "vertices");
   // store particles
   auto output = std::make_unique<pat::GenericParticleCollection>(particles);
   output->shrink_to_fit();
