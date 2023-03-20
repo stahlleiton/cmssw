@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDFilter.h"
+#include "FWCore/Framework/interface/global/EDFilter.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
@@ -14,10 +14,10 @@
 #include <DataFormats/HeavyIonEvent/interface/ClusterCompatibility.h>
 
 
-class HIClusterCompatibilityFilter : public edm::EDFilter {
+class HIClusterCompatibilityFilter : public edm::global::EDFilter<> {
   public:
     explicit HIClusterCompatibilityFilter(const edm::ParameterSet&);
-    ~HIClusterCompatibilityFilter();
+  //~HIClusterCompatibilityFilter();
 
     static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -25,9 +25,9 @@ class HIClusterCompatibilityFilter : public edm::EDFilter {
                                    double minZ, double maxZ);
 
   private:
-    virtual void beginJob() override;
-    virtual bool filter(edm::Event&, const edm::EventSetup&) override;
-    virtual void endJob() override;
+  //virtual void beginJob() override;
+  virtual bool filter(edm::StreamID, edm::Event&, const edm::EventSetup&) const;// override;
+  //virtual void endJob() override;
 
     edm::EDGetTokenT<reco::ClusterCompatibility> cluscomSrc_;
 
@@ -49,10 +49,10 @@ nhitsTrunc_(iConfig.getParameter<int>("nhitsTrunc")),
 clusterTrunc_(iConfig.getParameter<double>("clusterTrunc"))
 {}
 
-HIClusterCompatibilityFilter::~HIClusterCompatibilityFilter() {}
+//HIClusterCompatibilityFilter::~HIClusterCompatibilityFilter() {}
 
 bool
-HIClusterCompatibilityFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
+HIClusterCompatibilityFilter::filter(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const
 {
   using namespace edm;
 
@@ -82,7 +82,7 @@ HIClusterCompatibilityFilter::filter(edm::Event& iEvent, const edm::EventSetup& 
   return accept;
 
 }
-
+/*
 void
 HIClusterCompatibilityFilter::beginJob()
 {
@@ -92,7 +92,7 @@ void
 HIClusterCompatibilityFilter::endJob()
 {
 }
-
+*/
 double
 HIClusterCompatibilityFilter::determineQuality(const reco::ClusterCompatibility & cc,
                                                double minZ, double maxZ) 
