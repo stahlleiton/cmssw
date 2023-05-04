@@ -10,10 +10,27 @@ def applyDeepBtagging( process, postfix="" ) :
 
     process.load('PhysicsTools.PatAlgos.slimming.slimmedJets_cfi')
     from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfParticleNetAK4JetTagsAll as pfParticleNetAK4JetTagsAll
+    from RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff import _pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll as pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll
+    from RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff import _pfParticleNetFromMiniAODAK4PuppiForwardJetTagsAll as pfParticleNetFromMiniAODAK4PuppiForwardJetTagsAll
+    from RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff import _pfParticleNetFromMiniAODAK4CHSCentralJetTagsAll as pfParticleNetFromMiniAODAK4CHSCentralJetTagsAll
+    from RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff import _pfParticleNetFromMiniAODAK4CHSForwardJetTagsAll as pfParticleNetFromMiniAODAK4CHSForwardJetTagsAll
+    from RecoBTag.ONNXRuntime.pfParticleTransformerAK4_cff import _pfParticleTransformerAK4JetTagsAll as pfParticleTransformerAK4JetTagsAll
 
     # update slimmed jets to include DeepFlavour (keep same name)
     # make clone for DeepFlavour-less slimmed jets, so output name is preserved
-    addToProcessAndTask('slimmedJetsNoDeepFlavour', process.slimmedJets.clone(), process, task)
+    addToProcessAndTask('slimmedJetsNoDeepFlavour', slimmedJets.clone(), process, task)
+    _btagDiscriminatorsAK4CHS = cms.PSet(
+        names=cms.vstring(
+            'pfDeepFlavourJetTags:probb',
+            'pfDeepFlavourJetTags:probbb',
+            'pfDeepFlavourJetTags:problepb',
+            'pfDeepFlavourJetTags:probc',
+            'pfDeepFlavourJetTags:probuds',
+            'pfDeepFlavourJetTags:probg')
+            + pfParticleNetFromMiniAODAK4CHSCentralJetTagsAll
+            + pfParticleNetFromMiniAODAK4CHSForwardJetTagsAll
+            + pfParticleTransformerAK4JetTagsAll
+    )
     updateJetCollection(
        process,
        jetSource = cms.InputTag('slimmedJetsNoDeepFlavour'),
@@ -41,7 +58,43 @@ def applyDeepBtagging( process, postfix="" ) :
     delattr(process, 'slimmedJets')
     addToProcessAndTask('slimmedJets', getattr(process,'selectedUpdatedPatJetsSlimmedDeepFlavour'+postfix).clone(), process, task)
     # delete module not used anymore (slimmedJets substitutes)
-    delattr(process, 'selectedUpdatedPatJetsSlimmedDeepFlavour'+postfix)
+    delattr(process, 'selectedUpdatedPatJetsSlimmedDeepFlavour' + postfix)
+
+    # update slimmedJetsPuppi to include deep taggers
+    addToProcessAndTask('slimmedJetsPuppiNoDeepTags', slimmedJets.clone(
+        src = "selectedPatJetsPuppi", packedPFCandidates = "packedPFCandidates"
+    ), process, task)
+    _btagDiscriminatorsAK4Puppi = cms.PSet(
+        names=cms.vstring(
+            'pfDeepFlavourJetTags:probb',
+            'pfDeepFlavourJetTags:probbb',
+            'pfDeepFlavourJetTags:problepb',
+            'pfDeepFlavourJetTags:probc',
+            'pfDeepFlavourJetTags:probuds',
+            'pfDeepFlavourJetTags:probg')
+            + pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll
+            + pfParticleNetFromMiniAODAK4PuppiForwardJetTagsAll
+            + pfParticleTransformerAK4JetTagsAll
+    )
+  
+    updateJetCollection(
+        process,
+        jetSource = cms.InputTag('slimmedJetsPuppiNoDeepTags'),
+        pvSource = cms.InputTag('offlineSlimmedPrimaryVertices'),
+        pfCandidates = cms.InputTag('packedPFCandidates'),
+        svSource = cms.InputTag('slimmedSecondaryVertices'),
+        muSource = cms.InputTag('slimmedMuons'),
+        elSource = cms.InputTag('slimmedElectrons'),
+        jetCorrections = ('AK4PFPuppi', cms.vstring(['L2Relative', 'L3Absolute']), 'None'),
+        btagDiscriminators = _btagDiscriminatorsAK4Puppi.names.value(),
+        postfix = 'SlimmedPuppiWithDeepTags' + postfix,
+        printWarning = False
+    )
+
+    addToProcessAndTask('slimmedJetsPuppi', getattr(process, 'selectedUpdatedPatJetsSlimmedPuppiWithDeepTags' + postfix).clone(), process, task)
+    # delete module not used anymore (slimmedJetsPuppi substitutes)
+    delattr(process, 'selectedUpdatedPatJetsSlimmedPuppiWithDeepTags' + postfix)
+
 
     from RecoBTag.ONNXRuntime.pfDeepBoostedJet_cff import _pfDeepBoostedJetTagsAll as pfDeepBoostedJetTagsAll
     from RecoBTag.ONNXRuntime.pfHiggsInteractionNet_cff import _pfHiggsInteractionNetTagsProbs as pfHiggsInteractionNetTagsProbs

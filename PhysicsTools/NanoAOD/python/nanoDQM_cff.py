@@ -50,8 +50,17 @@ _Photon_plots_2016.append(Plot1D('mvaID17', 'mvaID17', 20, -1, 1, 'MVA Fall17v1p
 _Photon_plots_2016.append(Plot1D('mvaID17_WP80', 'mvaID17_WP80', 2, -0.5, 1.5, 'MVA Fall17v1p1 ID WP80'))
 _Photon_plots_2016.append(Plot1D('mvaID17_WP90', 'mvaID17_WP90', 2, -0.5, 1.5, 'MVA Fall17v1p1 ID WP90'))
 
-_FatJet_plots_80x = copy.deepcopy(nanoDQM.vplots.FatJet.plots)
-_FatJet_plots_80x.append(Plot1D('msoftdrop_chs', 'msoftdrop_chs', 20, -300, 300, 'Legacy uncorrected soft drop mass with CHS'))
+_Jet_Run2_plots = cms.VPSet()
+for plot in nanoDQM.vplots.Jet.plots:
+    _Jet_Run2_plots.append(plot)
+_Jet_Run2_plots.extend([
+    Plot1D('btagCSVV2', 'btagCSVV2', 20, -1, 1, ' pfCombinedInclusiveSecondaryVertexV2 b-tag discriminator (aka CSVV2)'),
+    Plot1D('btagCMVA', 'btagCMVA', 20, -1, 1, 'CMVA V2 btag discriminator'),
+    Plot1D('btagDeepB', 'btagDeepB', 20, -1, 1, 'Deep B+BB btag discriminator'),
+    Plot1D('btagDeepC', 'btagDeepC', 20, 0, 1, 'DeepCSV charm btag discriminator'),
+    Plot1D('btagDeepCvB', 'btagDeepCvB', 20, -1, 1, 'DeepCSV c vs b+bb discriminator'),
+    Plot1D('btagDeepCvL', 'btagDeepCvL', 20, -1, 1, 'DeepCSV c vs udsg discriminator')
+])
 
 _Flag_plots_80x = copy.deepcopy(nanoDQM.vplots.Flag.plots)
 _Flag_plots_80x.append(Plot1D('BadGlobalMuon', 'BadGlobalMuon', 2, -0.5, 1.5, 'Bad muon flag'))
