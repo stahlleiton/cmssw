@@ -54,6 +54,8 @@ private:
   edm::EDGetTokenT<reco::EvtPlaneCollection> EvtPlaneTag_;
   edm::EDGetTokenT<reco::EvtPlaneCollection> EvtPlaneFlatTag_;
 
+  edm::EDGetTokenT<reco::TrackCollection> TrackSrcTag_;
+
   edm::EDGetTokenT<edm::GenHIEvent> HiMCTag_;
   edm::EDGetTokenT<std::vector<reco::Vertex>> VertexTag_;
 
@@ -80,7 +82,7 @@ private:
   int nEvtPlanes;
   int HltEvtCnt;
   int hiBin;
-  int hiNpix, hiNpixelTracks, hiNtracks, hiNtracksPtCut, hiNtracksEtaCut, hiNtracksEtaPtCut;
+  int hiNpix, hiNpixelTracks, hiNtracks, hiNtracksPtCut, hiNtracksEtaCut, hiNtracksEtaPtCut, hiNtracksHighPurity;
   int hiNpixPlus, hiNpixMinus, hiNpixelTracksPlus, hiNpixelTracksMinus;
   float hiHF, hiHFplus, hiHFminus, hiHFplusEta4, hiHFminusEta4, hiHFhit, hiHFhitPlus, hiHFhitMinus;
   float hiHFECut, hiHFECutPlus, hiHFECutMinus;
@@ -142,6 +144,7 @@ HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig) :
   CentralityBinTag_(consumes<int>(iConfig.getParameter<edm::InputTag>("CentralityBinSrc"))),
   EvtPlaneTag_(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag>("EvtPlane"))),
   EvtPlaneFlatTag_(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag>("EvtPlaneFlat"))),
+  TrackSrcTag_(consumes<reco::TrackCollection>(edm::InputTag("generalTracks"))),
   HiMCTag_(consumes<edm::GenHIEvent>(iConfig.getParameter<edm::InputTag>("HiMC"))),
   VertexTag_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("Vertex"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("addPileupInfo"))),
@@ -268,7 +271,13 @@ HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
 
-  
+  edm::Handle<reco::TrackCollection> tracks;
+  if (iEvent.getByToken(TrackSrcTag_, tracks)) {
+    hiNtracksHighPurity = 0;
+    for (const auto& track : *tracks)
+      if (track.quality(reco::TrackBase::highPurity))
+        hiNtracksHighPurity++;
+  }
 
   if (doCentrality_) {
 
@@ -464,6 +473,7 @@ HiEvtAnalyzer::beginJob()
   thi_->Branch("hiNtracksPtCut",&hiNtracksPtCut,"hiNtracksPtCut/I");
   thi_->Branch("hiNtracksEtaCut",&hiNtracksEtaCut,"hiNtracksEtaCut/I");
   thi_->Branch("hiNtracksEtaPtCut",&hiNtracksEtaPtCut,"hiNtracksEtaPtCut/I");
+  thi_->Branch("hiNtracksHighPurity",&hiNtracksHighPurity,"hiNtracksHighPurity/I");
 
   // Event plane
   if (doEvtPlane_) {
