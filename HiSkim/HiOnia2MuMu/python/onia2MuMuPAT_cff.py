@@ -189,7 +189,7 @@ def onia2MuMuPAT(process, GlobalTag, MC=False, HLT='HLT', Filter=True, useL1Stag
             'keep patCompositeCandidates_*_dimutrk_Onia2MuMuPAT',  # PAT dimuon+track candidates
             'keep *_dedxHarmonic2_*_*',                            # dE/dx estimator for tracks (to do PID when doDimuTrk)
             'keep *_offlineSlimmedPrimaryVertices_*_*',                   # Primary vertices: you want these to compute impact parameters
-            'keep *_offlineSlimmedPrimaryVerticesRecovery_*_*',                   # Primary vertices: you want these to compute impact parameters
+            #'keep *_offlineSlimmedPrimaryVerticesRecovery_*_*',                   # Primary vertices: you want these to compute impact parameters (not needed anymore for PbPb!)
             'keep *_offlinePrimaryVertices_*_*',                   # Primary vertices: you want these to compute impact parameters
             'keep *_inclusiveSecondaryVertices_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
             'keep *_inclusiveSecondaryVerticesLoose_*_*',      # Secondary vertices: to check if non-prompt muons come from a common SV
