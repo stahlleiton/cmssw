@@ -9,7 +9,7 @@ from Configuration.StandardSequences.Eras import eras
 HLTProcess     = "HLT" # Name of HLT process
 isMC           = True # if input is MONTECARLO: True or if it's DATA: False
 muonSelection  = "All" # Single muon selection: All, Glb(isGlobal), GlbTrk(isGlobal&&isTracker), Trk(isTracker), GlbOrTrk, TwoGlbAmongThree (which requires two isGlobal for a trimuon, and one isGlobal for a dimuon) are available
-applyEventSel  = False # Only apply Event Selection if the required collections are present
+applyEventSel  = True # Only apply Event Selection if the required collections are present
 OnlySoftMuons  = False # Keep only isSoftMuon's (without highPurity, and without isGlobal which should be put in 'muonSelection' parameter) from the beginning of HiSkim. If you want the full SoftMuon selection, set this flag false and add 'isSoftMuon' in lowerPuritySelection. In any case, if applyCuts=True, isSoftMuon is required at HiAnalysis level for muons of selected dimuons.
 applyCuts      = False # At HiAnalysis level, apply kinematic acceptance cuts + identification cuts (isSoftMuon (without highPurity) or isTightMuon, depending on TightGlobalMuon flag) for muons from selected di(tri)muons + hard-coded cuts on the di(tri)muon that you would want to add (but recommended to add everything in LateDimuonSelection, applied at the end of HiSkim)
 SumETvariables = True  # Whether to write out SumET-related variables
@@ -56,8 +56,6 @@ options = VarParsing.VarParsing ('analysis')
 options.outputFile = "Oniatree_MC_miniAOD.root"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-  #'/store/himc/HINPbPbAutumn18DR/JPsi_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/AODSIM/mva98_103X_upgrade2018_realistic_HI_v11-v1/120000/06BA15D4-3041-D54E-AB6D-F32A05C95948.root'
-  #'/store/himc/HINPbPbSpring21MiniAOD/Upsilon1S_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/MINIAODSIM/mva98_112X_upgrade2018_realistic_HI_v9_ext1-v1/240000/00176f40-5946-4de6-b0c1-dfedf55ec258.root'
   #'/store/himc/HINPbPbSpring21MiniAOD/Upsilon1S_pThat-2_TuneCP5_HydjetDrumMB_5p02TeV_Pythia8/MINIAODSIM/mva98_112X_upgrade2018_realistic_HI_v9_ext1-v1/240000/00176f40-5946-4de6-b0c1-dfedf55ec258.root'
   '/store/group/phys_heavyions/junseok/RECO_MC_JPsi_5p36TeV__CMSSW_12_6_0_230215_v1/HIN-HINPbPbAutumn18GSHIMix-00008_5p36TeV_CMSSW_12_6_0/RECO_MC_JPsi_5p36TeV__CMSSW_12_6_0_230215_v1/230215_224251/0000/step3_RAW2DIGI_L1Reco_RECO_PAT_10.root'
 ]
@@ -263,8 +261,9 @@ process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hion
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
-  process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
-  process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter* process.hionia )
+  #process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
+  #process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter* process.hionia )
+  process.oniaTreeAna.replace(process.hionia, process.primaryVertexFilter * process.clusterCompatibilityFilter* process.hionia )
 
 if atLeastOneCand:
   if doTrimuons:
