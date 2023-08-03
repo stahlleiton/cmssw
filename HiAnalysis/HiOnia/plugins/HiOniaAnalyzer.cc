@@ -280,7 +280,6 @@ private:
   Short_t Reco_QQ_mumi_idx[Max_QQ_size];    // index of the muon minus from Jpsi, in the full list of muons
   Short_t Reco_QQ_whichGen[Max_QQ_size]; // index of the generated Jpsi that was matched with this rec Jpsi. Is -1 if one of the 2 muons from Jpsi was not reconstructed
   ULong64_t Reco_QQ_trig[Max_QQ_size];      // Vector of trigger bits matched to the Onia
-  bool Reco_QQ_isCowboy[Max_mu_size]; // Cowboy/Sailor Flag 
   float Reco_QQ_VtxProb[Max_QQ_size]; // chi2 probability of vertex fitting 
   float Reco_QQ_ctau[Max_QQ_size];    // ctau: flight time
   float Reco_QQ_ctauErr[Max_QQ_size]; // error on ctau
@@ -328,8 +327,6 @@ private:
 
   int Reco_mu_nPixValHits[Max_mu_size];  // Number of valid pixel hits in sta muons
   int Reco_mu_nMuValHits[Max_mu_size];  // Number of valid muon hits in sta muons
-  int Reco_mu_nMuValHits_inner[Max_mu_size];       // Number of valid muon hits in Inner sta muons
-  int Reco_mu_nMuValHits_bestTracker[Max_mu_size];       // Number of valid muon hits in best trcaker
   int Reco_mu_nTrkHits[Max_mu_size];  // track hits global muons
   int Reco_mu_nPixWMea[Max_mu_size];  // pixel layers with measurement for inner track muons
   int Reco_mu_nTrkWMea[Max_mu_size];  // track layers with measurement for inner track muons
@@ -1076,8 +1073,6 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
       Reco_mu_segmentComp[Reco_mu_size] = muon->segmentCompatibility(reco::Muon::SegmentAndTrackArbitration);
 
       Reco_mu_normChi2_bestTracker[Reco_mu_size] = bestTrack->normalizedChi2();
-      Reco_mu_nMuValHits_bestTracker[Reco_mu_size] = bestTrack->hitPattern().numberOfValidMuonHits();
-
 
       if (!iTrack.isNull()){
         Reco_mu_highPurity[Reco_mu_size] = iTrack->quality(reco::TrackBase::highPurity);
@@ -1092,7 +1087,6 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
         Reco_mu_dzErr[Reco_mu_size] = iTrack->dzError();
         //Reco_mu_pt_inner[Reco_mu_size] = iTrack->pt();
         Reco_mu_ptErr_inner[Reco_mu_size] = iTrack->ptError();
-        Reco_mu_nMuValHits_inner[Reco_mu_size] = iTrack->hitPattern().numberOfValidMuonHits();
         Reco_mu_validFraction[Reco_mu_size] = iTrack->validFraction();
       }
       else if(_muonSel!=(std::string)("All")){
@@ -3472,8 +3466,6 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_mu_candType", Reco_mu_candType, "Reco_mu_candType[Reco_mu_size]/S");
     myTree->Branch("Reco_mu_nPixValHits", Reco_mu_nPixValHits,   "Reco_mu_nPixValHits[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_nMuValHits", Reco_mu_nMuValHits,   "Reco_mu_nMuValHits[Reco_mu_size]/I");
-    myTree->Branch("Reco_mu_nMuValHits_inner", Reco_mu_nMuValHits_inner, "Reco_mu_nMuValHits_inner[Reco_mu_size]/I");
-    myTree->Branch("Reco_mu_nMuValHits_bestTracker", Reco_mu_nMuValHits_bestTracker, "Reco_mu_nMuValHits_bestTracker[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_nTrkHits",Reco_mu_nTrkHits, "Reco_mu_nTrkHits[Reco_mu_size]/I");
     myTree->Branch("Reco_mu_segmentComp", Reco_mu_segmentComp, "Reco_mu_segmentComp[Reco_mu_size]/F");
     myTree->Branch("Reco_mu_kink", Reco_mu_kink, "Reco_mu_kink[Reco_mu_size]/F");
