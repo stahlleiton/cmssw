@@ -1,0 +1,49 @@
+DEBUG 2023-05-07 05:52:34.751 UTC: 	 CRAB Client version: v3.230417
+DEBUG 2023-05-07 05:52:34.751 UTC: 	 Running on: Linux lxplus722.cern.ch 3.10.0-1160.88.1.el7.x86_64 #1 SMP Tue Mar 7 15:41:52 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux - CentOS Linux 7 (Core)
+DEBUG 2023-05-07 05:52:34.751 UTC: 	 Executing command: 'status'
+DEBUG 2023-05-07 05:52:34.751 UTC: 	 Found CRAB cache file /afs/cern.ch/user/n/nsaha/.crab3
+ERROR 2023-05-07 05:52:34.752 UTC: 	 Cannot find .requestcache file in CRAB project directory /afs/cern.ch/work/n/nsaha/serviceTask/GO/hiForest/new/CMSSW_12_5_2/src/HeavyIonsAnalysis/Configuration/crab/crab_projects/crab_HiForest_TestRun_data_ZB2
+ERROR 2023-05-07 05:52:34.752 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/bin/crab.py", line 159, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/bin/crab.py", line 144, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/status.py", line 48, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/SubCommand.py", line 275, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/SubCommand.py", line 646, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/SubCommand.py", line 508, in loadLocalCache
+    raise ex
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/SubCommand.py", line 502, in loadLocalCache
+    self.cachedinfo, self.logfile = loadCache(self.requestarea, self.logger)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/ClientUtilities.py", line 440, in loadCache
+    raise CachefileNotFoundException(msg)
+CRABClient.ClientExceptions.CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /afs/cern.ch/work/n/nsaha/serviceTask/GO/hiForest/new/CMSSW_12_5_2/src/HeavyIonsAnalysis/Configuration/crab/crab_projects/crab_HiForest_TestRun_data_ZB2
+INFO 2023-05-07 05:52:34.757 UTC: 	 Log file is /afs/cern.ch/work/n/nsaha/serviceTask/GO/hiForest/new/CMSSW_12_5_2/src/HeavyIonsAnalysis/Configuration/crab/crab.log
+DEBUG 2023-05-25 12:34:32.589 UTC: 	 CRAB Client version: v3.230417
+DEBUG 2023-05-25 12:34:32.590 UTC: 	 Running on: Linux lxplus732.cern.ch 3.10.0-1160.88.1.el7.x86_64 #1 SMP Tue Mar 7 15:41:52 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux - CentOS Linux 7 (Core)
+DEBUG 2023-05-25 12:34:32.590 UTC: 	 Executing command: 'submit'
+DEBUG 2023-05-25 12:34:32.616 UTC: 	 Found CRAB cache file /afs/cern.ch/user/n/nsaha/.crab3
+INFO 2023-05-25 12:34:32.670 UTC: 	 Will use CRAB configuration file crab_DATA_cfg.py
+DEBUG 2023-05-25 12:34:32.670 UTC: 	 Loading CRAB configuration file.
+DEBUG 2023-05-25 12:34:32.732 UTC: 	 Will use CRAB Analysis plugin (i.e. will run an analysis job type).
+ERROR 2023-05-25 12:34:32.804 UTC: 	 Working area '/afs/cern.ch/work/n/nsaha/serviceTask/GO/hiForest/new/CMSSW_12_5_2/src/HeavyIonsAnalysis/Configuration/crab/crab_projects/crab_HiForest_TestRun_data_ZB0' already exists 
+Please change the requestName in the config file
+ERROR 2023-05-25 12:34:32.804 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/bin/crab.py", line 159, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/bin/crab.py", line 144, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/submit.py", line 36, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/Commands/SubCommand.py", line 318, in __init__
+    self.requestarea, self.requestname, self.logfile = createWorkArea(
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.230417.00/lib/CRABClient/ClientUtilities.py", line 387, in createWorkArea
+    raise ConfigException("Working area '%s' already exists \nPlease change the requestName in the config file" % fullpath)
+CRABClient.ClientExceptions.ConfigException: Working area '/afs/cern.ch/work/n/nsaha/serviceTask/GO/hiForest/new/CMSSW_12_5_2/src/HeavyIonsAnalysis/Configuration/crab/crab_projects/crab_HiForest_TestRun_data_ZB0' already exists 
+Please change the requestName in the config file
+INFO 2023-05-25 12:34:32.846 UTC: 	 Log file is /afs/cern.ch/work/n/nsaha/serviceTask/GO/hiForest/new/CMSSW_12_5_2/src/HeavyIonsAnalysis/Configuration/crab/crab.log
