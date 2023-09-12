@@ -2635,47 +2635,47 @@ HiOniaAnalyzer::InitEvent()
   Reco_trk_size = 0;
 
   Reco_QQ_4mom->Clear();
-  Reco_QQ_4mom_pt.Clear();
-  Reco_QQ_4mom_eta.Clear();
-  Reco_QQ_4mom_phi.Clear();
-  Reco_QQ_4mom_m.Clear();
+  Reco_QQ_4mom_pt.clear();
+  Reco_QQ_4mom_eta.clear();
+  Reco_QQ_4mom_phi.clear();
+  Reco_QQ_4mom_m.clear();
   Reco_QQ_mupl_4mom->Clear();
-  Reco_QQ_mupl_pt.Clear();
-  Reco_QQ_mupl_eta.Clear();
-  Reco_QQ_mupl_phi.Clear();
-  Reco_QQ_mupl_m.Clear();
+  Reco_QQ_mupl_4mom_pt.clear();
+  Reco_QQ_mupl_4mom_eta.clear();
+  Reco_QQ_mupl_4mom_phi.clear();
+  Reco_QQ_mupl_4mom_m.clear();
   Reco_QQ_mumi_4mom->Clear();
-  Reco_QQ_mumi_pt.Clear();
-  Reco_QQ_mumi_eta.Clear();
-  Reco_QQ_mumi_phi.Clear();
-  Reco_QQ_mumi_m.Clear();
+  Reco_QQ_mumi_4mom_pt.clear();
+  Reco_QQ_mumi_4mom_eta.clear();
+  Reco_QQ_mumi_4mom_phi.clear();
+  Reco_QQ_mumi_4mom_m.clear();
   Reco_QQ_vtx->Clear();
   Reco_mu_4mom->Clear();
-  Reco_mu_4mom_pt.Clear();
-  Reco_mu_4mom_eta.Clear();
-  Reco_mu_4mom_phi.Clear();
-  Reco_mu_4mom_m.Clear();
+  Reco_mu_4mom_pt.clear();
+  Reco_mu_4mom_eta.clear();
+  Reco_mu_4mom_phi.clear();
+  Reco_mu_4mom_m.clear();
   Reco_mu_L1_4mom->Clear();
-  Reco_mu_L1_4mom_pt.Clear();
-  Reco_mu_L1_4mom_eta.Clear();
-  Reco_mu_L1_4mom_phi.Clear();
-  Reco_mu_L1_4mom_m.Clear();
+  Reco_mu_L1_4mom_pt.clear();
+  Reco_mu_L1_4mom_eta.clear();
+  Reco_mu_L1_4mom_phi.clear();
+  Reco_mu_L1_4mom_m.clear();
 
   if (_useGeTracks && _fillRecoTracks) {
     Reco_trk_4mom->Clear();
-    Reco_trk_4mom_pt.Clear();
-    Reco_trk_4mom_eta.Clear();
-    Reco_trk_4mom_phi.Clear();
-    Reco_trk_4mom_m.Clear();
+    Reco_trk_4mom_pt.clear();
+    Reco_trk_4mom_eta.clear();
+    Reco_trk_4mom_phi.clear();
+    Reco_trk_4mom_m.clear();
     Reco_trk_vtx->Clear();
   }
 
   if (_isMC) {
     Gen_QQ_4mom->Clear();
-    Gen_QQ_4mom_pt.Clear();
-    Gen_QQ_4mom_eta.Clear();
-    Gen_QQ_4mom_phi.Clear();
-    Gen_QQ_4mom_m.Clear();
+    Gen_QQ_4mom_pt.clear();
+    Gen_QQ_4mom_eta.clear();
+    Gen_QQ_4mom_phi.clear();
+    Gen_QQ_4mom_m.clear();
     Gen_mu_4mom->Clear();
 
     Gen_QQ_size = 0;
@@ -2693,28 +2693,28 @@ HiOniaAnalyzer::InitEvent()
     Reco_3mu_size = 0;
     Reco_3mu_vtx->Clear();
     Reco_3mu_4mom->Clear();
-    Reco_3mu_4mom_pt.Clear();
-    Reco_3mu_4mom_eta.Clear();
-    Reco_3mu_4mom_phi.Clear();
-    Reco_3mu_4mom_m.Clear();
+    Reco_3mu_4mom_pt.clear();
+    Reco_3mu_4mom_eta.clear();
+    Reco_3mu_4mom_phi.clear();
+    Reco_3mu_4mom_m.clear();
 
     if (_isMC) {
       Gen_Bc_size = 0;
       Gen_Bc_4mom->Clear();
-      Gen_Bc_4mom_pt.Clear();
-      Gen_Bc_4mom_eta.Clear();
-      Gen_Bc_4mom_phi.Clear();
-      Gen_Bc_4mom_m.Clear();
+      Gen_Bc_4mom_pt.clear();
+      Gen_Bc_4mom_eta.clear();
+      Gen_Bc_4mom_phi.clear();
+      Gen_Bc_4mom_m.clear();
       Gen_Bc_nuW_4mom->Clear();
-      Gen_Bc_nuW_4mom_pt.Clear();
-      Gen_Bc_nuW_4mom_eta.Clear();
-      Gen_Bc_nuW_4mom_phi.Clear();
-      Gen_Bc_nuW_4mom_m.Clear();
+      Gen_Bc_nuW_4mom_pt.clear();
+      Gen_Bc_nuW_4mom_eta.clear();
+      Gen_Bc_nuW_4mom_phi.clear();
+      Gen_Bc_nuW_4mom_m.clear();
       Gen_3mu_4mom->Clear();
-      Gen_3mu_4mom_pt.Clear();
-      Gen_3mu_4mom_eta.Clear();
-      Gen_3mu_4mom_phi.Clear();
-      Gen_3mu_4mom_m.Clear();
+      Gen_3mu_4mom_pt.clear();
+      Gen_3mu_4mom_eta.clear();
+      Gen_3mu_4mom_phi.clear();
+      Gen_3mu_4mom_m.clear();
     }
   }
 
@@ -3605,15 +3605,15 @@ HiOniaAnalyzer::InitTree()
     if(_flipJpsiDirection>0){
       myTree->Branch("Reco_QQ_flipJpsi",Reco_QQ_flipJpsi, "Reco_QQ_flipJpsi[Reco_QQ_size]/S");    
       myTree->Branch("Reco_QQ_mumi_4mom", "TClonesArray", &Reco_QQ_mumi_4mom, 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_pt" , &Reco_QQ_mumi_pt , 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_eta", &Reco_QQ_mumi_eta, 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_phi", &Reco_QQ_mumi_phi, 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_m"  , &Reco_QQ_mumi_m  , 32000, 0);
+      myTree->Branch("Reco_QQ_mumi_4mom_pt" , &Reco_QQ_mumi_4mom_pt , 32000, 0);
+      myTree->Branch("Reco_QQ_mumi_4mom_eta", &Reco_QQ_mumi_4mom_eta, 32000, 0);
+      myTree->Branch("Reco_QQ_mumi_4mom_phi", &Reco_QQ_mumi_4mom_phi, 32000, 0);
+      myTree->Branch("Reco_QQ_mumi_4mom_m"  , &Reco_QQ_mumi_4mom_m  , 32000, 0);
       myTree->Branch("Reco_QQ_mupl_4mom", "TClonesArray", &Reco_QQ_mupl_4mom, 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_pt" , &Reco_QQ_mupl_pt , 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_eta", &Reco_QQ_mupl_eta, 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_phi", &Reco_QQ_mupl_phi, 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_m"  , &Reco_QQ_mupl_m  , 32000, 0);
+      myTree->Branch("Reco_QQ_mupl_4mom_pt" , &Reco_QQ_mupl_4mom_pt , 32000, 0);
+      myTree->Branch("Reco_QQ_mupl_4mom_eta", &Reco_QQ_mupl_4mom_eta, 32000, 0);
+      myTree->Branch("Reco_QQ_mupl_4mom_phi", &Reco_QQ_mupl_4mom_phi, 32000, 0);
+      myTree->Branch("Reco_QQ_mupl_4mom_m"  , &Reco_QQ_mupl_4mom_m  , 32000, 0);
     }
   }
 
