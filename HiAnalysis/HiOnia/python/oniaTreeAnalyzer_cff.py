@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", L1Stage=2, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAOD=True, miniAODcuts=False, OnlySingleMuons=False):
+def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", L1Stage=2, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAOD=True, miniAODcuts=False, OnlySingleMuons=False, getObjectsBy="array"):
 
     if muonTriggerList==[[],[],[],[]]:
         muonTriggerList = {
@@ -153,6 +153,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     srcTrimuon          = cms.InputTag("onia2MuMuPatGlbGlb","trimuon"),      # Name of Onia Skim Collection for trimuons
                                     srcDimuTrk          = cms.InputTag("onia2MuMuPatGlbGlb","dimutrk"),      # Name of Onia Skim Collection for Jpsi+track
                                     EvtPlane            = cms.InputTag("hiEvtPlane",""),           # Name of Event Plane Collection. For RECO use: hiEventPlane,recoLevel
+                                    mom4format          = cms.untracked.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
                                     srcSV               = cms.InputTag("inclusiveSecondaryVerticesLoose",""), # Name of SV collection
 
                                     triggerResultsLabel = cms.InputTag("TriggerResults","",HLTProName), # Label of Trigger Results
