@@ -543,6 +543,7 @@ private:
   int _BcPDG;
   int _OneMatchedHLTMu;
   bool           _checkTrigNames;
+  string _mom4format;
 
   std::vector<unsigned int>                     _thePassedCats;
   std::vector<const pat::CompositeCandidate*>   _thePassedCands;
@@ -3573,11 +3574,13 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_QQ_size", &Reco_QQ_size,  "Reco_QQ_size/S");
     myTree->Branch("Reco_QQ_type", Reco_QQ_type,   "Reco_QQ_type[Reco_QQ_size]/S");
     myTree->Branch("Reco_QQ_sign", Reco_QQ_sign,   "Reco_QQ_sign[Reco_QQ_size]/S");
-    myTree->Branch("Reco_QQ_4mom", "TClonesArray", &Reco_QQ_4mom, 32000, 0);
+    if(std::strcmp("array", _mom4format.c_str()) == 0) myTree->Branch("Reco_QQ_4mom", "TClonesArray", &Reco_QQ_4mom, 32000, 0);
+    if(std::strcmp("vector", _mom4format.c_str()) == 0){
     myTree->Branch("Reco_QQ_4mom_pt" , &Reco_QQ_4mom_pt , 32000, 0);
     myTree->Branch("Reco_QQ_4mom_eta", &Reco_QQ_4mom_eta, 32000, 0);
     myTree->Branch("Reco_QQ_4mom_phi", &Reco_QQ_4mom_phi, 32000, 0);
     myTree->Branch("Reco_QQ_4mom_m"  , &Reco_QQ_4mom_m  , 32000, 0);
+    }
     myTree->Branch("Reco_QQ_mupl_idx",      Reco_QQ_mupl_idx,    "Reco_QQ_mupl_idx[Reco_QQ_size]/S");
     myTree->Branch("Reco_QQ_mumi_idx",      Reco_QQ_mumi_idx,    "Reco_QQ_mumi_idx[Reco_QQ_size]/S");
 
@@ -3605,16 +3608,20 @@ HiOniaAnalyzer::InitTree()
     }
     if(_flipJpsiDirection>0){
       myTree->Branch("Reco_QQ_flipJpsi",Reco_QQ_flipJpsi, "Reco_QQ_flipJpsi[Reco_QQ_size]/S");    
-      myTree->Branch("Reco_QQ_mumi_4mom", "TClonesArray", &Reco_QQ_mumi_4mom, 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_4mom_pt" , &Reco_QQ_mumi_4mom_pt , 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_4mom_eta", &Reco_QQ_mumi_4mom_eta, 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_4mom_phi", &Reco_QQ_mumi_4mom_phi, 32000, 0);
-      myTree->Branch("Reco_QQ_mumi_4mom_m"  , &Reco_QQ_mumi_4mom_m  , 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_4mom", "TClonesArray", &Reco_QQ_mupl_4mom, 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_4mom_pt" , &Reco_QQ_mupl_4mom_pt , 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_4mom_eta", &Reco_QQ_mupl_4mom_eta, 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_4mom_phi", &Reco_QQ_mupl_4mom_phi, 32000, 0);
-      myTree->Branch("Reco_QQ_mupl_4mom_m"  , &Reco_QQ_mupl_4mom_m  , 32000, 0);
+      if(std::strcmp("array", _mom4format.c_str()) == 0) myTree->Branch("Reco_QQ_mumi_4mom", "TClonesArray", &Reco_QQ_mumi_4mom, 32000, 0);
+      if(std::strcmp("vector", _mom4format.c_str()) == 0){
+        myTree->Branch("Reco_QQ_mumi_4mom_pt" , &Reco_QQ_mumi_4mom_pt , 32000, 0);
+        myTree->Branch("Reco_QQ_mumi_4mom_eta", &Reco_QQ_mumi_4mom_eta, 32000, 0);
+        myTree->Branch("Reco_QQ_mumi_4mom_phi", &Reco_QQ_mumi_4mom_phi, 32000, 0);
+        myTree->Branch("Reco_QQ_mumi_4mom_m"  , &Reco_QQ_mumi_4mom_m  , 32000, 0);
+      }
+      if(std::strcmp("array", _mom4format.c_str()) == 0) myTree->Branch("Reco_QQ_mupl_4mom", "TClonesArray", &Reco_QQ_mupl_4mom, 32000, 0);
+      if(std::strcmp("vector", _mom4format.c_str()) == 0){
+        myTree->Branch("Reco_QQ_mupl_4mom_pt" , &Reco_QQ_mupl_4mom_pt , 32000, 0);
+        myTree->Branch("Reco_QQ_mupl_4mom_eta", &Reco_QQ_mupl_4mom_eta, 32000, 0);
+        myTree->Branch("Reco_QQ_mupl_4mom_phi", &Reco_QQ_mupl_4mom_phi, 32000, 0);
+        myTree->Branch("Reco_QQ_mupl_4mom_m"  , &Reco_QQ_mupl_4mom_m  , 32000, 0);
+      }
     }
   }
 
@@ -3625,16 +3632,20 @@ HiOniaAnalyzer::InitTree()
   }
   myTree->Branch("Reco_mu_SelectionType", Reco_mu_SelectionType,   "Reco_mu_SelectionType[Reco_mu_size]/I");
   myTree->Branch("Reco_mu_charge", Reco_mu_charge,   "Reco_mu_charge[Reco_mu_size]/S");
-  myTree->Branch("Reco_mu_4mom", "TClonesArray", &Reco_mu_4mom, 32000, 0);
-  myTree->Branch("Reco_mu_4mom_pt" , &Reco_mu_4mom_pt , 32000, 0);
-  myTree->Branch("Reco_mu_4mom_eta", &Reco_mu_4mom_eta, 32000, 0);
-  myTree->Branch("Reco_mu_4mom_phi", &Reco_mu_4mom_phi, 32000, 0);
-  myTree->Branch("Reco_mu_4mom_m"  , &Reco_mu_4mom_m  , 32000, 0);
-  myTree->Branch("Reco_mu_L1_4mom", "TClonesArray", &Reco_mu_L1_4mom, 32000, 0);
-  myTree->Branch("Reco_mu_L1_4mom_pt" , &Reco_mu_L1_4mom_pt , 32000, 0);
-  myTree->Branch("Reco_mu_L1_4mom_eta", &Reco_mu_L1_4mom_eta, 32000, 0);
-  myTree->Branch("Reco_mu_L1_4mom_phi", &Reco_mu_L1_4mom_phi, 32000, 0);
-  myTree->Branch("Reco_mu_L1_4mom_m"  , &Reco_mu_L1_4mom_m  , 32000, 0);
+  if(std::strcmp("array", _mom4format.c_str()) == 0){
+    myTree->Branch("Reco_mu_4mom", "TClonesArray", &Reco_mu_4mom, 32000, 0);
+    myTree->Branch("Reco_mu_L1_4mom", "TClonesArray", &Reco_mu_L1_4mom, 32000, 0);
+  }
+  if(std::strcmp("vector", _mom4format.c_str()) == 0){
+    myTree->Branch("Reco_mu_4mom_pt" , &Reco_mu_4mom_pt , 32000, 0);
+    myTree->Branch("Reco_mu_4mom_eta", &Reco_mu_4mom_eta, 32000, 0);
+    myTree->Branch("Reco_mu_4mom_phi", &Reco_mu_4mom_phi, 32000, 0);
+    myTree->Branch("Reco_mu_4mom_m"  , &Reco_mu_4mom_m  , 32000, 0);
+    myTree->Branch("Reco_mu_L1_4mom_pt" , &Reco_mu_L1_4mom_pt , 32000, 0);
+    myTree->Branch("Reco_mu_L1_4mom_eta", &Reco_mu_L1_4mom_eta, 32000, 0);
+    myTree->Branch("Reco_mu_L1_4mom_phi", &Reco_mu_L1_4mom_phi, 32000, 0);
+    myTree->Branch("Reco_mu_L1_4mom_m"  , &Reco_mu_L1_4mom_m  , 32000, 0);
+  }
   myTree->Branch("Reco_mu_trig", Reco_mu_trig,   "Reco_mu_trig[Reco_mu_size]/l");
 
   if (!_theMinimumFlag) {
@@ -3689,19 +3700,23 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Reco_trk_charge", Reco_trk_charge,   "Reco_trk_charge[Reco_trk_size]/S");
     myTree->Branch("Reco_trk_InLooseAcc", Reco_trk_InLooseAcc,   "Reco_trk_InLooseAcc[Reco_trk_size]/O");
     myTree->Branch("Reco_trk_InTightAcc", Reco_trk_InTightAcc,   "Reco_trk_InTightAcc[Reco_trk_size]/O");
-    myTree->Branch("Reco_trk_4mom", "TClonesArray", &Reco_trk_4mom, 32000, 0);
-    myTree->Branch("Reco_trk_4mom_pt" , &Reco_trk_4mom_pt , 32000, 0);
-    myTree->Branch("Reco_trk_4mom_eta", &Reco_trk_4mom_eta, 32000, 0);
-    myTree->Branch("Reco_trk_4mom_phi", &Reco_trk_4mom_phi, 32000, 0);
-    myTree->Branch("Reco_trk_4mom_m"  , &Reco_trk_4mom_m  , 32000, 0);
-    myTree->Branch("Reco_trk_dxyError", Reco_trk_dxyError, "Reco_trk_dxyError[Reco_trk_size]/F");
-    myTree->Branch("Reco_trk_dzError", Reco_trk_dzError, "Reco_trk_dzError[Reco_trk_size]/F");
-    myTree->Branch("Reco_trk_dxy", Reco_trk_dxy, "Reco_trk_dxy[Reco_trk_size]/F");
-    myTree->Branch("Reco_trk_dz", Reco_trk_dz, "Reco_trk_dz[Reco_trk_size]/F");
-    myTree->Branch("Reco_trk_ptErr", Reco_trk_ptErr, "Reco_trk_ptErr[Reco_trk_size]/F");
-    myTree->Branch("Reco_trk_originalAlgo", Reco_trk_originalAlgo, "Reco_trk_originalAlgo[Reco_trk_size]/I");
-    myTree->Branch("Reco_trk_nPixWMea", Reco_trk_nPixWMea, "Reco_trk_nPixWMea[Reco_trk_size]/I");
-    myTree->Branch("Reco_trk_nTrkWMea", Reco_trk_nTrkWMea, "Reco_trk_nTrkWMea[Reco_trk_size]/I");
+    if(std::strcmp("array", _mom4format.c_str()) == 0){
+      myTree->Branch("Reco_trk_4mom", "TClonesArray", &Reco_trk_4mom, 32000, 0);
+    }
+    if(std::strcmp("vector", _mom4format.c_str()) == 0){
+      myTree->Branch("Reco_trk_4mom_pt" , &Reco_trk_4mom_pt , 32000, 0);
+      myTree->Branch("Reco_trk_4mom_eta", &Reco_trk_4mom_eta, 32000, 0);
+      myTree->Branch("Reco_trk_4mom_phi", &Reco_trk_4mom_phi, 32000, 0);
+      myTree->Branch("Reco_trk_4mom_m"  , &Reco_trk_4mom_m  , 32000, 0);
+      myTree->Branch("Reco_trk_dxyError", Reco_trk_dxyError, "Reco_trk_dxyError[Reco_trk_size]/F");
+      myTree->Branch("Reco_trk_dzError", Reco_trk_dzError, "Reco_trk_dzError[Reco_trk_size]/F");
+      myTree->Branch("Reco_trk_dxy", Reco_trk_dxy, "Reco_trk_dxy[Reco_trk_size]/F");
+      myTree->Branch("Reco_trk_dz", Reco_trk_dz, "Reco_trk_dz[Reco_trk_size]/F");
+      myTree->Branch("Reco_trk_ptErr", Reco_trk_ptErr, "Reco_trk_ptErr[Reco_trk_size]/F");
+      myTree->Branch("Reco_trk_originalAlgo", Reco_trk_originalAlgo, "Reco_trk_originalAlgo[Reco_trk_size]/I");
+      myTree->Branch("Reco_trk_nPixWMea", Reco_trk_nPixWMea, "Reco_trk_nPixWMea[Reco_trk_size]/I");
+      myTree->Branch("Reco_trk_nTrkWMea", Reco_trk_nTrkWMea, "Reco_trk_nTrkWMea[Reco_trk_size]/I");
+    }
     if (_isMC) {
       myTree->Branch("Reco_trk_whichGenmu", Reco_trk_whichGenmu, "Reco_trk_whichGenmu[Reco_trk_size]/S");
     }
@@ -3734,26 +3749,30 @@ HiOniaAnalyzer::InitTree()
       if(_doTrimuons || _doDimuTrk){
 	myTree->Branch("Gen_QQ_Bc_idx",      Gen_QQ_Bc_idx,    "Gen_QQ_Bc_idx[Gen_QQ_size]/S");
 	myTree->Branch("Gen_Bc_size",      &Gen_Bc_size,    "Gen_Bc_size/S");
-	myTree->Branch("Gen_Bc_4mom",      "TClonesArray", &Gen_Bc_4mom, 32000, 0);
-  myTree->Branch("Gen_Bc_4mom_pt" , &Gen_Bc_4mom_pt , 32000, 0);
-  myTree->Branch("Gen_Bc_4mom_eta", &Gen_Bc_4mom_eta, 32000, 0);
-  myTree->Branch("Gen_Bc_4mom_phi", &Gen_Bc_4mom_phi, 32000, 0);
-  myTree->Branch("Gen_Bc_4mom_m"  , &Gen_Bc_4mom_m  , 32000, 0);
-	myTree->Branch("Gen_Bc_nuW_4mom", "TClonesArray", &Gen_Bc_nuW_4mom, 32000, 0);
-  myTree->Branch("Gen_Bc_nuW_4mom_pt" , &Gen_Bc_nuW_4mom_pt , 32000, 0);
-  myTree->Branch("Gen_Bc_nuW_4mom_eta", &Gen_Bc_nuW_4mom_eta, 32000, 0);
-  myTree->Branch("Gen_Bc_nuW_4mom_phi", &Gen_Bc_nuW_4mom_phi, 32000, 0);
-  myTree->Branch("Gen_Bc_nuW_4mom_m"  , &Gen_Bc_nuW_4mom_m  , 32000, 0);
+  if(std::strcmp("array", _mom4format.c_str()) == 0){
+	  myTree->Branch("Gen_Bc_4mom",      "TClonesArray", &Gen_Bc_4mom, 32000, 0);
+	  myTree->Branch("Gen_Bc_nuW_4mom", "TClonesArray", &Gen_Bc_nuW_4mom, 32000, 0);
+	  myTree->Branch("Gen_3mu_4mom",      "TClonesArray", &Gen_3mu_4mom, 32000, 0);
+  }
+  if(std::strcmp("vector", _mom4format.c_str()) == 0){
+    myTree->Branch("Gen_Bc_4mom_pt" , &Gen_Bc_4mom_pt , 32000, 0);
+    myTree->Branch("Gen_Bc_4mom_eta", &Gen_Bc_4mom_eta, 32000, 0);
+    myTree->Branch("Gen_Bc_4mom_phi", &Gen_Bc_4mom_phi, 32000, 0);
+    myTree->Branch("Gen_Bc_4mom_m"  , &Gen_Bc_4mom_m  , 32000, 0);
+    myTree->Branch("Gen_Bc_nuW_4mom_pt" , &Gen_Bc_nuW_4mom_pt , 32000, 0);
+    myTree->Branch("Gen_Bc_nuW_4mom_eta", &Gen_Bc_nuW_4mom_eta, 32000, 0);
+    myTree->Branch("Gen_Bc_nuW_4mom_phi", &Gen_Bc_nuW_4mom_phi, 32000, 0);
+    myTree->Branch("Gen_Bc_nuW_4mom_m"  , &Gen_Bc_nuW_4mom_m  , 32000, 0);
+    myTree->Branch("Gen_3mu_4mom_pt" , &Gen_3mu_4mom_pt , 32000, 0);
+    myTree->Branch("Gen_3mu_4mom_eta", &Gen_3mu_4mom_eta, 32000, 0);
+    myTree->Branch("Gen_3mu_4mom_phi", &Gen_3mu_4mom_phi, 32000, 0);
+    myTree->Branch("Gen_3mu_4mom_m"  , &Gen_3mu_4mom_m  , 32000, 0);
+  }
 	myTree->Branch("Gen_Bc_QQ_idx",      Gen_Bc_QQ_idx,    "Gen_Bc_QQ_idx[Gen_Bc_size]/S");
 	myTree->Branch("Gen_Bc_muW_idx",      Gen_Bc_muW_idx,    "Gen_Bc_muW_idx[Gen_Bc_size]/S");
 	myTree->Branch("Gen_Bc_pdgId",      Gen_Bc_pdgId,    "Gen_Bc_pdgId[Gen_Bc_size]/I");
 	myTree->Branch("Gen_Bc_ctau",      Gen_Bc_ctau,    "Gen_Bc_ctau[Gen_Bc_size]/F");
 
-	myTree->Branch("Gen_3mu_4mom",      "TClonesArray", &Gen_3mu_4mom, 32000, 0);
-  myTree->Branch("Gen_3mu_4mom_pt" , &Gen_3mu_4mom_pt , 32000, 0);
-  myTree->Branch("Gen_3mu_4mom_eta", &Gen_3mu_4mom_eta, 32000, 0);
-  myTree->Branch("Gen_3mu_4mom_phi", &Gen_3mu_4mom_phi, 32000, 0);
-  myTree->Branch("Gen_3mu_4mom_m"  , &Gen_3mu_4mom_m  , 32000, 0);
 	myTree->Branch("Gen_3mu_whichRec", Gen_3mu_whichRec,   "Gen_3mu_whichRec[Gen_Bc_size]/S");
       }
     }
@@ -3761,11 +3780,15 @@ HiOniaAnalyzer::InitTree()
     myTree->Branch("Gen_mu_size",   &Gen_mu_size,  "Gen_mu_size/S");
     //myTree->Branch("Gen_mu_type",   Gen_mu_type,   "Gen_mu_type[Gen_mu_size]/S");
     myTree->Branch("Gen_mu_charge", Gen_mu_charge, "Gen_mu_charge[Gen_mu_size]/S");
-    myTree->Branch("Gen_mu_4mom",   "TClonesArray", &Gen_mu_4mom, 32000, 0);
-    myTree->Branch("Gen_mu_4mom_pt" , &Gen_mu_4mom_pt , 32000, 0);
-    myTree->Branch("Gen_mu_4mom_eta", &Gen_mu_4mom_eta, 32000, 0);
-    myTree->Branch("Gen_mu_4mom_phi", &Gen_mu_4mom_phi, 32000, 0);
-    myTree->Branch("Gen_mu_4mom_m"  , &Gen_mu_4mom_m  , 32000, 0);
+    if(std::strcmp("array", _mom4format.c_str()) == 0){
+      myTree->Branch("Gen_mu_4mom",   "TClonesArray", &Gen_mu_4mom, 32000, 0);
+    }
+    if(std::strcmp("vector", _mom4format.c_str()) == 0){
+      myTree->Branch("Gen_mu_4mom_pt" , &Gen_mu_4mom_pt , 32000, 0);
+      myTree->Branch("Gen_mu_4mom_eta", &Gen_mu_4mom_eta, 32000, 0);
+      myTree->Branch("Gen_mu_4mom_phi", &Gen_mu_4mom_phi, 32000, 0);
+      myTree->Branch("Gen_mu_4mom_m"  , &Gen_mu_4mom_m  , 32000, 0);
+    }
     myTree->Branch("Gen_mu_whichRec", Gen_mu_whichRec,   "Gen_mu_whichRec[Gen_mu_size]/S");
   }
 
