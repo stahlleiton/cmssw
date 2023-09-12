@@ -1092,7 +1092,7 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
     Reco_mu_4mom_pt.push_back(vMuon.Pt());
     Reco_mu_4mom_eta.push_back(vMuon.Eta());
     Reco_mu_4mom_phi.push_back(vMuon.Phi());
-    Reco_mu_4mom_mass.push_back(vMuon.M());
+    Reco_mu_4mom_m.push_back(vMuon.M());
 
 
     TLorentzVector vMuonL1;
@@ -1106,7 +1106,7 @@ HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t trigBit
     Reco_mu_L1_4mom_pt.push_back(vMuonL1.Pt());
     Reco_mu_L1_4mom_eta.push_back(vMuonL1.Eta());
     Reco_mu_L1_4mom_phi.push_back(vMuonL1.Phi());
-    Reco_mu_L1_4mom_mass.push_back(vMuonL1.M());
+    Reco_mu_L1_4mom_m.push_back(vMuonL1.M());
 
     //Fill map of the muon indices. Use long int keys, to avoid rounding errors on a float key. Implies a precision of 10^-6
     mapMuonMomToIndex_[ FloatToIntkey(vMuon.Pt()) ] = Reco_mu_size;
@@ -1265,13 +1265,13 @@ HiOniaAnalyzer::fillTreeJpsi(int count) {
     Reco_QQ_mupl_4mom_pt.push_back(mu1Trk.pt());
     Reco_QQ_mupl_4mom_eta.push_back(mu1Trk.eta());
     Reco_QQ_mupl_4mom_phi.push_back(mu1Trk.phi());
-    Reco_QQ_mupl_4mom_mass.push_back(vMuon1.M());
+    Reco_QQ_mupl_4mom_m.push_back(vMuon1.M());
 
 	  new((*Reco_QQ_mumi_4mom)[Reco_QQ_size])TLorentzVector(mu2Trk.px(),mu2Trk.py(),mu2Trk.pz(),vMuon2.E());
     Reco_QQ_mumi_4mom_pt.push_back(mu2Trk.pt());
     Reco_QQ_mumi_4mom_eta.push_back(mu2Trk.eta());
     Reco_QQ_mumi_4mom_phi.push_back(mu2Trk.phi());
-    Reco_QQ_mumi_4mom_mass.push_back(vMuon2.M());
+    Reco_QQ_mumi_4mom_m.push_back(vMuon2.M());
 
 	} else if(_muonLessPrimaryVertex || _useGeTracks){
 	  iTrack_mupl = *(muon1->innerTrack());
@@ -1291,12 +1291,12 @@ HiOniaAnalyzer::fillTreeJpsi(int count) {
     Reco_QQ_mumi_4mom_pt.push_back(mu1Trk.pt());
     Reco_QQ_mumi_4mom_eta.push_back(mu1Trk.eta());
     Reco_QQ_mumi_4mom_phi.push_back(mu1Trk.phi());
-    Reco_QQ_mumi_4mom_mass.push_back(vMuon1.M());
+    Reco_QQ_mumi_4mom_m.push_back(vMuon1.M());
 	  new((*Reco_QQ_mupl_4mom)[Reco_QQ_size])TLorentzVector(mu2Trk.px(),mu2Trk.py(),mu2Trk.pz(),vMuon2.E());
     Reco_QQ_mupl_4mom_pt.push_back(mu2Trk.pt());
     Reco_QQ_mupl_4mom_eta.push_back(mu2Trk.eta());
     Reco_QQ_mupl_4mom_phi.push_back(mu2Trk.phi());
-    Reco_QQ_mupl_4mom_mass.push_back(vMuon2.M());
+    Reco_QQ_mupl_4mom_m.push_back(vMuon2.M());
 	} else if(_muonLessPrimaryVertex || _useGeTracks){
 	  iTrack_mupl = *(muon2->innerTrack());
 	  iTrack_mumi = *(muon1->innerTrack());
@@ -1316,7 +1316,7 @@ HiOniaAnalyzer::fillTreeJpsi(int count) {
       Reco_QQ_4mom_pt.push_back(vJpsi.Pt());
       Reco_QQ_4mom_eta.push_back(vJpsi.Eta());
       Reco_QQ_4mom_phi.push_back(vJpsi.Phi());
-      Reco_QQ_4mom_mass.push_back(vJpsi.M());
+      Reco_QQ_4mom_m.push_back(vJpsi.M());
 
 
       if (_useBS) {
@@ -2993,7 +2993,7 @@ HiOniaAnalyzer::fillGenInfo()
       Gen_Bc_4mom_pt.push_back(vBc.Pt());
       Gen_Bc_4mom_eta.push_back(vBc.Eta());
       Gen_Bc_4mom_phi.push_back(vBc.Phi());
-      Gen_Bc_4mom_mass.push_back(vBc.M());
+      Gen_Bc_4mom_m.push_back(vBc.M());
 
 		  TLorentzVector vmuW = lorentzMomentum(genmuW->p4());
 		  Gen_Bc_muW_idx[Gen_Bc_size] = IndexOfThisMuon(&vmuW, true);
@@ -3003,7 +3003,7 @@ HiOniaAnalyzer::fillGenInfo()
       Gen_Bc_nuW_4mom_pt.push_back(vnuW.Pt());
       Gen_Bc_nuW_4mom_eta.push_back(vnuW.Eta());
       Gen_Bc_nuW_4mom_phi.push_back(vnuW.Phi());
-      Gen_Bc_nuW_4mom_mass.push_back(vnuW.M());
+      Gen_Bc_nuW_4mom_m.push_back(vnuW.M());
 	    
 		  Gen_Bc_size++;
 		}
@@ -3097,7 +3097,7 @@ HiOniaAnalyzer::fillBcMatchingInfo(){
     Gen_3mu_4mom_pt.push_back(gen_3mu_4mom.Pt());
     Gen_3mu_4mom_eta.push_back(gen_3mu_4mom.Eta());
     Gen_3mu_4mom_phi.push_back(gen_3mu_4mom.Phi());
-    Gen_3mu_4mom_mass.push_back(gen_3mu_4mom.M());
+    Gen_3mu_4mom_m.push_back(gen_3mu_4mom.M());
 
     //Look for index of reconstructed muon
     int Reco_muW_idx = Gen_mu_whichRec[Gen_Bc_muW_idx[igen]]; //index of the reconstructed muW associated to the generated muW of Bc
@@ -3290,7 +3290,7 @@ HiOniaAnalyzer::fillRecoTracks()
     Reco_trk_4mom_pt.push_back(vTrack.Pt());
     Reco_trk_4mom_eta.push_back(vTrack.Eta());
     Reco_trk_4mom_phi.push_back(vTrack.Phi());
-    Reco_trk_4mom_mass.push_back(vTrack.M());
+    Reco_trk_4mom_m.push_back(vTrack.M());
 	  Reco_trk_size++;
 	}
       }
