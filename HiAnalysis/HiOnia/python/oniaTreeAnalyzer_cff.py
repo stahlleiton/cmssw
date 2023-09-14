@@ -211,7 +211,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     fillRecoTracks    = cms.bool(False),
                                     histFileName      = cms.string(outputFileName),
                                     dataSetName       = cms.string("Jpsi_DataSet.root"),
-                                    mom4format          = cms.untracked.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
+                                    mom4format          = cms.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
 
                                     dblTriggerPathNames = muonTriggerList['DoubleMuonTrigger'],
                                     dblTriggerFilterNames = muonTriggerList['DoubleMuonFilter'],
