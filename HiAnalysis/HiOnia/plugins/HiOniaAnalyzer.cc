@@ -496,6 +496,7 @@ private:
   std::string         _histfilename;
   std::string         _datasetname;
   std::string         _muonSel;
+  std::string         _mom4format;
  
   std::vector<double> _centralityranges;
   std::vector<double> _ptbinranges;
@@ -543,7 +544,6 @@ private:
   int _BcPDG;
   int _OneMatchedHLTMu;
   bool           _checkTrigNames;
-  string _mom4format;
 
   std::vector<unsigned int>                     _thePassedCats;
   std::vector<const pat::CompositeCandidate*>   _thePassedCands;
