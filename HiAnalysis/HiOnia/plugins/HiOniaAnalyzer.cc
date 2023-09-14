@@ -495,8 +495,8 @@ private:
   edm::EDGetTokenT<reco::EvtPlaneCollection>          _evtPlaneTagToken;
   std::string         _histfilename;
   std::string         _datasetname;
-  std::string         _muonSel;
   std::string         _mom4format;
+  std::string         _muonSel;
  
   std::vector<double> _centralityranges;
   std::vector<double> _ptbinranges;
