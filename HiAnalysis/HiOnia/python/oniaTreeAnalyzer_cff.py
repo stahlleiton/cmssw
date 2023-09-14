@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from PhysicsTools.PatAlgos.tools.helpers import *
 
-def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", L1Stage=2, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAOD=True, miniAODcuts=False, OnlySingleMuons=False):
+def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', muonSelection="Trk", L1Stage=2, isMC=True, pdgID=443, outputFileName="OniaTree.root", muonlessPV = False, doTrimu=False, doDimuTrk=False, flipJpsiDir=0, miniAOD=True, miniAODcuts=False, OnlySingleMuons=False, getObjectsBy="array"):
 
     if muonTriggerList==[[],[],[],[]]:
         muonTriggerList = {
@@ -211,6 +211,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     fillRecoTracks    = cms.bool(False),
                                     histFileName      = cms.string(outputFileName),
                                     dataSetName       = cms.string("Jpsi_DataSet.root"),
+                                    mom4format          = cms.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
 
                                     dblTriggerPathNames = muonTriggerList['DoubleMuonTrigger'],
                                     dblTriggerFilterNames = muonTriggerList['DoubleMuonFilter'],

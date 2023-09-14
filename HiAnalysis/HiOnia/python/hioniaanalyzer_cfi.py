@@ -67,6 +67,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         fillRecoTracks = cms.bool(False),
                         histFileName = cms.string("Jpsi_Histos.root"),		
                         dataSetName = cms.string("Jpsi_DataSet.root"),
+                        mom4format       = cms.string("vector"), # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
                         
                         #--
                         dblTriggerPathNames    = cms.vstring(),
