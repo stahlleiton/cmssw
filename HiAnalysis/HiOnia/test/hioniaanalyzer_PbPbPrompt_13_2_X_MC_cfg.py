@@ -24,6 +24,7 @@ miniAOD        = True # whether the input file is in miniAOD format (default is 
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 UsePropToMuonSt = True # whether to use L1 propagated muons (works only for miniAOD now)
 pdgId = 443 # J/Psi : 443, Y(1S) : 553
+useMomFormat = "array" # default "array" for TClonesArray of TLorentzVector. Use "vector" for std::vector<float> of pt, eta, phi, M
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -216,6 +217,7 @@ process.hionia.applyCuts        = cms.bool(applyCuts)
 process.hionia.AtLeastOneCand   = cms.bool(atLeastOneCand)
 process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 process.hionia.checkTrigNames   = cms.bool(False)#change this to get the event-level trigger info in hStats output (but creates lots of warnings when fake trigger names are used)
+process.hionia.mom4format       = cms.string(useMomFormat)
 
 '''
 #----------------------------------------------------------------------------
