@@ -153,7 +153,6 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     srcTrimuon          = cms.InputTag("onia2MuMuPatGlbGlb","trimuon"),      # Name of Onia Skim Collection for trimuons
                                     srcDimuTrk          = cms.InputTag("onia2MuMuPatGlbGlb","dimutrk"),      # Name of Onia Skim Collection for Jpsi+track
                                     EvtPlane            = cms.InputTag("hiEvtPlane",""),           # Name of Event Plane Collection. For RECO use: hiEventPlane,recoLevel
-                                    mom4format          = cms.untracked.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
                                     srcSV               = cms.InputTag("inclusiveSecondaryVerticesLoose",""), # Name of SV collection
 
                                     triggerResultsLabel = cms.InputTag("TriggerResults","",HLTProName), # Label of Trigger Results
@@ -212,6 +211,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     fillRecoTracks    = cms.bool(False),
                                     histFileName      = cms.string(outputFileName),
                                     dataSetName       = cms.string("Jpsi_DataSet.root"),
+                                    mom4format          = cms.untracked.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
 
                                     dblTriggerPathNames = muonTriggerList['DoubleMuonTrigger'],
                                     dblTriggerFilterNames = muonTriggerList['DoubleMuonFilter'],

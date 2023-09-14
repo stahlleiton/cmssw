@@ -8,7 +8,6 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         genParticles     = cms.InputTag("genParticles"),
                         EvtPlane         = cms.InputTag("hiEvtPlane","recoLevel"),
                         primaryVertexTag = cms.InputTag("hiSelectedVertex"),
-                        mom4format       = cms.untracked.string("vector"), # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
                         
                         triggerResultsLabel = cms.InputTag("TriggerResults","","HLT"),
 
@@ -68,6 +67,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         fillRecoTracks = cms.bool(False),
                         histFileName = cms.string("Jpsi_Histos.root"),		
                         dataSetName = cms.string("Jpsi_DataSet.root"),
+                        mom4format       = cms.untracked.string("vector"), # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
                         
                         #--
                         dblTriggerPathNames    = cms.vstring(),
