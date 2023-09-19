@@ -7,6 +7,7 @@ namespace reco {
     unsigned short int numMinHFTowers3;
     unsigned short int numMinHFTowers4;
     unsigned short int numMinHFTowers5;
+    double maxHFTowerE;
   };
 }  // namespace reco
 

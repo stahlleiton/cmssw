@@ -52,6 +52,8 @@ void HiHFFilterProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
   unsigned short int nTowersTh4HFminus = 0;
   unsigned short int nTowersTh5HFplus = 0;
   unsigned short int nTowersTh5HFminus = 0;
+  double maxTowerEneHFplus = 0;
+  double maxTowerEneHFminus = 0;
 
   auto hiHFFilterResults = std::make_unique<reco::HFFilterInfo>();
   for (const auto& tower : towers) {
@@ -67,11 +69,15 @@ void HiHFFilterProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
       nTowersTh3HFplus += energy >= 3.0 ? 1 : 0;
       nTowersTh4HFplus += energy >= 4.0 ? 1 : 0;
       nTowersTh5HFplus += energy >= 5.0 ? 1 : 0;
+      if (maxTowerEneHFplus < energy)
+        maxTowerEneHFplus = energy;
     } else if (eta_minus) {
       nTowersTh2HFminus += energy >= 2.0 ? 1 : 0;
       nTowersTh3HFminus += energy >= 3.0 ? 1 : 0;
       nTowersTh4HFminus += energy >= 4.0 ? 1 : 0;
       nTowersTh5HFminus += energy >= 5.0 ? 1 : 0;
+      if (maxTowerEneHFminus < energy)
+        maxTowerEneHFminus = energy;
     }
   }
 
@@ -79,6 +85,7 @@ void HiHFFilterProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
   hiHFFilterResults->numMinHFTowers3 = std::min(nTowersTh3HFplus, nTowersTh3HFminus);
   hiHFFilterResults->numMinHFTowers4 = std::min(nTowersTh4HFplus, nTowersTh4HFminus);
   hiHFFilterResults->numMinHFTowers5 = std::min(nTowersTh5HFplus, nTowersTh5HFminus);
+  hiHFFilterResults->maxHFTowerE = std::min(maxTowerEneHFplus, maxTowerEneHFminus);
 
   iEvent.put(std::move(hiHFFilterResults), "hiHFfilters");
 }

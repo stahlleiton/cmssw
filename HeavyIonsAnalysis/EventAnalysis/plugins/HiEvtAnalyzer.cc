@@ -132,6 +132,7 @@ private:
   std::vector<float> tnpus;  //true number of interactions
 
   int numMinHFTower2, numMinHFTower3, numMinHFTower4, numMinHFTower5;
+  float maxHFTowerE;
 
   float vx, vy, vz;
 
@@ -399,11 +400,13 @@ void HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     numMinHFTower3 = HFfilter->numMinHFTowers3;
     numMinHFTower4 = HFfilter->numMinHFTowers4;
     numMinHFTower5 = HFfilter->numMinHFTowers5;
+    maxHFTowerE = HFfilter->maxHFTowerE;
   } else {
     numMinHFTower2 = 0;
     numMinHFTower3 = 0;
     numMinHFTower4 = 0;
     numMinHFTower5 = 0;
+    maxHFTowerE = 0;
   }
 
   thi_->Fill();
@@ -450,6 +453,7 @@ void HiEvtAnalyzer::beginJob() {
   numMinHFTower3 = -1;
   numMinHFTower4 = -1;
   numMinHFTower5 = -1;
+  maxHFTowerE = -1;
 
   // Run info
   thi_->Branch("run", &run, "run/i");
@@ -560,6 +564,7 @@ void HiEvtAnalyzer::beginJob() {
   thi_->Branch("numMinHFTower3", &numMinHFTower3, "numMinHFTower3/I");
   thi_->Branch("numMinHFTower4", &numMinHFTower4, "numMinHFTower4/I");
   thi_->Branch("numMinHFTower5", &numMinHFTower5, "numMinHFTower5/I");
+  thi_->Branch("maxHFTowerE", &maxHFTowerE, "maxHFTowerE/F");
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
