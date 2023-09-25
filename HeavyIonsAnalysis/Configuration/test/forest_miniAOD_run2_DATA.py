@@ -11,7 +11,7 @@ process = cms.Process('HiForest', Run2_2018_pp_on_AA,run2_miniAOD_pp_on_AA_103X)
 
 # HiForest info
 process.load("HeavyIonsAnalysis.EventAnalysis.HiForestInfo_cfi")
-process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 125X, data")
+process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, data")
 
 ###############################################################################
 
@@ -117,7 +117,7 @@ process.load('HeavyIonsAnalysis.ZDCAnalysis.QWZDC2018RecHit_cfi')
 
 process.load('HeavyIonsAnalysis.ZDCAnalysis.zdcanalyzer_cfi')
 process.zdcanalyzer.doZDCRecHit = True
-process.zdcanalyzer.doZDCDigi = False
+process.zdcanalyzer.doZDCDigi = True
 process.zdcanalyzer.zdcRecHitSrc = cms.InputTag("QWzdcreco")
 process.zdcanalyzer.calZDCDigi = False
 ################################
@@ -132,7 +132,7 @@ process.forest = cms.Path(
     #process.hltobject +
     #process.l1object +
     process.trackSequencePbPb +
-    process.particleFlowAnalyser +
+    #process.particleFlowAnalyser +
     process.correctedElectrons +
     process.ggHiNtuplizer +
     process.zdcdigi +

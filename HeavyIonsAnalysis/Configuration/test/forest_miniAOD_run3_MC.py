@@ -3,14 +3,14 @@
 # Type: mc
 
 import FWCore.ParameterSet.Config as cms
-from Configuration.Eras.Era_Run3_pp_on_PbPb_cff import Run3_pp_on_PbPb
-process = cms.Process('HiForest', Run3_pp_on_PbPb)
+from Configuration.Eras.Era_Run3_pp_on_PbPb_2023_cff import Run3_pp_on_PbPb_2023
+process = cms.Process('HiForest', Run3_pp_on_PbPb_2023)
 
 ###############################################################################
 
 # HiForest info
 process.load("HeavyIonsAnalysis.EventAnalysis.HiForestInfo_cfi")
-process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 125X, mc")
+process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, mc")
 
 ###############################################################################
 
@@ -18,13 +18,13 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 125X, mc")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-        '/store/user/mnguyen//Run3MC/QCD_pThat15_Run3_HydjetEmbedded/QCD_pthat15_Run3_HydjetEmbedded_mAOD_restrictTracking/220714_111445/0000/mAOD_RAW2DIGI_L1Reco_RECO_PAT_99.root'
+        'root://eoscms.cern.ch//store/group/phys_heavyions/jviinika/PythiaHydjetRun3_5p36TeV_dijet_ptHat15_100kEvents_miniAOD_2023_08_30/PythiaHydjetDijetRun3/PythiaHydjetRun3_dijet_ptHat15_5p36TeV_miniAOD/230830_165931/0000/pythiaHydjet_miniAOD_11.root'
     ),
 )
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(20)
     )
 
 ###############################################################################
@@ -38,7 +38,7 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2022_realistic_hi', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2023_realistic_hi', '')
 process.HiForestInfo.GlobalTagLabel = process.GlobalTag.globaltag
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
@@ -81,20 +81,14 @@ process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
 
-from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_mc
-process.hltobject.triggerNames = trigger_list_mc
+#from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_mc
+#process.hltobject.triggerNames = trigger_list_mc
 
-# process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 ################################
 # electrons, photons, muons
-SS2018PbPbMC = "HeavyIonsAnalysis/EGMAnalysis/data/SS2018PbPbMC.dat"
-process.load('HeavyIonsAnalysis.EGMAnalysis.correctedElectronProducer_cfi')
-process.correctedElectrons.correctionFile = SS2018PbPbMC
-
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
 process.ggHiNtuplizer.doGenParticles = cms.bool(True)
 process.ggHiNtuplizer.doMuons = cms.bool(False)
-process.ggHiNtuplizer.electronSrc = "correctedElectrons"
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
 # jet reco sequence
@@ -109,23 +103,35 @@ process.muonAnalyzer.doGen = cms.bool(True)
 
 ###############################################################################
 
+# ZDC analyzer
+process.load('HeavyIonsAnalysis.ZDCAnalysis.QWZDC2018Producer_cfi')
+process.load('HeavyIonsAnalysis.ZDCAnalysis.QWZDC2018RecHit_cfi')
+process.load('HeavyIonsAnalysis.ZDCAnalysis.zdcanalyzer_cfi')
 
+process.zdcanalyzer.doZDCRecHit = False
+process.zdcanalyzer.doZDCDigi = True
+process.zdcanalyzer.zdcRecHitSrc = cms.InputTag("QWzdcreco")
+process.zdcanalyzer.zdcDigiSrc = cms.InputTag("hcalDigis", "ZDC")
+process.zdcanalyzer.calZDCDigi = False
+process.zdcanalyzer.verbose = False
 
 ###############################################################################
 # main forest sequence
 process.forest = cms.Path(
     process.HiForestInfo +
     process.hltanalysis +
-    process.hltobject +
-    process.l1object +
+#    process.hltobject +
+#    process.l1object +
     process.trackSequencePbPb +
-    process.particleFlowAnalyser +
+#    process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
     process.HiGenParticleAna +
-    process.correctedElectrons +
     process.ggHiNtuplizer +
-    process.unpackedMuons +
-    process.muonAnalyzer
+#    process.zdcdigi +
+#    process.QWzdcreco +
+    process.zdcanalyzer #+
+#    process.unpackedMuons +
+#    process.muonAnalyzer
     )
 
 #customisation
@@ -214,4 +220,6 @@ if addCandidateTagging:
 process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
 process.pclusterCompatibilityFilter = cms.Path(process.clusterCompatibilityFilter)
 process.pprimaryVertexFilter = cms.Path(process.primaryVertexFilter)
+process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
+process.pphfCoincFilter2Th4 = cms.Path(process.phfCoincFilter2Th4)
 process.pAna = cms.EndPath(process.skimanalysis)

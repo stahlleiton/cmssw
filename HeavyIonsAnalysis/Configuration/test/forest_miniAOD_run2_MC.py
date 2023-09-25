@@ -11,7 +11,7 @@ process = cms.Process('HiForest', Run2_2018_pp_on_AA,run2_miniAOD_pp_on_AA_103X)
 
 # HiForest info
 process.load("HeavyIonsAnalysis.EventAnalysis.HiForestInfo_cfi")
-process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 125X, mc")
+process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, mc")
 
 ###############################################################################
 

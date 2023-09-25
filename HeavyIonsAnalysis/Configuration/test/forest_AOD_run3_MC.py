@@ -3,14 +3,14 @@
 # Type: mc
 
 import FWCore.ParameterSet.Config as cms
-from Configuration.Eras.Era_Run3_pp_on_PbPb_cff import Run3_pp_on_PbPb
-process = cms.Process('HiForest', Run3_pp_on_PbPb)
+from Configuration.Eras.Era_Run3_pp_on_PbPb_2023_cff import Run3_pp_on_PbPb_2023
+process = cms.Process('HiForest', Run3_pp_on_PbPb_2023)
 
 ###############################################################################
 
 # HiForest info
 process.load("HeavyIonsAnalysis.EventAnalysis.HiForestInfo_cfi")
-process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 125X, mc")
+process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, mc")
 
 ###############################################################################
 
@@ -38,7 +38,7 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2022_realistic_hi', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2023_realistic_hi', '')
 process.HiForestInfo.GlobalTagLabel = process.GlobalTag.globaltag
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
