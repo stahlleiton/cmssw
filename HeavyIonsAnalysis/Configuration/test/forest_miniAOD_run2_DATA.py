@@ -120,6 +120,8 @@ process.zdcanalyzer.doZDCRecHit = True
 process.zdcanalyzer.doZDCDigi = True
 process.zdcanalyzer.zdcRecHitSrc = cms.InputTag("QWzdcreco")
 process.zdcanalyzer.calZDCDigi = False
+process.zdcanalyzer.verbose = False
+
 ################################
 
 
