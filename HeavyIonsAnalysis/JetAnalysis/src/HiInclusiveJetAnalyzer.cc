@@ -13,6 +13,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "fastjet/contrib/Njettiness.hh"
 #include "fastjet/AreaDefinition.hh"
 #include "fastjet/ClusterSequence.hh"
@@ -611,12 +612,13 @@ void HiInclusiveJetAnalyzer::analyze(const Event& iEvent, const EventSetup& iSet
         }
       }
 
+      reco::PFCandidate converter = reco::PFCandidate();
       for (unsigned int icand = 0; icand < pfCandidates->size(); ++icand) {
         const pat::PackedCandidate& track = (*pfCandidates)[icand];
         double dr = deltaR(jet, track);
         if (dr < rParam) {
           double ptcand = track.pt();
-          int pfid = track.pdgId();
+          int pfid = converter.translatePdgIdToType(track.pdgId());
 
           switch (pfid) {
             case 1:
