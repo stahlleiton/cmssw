@@ -214,9 +214,7 @@ def oniaTreeAnalyzer(process, muonTriggerList=[[],[],[],[]], HLTProName='HLT', m
                                     mom4format          = cms.string(getObjectsBy),          # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
 
                                     dblTriggerPathNames = muonTriggerList['DoubleMuonTrigger'],
-                                    dblTriggerFilterNames = muonTriggerList['DoubleMuonFilter'],
                                     sglTriggerPathNames = muonTriggerList['SingleMuonTrigger'],
-                                    sglTriggerFilterNames = muonTriggerList['SingleMuonFilter'],
                                     stageL1Trigger = cms.uint32(L1Stage),
     )
 
