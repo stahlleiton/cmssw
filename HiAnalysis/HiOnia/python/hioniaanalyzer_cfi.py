@@ -8,26 +8,26 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         genParticles     = cms.InputTag("genParticles"),
                         EvtPlane         = cms.InputTag("hiEvtPlane","recoLevel"),
                         primaryVertexTag = cms.InputTag("hiSelectedVertex"),
-                        
+
                         triggerResultsLabel = cms.InputTag("TriggerResults","","HLT"),
 
                         CentralitySrc    = cms.InputTag("hiCentrality"),
                         CentralityBinSrc = cms.InputTag("centralityBin","HFtowers"),
-                        
+
                         #-- Reco Details
                         useBeamSpot = cms.bool(False),
                         useRapidity = cms.bool(True),
-                        
+
                         #--
                         maxAbsZ = cms.double(24.0),
-                        
+
                         pTBinRanges = cms.vdouble(0.5, 3.0, 6.0, 8.0, 10.0, 15.0, 35.0),
                         etaBinRanges = cms.vdouble(0.0, 2.5),
                         centralityRanges = cms.vdouble(20,40,100),
-                        
-                        onlyTheBest = cms.bool(False),		
+
+                        onlyTheBest = cms.bool(False),
                         applyCuts = cms.bool(True),
-			selTightGlobalMuon = cms.bool(False), 
+			selTightGlobalMuon = cms.bool(False),
                         storeEfficiency = cms.bool(False),
                         SofterSgMuAcceptance = cms.bool(False),
                         SumETvariables = cms.bool(True),
@@ -40,11 +40,11 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         miniAODcut = cms.bool(False),
                         removeSignalEvents = cms.untracked.bool(False),
                         removeTrueMuons = cms.untracked.bool(False),
-                        checkTrigNames     = cms.bool(True),  # Whether to names of the triggers given in the config 
-                        
+                        checkTrigNames     = cms.bool(True),  # Whether to names of the triggers given in the config
+
                         muonLessPV = cms.bool(False),
                         useSVfinder = cms.bool(False),
-                        
+
                         #-- Gen Details
                         BcPDG = cms.int32(541),
                         oniaPDG = cms.int32(443),
@@ -65,13 +65,11 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         fillSingleMuons = cms.bool(True),
                         onlySingleMuons = cms.bool(False),
                         fillRecoTracks = cms.bool(False),
-                        histFileName = cms.string("Jpsi_Histos.root"),		
+                        histFileName = cms.string("Jpsi_Histos.root"),
                         dataSetName = cms.string("Jpsi_DataSet.root"),
                         mom4format       = cms.string("vector"), # "vector" for flat tree, "array" for TClonesArray of LorentzVectors
-                        
+
                         #--
                         dblTriggerPathNames    = cms.vstring(),
-                        dblTriggerFilterNames = cms.vstring(),
                         sglTriggerPathNames    = cms.vstring(),
-                        sglTriggerFilterNames = cms.vstring()
                         )
