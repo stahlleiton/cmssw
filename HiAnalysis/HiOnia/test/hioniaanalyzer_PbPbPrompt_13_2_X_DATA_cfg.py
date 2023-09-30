@@ -24,7 +24,7 @@ miniAOD        = True # whether the input file is in miniAOD format (default is 
 miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 UsePropToMuonSt = True # whether to use L1 propagated muons (works only for miniAOD now)
 pdgId = 443 # J/Psi : 443, Y(1S) : 553
-useMomFormat = "array" # default "array" for TClonesArray of TLorentzVector. Use "vector" for std::vector<float> of pt, eta, phi, M
+useMomFormat = "vector" # default "array" for TClonesArray of TLorentzVector. Use "vector" for std::vector<float> of pt, eta, phi, M
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -59,10 +59,10 @@ run = 374354
 
 filename = f'HIExpressRawPrime_Run{run}_miniAOD.root'
 
-options.outputFile = f"file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/Oniatrees/Oniatree_{filename}"
+options.outputFile = f"/eos/cms/store/group/phys_heavyions/dileptons/Data2023/Oniatrees/Oniatree_{filename}"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-  f'file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/DimuonSkims/DimuonSkim_{filename}.root'
+  f'file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/DimuonSkims/DimuonSkim_{filename}'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -121,6 +121,20 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '')
+
+### For Centrality
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
+print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
+process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
+process.GlobalTag.toGet.extend([
+    cms.PSet(record = cms.string("HeavyIonRcd"),
+        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
+       connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+        label = cms.untracked.string("HFtowers")
+        ),
+    ])
 
 #----------------------------------------------------------------------------
 
@@ -193,7 +207,7 @@ if saveHLT:
   process.oniaTreeAna = cms.Path(process.hltbitanalysis * process.hltobject * process.oniaTreeAna )
 '''
 
-process.oniaTreeAna.replace(process.hionia, process.hionia )
+process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
