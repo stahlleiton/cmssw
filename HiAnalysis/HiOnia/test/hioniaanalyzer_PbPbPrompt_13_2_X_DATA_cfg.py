@@ -4,7 +4,7 @@ from Configuration.StandardSequences.Eras import eras
 
 #----------------------------------------------------------------------------
 
-# Setup Settings for ONIA TREE: 2023 PbPb MC
+# Setup Settings for ONIA TREE: 2023 PbPb data taking, ntuples dimuon skimmed events based on HIExpressRawPrime streams
 
 HLTProcess     = "HLT" # Name of HLT process
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
@@ -54,10 +54,15 @@ process = cms.Process("HIOnia", eras.Run3_pp_on_PbPb)
 options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Name
-options.outputFile = "Oniatree_DATA_miniAOD.root"
+
+run = 374354
+
+filename = f'HIExpressRawPrime_Run{run}_miniAOD.root'
+
+options.outputFile = f"file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/Oniatrees/Oniatree_{filename}"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
 options.inputFiles =[
-  'file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/DimuonSkims/DimuonSkim_HIExpressRawPrime_Run374354_miniAOD.root'
+  f'file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/DimuonSkims/DimuonSkim_{filename}.root'
 ]
 options.maxEvents = -1 # -1 means all events
 
@@ -102,7 +107,7 @@ triggerList    = {
 if isMC:
   globalTag = 'auto:phase1_2023_realistic_hi' #for Run3 MC : phase1_2023_realistic_hi
 else:
-  globalTag = 'auto:run3_data_prompt' # for Run3 data (test run) : 124X_dataRun3_Prompt_v10
+  globalTag = '132X_dataRun3_Express_v4' # 'auto:run3_data_prompt' # for Run3 data (test run) : 124X_dataRun3_Prompt_v10
 
 #----------------------------------------------------------------------------
 
@@ -225,5 +230,7 @@ process.TFileService = cms.Service("TFileService",
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+
+process.options.numberOfThreads = 4
 
 process.schedule  = cms.Schedule( process.oniaTreeAna )
