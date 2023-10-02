@@ -97,13 +97,20 @@ void TrackAnalyzer::fillTracks(const edm::Event& iEvent, const edm::EventSetup& 
 
     //DCA info for associated vtx
     const auto& v = c.vertexRef();
-    if (v.isNonnull()) {
+    if (v.isNonnull() && c.hasTrackDetails()) {
       trkAssociatedVtxIndx.push_back(v.key());
       trkAssociatedVtxQuality.push_back(c.fromPV(v.key()));
       trkDzAssociatedVtx.push_back(c.dz(v->position()));
       trkDzErrAssociatedVtx.push_back(sqrt(c.dzError() * c.dzError() + v->zError() * v->zError()));
       trkDxyAssociatedVtx.push_back(c.dxy(v->position()));
       trkDxyErrAssociatedVtx.push_back(sqrt(c.dxyError() * c.dxyError() + v->xError() * v->yError()));
+    } else {
+      trkAssociatedVtxIndx.push_back(-1);
+      trkAssociatedVtxQuality.push_back(-999999);
+      trkDzAssociatedVtx.push_back(-999999);
+      trkDzErrAssociatedVtx.push_back(-999999);
+      trkDxyAssociatedVtx.push_back(-999999);
+      trkDxyErrAssociatedVtx.push_back(-999999);
     }
 
     //DCA info for first (highest pt) vtx
