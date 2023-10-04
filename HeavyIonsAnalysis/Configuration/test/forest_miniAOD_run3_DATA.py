@@ -25,7 +25,7 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, data")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-        'root://eoscms.cern.ch//store/group/phys_heavyions/wangj/RECO2023/miniaod_HIExpress_374354/reco_run374354_ls0050_streamHIExpress_StorageManager.root'
+        'root://eoscms.cern.ch//store/group/phys_heavyions/wangj/RECO2023/miniaod_PhysicsHIForward0_374596/reco_run374596_ls0274_streamPhysicsHIForward0_StorageManager.root'
     ), 
 )
 
@@ -45,8 +45,24 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '124X_dataRun3_Prompt_v10', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '132X_dataRun3_Prompt_v4', '')
 process.HiForestInfo.GlobalTagLabel = process.GlobalTag.globaltag
+
+###############################################################################
+
+# Define centrality binning
+process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
+process.GlobalTag.toGet.extend([
+    cms.PSet(record = cms.string("HeavyIonRcd"),
+        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289"),
+        connect = cms.string("sqlite_file:CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db"),
+        label = cms.untracked.string("HFtowers")
+        ),
+    ])
+
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
 
 ###############################################################################
 
@@ -105,12 +121,14 @@ process.load('HeavyIonsAnalysis.ZDCAnalysis.QWZDC2018Producer_cfi')
 process.load('HeavyIonsAnalysis.ZDCAnalysis.QWZDC2018RecHit_cfi')
 process.load('HeavyIonsAnalysis.ZDCAnalysis.zdcanalyzer_cfi')
 
+process.zdcdigi.SOI = cms.untracked.int32(2)
 process.zdcanalyzer.doZDCRecHit = False
 process.zdcanalyzer.doZDCDigi = True
 process.zdcanalyzer.zdcRecHitSrc = cms.InputTag("QWzdcreco")
 process.zdcanalyzer.zdcDigiSrc = cms.InputTag("hcalDigis", "ZDC")
 process.zdcanalyzer.calZDCDigi = False
 process.zdcanalyzer.verbose = False
+process.zdcanalyzer.nZdcTs = cms.int32(6)
 
 from CondCore.CondDB.CondDB_cfi import *
 process.es_pool = cms.ESSource("PoolDBESSource",
@@ -142,6 +160,7 @@ process.es_ascii = cms.ESSource(
 # main forest sequence
 process.forest = cms.Path(
     process.HiForestInfo +
+    process.centralityBin +
     process.hiEvtAnalyzer +
     process.hltanalysis +
     process.hltobject +
