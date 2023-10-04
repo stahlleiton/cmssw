@@ -68,8 +68,6 @@ void pat::TrackAndVertexUnpacker::produce(edm::StreamID, edm::Event& iEvent, con
     pcAssoc[i] = std::vector<int>(cands->size(), -1);
     for (size_t iC = 0; iC < cands->size(); iC++) {
       const auto& cand = (*cands)[iC];
-      if (cand.charge() == 0)
-        continue;
       const auto& normChi2 = normChi2Map.isValid() ? normChi2Map->get(cands.id(), iC) : -1;
       const auto& trkAlgo = static_cast<reco::TrackBase::TrackAlgorithm>(cand.trkAlgo());
       const auto& trkOrigAlgo = static_cast<reco::TrackBase::TrackAlgorithm>(cand.trkOriginalAlgo());
