@@ -21,10 +21,10 @@ OneMatchedHLTMu = -1   # Keep only di(tri)muons of which the one(two) muon(s) ar
 #############################################################################
 keepExtraColl  = False # General Tracks + Stand Alone Muons + Converted Photon collections
 miniAOD        = True # whether the input file is in miniAOD format (default is AOD)
-miniAOD_muonCuts = False # Apply the cuts used in the muon collections of miniAOD. Only has an effect with AOD.
 UsePropToMuonSt = True # whether to use L1 propagated muons (works only for miniAOD now)
 pdgId = 443 # J/Psi : 443, Y(1S) : 553
 useMomFormat = "vector" # default "array" for TClonesArray of TLorentzVector. Use "vector" for std::vector<float> of pt, eta, phi, M
+useJSON = True # Use json file with cmsRun
 #----------------------------------------------------------------------------
 
 # Print Onia Tree settings:
@@ -43,7 +43,6 @@ print( "[INFO] doDimuonTrk          = " + ("True" if doDimuonTrk else "False") )
 print( "[INFO] atLeastOneCand       = " + ("True" if atLeastOneCand else "False") )
 print( "[INFO] OneMatchedHLTMu      = " + ("True" if OneMatchedHLTMu else "False") )
 print( "[INFO] miniAOD              = " + ("True" if miniAOD else "False") )
-print( "[INFO] miniAOD_muonCuts     = " + ("True" if miniAOD_muonCuts else "False") )
 print( "[INFO] UsePropToMuonSt      = " + ("True" if UsePropToMuonSt else "False") )
 print( " " )
 
@@ -130,8 +129,8 @@ print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5F_v1032x02_mc" if isMC else "CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run2v1033p1x01_offline"),
-       connect = cms.string("frontier://FrontierProd/CMS_CONDITIONS"),
+        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289"),
+        connect = cms.string("sqlite_file:CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db"),
         label = cms.untracked.string("HFtowers")
         ),
     ])
@@ -141,23 +140,19 @@ process.GlobalTag.toGet.extend([
 # For OniaTree Analyzer
 from HiAnalysis.HiOnia.oniaTreeAnalyzer_cff import oniaTreeAnalyzer
 oniaTreeAnalyzer(process,
-                 muonTriggerList=triggerList, #HLTProName=HLTProcess,
+                 muonTriggerList=triggerList, HLTProName=HLTProcess,
                  muonSelection=muonSelection, L1Stage=2, isMC=isMC, pdgID=pdgId, outputFileName=options.outputFile, doTrimu=doTrimuons,
-                 miniAOD=miniAOD, miniAODcuts=miniAOD_muonCuts, OnlySingleMuons=False
+                 OnlySingleMuons=False
 )
 
-#process.onia2MuMuPatGlbGlb.dimuonSelection       = cms.string("8 < mass && mass < 14 && charge==0 && abs(daughter('muon1').innerTrack.dz - daughter('muon2').innerTrack.dz) < 25")
-#process.onia2MuMuPatGlbGlb.lowerPuritySelection  = cms.string("pt > 5 || isPFMuon || (pt>1.2 && (isGlobalMuon || isStandAloneMuon)) || (isTrackerMuon && track.quality('highPurity'))")
-#process.onia2MuMuPatGlbGlb.higherPuritySelection = cms.string("") ## No need to repeat lowerPuritySelection in there, already included
 if applyCuts:
-  process.onia2MuMuPatGlbGlb.LateDimuonSel         = cms.string("userFloat(\"vProb\")>0.01")
-process.onia2MuMuPatGlbGlb.onlySoftMuons         = cms.bool(OnlySoftMuons)
+  process.onia2MuMuPatGlbGlb.LateDimuonSel = cms.string("userFloat(\"vProb\")>0.01")
+process.onia2MuMuPatGlbGlb.onlySoftMuons = cms.bool(OnlySoftMuons)
 process.hionia.minimumFlag      = cms.bool(keepExtraColl)           #for Reco_trk_*
 process.hionia.useGeTracks      = cms.untracked.bool(keepExtraColl) #for Reco_trk_*
 process.hionia.fillRecoTracks   = cms.bool(keepExtraColl)           #for Reco_trk_*
 process.hionia.CentralitySrc    = cms.InputTag("hiCentrality")
 process.hionia.CentralityBinSrc = cms.InputTag("centralityBin","HFtowers")
-#process.hionia.muonLessPV       = cms.bool(False)
 process.hionia.SofterSgMuAcceptance = cms.bool(SofterSgMuAcceptance)
 process.hionia.SumETvariables   = cms.bool(SumETvariables)
 process.hionia.applyCuts        = cms.bool(applyCuts)
@@ -166,54 +161,12 @@ process.hionia.OneMatchedHLTMu  = cms.int32(OneMatchedHLTMu)
 process.hionia.checkTrigNames   = cms.bool(False)#change this to get the event-level trigger info in hStats output (but creates lots of warnings when fake trigger names are used)
 process.hionia.mom4format       = cms.string(useMomFormat)
 
-'''
-#----------------------------------------------------------------------------
-
-# For HLTBitAnalyzer
-process.load("HLTrigger.HLTanalyzers.HLTBitAnalyser_cfi")
-process.hltbitanalysis.HLTProcessName              = HLTProcess
-process.hltbitanalysis.hltresults                  = cms.InputTag("TriggerResults","",HLTProcess)
-process.hltbitanalysis.l1tAlgBlkInputTag           = cms.InputTag("hltGtStage2Digis","",HLTProcess)
-process.hltbitanalysis.l1tExtBlkInputTag           = cms.InputTag("hltGtStage2Digis","",HLTProcess)
-process.hltbitanalysis.gObjectMapRecord            = cms.InputTag("hltGtStage2ObjectMap","",HLTProcess)
-process.hltbitanalysis.gmtStage2Digis              = cms.string("hltGtStage2Digis")
-process.hltbitanalysis.caloStage2Digis             = cms.string("hltGtStage2Digis")
-process.hltbitanalysis.UseL1Stage2                 = cms.untracked.bool(True)
-process.hltbitanalysis.getPrescales                = cms.untracked.bool(False)
-process.hltbitanalysis.getL1InfoFromEventSetup     = cms.untracked.bool(False)
-process.hltbitanalysis.UseTFileService             = cms.untracked.bool(True)
-process.hltbitanalysis.RunParameters.HistogramFile = cms.untracked.string(options.outputFile)
-process.hltbitanalysis.RunParameters.isData        = cms.untracked.bool(not isMC)
-process.hltbitanalysis.RunParameters.Monte         = cms.bool(isMC)
-process.hltbitanalysis.RunParameters.GenTracks     = cms.bool(False)
-if (HLTProcess == "HLT") :
-	process.hltbitanalysis.l1tAlgBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
-	process.hltbitanalysis.l1tExtBlkInputTag = cms.InputTag("gtStage2Digis","","RECO")
-	process.hltbitanalysis.gmtStage2Digis    = cms.string("gtStage2Digis")
-	process.hltbitanalysis.caloStage2Digis   = cms.string("gtStage2Digis")
-
-##----------------------------------------------------------------------------
-
-# For HLTObject Analyzer
-process.load("HeavyIonsAnalysis.EventAnalysis.hltobject_cfi")
-process.hltobject.processName = cms.string(HLTProcess)
-process.hltobject.treeName = cms.string(options.outputFile)
-process.hltobject.loadTriggersFromHLT = cms.untracked.bool(False)
-process.hltobject.triggerNames = triggerList['DoubleMuonTrigger'] + triggerList['SingleMuonTrigger']
-process.hltobject.triggerResults = cms.InputTag("TriggerResults","",HLTProcess)
-process.hltobject.triggerEvent   = cms.InputTag("hltTriggerSummaryAOD","",HLTProcess)
-
-if saveHLT:
-  process.oniaTreeAna = cms.Path(process.hltbitanalysis * process.hltobject * process.oniaTreeAna )
-'''
-
 process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 
 if applyEventSel:
   process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
-  #process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
-  #process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter* process.hionia )
-  process.oniaTreeAna.replace(process.hionia, process.primaryVertexFilter * process.clusterCompatibilityFilter* process.hionia )
+  process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
+  process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
 
 if atLeastOneCand:
   if doTrimuons:
@@ -244,6 +197,10 @@ process.TFileService = cms.Service("TFileService",
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+if useJSON:
+    import FWCore.PythonUtilities.LumiList as LumiList
+    jsonFile = '/eos/cms/store/group/phys_heavyions/sayan/HIN_run3_pseudo_JSON/HIPhysicsRawPrime/Muon_Online_live.json'
+    process.source.lumisToProcess = LumiList.LumiList(filename = jsonFile).getVLuminosityBlockRange()
 
 process.options.numberOfThreads = 4
 
