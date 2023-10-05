@@ -29,6 +29,9 @@ process.source = cms.Source("PoolSource",
     ), 
 )
 
+import FWCore.PythonUtilities.LumiList as LumiList
+process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/cms/store/group/phys_heavyions/sayan/HIN_run3_pseudo_JSON/HIPhysicsRawPrime/Golden_Online_live.json').getVLuminosityBlockRange()
+
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(25)
