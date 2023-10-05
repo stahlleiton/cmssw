@@ -4,7 +4,7 @@ from Configuration.StandardSequences.Eras import eras
 
 #----------------------------------------------------------------------------
 
-# Setup Settings for ONIA TREE: 2023 PbPb data taking, ntuples dimuon skimmed events based on HIExpressRawPrime streams
+# Setup Settings for ONIA TREE: 2023 PbPb data taking, ntuples dimuon skimmed events based on 'PhysicsHIPhysicsRawPrime' streams (thanks to Jing!)
 
 HLTProcess     = "HLT" # Name of HLT process
 isMC           = False # if input is MONTECARLO: True or if it's DATA: False
@@ -54,9 +54,9 @@ options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Name
 
-run = 374354
+run = 374719
 
-filename = f'HIExpressRawPrime_Run{run}_miniAOD.root'
+filename = f'PhysicsHIPhysicsRawPrime0_Run{run}_miniAOD.root'
 
 options.outputFile = f"/eos/cms/store/group/phys_heavyions/dileptons/Data2023/Oniatrees/Oniatree_{filename}"
 options.secondaryOutputFile = "Jpsi_DataSet.root"
@@ -106,7 +106,7 @@ triggerList    = {
 if isMC:
   globalTag = 'auto:phase1_2023_realistic_hi' #for Run3 MC : phase1_2023_realistic_hi
 else:
-  globalTag = '132X_dataRun3_Express_v4' # 'auto:run3_data_prompt' # for Run3 data (test run) : 124X_dataRun3_Prompt_v10
+  globalTag = '132X_dataRun3_Prompt_v4' # 'auto:run3_data_prompt'
 
 #----------------------------------------------------------------------------
 
@@ -125,7 +125,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '')
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
 process.centralityBin.Centrality = cms.InputTag("hiCentrality")
 process.centralityBin.centralityVariable = cms.string("HFtowers")
-print('\n\033[31m~*~ USING CENTRALITY TABLE FOR PbPb 2018 ~*~\033[0m\n')
+print('\n\033[31m~*~ USING PRELIMINARY CENTRALITY TABLE FOR PbPb 2023 ~*~\033[0m\n')
 process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
 process.GlobalTag.toGet.extend([
     cms.PSet(record = cms.string("HeavyIonRcd"),
