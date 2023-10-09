@@ -36,7 +36,7 @@ hionia = cms.EDAnalyzer('HiOniaAnalyzer',
                         SofterSgMuAcceptance = cms.bool(False),
                         SumETvariables = cms.bool(True),
                         OneMatchedHLTMu = cms.int32(-1),
-                        storeSameSign = cms.bool(True),
+                        storeSameSign = cms.bool(False),
                         AtLeastOneCand = cms.bool(False),
 
                         doTrimuons = cms.bool(False),
