@@ -54,15 +54,13 @@ options = VarParsing.VarParsing ('analysis')
 
 # Input and Output File Name
 
-run = 374719
-
-filename = f'PhysicsHIPhysicsRawPrime0_Run{run}_miniAOD.root'
-
-options.outputFile = f"/eos/cms/store/group/phys_heavyions/dileptons/Data2023/Oniatrees/Oniatree_{filename}"
-options.secondaryOutputFile = "Jpsi_DataSet.root"
-options.inputFiles =[
-  f'file:/eos/cms/store/group/phys_heavyions/dileptons/Data2023/DimuonSkims/DimuonSkim_{filename}'
+options.inputFiles = [
+  '/store/hidata/HIRun2023A/HIPhysicsRawPrime0/MINIAOD/PromptReco-v2/000/374/668/00000/1bb772f3-bfa5-46ef-81d2-8cf78de992b0.root'
 ]
+
+options.outputFile = 'Oniatree_2023PbPbPromptRecoData_132X_miniAOD.root'
+options.secondaryOutputFile = "Jpsi_Dataset.root"
+
 options.maxEvents = -1 # -1 means all events
 
 # Get and parse the command line arguments
@@ -89,16 +87,18 @@ triggerList    = {
                         ),
                 # Single Muon Trigger List
                 'SingleMuonTrigger' : cms.vstring(
-                        "HLT_HIL1SingleMu0_Cosmic_v",#0
-                        "HLT_HIL1SingleMu0_Open_v",#1
-                        "HLT_HIL1SingleMu0_v",#2
-                        "HLT_HIL2SingleMu3_Open_v",#3
-                        "HLT_HIL2SingleMu5_v",#4
-                        "HLT_HIL2SingleMu7_v",#5
-                        "HLT_HIL3SingleMu3_Open_v",#6
-                        "HLT_HIL3SingleMu5_v",#7
-                        "HLT_HIL3SingleMu7_v",#8
-                        "HLT_HIL3SingleMu12_v",#9
+                        "HLT_HIL1SingleMu0_Open_v",#15
+                        "HLT_HIL1SingleMu0_v",#16
+                        "HLT_HIL2SingleMu3_Open_v",#17
+                        "HLT_HIL2SingleMu5_v",#18
+                        "HLT_HIL2SingleMu7_v",#19
+                        "HLT_HIL3SingleMu3_Open_v",#20
+                        "HLT_HIL3SingleMu5_v",#21
+                        "HLT_HIL3SingleMu7_v",#22
+                        "HLT_HIL3SingleMu12_v",#23
+                        "HLT_HIMinimumBiasHF1AND_v", #24
+                        "HLT_HIMinimumBiasHF1ANDZDC2nOR_v", #25
+                        "HLT_HIMinimumBiasHF1ANDZDC1nOR_v", #26
 			)
                 }
 
@@ -164,9 +164,19 @@ process.hionia.mom4format       = cms.string(useMomFormat)
 process.oniaTreeAna.replace(process.hionia, process.centralityBin * process.hionia )
 
 if applyEventSel:
+  # Offline event filters
   process.load('HeavyIonsAnalysis.EventAnalysis.collisionEventSelection_cff')
   process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
-  process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
+  #process.oniaTreeAna.replace(process.hionia, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.clusterCompatibilityFilter * process.hionia )
+
+  # HLT trigger firing events
+  import HLTrigger.HLTfilters.hltHighLevel_cfi
+  process.hltHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+  process.hltHI.HLTPaths = ["HLT_HIL*SingleMu*_v*", "HLT_HIL*DoubleMu*_v*", "HLT_HIMinimumBiasHF1AND*_v*"]
+  process.hltHI.throw = False
+  process.hltHI.andOr = True
+  
+  process.oniaTreeAna.replace(process.patMuonSequence, process.phfCoincFilter2Th4 * process.primaryVertexFilter * process.hltHI * process.clusterCompatibilityFilter * process.patMuonSequence )
 
 if atLeastOneCand:
   if doTrimuons:
@@ -197,10 +207,6 @@ process.TFileService = cms.Service("TFileService",
 		)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
-if useJSON:
-    import FWCore.PythonUtilities.LumiList as LumiList
-    jsonFile = '/eos/cms/store/group/phys_heavyions/sayan/HIN_run3_pseudo_JSON/HIPhysicsRawPrime/Muon_Online_live.json'
-    process.source.lumisToProcess = LumiList.LumiList(filename = jsonFile).getVLuminosityBlockRange()
 
 process.options.numberOfThreads = 4
 
