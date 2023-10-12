@@ -1309,33 +1309,6 @@ void HiOniaAnalyzer::fillGenInfo(){
   return;
 };
 
-//Find the indices of the reconstructed muon matching each generated muon, and vice versa
-void HiOniaAnalyzer::fillMuMatchingInfo(){
-
-  //initialize Gen_mu_whichRec
-  for (int igen=0;igen<Gen_mu_size;igen++){
-    Gen_mu_whichRec[igen] = -1;
-  }
- 
-  //Find the index of generated muon associated to a reco muon, txs to Reco_mu_pTrue
-  for (int irec=0;irec<Reco_mu_size;irec++){
-    int foundGen = -1;
-    if(Reco_mu_pTrue[irec]>=0){ //if pTrue=-1, then the reco muon is a fake                                                                                                                                                                  
-
-      for (int igen=0;igen<Gen_mu_size;igen++){
-        TLorentzVector *genmuMom = (TLorentzVector*)Gen_mu_4mom->ConstructedAt(igen);
-        if(fabs(genmuMom->P() - Reco_mu_pTrue[irec])/Reco_mu_pTrue[irec] < 1e-6 && Gen_mu_charge[igen]==Reco_mu_charge[irec]){
-          foundGen = igen; 
-	  break;
-        }
-      }
-    }
-
-    Reco_mu_whichGen[irec] = foundGen;
-    if(foundGen>-1) Gen_mu_whichRec[foundGen] = irec;
-  }
-  
-};
 
 //Find the indices of the reconstructed J/psi matching each generated J/psi (when the two daughter muons are reconstructed), and vice versa
 void HiOniaAnalyzer::fillQQMatchingInfo(){
@@ -1935,7 +1908,7 @@ void HiOniaAnalyzer::InitTree(){
   }
 
   return;
-}
+};
 
 // ------------ method called once each job just before starting event loop  ------------
 void  HiOniaAnalyzer::beginJob(){
@@ -2086,6 +2059,3 @@ void  HiOniaAnalyzer::endJob(){
   std::cout << "Total number of passed candidates = " << passedCandidates << std::endl;
   return;
 };
-
-
-
