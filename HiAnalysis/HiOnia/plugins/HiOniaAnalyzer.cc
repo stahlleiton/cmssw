@@ -864,8 +864,8 @@ void HiOniaAnalyzer::fillRecoJpsi(int count, std::string trigName, std::string c
   bool isBarrel = (fabs(aJpsiCand->rapidity()) < 1.2);
 
   if (iSign==0 &&
-	 JpsiCand->mass() >= JpsiMassMin && aJpsiCand->mass() < JpsiMassMax &&  
-	 JpsiCand->pt() >= JpsiPtMin && aJpsiCand->pt() < JpsiPtMax && 
+	 aJpsiCand->mass() >= JpsiMassMin && aJpsiCand->mass() < JpsiMassMax &&  
+	 aJpsiCand->pt() >= JpsiPtMin && aJpsiCand->pt() < JpsiPtMax && 
 	 abs(aJpsiCand->rapidity()) >= JpsiRapMin && fabs(aJpsiCand->rapidity()) < JpsiRapMax)	
     assedCandidates++;
 
