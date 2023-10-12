@@ -1745,3 +1745,6 @@ void  HiOniaAnalyzer::endJob(){
   std::cout << "Total number of passed candidates = " << passedCandidates << std::endl;
   return;
 };
+
+//define this as a plug-in
+DEFINE_FWK_MODULE(HiOniaAnalyzer);
