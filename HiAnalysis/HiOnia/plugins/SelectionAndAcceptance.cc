@@ -1,4 +1,4 @@
-
+#include "HiAnalysis/HiOnia/interface/HiOniaAnalyzer.h"
 
 bool HiOniaAnalyzer::isTrkInMuonAccept(TLorentzVector trk4mom, std::string muonType){
   if (muonType == (std::string)("GLB")) {
