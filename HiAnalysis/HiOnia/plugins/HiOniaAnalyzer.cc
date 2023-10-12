@@ -552,7 +552,6 @@ void HiOniaAnalyzer::fillTreeMuon(const pat::Muon* muon, int iType, ULong64_t tr
 	Reco_mu_simExtType[Reco_mu_size] = muon->simExtType();
       }
     }
-
   }
   else {
     std::cout<<"ERROR: 'muon' pointer in fillTreeMuon is NULL ! Return now"<<std::endl; return;
@@ -847,73 +846,66 @@ void HiOniaAnalyzer::fillTreeJpsi(int count){
 void HiOniaAnalyzer::fillRecoJpsi(int count, std::string trigName, std::string centName){
   pat::CompositeCandidate* aJpsiCand = _thePassedCands.at(count)->clone();
 
-  if(aJpsiCand==NULL){
-    std::cout<<"ERROR: 'aJpsiCand' pointer in fillTreeJpsi is NULL ! Return now"<<std::endl; return;
+  if(aJpsiCand==NULL){ 
+    std::cout<<"ERROR: 'aJpsiCand' pointer in fillTreeJpsi is NULL ! Return now"<<std::endl; return; 
   }
-  else{
+  aJpsiCand->addUserInt("centBin",centBin);
+  const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon1"));
+  const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon2"));
 
-    aJpsiCand->addUserInt("centBin",centBin);
-    const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon1"));
-    const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon2"));
+  if (muon1==NULL || muon2==NULL){ 
+    std::cout<<"ERROR: 'muon1' or 'muon2' pointer in fillTreeJpsi is NULL ! Return now"<<std::endl; return;
+  }
+  int iSign = muon1->charge() + muon2->charge();
+  if(iSign!=0){ (iSign==2)?(iSign=1):(iSign=2) ; }
 
-    if (muon1==NULL || muon2==NULL){
-      std::cout<<"ERROR: 'muon1' or 'muon2' pointer in fillTreeJpsi is NULL ! Return now"<<std::endl; return;
-    }
-    else {
-      int iSign = muon1->charge() + muon2->charge();
-      if(iSign!=0){ (iSign==2)?(iSign=1):(iSign=2) ; }
+  std::string theLabel =  trigName + "_" + centName + "_" + theSign.at(iSign);
 
-      std::string theLabel =  trigName + "_" + centName + "_" + theSign.at(iSign);
+  bool isBarrel = (fabs(aJpsiCand->rapidity()) < 1.2);
 
-      bool isBarrel = (fabs(aJpsiCand->rapidity()) < 1.2);
+  if (iSign==0 &&
+	 JpsiCand->mass() >= JpsiMassMin && aJpsiCand->mass() < JpsiMassMax &&  
+	 JpsiCand->pt() >= JpsiPtMin && aJpsiCand->pt() < JpsiPtMax && 
+	 abs(aJpsiCand->rapidity()) >= JpsiRapMin && fabs(aJpsiCand->rapidity()) < JpsiRapMax)	
+    assedCandidates++;
 
-      if (iSign==0 &&
-	  aJpsiCand->mass() >= JpsiMassMin && aJpsiCand->mass() < JpsiMassMax &&  
-	  aJpsiCand->pt() >= JpsiPtMin && aJpsiCand->pt() < JpsiPtMax && 
-	  fabs(aJpsiCand->rapidity()) >= JpsiRapMin && fabs(aJpsiCand->rapidity()) < JpsiRapMax) {
-	passedCandidates++;
-      }
-
-      if (_fillHistos) {
-	if (_combineCategories && _thePassedCats.at(count)<=Trk_Trk) { // for the moment consider Glb+Glb, GlbTrk+GlbTrk, Trk+Trk
-	  myRecoJpsiHistos->Fill(aJpsiCand, "All_"+ theLabel);
+  if (_fillHistos){
+	  if (_combineCategories && _thePassedCats.at(count)<=Trk_Trk) { // for the moment consider Glb+Glb, GlbTrk+GlbTrk, Trk+Trk
+	   myRecoJpsiHistos->Fill(aJpsiCand, "All_"+ theLabel);
 	  if (isBarrel)
 	    myRecoJpsiHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
 	  else
 	    myRecoJpsiHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
-	}
-	else {
-	  switch (_thePassedCats.at(count)) {
-	  case Glb_Glb:
-	    myRecoJpsiGlbGlbHistos->Fill(aJpsiCand, "All_"+ theLabel);
-	    if (isBarrel)
-	      myRecoJpsiGlbGlbHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
-	    else
-	      myRecoJpsiGlbGlbHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
-	    break;
-	  case GlbTrk_GlbTrk:
-	    myRecoJpsiGlbTrkHistos->Fill(aJpsiCand, "All_"+ theLabel);
-	    if (isBarrel)
-	      myRecoJpsiGlbTrkHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
-	    else
-	      myRecoJpsiGlbTrkHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
-	    break;
-	  case Trk_Trk:
-	    myRecoJpsiTrkTrkHistos->Fill(aJpsiCand, "All_"+ theLabel);
-	    if (isBarrel)
-	      myRecoJpsiTrkTrkHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
-	    else
-	      myRecoJpsiTrkTrkHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
-	    break;
-	  default:
-	    break;
 	  }
-	}
-      }
-    }
+	  else {
+	    switch (_thePassedCats.at(count)) {
+	    case Glb_Glb:
+	      myRecoJpsiGlbGlbHistos->Fill(aJpsiCand, "All_"+ theLabel);
+	      if (isBarrel)
+	        myRecoJpsiGlbGlbHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
+	      else
+	        myRecoJpsiGlbGlbHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
+	      break;
+	    case GlbTrk_GlbTrk:
+	      myRecoJpsiGlbTrkHistos->Fill(aJpsiCand, "All_"+ theLabel);
+	      if (isBarrel)
+	        myRecoJpsiGlbTrkHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
+	      else
+	        myRecoJpsiGlbTrkHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
+	      break;
+	    case Trk_Trk:
+	      myRecoJpsiTrkTrkHistos->Fill(aJpsiCand, "All_"+ theLabel);
+	      if (isBarrel)
+	        myRecoJpsiTrkTrkHistos->Fill(aJpsiCand, "Barrel_"+ theLabel);
+	      else
+	        myRecoJpsiTrkTrkHistos->Fill(aJpsiCand, "EndCap_"+ theLabel);
+	      break;
+	    default:
+	      break;
+	    }
+	  }
   }
   this->fillHistosAndDS(_thePassedCats.at(count), aJpsiCand); 
-
   delete aJpsiCand;
   return;
 };
@@ -923,69 +915,42 @@ void HiOniaAnalyzer::fillHistosAndDS(unsigned int theCat, const pat::CompositeCa
 };
 
 void HiOniaAnalyzer::checkTriggers(const pat::CompositeCandidate* aJpsiCand){
-
   if(aJpsiCand==NULL){
     std::cout<<"ERROR: 'aJpsiCand' pointer in checkTriggers is NULL ! Return now"<<std::endl; return;
-  } else{
+  }
 
-    const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon1"));
-    const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon2"));
+  const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon1"));
+  const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(aJpsiCand->daughter("muon2"));
 
-    if (muon1==NULL || muon2==NULL){
-      std::cout<<"ERROR: 'muon1' or 'muon2' pointer in checkTriggers is NULL ! Return now"<<std::endl; return;
-    } else {
+  if (muon1==NULL || muon2==NULL){ 
+    std::cout<<"ERROR: 'muon1' or 'muon2' pointer in checkTriggers is NULL ! Return now"<<std::endl; return;
+  }
 
-      // Trigger passed
-      for (unsigned int iTr = 1; iTr<NTRIGGERS; ++iTr) {
-        const auto& lastFilter = filterNameMap.at(theTriggerNames[iTr]);
-	    const auto& mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( lastFilter );
-	    const auto& mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( lastFilter );
+  // Trigger passed
+  for (unsigned int iTr = 1; iTr<NTRIGGERS; ++iTr) {
+    const auto& lastFilter = filterNameMap.at(theTriggerNames[iTr]);
+	  const auto& mu1HLTMatchesFilter = muon1->triggerObjectMatchesByFilter( lastFilter );
+	  const auto& mu2HLTMatchesFilter = muon2->triggerObjectMatchesByFilter( lastFilter );
     
-	// const pat::TriggerObjectStandAloneCollection mu1HLTMatchesPath = muon1->triggerObjectMatchesByPath( theTriggerNames.at(iTr), true, false );
-	// const pat::TriggerObjectStandAloneCollection mu2HLTMatchesPath = muon2->triggerObjectMatchesByPath( theTriggerNames.at(iTr), true, false );
-    
-	bool pass1 = mu1HLTMatchesFilter.size() > 0;
-	bool pass2 = mu2HLTMatchesFilter.size() > 0;
-    
-	if (iTr > NTRIGGERS_DBL) {  // single triggers here
-	  isTriggerMatched[iTr] = pass1 || pass2;
-	} else {        // double triggers here
-	  isTriggerMatched[iTr] = pass1 && pass2;
-	}
-      }
+	  bool pass1 = mu1HLTMatchesFilter.size() > 0;
+	  bool pass2 = mu2HLTMatchesFilter.size() > 0;
 
-      for (unsigned int iTr=1;iTr<NTRIGGERS;++iTr) {
-	if (isTriggerMatched[iTr]) {
-	  // since we have bins for event info, let's try to fill here the trigger info for each pair
-	  // also if there are several pairs matched to the same kind of trigger
-	  hStats->Fill(iTr+NTRIGGERS); // pair info
-	}
-      }
-    }
+	  if (iTr > NTRIGGERS_DBL) {  // single triggers here
+	    isTriggerMatched[iTr] = pass1 || pass2;
+	  } else {        // double triggers here
+	    isTriggerMatched[iTr] = pass1 && pass2;
+	  }
+  }
+
+  for (unsigned int iTr=1;iTr<NTRIGGERS;++iTr) {
+	  if (isTriggerMatched[iTr]) {
+	    // since we have bins for event info, let's try to fill here the trigger info for each pair
+	    // also if there are several pairs matched to the same kind of trigger
+	    hStats->Fill(iTr+NTRIGGERS); // pair info
+	  }
   }
   return;
 };
-
-pair< unsigned int, const pat::CompositeCandidate* >  HiOniaAnalyzer::theBestQQ() {
-
-  unsigned int theBestCat = 99;
-  const pat::CompositeCandidate* theBestCand = new pat::CompositeCandidate();
-
-  for( unsigned int i = 0; i < _thePassedCands.size(); i++) { 
-    if (_thePassedCats.at(i) < theBestCat) {
-      theBestCat = _thePassedCats.at(i);
-      theBestCand = _thePassedCands.at(i);
-    }
-  }
-
-  pair< unsigned int, const pat::CompositeCandidate* > result = make_pair(theBestCat, theBestCand );
-  return result;
-};
-
-bool HiOniaAnalyzer::PassMiniAODcut(const pat::Muon* aMuon){
-  return aMuon->pt() > 5 || aMuon->isPFMuon() || (aMuon->pt()>1.2 && (aMuon->isGlobalMuon() || aMuon->isStandAloneMuon())) || (aMuon->isTrackerMuon() && aMuon->innerTrack()->quality(reco::TrackBase::highPurity));
-};
-
 
 void HiOniaAnalyzer::InitEvent(){
   for (unsigned int iTr=1;iTr<NTRIGGERS;++iTr) {
@@ -994,7 +959,8 @@ void HiOniaAnalyzer::InitEvent(){
   HLTriggers = 0;
   nEP = 0;
 
-  _thePassedCats.clear();      _thePassedCands.clear();
+  _thePassedCats.clear();
+  _thePassedCands.clear();
 
   Reco_QQ_size = 0;
   Reco_mu_size = 0;
@@ -1096,328 +1062,71 @@ void HiOniaAnalyzer::InitEvent(){
   return;
 };
 
-
-reco::GenParticleRef HiOniaAnalyzer::findDaughterRef(reco::GenParticleRef GenParticleDaughter, int GenParticlePDG){
-
-  reco::GenParticleRef GenParticleTmp = GenParticleDaughter;
-  bool foundFirstDaughter = false;
-
-  for(int j=0; j<1000; ++j) {
-    //cout<<""; // trick to prevent rare segfault errors with the GenParticleTmp
-    
-    if ( GenParticleTmp.isNonnull() && GenParticleTmp->status()>0 && GenParticleTmp->status()<1000 && GenParticleTmp->numberOfDaughters()>0 ) 
-      {
-	if ( GenParticleTmp->pdgId()==GenParticlePDG || GenParticleTmp->daughterRef(0)->pdgId()==GenParticlePDG ) //if oscillating B, can take two decays to return to pdgID(B parent)
-	  {
-	    GenParticleTmp = GenParticleTmp->daughterRef(0); 
-	  }
-	else if ( !foundFirstDaughter ) //if Tmp is not a Bc, it means Tmp is a true daughter
-	  {
-	    foundFirstDaughter = true;
-	    GenParticlePDG = GenParticleTmp->pdgId();
-	  } 
-      }
-    else break;
-  }
-  if (GenParticleTmp.isNonnull() && GenParticleTmp->status()>0 && GenParticleTmp->status()<1000 && foundFirstDaughter){ //(GenParticleTmp->pdgId()==GenParticlePDG)) {
-    GenParticleDaughter = GenParticleTmp;
-  }
-
-  return GenParticleDaughter;
-
-};
-
-
-void HiOniaAnalyzer::fillGenInfo(){
-  if (Gen_QQ_size >= Max_QQ_size) {
-    std::cout << "Too many dimuons: " << Gen_QQ_size << std::endl;
-    std::cout << "Maximum allowed: " << Max_QQ_size << std::endl;
-    return;
-  }
-
-  if (Gen_Bc_size >= Max_Bc_size) {
-    std::cout << "Too many Bc's: " << Gen_Bc_size << std::endl;
-    std::cout << "Maximum allowed: " << Max_Bc_size << std::endl;
-    return;
-  }
-
-  if (Gen_mu_size >= Max_mu_size) {
-    std::cout << "Too many muons: " << Gen_mu_size << std::endl;
-    std::cout << "Maximum allowed: " << Max_mu_size << std::endl;
-    return;
-  }
-
-  if (genInfo.isValid()) {
-    if (genInfo->hasBinningValues()) Gen_pthat = genInfo->binningValues()[0];
-    Gen_weight = genInfo->weight();
-  }
-
-  if (collGenParticles.isValid()) {
-    //Fill the single muons, before the dimuons (important)
-    for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
-        it!=collGenParticles->end();++it) {
-      const reco::GenParticle* gen = &(*it);
-      
-      if (abs(gen->pdgId()) == 13 && (gen->status() == 1)) {
-        Gen_mu_type[Gen_mu_size] = _isPromptMC ? 0 : 1; // prompt: 0, non-prompt: 1
-        Gen_mu_charge[Gen_mu_size] = gen->charge();
-
-        TLorentzVector vMuon = lorentzMomentum(gen->p4());
-        new((*Gen_mu_4mom)[Gen_mu_size])TLorentzVector(vMuon);
-        Gen_mu_4mom_pt.push_back(vMuon.Pt());
-        Gen_mu_4mom_eta.push_back(vMuon.Eta());
-        Gen_mu_4mom_phi.push_back(vMuon.Phi());
-        Gen_mu_4mom_m.push_back(vMuon.M());
-
-	//Fill map of the muon indices. Use long int keys, to avoid rounding errors on a float key. Implies a precision of 10^-6     
-	mapGenMuonMomToIndex_[ FloatToIntkey(vMuon.Pt()) ] = Gen_mu_size;
-
-        Gen_mu_size++;
-      }
-    }
-
-    for(std::vector<reco::GenParticle>::const_iterator it=collGenParticles->begin();
-        it!=collGenParticles->end();++it) {
-      const reco::GenParticle* gen = &(*it);
-
-      if (abs(gen->pdgId()) == _oniaPDG  && (gen->status() == 2 || (abs(gen->pdgId())==23 && gen->status() == 62))  &&
-          gen->numberOfDaughters() >= 2) {
-
-        reco::GenParticleRef genMuon1 = findDaughterRef(gen->daughterRef(0), gen->pdgId());
-        reco::GenParticleRef genMuon2 = findDaughterRef(gen->daughterRef(1), gen->pdgId());
-
-        if ( abs(genMuon1->pdgId()) == 13 &&
-             abs(genMuon2->pdgId()) == 13 &&
-             ( genMuon1->status() == 1 ) &&
-             ( genMuon2->status() == 1 )
-             ) {
-
-	  Gen_QQ_Bc_idx[Gen_QQ_size] = -1;          
-          Gen_QQ_type[Gen_QQ_size] = _isPromptMC ? 0 : 1; // prompt: 0, non-prompt: 1
-          std::pair< std::vector<reco::GenParticleRef> , std::pair<float, float> > MCinfo = findGenMCInfo(gen);
-          Gen_QQ_ctau[Gen_QQ_size] = 10.0*MCinfo.second.first;
-          Gen_QQ_ctau3D[Gen_QQ_size] = 10.0*MCinfo.second.second;
-
-	  if(_genealogyInfo){
-	    _Gen_QQ_MomAndTrkBro[Gen_QQ_size] = MCinfo.first;
-	    Gen_QQ_momId[Gen_QQ_size] = _Gen_QQ_MomAndTrkBro[Gen_QQ_size][0]->pdgId();
-	  }
-          
-          TLorentzVector vJpsi = lorentzMomentum(gen->p4());
-          new((*Gen_QQ_4mom)[Gen_QQ_size])TLorentzVector(vJpsi);
-          Gen_QQ_4mom_pt.push_back(vJpsi.Pt());
-          Gen_QQ_4mom_eta.push_back(vJpsi.Eta());
-          Gen_QQ_4mom_phi.push_back(vJpsi.Phi());
-          Gen_QQ_4mom_m.push_back(vJpsi.M());
-
-          TLorentzVector vMuon1 = lorentzMomentum(genMuon1->p4());
-          TLorentzVector vMuon2 = lorentzMomentum(genMuon2->p4());
-            
-          if (genMuon1->charge() > genMuon2->charge()) {
-            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , true);
-            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , true);
-          }
-          else {
-            Gen_QQ_mupl_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon2 , true);
-            Gen_QQ_mumi_idx[Gen_QQ_size] = IndexOfThisMuon(&vMuon1 , true);
-          }
-
-	  if(_doTrimuons){
-	    //GenInfo for the Bc and the daughter muon from the W daughter of the Bc. Beware, this is designed for generated Bc's having QQ as a daughter!!
-	    std::pair<bool, reco::GenParticleRef> findBcMom = findBcMotherRef( findMotherRef(gen->motherRef(),gen->pdgId()) , _BcPDG); //the boolean says if the Bc mother was found
-	  
-	    if (findBcMom.first) {
-	  
-	      if (Gen_QQ_Bc_idx[Gen_QQ_size] >-1) {std::cout<<"WARNING : Jpsi seems to have more than one Bc mother"<<std::endl;}
-
-	      reco::GenParticleRef genBc = findBcMom.second;
-	      if(genBc->numberOfDaughters() >= 3){
-		reco::GenParticleRef genDau1 = findDaughterRef(genBc->daughterRef(0), genBc->pdgId());
-		reco::GenParticleRef genDau2 = findDaughterRef(genBc->daughterRef(1), genBc->pdgId());
-		reco::GenParticleRef genDau3 = findDaughterRef(genBc->daughterRef(2), genBc->pdgId());
-
-		//Which daughter is the mu or nu from the W?
-		bool goodDaughters = true;
-		reco::GenParticleRef gennuW = genDau1;
-		reco::GenParticleRef genmuW = genDau2;
-	    
-		if ( isNeutrino(genDau1->pdgId()) && (abs(genDau2->pdgId()) == 13) ){
-		}
-		else if ( isNeutrino(genDau2->pdgId()) && (abs(genDau1->pdgId()) == 13) ){
-		  reco::GenParticleRef gennuW = genDau2;
-		  reco::GenParticleRef genmuW = genDau1;
-		}
-		else if ( isNeutrino(genDau1->pdgId()) && (abs(genDau3->pdgId()) == 13) ){
-		  reco::GenParticleRef gennuW = genDau1;
-		  reco::GenParticleRef genmuW = genDau3;
-		}
-		else if ( isNeutrino(genDau3->pdgId()) && (abs(genDau1->pdgId()) == 13) ){
-		  reco::GenParticleRef gennuW = genDau3;
-		  reco::GenParticleRef genmuW = genDau1;
-		}
-		else if ( isNeutrino(genDau2->pdgId()) && (abs(genDau3->pdgId()) == 13) ){
-		  reco::GenParticleRef gennuW = genDau2;
-		  reco::GenParticleRef genmuW = genDau3;
-		}
-		else if ( isNeutrino(genDau3->pdgId()) && (abs(genDau2->pdgId()) == 13) ){
-		  reco::GenParticleRef gennuW = genDau3;
-		  reco::GenParticleRef genmuW = genDau2;
-		}
-		else {
-		  goodDaughters = false;
-		}
-	    
-		//Fill info for Bc and its mu,nu daughters
-		if(goodDaughters && (genmuW->charge() == genBc->charge()) 
-		   && ( genmuW->status() == 1 ) ){
-	
-		  Gen_QQ_Bc_idx[Gen_QQ_size] = Gen_Bc_size;
-		  Gen_Bc_QQ_idx[Gen_Bc_size] = Gen_QQ_size;
-
-		  Gen_Bc_pdgId[Gen_Bc_size] = genBc->pdgId();
-		  std::pair<int, std::pair<float, float> > MCinfo = findGenBcInfo(genBc, gen);
-		  Gen_Bc_ctau[Gen_Bc_size] = 10.0*MCinfo.second.first;
-
-		  TLorentzVector vBc = lorentzMomentum(genBc->p4());
-		  new((*Gen_Bc_4mom)[Gen_Bc_size])TLorentzVector(vBc);
-      Gen_Bc_4mom_pt.push_back(vBc.Pt());
-      Gen_Bc_4mom_eta.push_back(vBc.Eta());
-      Gen_Bc_4mom_phi.push_back(vBc.Phi());
-      Gen_Bc_4mom_m.push_back(vBc.M());
-
-		  TLorentzVector vmuW = lorentzMomentum(genmuW->p4());
-		  Gen_Bc_muW_idx[Gen_Bc_size] = IndexOfThisMuon(&vmuW, true);
-	      
-		  TLorentzVector vnuW = lorentzMomentum(gennuW->p4());
-		  new((*Gen_Bc_nuW_4mom)[Gen_Bc_size])TLorentzVector(vnuW);
-      Gen_Bc_nuW_4mom_pt.push_back(vnuW.Pt());
-      Gen_Bc_nuW_4mom_eta.push_back(vnuW.Eta());
-      Gen_Bc_nuW_4mom_phi.push_back(vnuW.Phi());
-      Gen_Bc_nuW_4mom_m.push_back(vnuW.M());
-	    
-		  Gen_Bc_size++;
-		}
-		else {std::cout<<"WARNING : Problem with daughters of the gen Bc, hence Bc and its daughters are not written out"<<std::endl;}
-	      }
-	    }
-	  }
-          Gen_QQ_size++;
-        }
-      }
-    }
-  }  
-  return;
-};
-
-
-//Find the indices of the reconstructed J/psi matching each generated J/psi (when the two daughter muons are reconstructed), and vice versa
-void HiOniaAnalyzer::fillQQMatchingInfo(){
-  for (int igen=0;igen<Gen_QQ_size;igen++){
-    Gen_QQ_whichRec[igen] = -1;
-    int Reco_mupl_idx = Gen_mu_whichRec[Gen_QQ_mupl_idx[igen]]; //index of the reconstructed mupl associated to the generated mupl of Jpsi
-    int Reco_mumi_idx = Gen_mu_whichRec[Gen_QQ_mumi_idx[igen]]; //index of the reconstructed mumi associated to the generated mumi of Jpsi
-    
-    if((Reco_mupl_idx>=0) && (Reco_mumi_idx>=0)){   //Search for Reco_QQ only if both muons are reco
-      for (int irec=0;irec<Reco_QQ_size;irec++){
-	if(((Reco_mupl_idx == Reco_QQ_mupl_idx[irec]) && (Reco_mumi_idx == Reco_QQ_mumi_idx[irec])) ||    //the charges might be wrong in reco
-	   ((Reco_mupl_idx == Reco_QQ_mumi_idx[irec]) && (Reco_mumi_idx == Reco_QQ_mupl_idx[irec]))	   ){
-	  Gen_QQ_whichRec[igen] = irec;
-	  break;
-	}
-      }
-      
-      if (Gen_QQ_whichRec[igen]==-1) Gen_QQ_whichRec[igen] = -2; //Means the two muons were reconstructed, but the dimuon was not selected
-    }
-  }
-
-  //Find the index of generated J/psi associated to a reco QQ
-  for (int irec=0;irec<Reco_QQ_size;irec++){
-    Reco_QQ_whichGen[irec] = -1;
-    
-    for (int igen=0;igen<Gen_QQ_size;igen++){
-      if((Gen_QQ_whichRec[igen] == irec)){
-	Reco_QQ_whichGen[irec] = igen;
-	break;
-      }
-    }      
-  }
-  
-};
-
-
 void HiOniaAnalyzer::fillRecoTracks(){
-  if (collTracks.isValid()) {
-    for(unsigned int tidx=0; tidx<collTracks->size();tidx++) {
-      const reco::TrackRef track(collTracks, tidx);
-
-      if (!track.isNonnull()){
-	std::cout<<"ERROR: 'track' pointer in fillRecoTracks is NULL ! Go to next track."<<endl;
-      } else {
-
-	bool WantedTrack = false;
-	for (int k=0;k<(int)EtaOfWantedTracks.size();k++){
-	  if (fabs(track->eta() - EtaOfWantedTracks[k]) < 1e-5) {
-	    WantedTrack = true; break;}
-	}
-	if (_doDimuTrk && !WantedTrack) continue;
-
-	if (selTrk(track))  {
-	  if (Reco_trk_size >= Max_trk_size) {
-	    std::cout << "Too many tracks: " << Reco_trk_size << std::endl;
-	    std::cout << "Maximum allowed: " << Max_trk_size << std::endl;
-	    break;
+  if (!collTracks.isValid()) return; 
+  for(unsigned int tidx=0; tidx<collTracks->size();tidx++) {
+    const reco::TrackRef track(collTracks, tidx);
+    if (!track.isNonnull()){
+	    std::cout<<"ERROR: 'track' pointer in fillRecoTracks is NULL ! Go to next track."<<endl;
+      return;
+    }
+	  bool WantedTrack = false;
+	  for (int k=0;k<(int)EtaOfWantedTracks.size();k++){
+	    if (fabs(track->eta() - EtaOfWantedTracks[k]) < 1e-5) {
+	      WantedTrack = true; break;}
 	  }
+	  if (_doDimuTrk && !WantedTrack) continue;
 
-	  TLorentzVector vTrack;
-	  vTrack.SetPtEtaPhiM(track->pt(), track->eta(), track->phi(), 0.10566); //0.13957018 for the pion
+	  if (selTrk(track))  {
+	    if (Reco_trk_size >= Max_trk_size) {
+	      std::cout << "Too many tracks: " << Reco_trk_size << std::endl;
+	      std::cout << "Maximum allowed: " << Max_trk_size << std::endl;
+	      break;
+	    }
+	    TLorentzVector vTrack;
+	    vTrack.SetPtEtaPhiM(track->pt(), track->eta(), track->phi(), 0.10566); //0.13957018 for the pion
 
-	  Reco_trk_whichGenmu[Reco_trk_size] = -1;
-	  if(_isMC){
-	    float dRmax = 0.05; //dR max of the matching to gen muons//same than for reco-gen muon matching
-	    float dR;
-	    float dPtmax = 0.5;
-	    for(int igen=0;igen<Gen_mu_size;igen++){
-	      TLorentzVector* genmu = (TLorentzVector*)Gen_mu_4mom->ConstructedAt(igen);
-	      dR = genmu->DeltaR(vTrack);
-	      if(dR<=dRmax && track->charge()==Gen_mu_charge[igen] && fabs(genmu->Pt()-vTrack.Pt())/genmu->Pt() < dPtmax) {
-		dRmax = dR;
-		Reco_trk_whichGenmu[Reco_trk_size] = igen;
+	    Reco_trk_whichGenmu[Reco_trk_size] = -1;
+	    if(_isMC){
+	      float dRmax = 0.05; //dR max of the matching to gen muons//same than for reco-gen muon matching
+	      float dR;
+	      float dPtmax = 0.5;
+	      for(int igen=0;igen<Gen_mu_size;igen++){
+	        TLorentzVector* genmu = (TLorentzVector*)Gen_mu_4mom->ConstructedAt(igen);
+	        dR = genmu->DeltaR(vTrack);
+	        if(dR<=dRmax && track->charge()==Gen_mu_charge[igen] && fabs(genmu->Pt()-vTrack.Pt())/genmu->Pt() < dPtmax) {
+		       dRmax = dR;
+		       Reco_trk_whichGenmu[Reco_trk_size] = igen;
+	        }
 	      }
 	    }
-	  }
 
-	  if(!_doDimuTrk && Reco_trk_whichGenmu[Reco_trk_size]==-1) continue;
-        
-	  Reco_trk_charge[Reco_trk_size] = track->charge();
+	    if(!_doDimuTrk && Reco_trk_whichGenmu[Reco_trk_size]==-1) continue;
 
-	  //new((*Reco_trk_vtx)[Reco_trk_size])TVector3(track->vx(),track->vy(),track->vz());
-	  //cout<<"Just found and filled Reco_trk_vtx"<<endl;
+	    Reco_trk_charge[Reco_trk_size] = track->charge();
 	  
-	  Reco_trk_originalAlgo[Reco_mu_size] = track->originalAlgo();
-	  Reco_trk_nPixWMea[Reco_mu_size] = track->hitPattern().pixelLayersWithMeasurement();
-	  Reco_trk_nTrkWMea[Reco_mu_size] = track->hitPattern().trackerLayersWithMeasurement();
-	  Reco_trk_dxyError[Reco_trk_size] = track->dxyError();
-	  Reco_trk_dzError[Reco_trk_size] = track->dzError();
-	  Reco_trk_dxy[Reco_trk_size] = track->dxy(RefVtx);
-	  Reco_trk_dz[Reco_trk_size] = track->dz(RefVtx);
-	  Reco_trk_ptErr[Reco_trk_size] = track->ptError();
+	    Reco_trk_originalAlgo[Reco_mu_size] = track->originalAlgo();
+	    Reco_trk_nPixWMea[Reco_mu_size] = track->hitPattern().pixelLayersWithMeasurement();
+	    Reco_trk_nTrkWMea[Reco_mu_size] = track->hitPattern().trackerLayersWithMeasurement();
+	    Reco_trk_dxyError[Reco_trk_size] = track->dxyError();
+	    Reco_trk_dzError[Reco_trk_size] = track->dzError();
+	    Reco_trk_dxy[Reco_trk_size] = track->dxy(RefVtx);
+	    Reco_trk_dz[Reco_trk_size] = track->dz(RefVtx);
+	    Reco_trk_ptErr[Reco_trk_size] = track->ptError();
 
-	  mapTrkMomToIndex_[ FloatToIntkey(vTrack.Pt()) ] = Reco_trk_size;
+	    mapTrkMomToIndex_[ FloatToIntkey(vTrack.Pt()) ] = Reco_trk_size;
 
-	  Reco_trk_InLooseAcc[Reco_trk_size] = isTrkInMuonAccept(vTrack,"GLBSOFT");
-	  Reco_trk_InTightAcc[Reco_trk_size] = isTrkInMuonAccept(vTrack,"GLB");
+	    Reco_trk_InLooseAcc[Reco_trk_size] = isTrkInMuonAccept(vTrack,"GLBSOFT");
+	    Reco_trk_InTightAcc[Reco_trk_size] = isTrkInMuonAccept(vTrack,"GLB");
 
-	  new((*Reco_trk_4mom)[Reco_trk_size])TLorentzVector(vTrack);
-    Reco_trk_4mom_pt.push_back(vTrack.Pt());
-    Reco_trk_4mom_eta.push_back(vTrack.Eta());
-    Reco_trk_4mom_phi.push_back(vTrack.Phi());
-    Reco_trk_4mom_m.push_back(vTrack.M());
-	  Reco_trk_size++;
-	}
-      }
+	    new((*Reco_trk_4mom)[Reco_trk_size])TLorentzVector(vTrack);
+      Reco_trk_4mom_pt.push_back(vTrack.Pt());
+      Reco_trk_4mom_eta.push_back(vTrack.Eta());
+      Reco_trk_4mom_phi.push_back(vTrack.Phi());
+      Reco_trk_4mom_m.push_back(vTrack.M());
+	    Reco_trk_size++;
     }
   }
-  
   return;
 };
 
@@ -1430,119 +1139,112 @@ void HiOniaAnalyzer::fillRecoMuons(int iCent){
     for(std::vector<pat::Muon>::const_iterator it=collMuonNoTrig->begin();
         it!=collMuonNoTrig->end();++it) {
       const pat::Muon* muon = &(*it);
-
       if (muon==NULL){
-	std::cout<<"ERROR: 'muon' pointer in fillRecoMuons is NULL ! Return now"<<std::endl; return;
-      } else {
-	if (selGlobalMuon(muon))
-	  nGoodMuonsNoTrig++;
-      }
+	      std::cout<<"ERROR: 'muon' pointer in fillRecoMuons is NULL ! Return now"<<std::endl; return;
+      } 
+	    if (selGlobalMuon(muon))
+	      nGoodMuonsNoTrig++;
     }
   }
 
   if (collMuon.isValid()) {
-    for(vector<pat::Muon>::const_iterator it=collMuon->begin();
-        it!=collMuon->end();++it) {
+    for(vector<pat::Muon>::const_iterator it=collMuon->begin(); it!=collMuon->end();++it) {
       const pat::Muon* muon = &(*it);
-
       if (muon==NULL){
-	std::cout<<"ERROR: 'muon' pointer in fillRecoMuons is NULL ! Return now"<<std::endl; return;
-      } else {
-
-	//Trick to recover feature of filling only muons from selected dimuons
-	if(!_fillSingleMuons){
-	  bool WantedMuon = false;
-	  for (int k=0;k<(int)EtaOfWantedMuons.size();k++){
-	    if (fabs(muon->eta() - EtaOfWantedMuons[k]) < 1e-5) {
-	      WantedMuon = true; break;}
-	  }
-	  if (!WantedMuon) continue;
-	}
-      
-	bool isBarrel = (fabs(muon->eta() < 1.2));
-	std::string theLabel = theTriggerNames.at(0) + "_" + theCentralities.at(iCent);
-
-	if (_fillHistos) {
-	  if (_combineCategories) {
-	    if ( selGlobalMuon(muon) || selTrackerMuon(muon) ) {
-	      myRecoMuonHistos->Fill(muon, "All_"+theLabel);
-	      if (isBarrel)
-		myRecoMuonHistos->Fill(muon, "Barrel_"+theLabel);
-	      else
-		myRecoMuonHistos->Fill(muon, "EndCap_"+theLabel);
-	    }
-	  }
-	  else {
-	    if (selGlobalMuon(muon)) {
-          
-	      myRecoGlbMuonHistos->Fill(muon, "All_"+theLabel);
-	      if (isBarrel)
-		myRecoGlbMuonHistos->Fill(muon, "Barrel_"+theLabel);
-	      else
-		myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
-	    }
-	    else if (selTrackerMuon(muon)) {
-	      myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
-	      if (isBarrel)
-		myRecoTrkMuonHistos->Fill(muon, "Barrel_"+theLabel);
-	      else
-		myRecoTrkMuonHistos->Fill(muon, "EndCap_"+theLabel);
-	    }
-	  }
-	}
-      
-	muType = -99;
-        if ( _muonSel==(std::string)("Glb")      && selGlobalMuon(muon)  ) muType = Glb;
-        if ( _muonSel==(std::string)("GlbTrk")   && selGlobalMuon(muon)  ) muType = GlbTrk;
-        if ( _muonSel==(std::string)("Trk")      && selTrackerMuon(muon) ) muType = Trk;
-        if ( _muonSel==(std::string)("TwoGlbAmongThree") && selGlobalOrTrackerMuon(muon) ) muType = GlbOrTrk;
-	if ( _muonSel==(std::string)("GlbOrTrk") && selGlobalOrTrackerMuon(muon) ) muType = GlbOrTrk;
-	if ( _muonSel==(std::string)("All") && selAllMuon(muon) ) muType = All;
-      
-	if ( muType==GlbOrTrk || muType==GlbTrk || muType==Trk || muType==Glb || muType==All ) {
-	  nGoodMuons++;
-
-	  ULong64_t trigBits=0;
-	  for (unsigned int iTr=1; iTr<NTRIGGERS; ++iTr) {
-	    const pat::TriggerObjectStandAloneCollection muHLTMatchesFilter = muon->triggerObjectMatchesByFilter( filterNameMap.at(theTriggerNames[iTr]) );
-	    
-	    // apparently matching by path gives false positives so we use matching by filter for all triggers for which we know the filter name
-	    if ( muHLTMatchesFilter.size() > 0 ) {
-	      std::string theLabel = theTriggerNames.at(iTr) + "_" + theCentralities.at(iCent);
-            
-	      if (_fillHistos) {
-		if (_combineCategories) {
-		  myRecoMuonHistos->Fill(muon, "All_"+theLabel);
-		  if (isBarrel)
-		    myRecoMuonHistos->Fill(muon, "Barrel_"+theLabel);
-		  else
-		    myRecoMuonHistos->Fill(muon, "EndCap_"+theLabel);
-		}
-		else if ( muType==Glb || muType==GlbTrk ) {
-		  myRecoGlbMuonHistos->Fill(muon, "All_"+theLabel);
-		  if (isBarrel)
-		    myRecoGlbMuonHistos->Fill(muon, "Barrel_"+theLabel);
-		  else
-		    myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
-		}
-		else if ( muType==Trk || muType==GlbOrTrk || muType==All ) {
-		  myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
-		  if (isBarrel)
-		    myRecoTrkMuonHistos->Fill(muon, "Barrel_"+theLabel);
-		  else
-		    myRecoTrkMuonHistos->Fill(muon, "EndCap_"+theLabel);
-		}
-	      }
-
-	      trigBits += pow(2,iTr-1);
-
-	      if (iTr==1) nL1DoubleMu0Muons++;
-	    }
-	  }
-	  if (_fillTree)
-	    this->fillTreeMuon(muon, muType, trigBits);
-	}
+      	std::cout<<"ERROR: 'muon' pointer in fillRecoMuons is NULL ! Return now"<<std::endl;
+        return;
       }
+
+	    //Trick to recover feature of filling only muons from selected dimuons
+	    if(!_fillSingleMuons){
+	      bool WantedMuon = false;
+	      for (int k=0;k<(int)EtaOfWantedMuons.size();k++){
+	        if (fabs(muon->eta() - EtaOfWantedMuons[k]) < 1e-5) {
+	          WantedMuon = true; break;}
+	      }
+	      if (!WantedMuon) continue;
+	    }
+      
+	    bool isBarrel = (fabs(muon->eta() < 1.2));
+	    std::string theLabel = theTriggerNames.at(0) + "_" + theCentralities.at(iCent);
+
+	    if (_fillHistos) {
+	      if (_combineCategories) {
+	        if ( selGlobalMuon(muon) || selTrackerMuon(muon) ) {
+	          myRecoMuonHistos->Fill(muon, "All_"+theLabel);
+	          if (isBarrel)
+	    	      myRecoMuonHistos->Fill(muon, "Barrel_"+theLabel);
+	          else
+	    	      myRecoMuonHistos->Fill(muon, "EndCap_"+theLabel);
+	        }
+	      }
+	      else {
+	        if (selGlobalMuon(muon)) {
+	          myRecoGlbMuonHistos->Fill(muon, "All_"+theLabel);
+	          if (isBarrel)
+	    	      myRecoGlbMuonHistos->Fill(muon, "Barrel_"+theLabel);
+	          else
+	    	      myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
+	        }
+	        else if (selTrackerMuon(muon)) {
+	          myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
+	          if (isBarrel)
+	    	      myRecoTrkMuonHistos->Fill(muon, "Barrel_"+theLabel);
+	          else
+	    	      myRecoTrkMuonHistos->Fill(muon, "EndCap_"+theLabel);
+	        }
+	      }
+	    }
+      
+	    muType = -99;
+      if ( _muonSel==(std::string)("Glb")      && selGlobalMuon(muon)  ) muType = Glb;
+      if ( _muonSel==(std::string)("GlbTrk")   && selGlobalMuon(muon)  ) muType = GlbTrk;
+      if ( _muonSel==(std::string)("Trk")      && selTrackerMuon(muon) ) muType = Trk;
+      if ( _muonSel==(std::string)("TwoGlbAmongThree") && selGlobalOrTrackerMuon(muon) ) muType = GlbOrTrk;
+	    if ( _muonSel==(std::string)("GlbOrTrk") && selGlobalOrTrackerMuon(muon) ) muType = GlbOrTrk;
+	    if ( _muonSel==(std::string)("All") && selAllMuon(muon) ) muType = All;
+
+	    if ( muType==GlbOrTrk || muType==GlbTrk || muType==Trk || muType==Glb || muType==All ) {
+	      nGoodMuons++;
+
+	      ULong64_t trigBits=0;
+	      for (unsigned int iTr=1; iTr<NTRIGGERS; ++iTr) {
+	        const pat::TriggerObjectStandAloneCollection muHLTMatchesFilter = muon->triggerObjectMatchesByFilter( filterNameMap.at(theTriggerNames[iTr]) );
+	    
+	        // apparently matching by path gives false positives so we use matching by filter for all triggers for which we know the filter name
+	        if ( muHLTMatchesFilter.size() > 0 ) {
+	          std::string theLabel = theTriggerNames.at(iTr) + "_" + theCentralities.at(iCent);
+
+	          if (_fillHistos) {
+		          if (_combineCategories) {
+		              myRecoMuonHistos->Fill(muon, "All_"+theLabel);
+		            if (isBarrel)
+		              myRecoMuonHistos->Fill(muon, "Barrel_"+theLabel);
+		            else
+		              myRecoMuonHistos->Fill(muon, "EndCap_"+theLabel);
+		          }
+		            else if ( muType==Glb || muType==GlbTrk ) {
+		              myRecoGlbMuonHistos->Fill(muon, "All_"+theLabel);
+		              if (isBarrel)
+		                myRecoGlbMuonHistos->Fill(muon, "Barrel_"+theLabel);
+		             else
+		               myRecoGlbMuonHistos->Fill(muon, "EndCap_"+theLabel);
+		          }
+		          else if ( muType==Trk || muType==GlbOrTrk || muType==All ) {
+		            myRecoTrkMuonHistos->Fill(muon, "All_"+theLabel);
+		            if (isBarrel)
+		              myRecoTrkMuonHistos->Fill(muon, "Barrel_"+theLabel);
+		            else
+		              myRecoTrkMuonHistos->Fill(muon, "EndCap_"+theLabel);
+		          }
+	          }
+	          trigBits += pow(2,iTr-1);
+	          if (iTr==1) nL1DoubleMu0Muons++;
+	        }
+	      }
+	      if (_fillTree)
+	        this->fillTreeMuon(muon, muType, trigBits);
+	    }
     }
   }
   
@@ -1858,37 +1560,37 @@ void HiOniaAnalyzer::InitTree(){
       myTree->Branch("Gen_QQ_mumi_idx",      Gen_QQ_mumi_idx,    "Gen_QQ_mumi_idx[Gen_QQ_size]/S");
       myTree->Branch("Gen_QQ_whichRec", Gen_QQ_whichRec,   "Gen_QQ_whichRec[Gen_QQ_size]/S"); 
       if(_genealogyInfo){
-	myTree->Branch("Gen_QQ_momId", Gen_QQ_momId,   "Gen_QQ_momId[Gen_QQ_size]/I");
+      	myTree->Branch("Gen_QQ_momId", Gen_QQ_momId,   "Gen_QQ_momId[Gen_QQ_size]/I");
       }
 
       if(_doTrimuons || _doDimuTrk){
-	myTree->Branch("Gen_QQ_Bc_idx",      Gen_QQ_Bc_idx,    "Gen_QQ_Bc_idx[Gen_QQ_size]/S");
-	myTree->Branch("Gen_Bc_size",      &Gen_Bc_size,    "Gen_Bc_size/S");
-  if(std::strcmp("array", _mom4format.c_str()) == 0){
-	  myTree->Branch("Gen_Bc_4mom",      "TClonesArray", &Gen_Bc_4mom, 32000, 0);
-	  myTree->Branch("Gen_Bc_nuW_4mom", "TClonesArray", &Gen_Bc_nuW_4mom, 32000, 0);
-	  myTree->Branch("Gen_3mu_4mom",      "TClonesArray", &Gen_3mu_4mom, 32000, 0);
-  }
-  if(std::strcmp("vector", _mom4format.c_str()) == 0){
-    myTree->Branch("Gen_Bc_4mom_pt" , &Gen_Bc_4mom_pt , 32000, 0);
-    myTree->Branch("Gen_Bc_4mom_eta", &Gen_Bc_4mom_eta, 32000, 0);
-    myTree->Branch("Gen_Bc_4mom_phi", &Gen_Bc_4mom_phi, 32000, 0);
-    myTree->Branch("Gen_Bc_4mom_m"  , &Gen_Bc_4mom_m  , 32000, 0);
-    myTree->Branch("Gen_Bc_nuW_4mom_pt" , &Gen_Bc_nuW_4mom_pt , 32000, 0);
-    myTree->Branch("Gen_Bc_nuW_4mom_eta", &Gen_Bc_nuW_4mom_eta, 32000, 0);
-    myTree->Branch("Gen_Bc_nuW_4mom_phi", &Gen_Bc_nuW_4mom_phi, 32000, 0);
-    myTree->Branch("Gen_Bc_nuW_4mom_m"  , &Gen_Bc_nuW_4mom_m  , 32000, 0);
-    myTree->Branch("Gen_3mu_4mom_pt" , &Gen_3mu_4mom_pt , 32000, 0);
-    myTree->Branch("Gen_3mu_4mom_eta", &Gen_3mu_4mom_eta, 32000, 0);
-    myTree->Branch("Gen_3mu_4mom_phi", &Gen_3mu_4mom_phi, 32000, 0);
-    myTree->Branch("Gen_3mu_4mom_m"  , &Gen_3mu_4mom_m  , 32000, 0);
-  }
-	myTree->Branch("Gen_Bc_QQ_idx",      Gen_Bc_QQ_idx,    "Gen_Bc_QQ_idx[Gen_Bc_size]/S");
-	myTree->Branch("Gen_Bc_muW_idx",      Gen_Bc_muW_idx,    "Gen_Bc_muW_idx[Gen_Bc_size]/S");
-	myTree->Branch("Gen_Bc_pdgId",      Gen_Bc_pdgId,    "Gen_Bc_pdgId[Gen_Bc_size]/I");
-	myTree->Branch("Gen_Bc_ctau",      Gen_Bc_ctau,    "Gen_Bc_ctau[Gen_Bc_size]/F");
+      	myTree->Branch("Gen_QQ_Bc_idx",      Gen_QQ_Bc_idx,    "Gen_QQ_Bc_idx[Gen_QQ_size]/S");
+	      myTree->Branch("Gen_Bc_size",      &Gen_Bc_size,    "Gen_Bc_size/S");
+      if(std::strcmp("array", _mom4format.c_str()) == 0){
+	      myTree->Branch("Gen_Bc_4mom",      "TClonesArray", &Gen_Bc_4mom, 32000, 0);
+	      myTree->Branch("Gen_Bc_nuW_4mom", "TClonesArray", &Gen_Bc_nuW_4mom, 32000, 0);
+	      myTree->Branch("Gen_3mu_4mom",      "TClonesArray", &Gen_3mu_4mom, 32000, 0);
+      }
+    if(std::strcmp("vector", _mom4format.c_str()) == 0){
+      myTree->Branch("Gen_Bc_4mom_pt" , &Gen_Bc_4mom_pt , 32000, 0);
+      myTree->Branch("Gen_Bc_4mom_eta", &Gen_Bc_4mom_eta, 32000, 0);
+      myTree->Branch("Gen_Bc_4mom_phi", &Gen_Bc_4mom_phi, 32000, 0);
+      myTree->Branch("Gen_Bc_4mom_m"  , &Gen_Bc_4mom_m  , 32000, 0);
+      myTree->Branch("Gen_Bc_nuW_4mom_pt" , &Gen_Bc_nuW_4mom_pt , 32000, 0);
+      myTree->Branch("Gen_Bc_nuW_4mom_eta", &Gen_Bc_nuW_4mom_eta, 32000, 0);
+      myTree->Branch("Gen_Bc_nuW_4mom_phi", &Gen_Bc_nuW_4mom_phi, 32000, 0);
+      myTree->Branch("Gen_Bc_nuW_4mom_m"  , &Gen_Bc_nuW_4mom_m  , 32000, 0);
+      myTree->Branch("Gen_3mu_4mom_pt" , &Gen_3mu_4mom_pt , 32000, 0);
+      myTree->Branch("Gen_3mu_4mom_eta", &Gen_3mu_4mom_eta, 32000, 0);
+      myTree->Branch("Gen_3mu_4mom_phi", &Gen_3mu_4mom_phi, 32000, 0);
+      myTree->Branch("Gen_3mu_4mom_m"  , &Gen_3mu_4mom_m  , 32000, 0);
+    }
+	    myTree->Branch("Gen_Bc_QQ_idx",      Gen_Bc_QQ_idx,    "Gen_Bc_QQ_idx[Gen_Bc_size]/S");
+	    myTree->Branch("Gen_Bc_muW_idx",      Gen_Bc_muW_idx,    "Gen_Bc_muW_idx[Gen_Bc_size]/S");
+	    myTree->Branch("Gen_Bc_pdgId",      Gen_Bc_pdgId,    "Gen_Bc_pdgId[Gen_Bc_size]/I");
+	    myTree->Branch("Gen_Bc_ctau",      Gen_Bc_ctau,    "Gen_Bc_ctau[Gen_Bc_size]/F");
 
-	myTree->Branch("Gen_3mu_whichRec", Gen_3mu_whichRec,   "Gen_3mu_whichRec[Gen_Bc_size]/S");
+	    myTree->Branch("Gen_3mu_whichRec", Gen_3mu_whichRec,   "Gen_3mu_whichRec[Gen_Bc_size]/S");
       }
     }
 
@@ -1912,15 +1614,11 @@ void HiOniaAnalyzer::InitTree(){
 
 // ------------ method called once each job just before starting event loop  ------------
 void  HiOniaAnalyzer::beginJob(){
-  //fOut = new TFile(_histfilename.c_str(), "RECREATE");
   InitTree();
 
   // book histos
-  //hGoodMuonsNoTrig = new TH1F("hGoodMuonsNoTrig","hGoodMuonsNoTrig",10,0,10);
   hGoodMuonsNoTrig = fs->make<TH1F>("hGoodMuonsNoTrig","hGoodMuonsNoTrig",10,0,10);
-  //hGoodMuons = new TH1F("hGoodMuons","hGoodMuons",10,0,10);
   hGoodMuons = fs->make<TH1F>("hGoodMuons","hGoodMuons",10,0,10);
-  //hL1DoubleMu0 = new TH1F("hL1DoubleMu0","hL1DoubleMu0",10,0,10);
   hL1DoubleMu0 = fs->make<TH1F>("hL1DoubleMu0","hL1DoubleMu0",10,0,10);
   
   hGoodMuonsNoTrig->Sumw2();
@@ -1982,13 +1680,6 @@ void  HiOniaAnalyzer::beginJob(){
       }
     }
   }
-  /*
-  if (_combineCategories)
-    myRecoMuonHistos->Print();
-  else
-    myRecoGlbMuonHistos->Print();
-  */
-  //hStats = new TH1F("hStats","hStats;;Number of Events",2*NTRIGGERS+1,0,2*NTRIGGERS+1);
   hStats = fs->make<TH1F>("hStats","hStats;;Number of Events",2*NTRIGGERS+1,0,2*NTRIGGERS+1);
   hStats->GetXaxis()->SetBinLabel(1,"All");
   for (int i=2; i< (int) theTriggerNames.size()+1; ++i) {
@@ -1997,15 +1688,12 @@ void  HiOniaAnalyzer::beginJob(){
   }
   hStats->Sumw2();
 
-  //hCent = new TH1F("hCent","hCent;centrality bin;Number of Events",200,0,200);
   hCent = fs->make<TH1F>("hCent","hCent;centrality bin;Number of Events",200,0,200);
   hCent->Sumw2();
 
-  //hPileUp = new TH1F("hPileUp","Number of Primary Vertices;n_{PV};counts", 50, 0, 50);
   hPileUp = fs->make<TH1F>("hPileUp","Number of Primary Vertices;n_{PV};counts", 50, 0, 50);
   hPileUp->Sumw2();
 
-  //hZVtx = new TH1F("hZVtx","Primary z-vertex distribution;z_{vtx} [cm];counts", 120, -30, 30);
   hZVtx = fs->make<TH1F>("hZVtx","Primary z-vertex distribution;z_{vtx} [cm];counts", 120, -30, 30);
   hZVtx->Sumw2();
 
@@ -2019,7 +1707,6 @@ void HiOniaAnalyzer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetu
   EDConsumerBase::labelsForToken(_tagTriggerResultsToken, labelTriggerResults);	
   const std::string pro = labelTriggerResults.process;
 
-  //bool init(const edm::Run& iRun, const edm::EventSetup& iSetup, const std::string& processName, bool& changed);
   bool changed = true;
   hltConfigInit = hltConfig.init(iRun, iSetup, pro, changed);
 
@@ -2049,7 +1736,6 @@ void HiOniaAnalyzer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetu
         break;
       }
   }
-
   return;
 };
 

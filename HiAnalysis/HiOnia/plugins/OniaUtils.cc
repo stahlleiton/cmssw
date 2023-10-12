@@ -1,5 +1,9 @@
 #include "HiAnalysis/HiOnia/interface/HiOniaAnalyzer.h"
 
+bool HiOniaAnalyzer::PassMiniAODcut(const pat::Muon* aMuon){
+  return aMuon->pt() > 5 || aMuon->isPFMuon() || (aMuon->pt()>1.2 && (aMuon->isGlobalMuon() || aMuon->isStandAloneMuon())) || (aMuon->isTrackerMuon() && aMuon->innerTrack()->quality(reco::TrackBase::highPurity));
+};
+
 //Find the indices of the reconstructed muon matching each generated muon, and vice versa
 void HiOniaAnalyzer::fillMuMatchingInfo(){
 
@@ -11,27 +15,39 @@ void HiOniaAnalyzer::fillMuMatchingInfo(){
   //Find the index of generated muon associated to a reco muon, txs to Reco_mu_pTrue
   for (int irec=0;irec<Reco_mu_size;irec++){
     int foundGen = -1;
-    if(Reco_mu_pTrue[irec]>=0){ //if pTrue=-1, then the reco muon is a fake                                                                                                                                                                  
-
+    if(Reco_mu_pTrue[irec]>=0){ //if pTrue=-1, then the reco muon is a fake
       for (int igen=0;igen<Gen_mu_size;igen++){
         TLorentzVector *genmuMom = (TLorentzVector*)Gen_mu_4mom->ConstructedAt(igen);
         if(fabs(genmuMom->P() - Reco_mu_pTrue[irec])/Reco_mu_pTrue[irec] < 1e-6 && Gen_mu_charge[igen]==Reco_mu_charge[irec]){
           foundGen = igen; 
-	  break;
+	      break;
         }
       }
     }
-
     Reco_mu_whichGen[irec] = foundGen;
     if(foundGen>-1) Gen_mu_whichRec[foundGen] = irec;
   }
-  
 };
+
+pair< unsigned int, const pat::CompositeCandidate* >  HiOniaAnalyzer::theBestQQ() {
+  unsigned int theBestCat = 99;
+  const pat::CompositeCandidate* theBestCand = new pat::CompositeCandidate();
+
+  for( unsigned int i = 0; i < _thePassedCands.size(); i++){ 
+    if (_thePassedCats.at(i) < theBestCat) {
+      theBestCat = _thePassedCats.at(i);
+      theBestCand = _thePassedCands.at(i);
+    }
+  }
+  pair< unsigned int, const pat::CompositeCandidate* > result = make_pair(theBestCat, theBestCand );
+  return result;
+};
+
 
 void HiOniaAnalyzer::makeCuts(bool keepSameSign){
   math::XYZPoint RefVtx_tmp = RefVtx;
 
-  if (collJpsi.isValid()) {
+  if (collJpsi.isValid()){
 
     for(std::vector<pat::CompositeCandidate>::const_iterator it=collJpsi->begin();
         it!=collJpsi->end(); ++it) {
@@ -163,25 +179,30 @@ int HiOniaAnalyzer::IndexOfThisMuon(TLorentzVector* v1, bool isGen){
   const auto& mapMuIdx =  (isGen ?  mapGenMuonMomToIndex_ : mapMuonMomToIndex_);
   const long int& muPt = FloatToIntkey(v1->Pt());
 
-  if (mapMuIdx.count(muPt)==0) return -1;
-  else return mapMuIdx.at(muPt);
+  if (mapMuIdx.count(muPt)==0)
+    return -1;
+  else
+    return mapMuIdx.at(muPt);
 };
 
 int HiOniaAnalyzer::IndexOfThisTrack(TLorentzVector* v1, bool isGen){
   const auto& mapTrkIdx =  (isGen ?  mapTrkMomToIndex_ : mapTrkMomToIndex_);
   const long int& trkPt = FloatToIntkey(v1->Pt());
 
-  if (mapTrkIdx.count(trkPt)==0) return -1;
-  else return mapTrkIdx.at(trkPt);
+  if (mapTrkIdx.count(trkPt)==0)
+    return -1;
+  else
+    return mapTrkIdx.at(trkPt);
 };
 
 int HiOniaAnalyzer::IndexOfThisJpsi(int mu1_idx, int mu2_idx, int flipJpsi){
   int GoodIndex = -1;
   for(int iJpsi=0; iJpsi<Reco_QQ_size; iJpsi++){
-    if(((Reco_QQ_mumi_idx[iJpsi] == mu1_idx && Reco_QQ_mupl_idx[iJpsi] == mu2_idx) ||
-	(Reco_QQ_mumi_idx[iJpsi] == mu2_idx && Reco_QQ_mupl_idx[iJpsi] == mu1_idx))
-       && flipJpsi == Reco_QQ_flipJpsi[iJpsi]
-       ){
+    if(
+        ((Reco_QQ_mumi_idx[iJpsi] == mu1_idx && Reco_QQ_mupl_idx[iJpsi] == mu2_idx) ||  
+	    (Reco_QQ_mumi_idx[iJpsi] == mu2_idx && Reco_QQ_mupl_idx[iJpsi] == mu1_idx)) &&
+        (flipJpsi == Reco_QQ_flipJpsi[iJpsi])
+    ){
       GoodIndex = iJpsi;
       break;
     }
@@ -304,9 +325,8 @@ bool HiOniaAnalyzer::checkDimuTrkCuts(const pat::CompositeCandidate* cand, const
     return false;
 };
 
-Short_t  HiOniaAnalyzer::MuInSV(TLorentzVector v1, TLorentzVector v2, TLorentzVector v3) {
+Short_t  HiOniaAnalyzer::MuInSV(TLorentzVector v1, TLorentzVector v2, TLorentzVector v3){
 
-  //	cout<<"SV collection size : "<<SVs->size()<<endl;
   int nMuInSV = 0;
   for(std::vector<reco::Vertex>::const_iterator vt=SVs->begin(); vt!=SVs->end(); ++vt){
     const reco::Vertex* vtx = &(*vt);
@@ -318,8 +338,6 @@ Short_t  HiOniaAnalyzer::MuInSV(TLorentzVector v1, TLorentzVector v2, TLorentzVe
     }
     if (nTrksInSV>nMuInSV) nMuInSV=nTrksInSV;
   }
-  //cout<<"Number of muons from Bc that are in a given SV = "<<nMuInSV<<endl;
-
   return nMuInSV;
 };
 
@@ -327,7 +345,6 @@ Short_t  HiOniaAnalyzer::MuInSV(TLorentzVector v1, TLorentzVector v2, TLorentzVe
 TLorentzVector HiOniaAnalyzer::lorentzMomentum(const reco::Candidate::LorentzVector& p) {
   TLorentzVector res;
   res.SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
-
   return res;
 };
 
@@ -403,9 +420,10 @@ void HiOniaAnalyzer::hltReport(const edm::Event &iEvent ,const edm::EventSetup& 
 int HiOniaAnalyzer::muonIDmask(const pat::Muon* muon){
    int mask = 0;
    int type;
-   for (type=muon::All; type<=muon::RPCMuLoose; type++)
+   for (type=muon::All; type<=muon::RPCMuLoose; type++){
       if (muon->hasUserInt(Form("muonID_%d", type)) ? muon->userInt(Form("muonID_%d", type)) : muon::isGoodMuon(*muon, muon::SelectionType(type)))
          mask = mask | (int) pow(2, type);
+   }
 
    return mask;
 };
