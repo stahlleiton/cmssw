@@ -605,6 +605,4 @@ private:
   const edm::ParameterSet _iConfig;
 };
 
-//define this as a plug-in
-DEFINE_FWK_MODULE(HiOniaAnalyzer);
 #endif

@@ -96,17 +96,4 @@ class HiOnia2MuMuPAT : public edm::stream::EDProducer<> {
     math::XYZPoint RefVtx;
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
-
 #endif
