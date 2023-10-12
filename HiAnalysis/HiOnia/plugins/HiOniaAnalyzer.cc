@@ -867,7 +867,7 @@ void HiOniaAnalyzer::fillRecoJpsi(int count, std::string trigName, std::string c
 	 aJpsiCand->mass() >= JpsiMassMin && aJpsiCand->mass() < JpsiMassMax &&  
 	 aJpsiCand->pt() >= JpsiPtMin && aJpsiCand->pt() < JpsiPtMax && 
 	 abs(aJpsiCand->rapidity()) >= JpsiRapMin && fabs(aJpsiCand->rapidity()) < JpsiRapMax)	
-    assedCandidates++;
+    passedCandidates++;
 
   if (_fillHistos){
 	  if (_combineCategories && _thePassedCats.at(count)<=Trk_Trk) { // for the moment consider Glb+Glb, GlbTrk+GlbTrk, Trk+Trk
