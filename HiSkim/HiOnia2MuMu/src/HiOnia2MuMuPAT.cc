@@ -423,498 +423,498 @@ void HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
       userFloat["vNChi2"] = (vChi2/vNDF);
 	  userFloat["vProb"] = vProb;
 
-	TVector3 vtx, vtx3D;
-	TVector3 pvtx, pvtx3D;
-	VertexDistanceXY vdistXY;
-	VertexDistance3D vdistXYZ;
+	  TVector3 vtx, vtx3D;
+	  TVector3 pvtx, pvtx3D;
+	  VertexDistanceXY vdistXY;
+	  VertexDistance3D vdistXYZ;
 
-	vtx.SetXYZ(myVertex.position().x(),myVertex.position().y(),0);
-	TVector3 pperp(jpsi.px(), jpsi.py(), 0);
-	AlgebraicVector3 vpperp(pperp.x(), pperp.y(), 0.);
+	  vtx.SetXYZ(myVertex.position().x(),myVertex.position().y(),0);
+	  TVector3 pperp(jpsi.px(), jpsi.py(), 0);
+	  AlgebraicVector3 vpperp(pperp.x(), pperp.y(), 0.);
 
-	vtx3D.SetXYZ(myVertex.position().x(),myVertex.position().y(),myVertex.position().z());
-	TVector3 pxyz(jpsi.px(), jpsi.py(), jpsi.pz());
-	AlgebraicVector3 vpxyz(pxyz.x(), pxyz.y(), pxyz.z());
+	  vtx3D.SetXYZ(myVertex.position().x(),myVertex.position().y(),myVertex.position().z());
+	  TVector3 pxyz(jpsi.px(), jpsi.py(), jpsi.pz());
+	  AlgebraicVector3 vpxyz(pxyz.x(), pxyz.y(), pxyz.z());
 
-	///DCA
-	TrajectoryStateClosestToPoint mu1TS = t_tks[0].impactPointTSCP();
-	TrajectoryStateClosestToPoint mu2TS = t_tks[1].impactPointTSCP();
-	float dca = 1E20;
-	if (mu1TS.isValid() && mu2TS.isValid()){
-	  ClosestApproachInRPhi cApp;
-	  cApp.calculate(mu1TS.theState(), mu2TS.theState());
-	  if (cApp.status() ) dca = cApp.distance();
-	}
-	userFloat["DCA"] = dca;
-	///end DCA
-         
-	if (addMuonlessPrimaryVertex_){
-	  userVertex["muonlessPV"] = thePrimaryV;
-	  userVertex["PVwithmuons"] = theOriginalPV;
-	} else {
-	  userVertex["PVwithmuons"] = thePrimaryV;
-	}
-          
-	// lifetime using PV
-	pvtx.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),0);
-	TVector3 vdiff = vtx - pvtx;
-	double cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
-	Measurement1D distXY = vdistXY.distance(Vertex(myVertex), thePrimaryV);
-	double ctauPV = distXY.value()*cosAlpha*3.096916/pperp.Perp();
-	GlobalError v1e = (Vertex(myVertex)).error();
-	GlobalError v2e = thePrimaryV.error();
-	AlgebraicSymMatrix33 vXYe = v1e.matrix()+ v2e.matrix();
-	double ctauErrPV = sqrt(ROOT::Math::Similarity(vpperp,vXYe))*3.096916/(pperp.Perp2());
-
-	userFloat["ppdlPV"] = ctauPV;
-	userFloat["ppdlErrPV"] = ctauErrPV;
-	userFloat["cosAlpha"] = cosAlpha;
-
-	pvtx3D.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),thePrimaryV.position().z());
-	TVector3 vdiff3D = vtx3D - pvtx3D;
-	double cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
-	Measurement1D distXYZ = vdistXYZ.distance(Vertex(myVertex), thePrimaryV);
-	double ctauPV3D = distXYZ.value()*cosAlpha3D*3.096916/pxyz.Mag();
-	double ctauErrPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*3.096916/(pxyz.Mag2());
-          
-	userFloat["ppdlPV3D"] = ctauPV3D;
-	userFloat["ppdlErrPV3D"] = ctauErrPV3D;
-	userFloat["cosAlpha3D"] = cosAlpha3D;
-
-	if (addMuonlessPrimaryVertex_ && !doTrimuons_ && !DimuonTrk_){
-	  // 2D-lifetime using Original PV
-	  pvtx.SetXYZ(theOriginalPV.position().x(),theOriginalPV.position().y(),0);
-	  vdiff = vtx - pvtx;
-	  double cosAlphaOrigPV = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
-	  distXY = vdistXY.distance(Vertex(myVertex), theOriginalPV);
-	  double ctauOrigPV = distXY.value()*cosAlphaOrigPV*3.096916/pperp.Perp();
-	  GlobalError v1eOrigPV = (Vertex(myVertex)).error();
-	  GlobalError v2eOrigPV = theOriginalPV.error();
-	  AlgebraicSymMatrix33 vXYeOrigPV = v1eOrigPV.matrix()+ v2eOrigPV.matrix();
-	  double ctauErrOrigPV = sqrt(ROOT::Math::Similarity(vpperp,vXYeOrigPV))*3.096916/(pperp.Perp2());
-
-	  userFloat["ppdlOrigPV"] = ctauOrigPV;
-	  userFloat["ppdlErrOrigPV"] = ctauErrOrigPV;
-
-	  // 3D-lifetime using Original PV
-	  pvtx3D.SetXYZ(theOriginalPV.position().x(), theOriginalPV.position().y(), theOriginalPV.position().z());
-	  vdiff3D = vtx3D - pvtx3D;
-	  double cosAlphaOrigPV3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
-	  distXYZ = vdistXYZ.distance(Vertex(myVertex), theOriginalPV);
-	  double ctauOrigPV3D = distXYZ.value()*cosAlphaOrigPV3D*3.096916/pxyz.Mag();
-	  double ctauErrOrigPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYeOrigPV))*3.096916/(pxyz.Mag2());
-          
-	    userFloat["ppdlOrigPV3D"] = ctauOrigPV3D;
-	    userFloat["ppdlErrOrigPV3D"] = ctauErrOrigPV3D;
+	  ///DCA
+	  TrajectoryStateClosestToPoint mu1TS = t_tks[0].impactPointTSCP();
+	  TrajectoryStateClosestToPoint mu2TS = t_tks[1].impactPointTSCP();
+	  float dca = 1E20;
+	  if (mu1TS.isValid() && mu2TS.isValid()){
+	    ClosestApproachInRPhi cApp;
+	    cApp.calculate(mu1TS.theState(), mu2TS.theState());
+	    if (cApp.status() ) dca = cApp.distance();
 	  }
-	  else {
-	    userFloat["ppdlOrigPV"] = ctauPV;
-	    userFloat["ppdlErrOrigPV"] = ctauErrPV;
-	    userFloat["ppdlOrigPV3D"] = ctauPV3D;
-	    userFloat["ppdlErrOrigPV3D"] = ctauErrPV3D;
-	  }
-
-	  // lifetime using BS
-	  if(!doTrimuons_ && !DimuonTrk_){
-	    pvtx.SetXYZ(theBeamSpotV.position().x(),theBeamSpotV.position().y(),0);
-	    vdiff = vtx - pvtx;
-	    cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
-	    distXY = vdistXY.distance(Vertex(myVertex), theBeamSpotV);
-	    double ctauBS = distXY.value()*cosAlpha*3.096916/pperp.Perp();
-	    GlobalError v1eB = (Vertex(myVertex)).error();
-	    GlobalError v2eB = theBeamSpotV.error();
-	    AlgebraicSymMatrix33 vXYeB = v1eB.matrix()+ v2eB.matrix();
-	    double ctauErrBS = sqrt(ROOT::Math::Similarity(vpperp,vXYeB))*3.096916/(pperp.Perp2());
-            
-	    userFloat["ppdlBS"] = ctauBS;
-	    userFloat["ppdlErrBS"] = ctauErrBS;
-	    pvtx3D.SetXYZ(theBeamSpotV.position().x(),theBeamSpotV.position().y(),theBeamSpotV.position().z());
-	    vdiff3D = vtx3D - pvtx3D;
-	    cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
-	    distXYZ = vdistXYZ.distance(Vertex(myVertex), theBeamSpotV);
-	    double ctauBS3D = distXYZ.value()*cosAlpha3D*3.096916/pxyz.Mag();
-	    double ctauErrBS3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYeB))*3.096916/(pxyz.Mag2());
-
-	    userFloat["ppdlBS3D"] = ctauBS3D;
-	    userFloat["ppdlErrBS3D"] = ctauErrBS3D;
-	  }
-          
-		if (addCommonVertex_) {
-		  userVertex["commonVertex"] = Vertex(myVertex);
-		}
-    } else {
-	  userFloat["vNChi2"] = -1;
-	  userFloat["vProb"] = -1;
-	  userFloat["vertexWeight"] = -100;
-	  userFloat["sumPTPV"] = -100;
-	  userFloat["DCA"] = -10;
-	  userFloat["ppdlPV"] = -100;
-	  userFloat["ppdlErrPV"] = -100;
-	  userFloat["cosAlpha"] = -10;
-	  userFloat["ppdlBS"] = -100;
-	  userFloat["ppdlErrBS"] = -100;
-	  userFloat["ppdlOrigPV"] = -100;
-	  userFloat["ppdlErrOrigPV"] = -100;
-	  userFloat["ppdlPV3D"] = -100;
-	  userFloat["ppdlErrPV3D"] = -100;
-	  userFloat["cosAlpha3D"] = -10;
-	  userFloat["ppdlBS3D"] = -100;
-	  userFloat["ppdlErrBS3D"] = -100;
-	  userFloat["ppdlOrigPV3D"] = -100;
-	  userFloat["ppdlErrOrigPV3D"] = -100;
-
-	  userInt["countTksOfPV"] = -1;
-
-	  if (addCommonVertex_) {
-	    userVertex["commonVertex"] = Vertex();
-	  }
-	  if (addMuonlessPrimaryVertex_) {
-	    userVertex["muonlessPV"] = Vertex();
-	    userVertex["PVwithmuons"] = Vertex();
+	  userFloat["DCA"] = dca;
+	  ///end DCA
+           
+	  if (addMuonlessPrimaryVertex_){
+	    userVertex["muonlessPV"] = thePrimaryV;
+	    userVertex["PVwithmuons"] = theOriginalPV;
 	  } else {
-	    userVertex["PVwithmuons"] = Vertex();
+	    userVertex["PVwithmuons"] = thePrimaryV;
 	  }
-    }
+            
+	  // lifetime using PV
+	  pvtx.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),0);
+	  TVector3 vdiff = vtx - pvtx;
+	  double cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
+	  Measurement1D distXY = vdistXY.distance(Vertex(myVertex), thePrimaryV);
+	  double ctauPV = distXY.value()*cosAlpha*3.096916/pperp.Perp();
+	  GlobalError v1e = (Vertex(myVertex)).error();
+	  GlobalError v2e = thePrimaryV.error();
+	  AlgebraicSymMatrix33 vXYe = v1e.matrix()+ v2e.matrix();
+	  double ctauErrPV = sqrt(ROOT::Math::Similarity(vpperp,vXYe))*3.096916/(pperp.Perp2());
 
-      if (DimuonTrk_){
-	userInt["Ntrk"] = Ntrk;
+	  userFloat["ppdlPV"] = ctauPV;
+	  userFloat["ppdlErrPV"] = ctauErrPV;
+	  userFloat["cosAlpha"] = cosAlpha;
+
+	  pvtx3D.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),thePrimaryV.position().z());
+	  TVector3 vdiff3D = vtx3D - pvtx3D;
+	  double cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
+	  Measurement1D distXYZ = vdistXYZ.distance(Vertex(myVertex), thePrimaryV);
+	  double ctauPV3D = distXYZ.value()*cosAlpha3D*3.096916/pxyz.Mag();
+	  double ctauErrPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*3.096916/(pxyz.Mag2());
+            
+	  userFloat["ppdlPV3D"] = ctauPV3D;
+	  userFloat["ppdlErrPV3D"] = ctauErrPV3D;
+	  userFloat["cosAlpha3D"] = cosAlpha3D;
+
+	  if (addMuonlessPrimaryVertex_ && !doTrimuons_ && !DimuonTrk_){
+	    // 2D-lifetime using Original PV
+	    pvtx.SetXYZ(theOriginalPV.position().x(),theOriginalPV.position().y(),0);
+	    vdiff = vtx - pvtx;
+	    double cosAlphaOrigPV = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
+	    distXY = vdistXY.distance(Vertex(myVertex), theOriginalPV);
+	    double ctauOrigPV = distXY.value()*cosAlphaOrigPV*3.096916/pperp.Perp();
+	    GlobalError v1eOrigPV = (Vertex(myVertex)).error();
+	    GlobalError v2eOrigPV = theOriginalPV.error();
+	    AlgebraicSymMatrix33 vXYeOrigPV = v1eOrigPV.matrix()+ v2eOrigPV.matrix();
+	    double ctauErrOrigPV = sqrt(ROOT::Math::Similarity(vpperp,vXYeOrigPV))*3.096916/(pperp.Perp2());
+
+	    userFloat["ppdlOrigPV"] = ctauOrigPV;
+	    userFloat["ppdlErrOrigPV"] = ctauErrOrigPV;
+
+	    // 3D-lifetime using Original PV
+	    pvtx3D.SetXYZ(theOriginalPV.position().x(), theOriginalPV.position().y(), theOriginalPV.position().z());
+	    vdiff3D = vtx3D - pvtx3D;
+	    double cosAlphaOrigPV3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
+	    distXYZ = vdistXYZ.distance(Vertex(myVertex), theOriginalPV);
+	    double ctauOrigPV3D = distXYZ.value()*cosAlphaOrigPV3D*3.096916/pxyz.Mag();
+	    double ctauErrOrigPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYeOrigPV))*3.096916/(pxyz.Mag2());
+            
+	      userFloat["ppdlOrigPV3D"] = ctauOrigPV3D;
+	      userFloat["ppdlErrOrigPV3D"] = ctauErrOrigPV3D;
+	    }
+	    else {
+	      userFloat["ppdlOrigPV"] = ctauPV;
+	      userFloat["ppdlErrOrigPV"] = ctauErrPV;
+	      userFloat["ppdlOrigPV3D"] = ctauPV3D;
+	      userFloat["ppdlErrOrigPV3D"] = ctauErrPV3D;
+	    }
+
+	    // lifetime using BS
+	    if(!doTrimuons_ && !DimuonTrk_){
+	      pvtx.SetXYZ(theBeamSpotV.position().x(),theBeamSpotV.position().y(),0);
+	      vdiff = vtx - pvtx;
+	      cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
+	      distXY = vdistXY.distance(Vertex(myVertex), theBeamSpotV);
+	      double ctauBS = distXY.value()*cosAlpha*3.096916/pperp.Perp();
+	      GlobalError v1eB = (Vertex(myVertex)).error();
+	      GlobalError v2eB = theBeamSpotV.error();
+	      AlgebraicSymMatrix33 vXYeB = v1eB.matrix()+ v2eB.matrix();
+	      double ctauErrBS = sqrt(ROOT::Math::Similarity(vpperp,vXYeB))*3.096916/(pperp.Perp2());
+              
+	      userFloat["ppdlBS"] = ctauBS;
+	      userFloat["ppdlErrBS"] = ctauErrBS;
+	      pvtx3D.SetXYZ(theBeamSpotV.position().x(),theBeamSpotV.position().y(),theBeamSpotV.position().z());
+	      vdiff3D = vtx3D - pvtx3D;
+	      cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
+	      distXYZ = vdistXYZ.distance(Vertex(myVertex), theBeamSpotV);
+	      double ctauBS3D = distXYZ.value()*cosAlpha3D*3.096916/pxyz.Mag();
+	      double ctauErrBS3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYeB))*3.096916/(pxyz.Mag2());
+
+	      userFloat["ppdlBS3D"] = ctauBS3D;
+	      userFloat["ppdlErrBS3D"] = ctauErrBS3D;
+	    }
+            
+	  	if (addCommonVertex_) {
+	  	  userVertex["commonVertex"] = Vertex(myVertex);
+	  	}
+      } else {
+	    userFloat["vNChi2"] = -1;
+	    userFloat["vProb"] = -1;
+	    userFloat["vertexWeight"] = -100;
+	    userFloat["sumPTPV"] = -100;
+	    userFloat["DCA"] = -10;
+	    userFloat["ppdlPV"] = -100;
+	    userFloat["ppdlErrPV"] = -100;
+	    userFloat["cosAlpha"] = -10;
+	    userFloat["ppdlBS"] = -100;
+	    userFloat["ppdlErrBS"] = -100;
+	    userFloat["ppdlOrigPV"] = -100;
+	    userFloat["ppdlErrOrigPV"] = -100;
+	    userFloat["ppdlPV3D"] = -100;
+	    userFloat["ppdlErrPV3D"] = -100;
+	    userFloat["cosAlpha3D"] = -10;
+	    userFloat["ppdlBS3D"] = -100;
+	    userFloat["ppdlErrBS3D"] = -100;
+	    userFloat["ppdlOrigPV3D"] = -100;
+	    userFloat["ppdlErrOrigPV3D"] = -100;
+
+	    userInt["countTksOfPV"] = -1;
+
+	    if (addCommonVertex_) {
+	      userVertex["commonVertex"] = Vertex();
+	    }
+	    if (addMuonlessPrimaryVertex_) {
+	      userVertex["muonlessPV"] = Vertex();
+	      userVertex["PVwithmuons"] = Vertex();
+	    } else {
+	      userVertex["PVwithmuons"] = Vertex();
+	    }
       }
 
-      for (std::map<std::string, float>::iterator i = userFloat.begin(); i != userFloat.end(); i++) { myCand.addUserFloat(i->first , i->second); }
+      if (DimuonTrk_){
+	    userInt["Ntrk"] = Ntrk;
+      }
 
-      if(!LateDimuonSel_(myCand)) 
-	{if (DimuonTrk_ || flipJpsiDirection_>0 || (!doTrimuons_)) continue; //if flipJpsi>0 or we do dimuon+track, then we want this dimuon to be the true Jpsi in the trimuon
-	  else {goto TrimuonCand;}}
+      for (auto i = userFloat) { myCand.addUserFloat(i->first , i->second); }
+
+      if(!LateDimuonSel_(myCand)){
+		if (DimuonTrk_ || flipJpsiDirection_>0 || (!doTrimuons_)) continue; //if flipJpsi>0 or we do dimuon+track, then we want this dimuon to be the true Jpsi in the trimuon
+	    else {goto TrimuonCand;}
+	  }
       goodMu1Mu2 = true;
-
       for(; flipJpsi<(1+flipJpsiDirection_); flipJpsi++){ //'int flipJpsi=0' must be declared before the 'goto' statements
-	if(flipJpsiDirection_>0 && flipJpsi==0) continue;
+	    if(flipJpsiDirection_>0 && flipJpsi==0) continue;
 	
-	myCandTmp = myCand;
-	// --- Build the flipped tracks, change the vertex accordingly ---
-	if(flipJpsiDirection_>0){
-	  const reco::TrackBase::Point &refPoint1 = rotatePoint(thePrimaryV.position(), (it.track())->referencePoint(), flipJpsi); //catch tracks of original muons
-	  const reco::TrackBase::Vector &Momentum1 = rotateMomentum(*it.track(), flipJpsi); 
-	  muon1Trk = reco::Track(muon1Trk.chi2(), muon1Trk.ndof(), refPoint1, Momentum1, it.charge(), muon1Trk.covariance(), muon1Trk.originalAlgo()); //forget TrackQuality info here
-	  mu1 = LorentzVector(muon1Trk.px(),muon1Trk.py(),muon1Trk.pz(), sqrt(pow(muon1Trk.p(),2) + pow(muMasses[0],2)) );
+	    myCandTmp = myCand;
+	    // --- Build the flipped tracks, change the vertex accordingly ---
+	    if(flipJpsiDirection_>0){
+	      const reco::TrackBase::Point &refPoint1 = rotatePoint(thePrimaryV.position(), (it.track())->referencePoint(), flipJpsi); //catch tracks of original muons
+	      const reco::TrackBase::Vector &Momentum1 = rotateMomentum(*it.track(), flipJpsi); 
+	      muon1Trk = reco::Track(muon1Trk.chi2(), muon1Trk.ndof(), refPoint1, Momentum1, it.charge(), muon1Trk.covariance(), muon1Trk.originalAlgo()); //forget TrackQuality info here
+	      mu1 = LorentzVector(muon1Trk.px(),muon1Trk.py(),muon1Trk.pz(), sqrt(pow(muon1Trk.p(),2) + pow(muMasses[0],2)) );
 
-	  const reco::TrackBase::Point &refPoint2 = rotatePoint(thePrimaryV.position(), (it2.track())->referencePoint(), flipJpsi);
-	  const reco::TrackBase::Vector &Momentum2 = rotateMomentum(*it2.track(), flipJpsi); 
-	  muon2Trk = reco::Track(muon2Trk.chi2(), muon2Trk.ndof(), refPoint2, Momentum2, it2.charge(), muon2Trk.covariance(), muon2Trk.originalAlgo()); 
-	  mu2 = LorentzVector(muon2Trk.px(),muon2Trk.py(),muon2Trk.pz(), sqrt(pow(muon2Trk.p(),2) + pow(muMasses[1],2)) );
-	  // cout<<"PV x, y,, z = "<<thePrimaryV.position().x()<<" "<<thePrimaryV.position().y()<<" "<<thePrimaryV.position().z()<<" "<<endl;
-	  // cout<<"old track x, y, z, px, py, pz = "<<(*it.track()).referencePoint().x()<<" "<<(*it.track()).referencePoint().y()<<" "<<(*it.track()).referencePoint().z()<<" "<<(*it.track()).px()<<" "<<(*it.track()).py()<<" "<<(*it.track()).pz()<<endl;
-	  // cout<<"new track x, y, z, px, py, pz = "<<muon1Trk.referencePoint().x()<<" "<<muon1Trk.referencePoint().y()<<" "<<muon1Trk.referencePoint().z()<<" "<<muon1Trk.px()<<" "<<muon1Trk.py()<<" "<<muon1Trk.pz()<<endl;
+	      const reco::TrackBase::Point &refPoint2 = rotatePoint(thePrimaryV.position(), (it2.track())->referencePoint(), flipJpsi);
+	      const reco::TrackBase::Vector &Momentum2 = rotateMomentum(*it2.track(), flipJpsi); 
+	      muon2Trk = reco::Track(muon2Trk.chi2(), muon2Trk.ndof(), refPoint2, Momentum2, it2.charge(), muon2Trk.covariance(), muon2Trk.originalAlgo()); 
+	      mu2 = LorentzVector(muon2Trk.px(),muon2Trk.py(),muon2Trk.pz(), sqrt(pow(muon2Trk.p(),2) + pow(muMasses[1],2)) );
+	      // cout<<"PV x, y,, z = "<<thePrimaryV.position().x()<<" "<<thePrimaryV.position().y()<<" "<<thePrimaryV.position().z()<<" "<<endl;
+	      // cout<<"old track x, y, z, px, py, pz = "<<(*it.track()).referencePoint().x()<<" "<<(*it.track()).referencePoint().y()<<" "<<(*it.track()).referencePoint().z()<<" "<<(*it.track()).px()<<" "<<(*it.track()).py()<<" "<<(*it.track()).pz()<<endl;
+	      // cout<<"new track x, y, z, px, py, pz = "<<muon1Trk.referencePoint().x()<<" "<<muon1Trk.referencePoint().y()<<" "<<muon1Trk.referencePoint().z()<<" "<<muon1Trk.px()<<" "<<muon1Trk.py()<<" "<<muon1Trk.pz()<<endl;
 
-	  jpsi = mu1 + mu2;
-	  myCandTmp.setP4(jpsi);
-	}
+	      jpsi = mu1 + mu2;
+	      myCandTmp.setP4(jpsi);
+	    }
 
-	///////////////////////////////////////////////////////
-	////// Building dimuon+track candidates 
-	///////////////////////////////////////////////////////
+	    ///////////////////////////////////////////////////////
+	    ////// Building dimuon+track candidates 
+	    ///////////////////////////////////////////////////////
 
-	if(!DimuonTrk_) 
-	  {goto TrimuonCand;}
+	    if(!DimuonTrk_) 
+	      {goto TrimuonCand;}
 
-	if(DimuonTrk_ && flipJpsiDirection_>0) cout<<" ***** BEWARE !!! Undefined behaviour when DimuonTrack and flipJpsiDirection options are both true!"<<endl;
+	    if(DimuonTrk_ && flipJpsiDirection_>0) cout<<" ***** BEWARE !!! Undefined behaviour when DimuonTrack and flipJpsiDirection options are both true!"<<endl;
 
-	for(int k=0; k<Ntrk; k++){
-	  const reco::TrackRef it3 = ourTracks[k];
-	  //cout<<"Got track #"<<k<<endl;
-	  RecoChargedCandidate piCand3;
-	  Converter_.TrackToCandidate::convert(it3, piCand3);
-	  piCand3.setPdgId(trackType_);
-	  piCand3.setMass(trackMass_);//usually pion or muon mass
+		for(int k=0; k<Ntrk; k++){
+	      const reco::TrackRef it3 = ourTracks[k];
+	      //cout<<"Got track #"<<k<<endl;
+	      RecoChargedCandidate piCand3;
+	      Converter_.TrackToCandidate::convert(it3, piCand3);
+	      piCand3.setPdgId(trackType_);
+	      piCand3.setMass(trackMass_);//usually pion or muon mass
 	
-	  if( ( fabs((it3->pt() - (it.track())->pt())) < 1e-4 && fabs((it3->eta() - (it.track())->eta())) < 1e-6) || (fabs((it3->pt() - (it2.track())->pt())) < 1e-4 && (fabs(it3->eta() - (it2.track())->eta())) < 1e-6) ) {
-	    continue;}
-	  pat::CompositeCandidate BcCand;
-	  // ---- no explicit order defined ----
-	  BcCand.addDaughter(it, "muon1");
-	  BcCand.addDaughter(it2,"muon2");
-	  BcCand.addDaughter(piCand3,"track");
+	      if( ( fabs((it3->pt() - (it.track())->pt())) < 1e-4 && fabs((it3->eta() - (it.track())->eta())) < 1e-6) || (fabs((it3->pt() - (it2.track())->pt())) < 1e-4 && (fabs(it3->eta() - (it2.track())->eta())) < 1e-6) ) {
+	        continue;}
+	      pat::CompositeCandidate BcCand;
+	      // ---- no explicit order defined ----
+	      BcCand.addDaughter(it, "muon1");
+	      BcCand.addDaughter(it2,"muon2");
+	      BcCand.addDaughter(piCand3,"track");
 
-	  // ---- define and set candidate's 4momentum  ----  
-	  LorentzVector bc = it.p4() + it2.p4() + piCand3.p4();
-	  BcCand.setP4(bc);
-	  BcCand.setCharge(it.charge()+it2.charge()+piCand3.charge());
+	      // ---- define and set candidate's 4momentum  ----  
+	      LorentzVector bc = it.p4() + it2.p4() + piCand3.p4();
+	      BcCand.setP4(bc);
+	      BcCand.setCharge(it.charge()+it2.charge()+piCand3.charge());
 
-	  std::map< std::string, float > userBcFloat;
-	  std::map< std::string, reco::Vertex > userBcVertex;
+	      std::map< std::string, float > userBcFloat;
+	      std::map< std::string, reco::Vertex > userBcVertex;
 
-	  // ---- apply the Bc cut ---- 
-	  if(!( DimuTrkSelection_(BcCand))) continue;
+	      // ---- apply the Bc cut ---- 
+	      if(!( DimuTrkSelection_(BcCand))) continue;
 
-	  if (!(it.track().isNonnull() && it2.track().isNonnull())) continue;
+	      if (!(it.track().isNonnull() && it2.track().isNonnull())) continue;
 
-	  // ---- build the Jpsi+trk secondary vertex	----
-	  //////////// Kalman Vertex Fitter
-	  vector<TransientTrack> t_tks;
-	  t_tks.push_back(theTTBuilder->build(*it.track()));  // pass the reco::Track, not  the reco::TrackRef (which can be transient)
-	  t_tks.push_back(theTTBuilder->build(*it2.track())); // otherwise the vertex will have transient refs inside.
-	  t_tks.push_back(theTTBuilder->build(*piCand3.track()));
+	      // ---- build the Jpsi+trk secondary vertex	----
+	      //////////// Kalman Vertex Fitter
+	      vector<TransientTrack> t_tks;
+	      t_tks.push_back(theTTBuilder->build(*it.track()));  // pass the reco::Track, not  the reco::TrackRef (which can be transient)
+	      t_tks.push_back(theTTBuilder->build(*it2.track())); // otherwise the vertex will have transient refs inside.
+	      t_tks.push_back(theTTBuilder->build(*piCand3.track()));
 
-	  CachingVertex<5> VtxForInvMass = vtxFitter.vertex( t_tks );
-	  Measurement1D MassWErr = massCalculator.invariantMass( VtxForInvMass, DimuTrkMasses );
-	  userBcFloat["MassErr"] = MassWErr.error();
+	      CachingVertex<5> VtxForInvMass = vtxFitter.vertex( t_tks );
+	      Measurement1D MassWErr = massCalculator.invariantMass( VtxForInvMass, DimuTrkMasses );
+	      userBcFloat["MassErr"] = MassWErr.error();
 
-	  TransientVertex DimuTrkVertex = vtxFitter.vertex(t_tks);
+	      TransientVertex DimuTrkVertex = vtxFitter.vertex(t_tks);
 
-	  if (DimuTrkVertex.isValid()) {
-	    float vChi2 = DimuTrkVertex.totalChiSquared();
-	    float vNDF  = DimuTrkVertex.degreesOfFreedom();
-	    float vProb(TMath::Prob(vChi2,(int)vNDF));
+	      if (DimuTrkVertex.isValid()) {
+	        float vChi2 = DimuTrkVertex.totalChiSquared();
+	        float vNDF  = DimuTrkVertex.degreesOfFreedom();
+	        float vProb(TMath::Prob(vChi2,(int)vNDF));
 
-	    userBcFloat["vNChi2"] = (vChi2/vNDF);
-	    userBcFloat["vProb"] = vProb;
+	        userBcFloat["vNChi2"] = (vChi2/vNDF);
+	        userBcFloat["vProb"] = vProb;
 
-	    TVector3 vtx, vtx3D;
-	    TVector3 pvtx, pvtx3D;
-	    VertexDistanceXY vdistXY;
-	    VertexDistance3D vdistXYZ;
+	        TVector3 vtx, vtx3D;
+	        TVector3 pvtx, pvtx3D;
+	        VertexDistanceXY vdistXY;
+	        VertexDistance3D vdistXYZ;
 
-	    vtx.SetXYZ(DimuTrkVertex.position().x(),DimuTrkVertex.position().y(),0);
-	    TVector3 pperp(bc.px(), bc.py(), 0);
-	    AlgebraicVector3 vpperp(pperp.x(), pperp.y(), 0.);
+	        vtx.SetXYZ(DimuTrkVertex.position().x(),DimuTrkVertex.position().y(),0);
+	        TVector3 pperp(bc.px(), bc.py(), 0);
+	        AlgebraicVector3 vpperp(pperp.x(), pperp.y(), 0.);
 
-	    vtx3D.SetXYZ(DimuTrkVertex.position().x(),DimuTrkVertex.position().y(),DimuTrkVertex.position().z());
-	    TVector3 pxyz(bc.px(), bc.py(), bc.pz());
-	    AlgebraicVector3 vpxyz(pxyz.x(), pxyz.y(), pxyz.z());
+	        vtx3D.SetXYZ(DimuTrkVertex.position().x(),DimuTrkVertex.position().y(),DimuTrkVertex.position().z());
+	        TVector3 pxyz(bc.px(), bc.py(), bc.pz());
+	        AlgebraicVector3 vpxyz(pxyz.x(), pxyz.y(), pxyz.z());
 
-	    //The "resolvePileUpAmbiguity" (looking for the PV that is the closest in z to the displaced vertex) has already been done with the dimuon, we keep this PV as such
-	    Vertex thePrimaryV = theOriginalPV;
-	    
-	    muonLess.clear();
-	    muonLess.reserve(thePrimaryV.tracksSize());
-	    if( addMuonlessPrimaryVertex_ && thePrimaryV.tracksSize()>2) {
-	      // Primary vertex matched to the dimuon, now refit it removing the three muons
-	      // I need to go back to the reco::Muon object, as the TrackRef in the pat::Muon can be an embedded ref.
-	      const reco::Muon *rmu1 = dynamic_cast<const reco::Muon *>(it.originalObject());
-	      const reco::Muon *rmu2 = dynamic_cast<const reco::Muon *>(it2.originalObject());
-	      const reco::TrackRef rtrk3 = it3;
-	      if( thePrimaryV.hasRefittedTracks() ) {
-		// Need to go back to the original tracks before taking the key
-		std::vector<reco::Track>::const_iterator itRefittedTrack   = thePrimaryV.refittedTracks().begin();
-		std::vector<reco::Track>::const_iterator refittedTracksEnd = thePrimaryV.refittedTracks().end();
-		for( ; itRefittedTrack != refittedTracksEnd; ++itRefittedTrack ) {
-		  if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rmu1->track().key() ) continue;
-		  if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rmu2->track().key() ) continue;
-		  if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rtrk3.key() ) continue;
+	        //The "resolvePileUpAmbiguity" (looking for the PV that is the closest in z to the displaced vertex) has already been done with the dimuon, we keep this PV as such
+	        Vertex thePrimaryV = theOriginalPV;
+	        
+	        muonLess.clear();
+	        muonLess.reserve(thePrimaryV.tracksSize());
+	        if( addMuonlessPrimaryVertex_ && thePrimaryV.tracksSize()>2) {
+	          // Primary vertex matched to the dimuon, now refit it removing the three muons
+	          // I need to go back to the reco::Muon object, as the TrackRef in the pat::Muon can be an embedded ref.
+	          const reco::Muon *rmu1 = dynamic_cast<const reco::Muon *>(it.originalObject());
+	          const reco::Muon *rmu2 = dynamic_cast<const reco::Muon *>(it2.originalObject());
+	          const reco::TrackRef rtrk3 = it3;
+	          if( thePrimaryV.hasRefittedTracks() ) {
+	    	// Need to go back to the original tracks before taking the key
+	    	std::vector<reco::Track>::const_iterator itRefittedTrack   = thePrimaryV.refittedTracks().begin();
+	    	std::vector<reco::Track>::const_iterator refittedTracksEnd = thePrimaryV.refittedTracks().end();
+	    	for( ; itRefittedTrack != refittedTracksEnd; ++itRefittedTrack ) {
+	    	  if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rmu1->track().key() ) continue;
+	    	  if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rmu2->track().key() ) continue;
+	    	  if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rtrk3.key() ) continue;
 
-		  const reco::Track & recoTrack = *(thePrimaryV.originalTrack(*itRefittedTrack));
-		  muonLess.push_back(recoTrack);
-		}
-	      }// PV has refitted tracks
-	      else 
-		{
-		  std::vector<reco::TrackBaseRef>::const_iterator itPVtrack = thePrimaryV.tracks_begin();
-		  for( ; itPVtrack != thePrimaryV.tracks_end(); ++itPVtrack ) if (itPVtrack->isNonnull()) {
-		      if( itPVtrack->key() == rmu1->track().key() ) continue;
-		      if( itPVtrack->key() == rmu2->track().key() ) continue;
-		      if( itPVtrack->key() == rtrk3.key() ) continue;
-		      muonLess.push_back(**itPVtrack);
-		    }
-		}// take all tracks associated with the vtx
+	    	  const reco::Track & recoTrack = *(thePrimaryV.originalTrack(*itRefittedTrack));
+	    	  muonLess.push_back(recoTrack);
+	    	}
+	          }// PV has refitted tracks
+	          else 
+	    	{
+	    	  std::vector<reco::TrackBaseRef>::const_iterator itPVtrack = thePrimaryV.tracks_begin();
+	    	  for( ; itPVtrack != thePrimaryV.tracks_end(); ++itPVtrack ) if (itPVtrack->isNonnull()) {
+	    	      if( itPVtrack->key() == rmu1->track().key() ) continue;
+	    	      if( itPVtrack->key() == rmu2->track().key() ) continue;
+	    	      if( itPVtrack->key() == rtrk3.key() ) continue;
+	    	      muonLess.push_back(**itPVtrack);
+	    	    }
+	    	}// take all tracks associated with the vtx
 
-	      if (muonLess.size()>1 && muonLess.size() < thePrimaryV.tracksSize()) {
-		// find the new vertex, from which the 2 muons were removed
-		// need the transient tracks corresponding to the new track collection
-		std::vector<reco::TransientTrack> t_tks; 
-		t_tks.reserve(muonLess.size());
+	          if (muonLess.size()>1 && muonLess.size() < thePrimaryV.tracksSize()) {
+	    	// find the new vertex, from which the 2 muons were removed
+	    	// need the transient tracks corresponding to the new track collection
+	    	std::vector<reco::TransientTrack> t_tks; 
+	    	t_tks.reserve(muonLess.size());
 
-		for (reco::TrackCollection::const_iterator it = muonLess.begin(), ed = muonLess.end(); it != ed; ++it) {
-		  t_tks.push_back((*theTTBuilder).build(*it));
-		  t_tks.back().setBeamSpot(bs);
-		}
-		std::unique_ptr<AdaptiveVertexFitter> theFitter( new AdaptiveVertexFitter() );
-		TransientVertex pvs = theFitter->vertex(t_tks, bs);  // if you want the beam constraint
+	    	for (reco::TrackCollection::const_iterator it = muonLess.begin(), ed = muonLess.end(); it != ed; ++it) {
+	    	  t_tks.push_back((*theTTBuilder).build(*it));
+	    	  t_tks.back().setBeamSpot(bs);
+	    	}
+	    	std::unique_ptr<AdaptiveVertexFitter> theFitter( new AdaptiveVertexFitter() );
+	    	TransientVertex pvs = theFitter->vertex(t_tks, bs);  // if you want the beam constraint
 
-		if (pvs.isValid()) {
-		  reco::Vertex muonLessPV = Vertex(pvs);
-		  thePrimaryV = muonLessPV;
-		} else {
-		  edm::LogWarning("HiOnia2MuMuPAT_FailingToRefitMuonLessVtx") << 
-		    "TransientVertex re-fitted is not valid!! You got still the 'old vertex'" << "\n";
-		}
+	    	if (pvs.isValid()) {
+	    	  reco::Vertex muonLessPV = Vertex(pvs);
+	    	  thePrimaryV = muonLessPV;
+	    	} else {
+	    	  edm::LogWarning("HiOnia2MuMuPAT_FailingToRefitMuonLessVtx") << 
+	    	    "TransientVertex re-fitted is not valid!! You got still the 'old vertex'" << "\n";
+	    	}
+	          } else {
+	    	if ( muonLess.size()==thePrimaryV.tracksSize() ){
+	    	  edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
+	    	    "Still have the original PV: the refit was not done 'cose it is already muonless" << "\n";
+	    	} else if ( muonLess.size()<=1 ){
+	    	  // edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
+	    	  //  "Still have the original PV: the refit was not done 'cose there are not enough tracks to do the refit without the muon tracks" << "\n";
+	    	} else {
+	    	  edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
+	    	    "Still have the original PV: Something weird just happened, muonLess.size()=" << muonLess.size() << " and thePrimaryV.tracksSize()=" << thePrimaryV.tracksSize() << " ." << "\n";
+	    	}
+	          }
+	        }// refit vtx without the muon tracks
+
+	        if (addMuonlessPrimaryVertex_) {
+	          userBcVertex["muonlessPV"] = thePrimaryV;
+	          userBcVertex["PVwithmuons"] = theOriginalPV;
+	        } else {
+	          userBcVertex["PVwithmuons"] = thePrimaryV;
+	        }
+
+	        // lifetime using PV
+	        pvtx.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),0);
+	        TVector3 vdiff = vtx - pvtx;
+	        double cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
+	        Measurement1D distXY = vdistXY.distance(Vertex(DimuTrkVertex), thePrimaryV);
+	        double ctauPV = distXY.value()*cosAlpha*6.276/pperp.Perp();
+	        GlobalError v1e = (Vertex(DimuTrkVertex)).error();
+	        GlobalError v2e = thePrimaryV.error();
+	        AlgebraicSymMatrix33 vXYe = v1e.matrix()+ v2e.matrix();
+	        double ctauErrPV = sqrt(ROOT::Math::Similarity(vpperp,vXYe))*6.276/(pperp.Perp2());
+
+	        userBcFloat["ppdlPV"] = ctauPV;
+	        userBcFloat["ppdlErrPV"] = ctauErrPV;
+	        userBcFloat["cosAlpha"] = cosAlpha;
+
+	        pvtx3D.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),thePrimaryV.position().z());
+	        TVector3 vdiff3D = vtx3D - pvtx3D;
+	        double cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
+	        Measurement1D distXYZ = vdistXYZ.distance(Vertex(DimuTrkVertex), thePrimaryV);
+	        double ctauPV3D = distXYZ.value()*cosAlpha3D*6.276/pxyz.Mag();
+	        double ctauErrPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*6.276/(pxyz.Mag2());
+              
+	        userBcFloat["ppdlPV3D"] = ctauPV3D;
+	        userBcFloat["ppdlErrPV3D"] = ctauErrPV3D;
+	        userBcFloat["cosAlpha3D"] = cosAlpha3D;
+
+	        if (addCommonVertex_) {
+	          userBcVertex["commonVertex"] = Vertex(DimuTrkVertex);
+	        }
+
 	      } else {
-		if ( muonLess.size()==thePrimaryV.tracksSize() ){
-		  edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-		    "Still have the original PV: the refit was not done 'cose it is already muonless" << "\n";
-		} else if ( muonLess.size()<=1 ){
-		  // edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-		  //  "Still have the original PV: the refit was not done 'cose there are not enough tracks to do the refit without the muon tracks" << "\n";
-		} else {
-		  edm::LogWarning("HiOnia2MuMuPAT_muonLessSizeORpvTrkSize") << 
-		    "Still have the original PV: Something weird just happened, muonLess.size()=" << muonLess.size() << " and thePrimaryV.tracksSize()=" << thePrimaryV.tracksSize() << " ." << "\n";
-		}
+	        userBcFloat["vNChi2"] = -1;
+	        userBcFloat["vProb"] = -1;
+	        userBcFloat["vertexWeight"] = -100;
+	        userBcFloat["sumPTPV"] = -100;
+	        userBcFloat["ppdlPV"] = -100;
+	        userBcFloat["ppdlErrPV"] = -100;
+	        userBcFloat["cosAlpha"] = -100;
+	        userBcFloat["ppdlBS"] = -100;
+	        userBcFloat["ppdlErrBS"] = -100;
+	        userBcFloat["ppdlOrigPV"] = -100;
+	        userBcFloat["ppdlErrOrigPV"] = -100;
+	        userBcFloat["ppdlPV3D"] = -100;
+	        userBcFloat["ppdlErrPV3D"] = -100;
+	        userBcFloat["cosAlpha3D"] = -100;
+	        userBcFloat["ppdlBS3D"] = -100;
+	        userBcFloat["ppdlErrBS3D"] = -100;
+	        userBcFloat["ppdlOrigPV3D"] = -100;
+	        userBcFloat["ppdlErrOrigPV3D"] = -100;
+
+	        if (addCommonVertex_) {
+	          userBcVertex["commonVertex"] = Vertex();
+	        }
+	        if (addMuonlessPrimaryVertex_) {
+	          userBcVertex["muonlessPV"] = Vertex();
+	          userBcVertex["PVwithmuons"] = Vertex();
+	        } else {
+	          userBcVertex["PVwithmuons"] = Vertex();
+	        } 
 	      }
-	    }// refit vtx without the muon tracks
 
-	    if (addMuonlessPrimaryVertex_) {
-	      userBcVertex["muonlessPV"] = thePrimaryV;
-	      userBcVertex["PVwithmuons"] = theOriginalPV;
-	    } else {
-	      userBcVertex["PVwithmuons"] = thePrimaryV;
-	    }
+	      for (std::map<std::string, float>::iterator i = userBcFloat.begin(); i != userBcFloat.end(); i++) { BcCand.addUserFloat(i->first , i->second); }
+	      for (std::map<std::string, reco::Vertex>::iterator i = userBcVertex.begin(); i != userBcVertex.end(); i++) { BcCand.addUserData(i->first , i->second); }
 
-	    // lifetime using PV
-	    pvtx.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),0);
-	    TVector3 vdiff = vtx - pvtx;
-	    double cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
-	    Measurement1D distXY = vdistXY.distance(Vertex(DimuTrkVertex), thePrimaryV);
-	    double ctauPV = distXY.value()*cosAlpha*6.276/pperp.Perp();
-	    GlobalError v1e = (Vertex(DimuTrkVertex)).error();
-	    GlobalError v2e = thePrimaryV.error();
-	    AlgebraicSymMatrix33 vXYe = v1e.matrix()+ v2e.matrix();
-	    double ctauErrPV = sqrt(ROOT::Math::Similarity(vpperp,vXYe))*6.276/(pperp.Perp2());
+	      if(!LateDimuTrkSel_(BcCand)) continue;	
 
-	    userBcFloat["ppdlPV"] = ctauPV;
-	    userBcFloat["ppdlErrPV"] = ctauErrPV;
-	    userBcFloat["cosAlpha"] = cosAlpha;
+	      bool KCvtxNotFound=true;
+	      /////////////////Begin Kinematic Constrained Vertex Fit
+	      std::vector<RefCountedKinematicParticle> BcDaughters;
+	      reco::TransientTrack muon1TT(it.track(), &(*bField) );
+	      reco::TransientTrack muon2TT(it2.track(), &(*bField) );
+	      reco::TransientTrack pion3TT(piCand3.track(), &(*bField) );
 
-	    pvtx3D.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),thePrimaryV.position().z());
-	    TVector3 vdiff3D = vtx3D - pvtx3D;
-	    double cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
-	    Measurement1D distXYZ = vdistXYZ.distance(Vertex(DimuTrkVertex), thePrimaryV);
-	    double ctauPV3D = distXYZ.value()*cosAlpha3D*6.276/pxyz.Mag();
-	    double ctauErrPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*6.276/(pxyz.Mag2());
-          
-	    userBcFloat["ppdlPV3D"] = ctauPV3D;
-	    userBcFloat["ppdlErrPV3D"] = ctauErrPV3D;
-	    userBcFloat["cosAlpha3D"] = cosAlpha3D;
+	      if(muon1TT.isValid() && muon2TT.isValid() && pion3TT.isValid()) {
+	        float chi = 0.;	float ndf = 0.;
+	        BcDaughters.push_back(pFactory.particle(muon1TT,muon_mass,chi,ndf,muon_sigma));
+	        BcDaughters.push_back(pFactory.particle(muon2TT,muon_mass,chi,ndf,muon_sigma));
+	        BcDaughters.push_back(pFactory.particle(pion3TT,pion_mass,chi,ndf,pion_sigma));
 
-	    if (addCommonVertex_) {
-	      userBcVertex["commonVertex"] = Vertex(DimuTrkVertex);
-	    }
+	        RefCountedKinematicTree BcTree = KCfitter.fit(BcDaughters, jpsi_c);   
+	        if(BcTree->isValid()){
+	          BcTree->movePointerToTheTop();
+	          RefCountedKinematicParticle BcPart = BcTree->currentParticle();
+	          RefCountedKinematicVertex BcVtx = BcTree->currentDecayVertex();
+	          if(BcVtx->vertexIsValid()){
+	    	KCvtxNotFound=false;
+	    	//////////////////End Kinematic Constrained Vertex Fit
 
-	  } else {
-	    userBcFloat["vNChi2"] = -1;
-	    userBcFloat["vProb"] = -1;
-	    userBcFloat["vertexWeight"] = -100;
-	    userBcFloat["sumPTPV"] = -100;
-	    userBcFloat["ppdlPV"] = -100;
-	    userBcFloat["ppdlErrPV"] = -100;
-	    userBcFloat["cosAlpha"] = -100;
-	    userBcFloat["ppdlBS"] = -100;
-	    userBcFloat["ppdlErrBS"] = -100;
-	    userBcFloat["ppdlOrigPV"] = -100;
-	    userBcFloat["ppdlErrOrigPV"] = -100;
-	    userBcFloat["ppdlPV3D"] = -100;
-	    userBcFloat["ppdlErrPV3D"] = -100;
-	    userBcFloat["cosAlpha3D"] = -100;
-	    userBcFloat["ppdlBS3D"] = -100;
-	    userBcFloat["ppdlErrBS3D"] = -100;
-	    userBcFloat["ppdlOrigPV3D"] = -100;
-	    userBcFloat["ppdlErrOrigPV3D"] = -100;
+	    	double vtxProb = TMath::Prob(BcVtx->chiSquared(), BcVtx->degreesOfFreedom());
+	    	userBcFloat["KinConstrainedVtxProb"] = vtxProb;
 
-	    if (addCommonVertex_) {
-	      userBcVertex["commonVertex"] = Vertex();
-	    }
-	    if (addMuonlessPrimaryVertex_) {
-	      userBcVertex["muonlessPV"] = Vertex();
-	      userBcVertex["PVwithmuons"] = Vertex();
-	    } else {
-	      userBcVertex["PVwithmuons"] = Vertex();
-	    } 
-	  }
+	    	// lifetime using PV and vertex from kin constrained fit
+	    	TVector3 vtx, vtx3D;
+	    	TVector3 pvtx, pvtx3D;
+	    	VertexDistanceXY vdistXY;
+	    	VertexDistance3D vdistXYZ;
 
-	  for (std::map<std::string, float>::iterator i = userBcFloat.begin(); i != userBcFloat.end(); i++) { BcCand.addUserFloat(i->first , i->second); }
-	  for (std::map<std::string, reco::Vertex>::iterator i = userBcVertex.begin(); i != userBcVertex.end(); i++) { BcCand.addUserData(i->first , i->second); }
+	    	vtx.SetXYZ(BcVtx->position().x(),BcVtx->position().y(),0);
+	    	TVector3 pperp(BcPart->currentState().kinematicParameters().momentum().x(), BcPart->currentState().kinematicParameters().momentum().y(), 0);
+	    	AlgebraicVector3 vpperp(pperp.x(), pperp.y(), 0.);
 
-	  if(!LateDimuTrkSel_(BcCand)) continue;	
+	    	vtx3D.SetXYZ(vtx.X(), vtx.Y(), BcVtx->position().z());
+	    	TVector3 pxyz(pperp.x(), pperp.y(), BcPart->currentState().kinematicParameters().momentum().z());
+	    	AlgebraicVector3 vpxyz(pxyz.x(), pxyz.y(), pxyz.z());
 
-	  bool KCvtxNotFound=true;
-	  /////////////////Begin Kinematic Constrained Vertex Fit
-	  std::vector<RefCountedKinematicParticle> BcDaughters;
-	  reco::TransientTrack muon1TT(it.track(), &(*bField) );
-	  reco::TransientTrack muon2TT(it2.track(), &(*bField) );
-	  reco::TransientTrack pion3TT(piCand3.track(), &(*bField) );
+	    	pvtx.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),0);
+	    	TVector3 vdiff = vtx - pvtx;
+	    	double cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
+	    	Measurement1D distXY = vdistXY.distance(Vertex(
+	    						       math::XYZPoint(vtx3D.X(), vtx3D.Y(), vtx3D.Z()),
+	    						       reco::Vertex::Error()), thePrimaryV); //!!! Put 0 error here because we use only dist.value
+	    	double ctauPV = distXY.value()*cosAlpha*6.275/pperp.Perp();
+	    	GlobalError v1e = BcVtx->error();
+	    	GlobalError v2e = thePrimaryV.error();
+	    	AlgebraicSymMatrix33 vXYe = v1e.matrix()+ v2e.matrix();
+	    	double ctauErrPV = sqrt(ROOT::Math::Similarity(vpperp,vXYe))*6.275/(pperp.Perp2());
 
-	  if(muon1TT.isValid() && muon2TT.isValid() && pion3TT.isValid()) {
-	    float chi = 0.;	float ndf = 0.;
-	    BcDaughters.push_back(pFactory.particle(muon1TT,muon_mass,chi,ndf,muon_sigma));
-	    BcDaughters.push_back(pFactory.particle(muon2TT,muon_mass,chi,ndf,muon_sigma));
-	    BcDaughters.push_back(pFactory.particle(pion3TT,pion_mass,chi,ndf,pion_sigma));
+	    	userBcFloat["KCppdlPV"] = ctauPV;
+	    	userBcFloat["KCppdlErrPV"] = ctauErrPV;
+	    	userBcFloat["KCcosAlpha"] = cosAlpha;
 
-	    RefCountedKinematicTree BcTree = KCfitter.fit(BcDaughters, jpsi_c);   
-	    if(BcTree->isValid()){
-	      BcTree->movePointerToTheTop();
-	      RefCountedKinematicParticle BcPart = BcTree->currentParticle();
-	      RefCountedKinematicVertex BcVtx = BcTree->currentDecayVertex();
-	      if(BcVtx->vertexIsValid()){
-		KCvtxNotFound=false;
-		//////////////////End Kinematic Constrained Vertex Fit
+	    	pvtx3D.SetXYZ(pvtx.X(),pvtx.Y(),thePrimaryV.position().z());
+	    	TVector3 vdiff3D = vtx3D - pvtx3D;
+	    	double cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
+	    	Measurement1D distXYZ = vdistXYZ.distance(Vertex(
+	    							 math::XYZPoint(vtx3D.X(), vtx3D.Y(), vtx3D.Z()),
+	    							 reco::Vertex::Error()), thePrimaryV); //!!! Put 0 error here because we use only dist.value
+	    	double ctauPV3D = distXYZ.value()*cosAlpha3D*6.275/pxyz.Mag();
+	    	double ctauErrPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*6.275/(pxyz.Mag2());
+              
+	    	userBcFloat["KCppdlPV3D"] = ctauPV3D;
+	    	userBcFloat["KCppdlErrPV3D"] = ctauErrPV3D;
+	    	userBcFloat["KCcosAlpha3D"] = cosAlpha3D;
 
-		double vtxProb = TMath::Prob(BcVtx->chiSquared(), BcVtx->degreesOfFreedom());
-		userBcFloat["KinConstrainedVtxProb"] = vtxProb;
-
-		// lifetime using PV and vertex from kin constrained fit
-		TVector3 vtx, vtx3D;
-		TVector3 pvtx, pvtx3D;
-		VertexDistanceXY vdistXY;
-		VertexDistance3D vdistXYZ;
-
-		vtx.SetXYZ(BcVtx->position().x(),BcVtx->position().y(),0);
-		TVector3 pperp(BcPart->currentState().kinematicParameters().momentum().x(), BcPart->currentState().kinematicParameters().momentum().y(), 0);
-		AlgebraicVector3 vpperp(pperp.x(), pperp.y(), 0.);
-
-		vtx3D.SetXYZ(vtx.X(), vtx.Y(), BcVtx->position().z());
-		TVector3 pxyz(pperp.x(), pperp.y(), BcPart->currentState().kinematicParameters().momentum().z());
-		AlgebraicVector3 vpxyz(pxyz.x(), pxyz.y(), pxyz.z());
-
-		pvtx.SetXYZ(thePrimaryV.position().x(),thePrimaryV.position().y(),0);
-		TVector3 vdiff = vtx - pvtx;
-		double cosAlpha = vdiff.Dot(pperp)/(vdiff.Perp()*pperp.Perp());
-		Measurement1D distXY = vdistXY.distance(Vertex(
-							       math::XYZPoint(vtx3D.X(), vtx3D.Y(), vtx3D.Z()),
-							       reco::Vertex::Error()), thePrimaryV); //!!! Put 0 error here because we use only dist.value
-		double ctauPV = distXY.value()*cosAlpha*6.275/pperp.Perp();
-		GlobalError v1e = BcVtx->error();
-		GlobalError v2e = thePrimaryV.error();
-		AlgebraicSymMatrix33 vXYe = v1e.matrix()+ v2e.matrix();
-		double ctauErrPV = sqrt(ROOT::Math::Similarity(vpperp,vXYe))*6.275/(pperp.Perp2());
-
-		userBcFloat["KCppdlPV"] = ctauPV;
-		userBcFloat["KCppdlErrPV"] = ctauErrPV;
-		userBcFloat["KCcosAlpha"] = cosAlpha;
-
-		pvtx3D.SetXYZ(pvtx.X(),pvtx.Y(),thePrimaryV.position().z());
-		TVector3 vdiff3D = vtx3D - pvtx3D;
-		double cosAlpha3D = vdiff3D.Dot(pxyz)/(vdiff3D.Mag()*pxyz.Mag());
-		Measurement1D distXYZ = vdistXYZ.distance(Vertex(
-								 math::XYZPoint(vtx3D.X(), vtx3D.Y(), vtx3D.Z()),
-								 reco::Vertex::Error()), thePrimaryV); //!!! Put 0 error here because we use only dist.value
-		double ctauPV3D = distXYZ.value()*cosAlpha3D*6.275/pxyz.Mag();
-		double ctauErrPV3D = sqrt(ROOT::Math::Similarity(vpxyz,vXYe))*6.275/(pxyz.Mag2());
-          
-		userBcFloat["KCppdlPV3D"] = ctauPV3D;
-		userBcFloat["KCppdlErrPV3D"] = ctauErrPV3D;
-		userBcFloat["KCcosAlpha3D"] = cosAlpha3D;
-
+	          }
+	        }
 	      }
-	    }
-	  }
-	  if(KCvtxNotFound) {
-	    userBcFloat["KinConstrainedVtxProb"] = -1;
-	    userBcFloat["KCppdlPV"] = -10;
-	    userBcFloat["KCppdlErrPV"] = -10;
-	    userBcFloat["KCcosAlpha"] = -10;
-	    userBcFloat["KCppdlPV3D"] = -10;
-	    userBcFloat["KCppdlErrPV3D"] = -10;
-	    userBcFloat["KCcosAlpha3D"] = -10;
-	  }
-	  for (std::map<std::string, float>::iterator i = userBcFloat.begin(); i != userBcFloat.end(); i++) { BcCand.addUserFloat(i->first , i->second); }
+	      if(KCvtxNotFound) {
+	        userBcFloat["KinConstrainedVtxProb"] = -1;
+	        userBcFloat["KCppdlPV"] = -10;
+	        userBcFloat["KCppdlErrPV"] = -10;
+	        userBcFloat["KCcosAlpha"] = -10;
+	        userBcFloat["KCppdlPV3D"] = -10;
+	        userBcFloat["KCppdlErrPV3D"] = -10;
+	        userBcFloat["KCcosAlpha3D"] = -10;
+	      }
+	      for (std::map<std::string, float>::iterator i = userBcFloat.begin(); i != userBcFloat.end(); i++) { BcCand.addUserFloat(i->first , i->second); }
 
-	  // ---- Push back output ----  
-	  dimutrkOutput->push_back(BcCand);
-	}//it3 end loop
+	      // ---- Push back output ----  
+	      dimutrkOutput->push_back(BcCand);
+	    }//it3 end loop
 
-	///////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////
         ////// Building trimuon candidates
         ///////////////////////////////////////////////////////
     
-      TrimuonCand:
+        TrimuonCand:
 	int passedBcCands = 0;
 	if(!doTrimuons_) goto EndTrimuon;
 	
