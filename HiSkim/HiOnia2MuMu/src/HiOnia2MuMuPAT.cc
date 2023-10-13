@@ -1196,11 +1196,10 @@ void HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 						  userVertex["commonVertex"].error(), vChi2, vNDF, 2);
 	    }
 	    userInt["flipJpsi"] = flipJpsi;
-	    for (std::map<std::string, reco::Track>::iterator i = userTrack.begin(); i != userTrack.end(); i++) { myCandTmp.addUserData(i->first , i->second); }
+	    for (auto i : userTrack) { myCandTmp.addUserData(i.first , i.second); }
 	  }
-
-	  for (std::map<std::string, int>::iterator i = userInt.begin(); i != userInt.end(); i++) { myCandTmp.addUserInt(i->first , i->second); }
-	  for (std::map<std::string, reco::Vertex>::iterator i = userVertex.begin(); i != userVertex.end(); i++) { myCandTmp.addUserData(i->first , i->second); }
+	  for (auto i : userInt) { myCandTmp.addUserInt(i.first , i.second); }
+	  for (auto i : userVertex) { myCandTmp.addUserData(i.first , i.second); }
 	  // ---- Push back output of this Jpsi candidate ----  
 	  oniaOutput->push_back(myCandTmp);
 	}
