@@ -345,7 +345,7 @@ void HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      std::vector<reco::TransientTrack> t_tks_muonless; 
 	      t_tks_muonless.reserve(muonLess.size());
 
-	      for ( auto it : muonLess.begin()) {
+	      for ( auto it : muonLess) {
 	        t_tks_muonless.push_back((*theTTBuilder).build(it));
 	        t_tks_muonless.back().setBeamSpot(bs);
 	      }
