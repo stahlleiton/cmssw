@@ -323,9 +323,9 @@ void HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 		if( thePrimaryV.hasRefittedTracks()){
 		  // Need to go back to the original tracks before taking the key
 		  for( auto itRefittedTrack : thePrimaryV.refittedTracks()) {
-		    if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rmu1->track().key() ) continue;
-		    if( thePrimaryV.originalTrack(*itRefittedTrack).key() == rmu2->track().key() ) continue;
-		    const reco::Track & recoTrack = *(thePrimaryV.originalTrack(*itRefittedTrack));
+		    if( thePrimaryV.originalTrack(itRefittedTrack).key() == rmu1->track().key() ) continue;
+		    if( thePrimaryV.originalTrack(itRefittedTrack).key() == rmu2->track().key() ) continue;
+		    const reco::Track & recoTrack = *(thePrimaryV.originalTrack(itRefittedTrack));
 		    muonLess.push_back(recoTrack);
 		  }
 		}// PV has refitted tracks
@@ -346,7 +346,7 @@ void HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      t_tks_muonless.reserve(muonLess.size());
 
 	      for ( auto it : muonLess.begin()) {
-	        t_tks_muonless.push_back((*theTTBuilder).build(*it));
+	        t_tks_muonless.push_back((*theTTBuilder).build(it));
 	        t_tks_muonless.back().setBeamSpot(bs);
 	      }
 	      std::unique_ptr<AdaptiveVertexFitter> theFitter( new AdaptiveVertexFitter() );
@@ -580,7 +580,7 @@ void HiOnia2MuMuPAT::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	    userInt["Ntrk"] = Ntrk;
       }
 
-      for (auto i = userFloat) { myCand.addUserFloat(i->first , i->second); }
+      for (auto i : userFloat) { myCand.addUserFloat(i.first , i.second); }
 
       if(!LateDimuonSel_(myCand)){
 		if (DimuonTrk_ || flipJpsiDirection_>0 || (!doTrimuons_)) continue; //if flipJpsi>0 or we do dimuon+track, then we want this dimuon to be the true Jpsi in the trimuon
