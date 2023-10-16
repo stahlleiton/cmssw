@@ -11,7 +11,7 @@
 //
 ParticleFlowAnalyser::ParticleFlowAnalyser(const edm::ParameterSet& iConfig)
     : pfCandidateToken_(
-          consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCandidateSrc"))),
+          consumes<edm::View<reco::Candidate>>(iConfig.getParameter<edm::InputTag>("pfCandidateSrc"))),
       ptMin_(iConfig.getParameter<double>("ptMin")),
       absEtaMax_(iConfig.getParameter<double>("absEtaMax")) {}
 
@@ -28,7 +28,7 @@ ParticleFlowAnalyser::~ParticleFlowAnalyser() {
 void ParticleFlowAnalyser::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   clear();
 
-  edm::Handle<pat::PackedCandidateCollection> pfCandidates;
+  edm::Handle<edm::View<reco::Candidate>> pfCandidates;
   iEvent.getByToken(pfCandidateToken_, pfCandidates);
 
   for (const auto& pfcand : *pfCandidates) {

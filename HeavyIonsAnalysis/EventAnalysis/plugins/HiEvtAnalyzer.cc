@@ -54,7 +54,7 @@ private:
   edm::EDGetTokenT<reco::Centrality> CentralityTag_;
   edm::EDGetTokenT<int> CentralityBinTag_;
 
-  edm::EDGetTokenT<pat::PackedCandidateCollection> pfCandidateTag_;
+  edm::EDGetTokenT<edm::View<reco::Candidate>> pfCandidateTag_;
 
   edm::EDGetTokenT<reco::EvtPlaneCollection> EvtPlaneTag_;
   edm::EDGetTokenT<reco::EvtPlaneCollection> EvtPlaneFlatTag_;
@@ -154,7 +154,7 @@ private:
 HiEvtAnalyzer::HiEvtAnalyzer(const edm::ParameterSet& iConfig)
     : CentralityTag_(consumes<reco::Centrality>(iConfig.getParameter<edm::InputTag>("CentralitySrc"))),
       CentralityBinTag_(consumes<int>(iConfig.getParameter<edm::InputTag>("CentralityBinSrc"))),
-      pfCandidateTag_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCandidateSrc"))),
+      pfCandidateTag_(consumes<edm::View<reco::Candidate>>(iConfig.getParameter<edm::InputTag>("pfCandidateSrc"))),
       EvtPlaneTag_(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag>("EvtPlane"))),
       EvtPlaneFlatTag_(consumes<reco::EvtPlaneCollection>(iConfig.getParameter<edm::InputTag>("EvtPlaneFlat"))),
       HiMCTag_(consumes<edm::GenHIEvent>(iConfig.getParameter<edm::InputTag>("HiMC"))),
@@ -314,15 +314,14 @@ void HiEvtAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     hiEB = centrality->EtEBSum();
     hiET = centrality->EtMidRapiditySum();
     
-    edm::Handle<pat::PackedCandidateCollection> pfCandidates;
-    iEvent.getByToken(pfCandidateTag_, pfCandidates);
+    const auto& pfCandidates = iEvent.get(pfCandidateTag_);
 
     hiHF_pf=0; hiHFE_pf=0; hiHF_pfle =0; hiHF_pfha=0; hiHF_pfem=0;
     hiHFPlus_pf=0; hiHFEPlus_pf=0; hiHFPlus_pfle =0; hiHFPlus_pfha=0; hiHFPlus_pfem=0;
     hiHFMinus_pf=0; hiHFEMinus_pf=0; hiHFMinus_pfle =0; hiHFMinus_pfha=0; hiHFMinus_pfem=0;
     nCountsHF_pf = 0; nCountsHFPlus_pf = 0; nCountsHFMinus_pf = 0;
 
-    for (const auto& pfcand : *pfCandidates) {
+    for (const auto& pfcand : pfCandidates) {
       if (pfcand.pdgId() == 1 || pfcand.pdgId() == 2){
         const bool eta_plus = (pfcand.eta() > 3.0) && (pfcand.eta() < 6.0);
         const bool eta_minus = (pfcand.eta() < -3.0) && (pfcand.eta() > -6.0);

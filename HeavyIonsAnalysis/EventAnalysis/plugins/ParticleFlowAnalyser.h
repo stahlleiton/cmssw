@@ -25,7 +25,7 @@ private:
   // ----------member data ---------------------------
   edm::Service<TFileService> fs_;
 
-  edm::EDGetTokenT<pat::PackedCandidateCollection> pfCandidateToken_;
+  edm::EDGetTokenT<edm::View<reco::Candidate>> pfCandidateToken_;
 
   float ptMin_;
   float absEtaMax_;

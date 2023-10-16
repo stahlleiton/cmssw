@@ -106,7 +106,7 @@ private:
   edm::EDGetTokenT<edm::View<pat::Muon>> muonsToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
   edm::EDGetTokenT<reco::ConversionCollection> conversionsToken_;
-  edm::EDGetTokenT<edm::View<pat::PackedCandidate>> packedPFCandToken_;
+  edm::EDGetTokenT<edm::View<reco::Candidate>> packedPFCandToken_;
   edm::EDGetTokenT<edm::View<reco::PFCandidate>> recoPFCandToken_;
   bool isPackedPFCandidate_;
 

@@ -53,7 +53,7 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps)
     std::string strPFCandSrc = "particleFlowCollection";
     if (isPackedPFCandidate_) {
       packedPFCandToken_ =
-          consumes<edm::View<pat::PackedCandidate>>(ps.getParameter<edm::InputTag>(strPFCandSrc.c_str()));
+          consumes<edm::View<reco::Candidate>>(ps.getParameter<edm::InputTag>(strPFCandSrc.c_str()));
     } else {
       recoPFCandToken_ = consumes<edm::View<reco::PFCandidate>>(ps.getParameter<edm::InputTag>(strPFCandSrc.c_str()));
     }
@@ -1384,13 +1384,13 @@ void ggHiNtuplizer::fillElectrons(const edm::Event& e, const edm::EventSetup& es
       pfIsoCal.setUsePackedCandidates(isPackedPFCandidate_);
       pfIsoCal.setVertex(pv.position());
       if (isPackedPFCandidate_) {
-        edm::Handle<edm::View<pat::PackedCandidate>> candidatesPacked;
+        edm::Handle<edm::View<reco::Candidate>> candidatesPacked;
         e.getByToken(packedPFCandToken_, candidatesPacked);
         pfIsoCal.setCandidatesPacked(candidatesPacked);
       }
       /*
       else {
-        edm::Handle<edm::View< reco::PFCandidate >> candidatesReco;
+        edm::Handle<edm::View< reco::Candidate >> candidatesReco;
         e.getByToken(recoPFCandToken_, candidatesReco);
         pfIsoCal.setCandidatesReco(candidatesReco);
       }
@@ -1690,13 +1690,13 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
       pfIso.setUsePackedCandidates(isPackedPFCandidate_);
       pfIso.setVertex(pv.position());
       if (isPackedPFCandidate_) {
-        edm::Handle<edm::View<pat::PackedCandidate>> candidatesPacked;
+        edm::Handle<edm::View<reco::Candidate>> candidatesPacked;
         e.getByToken(packedPFCandToken_, candidatesPacked);
         pfIso.setCandidatesPacked(candidatesPacked);
       }
       /*
       else {
-        edm::Handle<edm::View< reco::PFCandidate >> candidatesReco;
+        edm::Handle<edm::View< reco::Candidate >> candidatesReco;
         e.getByToken(recoPFCandToken_, candidatesReco);
         pfIso.setCandidatesReco(candidatesReco);
       }

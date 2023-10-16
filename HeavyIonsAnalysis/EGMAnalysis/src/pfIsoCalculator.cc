@@ -66,7 +66,7 @@ double pfIsoCalculator::getPfIso(
       }
       */
 
-      edm::Ptr<pat::PackedCandidate> candPtr(candidatesView, pf - candidatesView->begin());
+      edm::Ptr<reco::Candidate> candPtr(candidatesView, pf - candidatesView->begin());
       if (usePackedCandidates_) {
         // std::cout << "numberOfSourceCandidatePtrs = " << photon.numberOfSourceCandidatePtrs() << std::endl;
         if (isAssociatedPackedCand(photon.associatedPackedPFCandidates(), candPtr)) {
@@ -151,7 +151,7 @@ double pfIsoCalculator::getPfIsoSubUE(const pat::Photon& photon,
       }
       */
 
-      edm::Ptr<pat::PackedCandidate> candPtr(candidatesView, pf - candidatesView->begin());
+      edm::Ptr<reco::Candidate> candPtr(candidatesView, pf - candidatesView->begin());
       if (usePackedCandidates_) {
         if (isAssociatedPackedCand(photon.associatedPackedPFCandidates(), candPtr)) {
           continue;

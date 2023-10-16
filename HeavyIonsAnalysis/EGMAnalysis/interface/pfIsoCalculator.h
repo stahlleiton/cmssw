@@ -16,7 +16,7 @@ public:
   pfIsoCalculator() { usePackedCandidates_ = true; };
 
   void setUsePackedCandidates(bool usePackedCandidates) { usePackedCandidates_ = usePackedCandidates; };
-  void setCandidatesPacked(const edm::Handle<edm::View<pat::PackedCandidate>>& candidatesPacked) {
+  void setCandidatesPacked(const edm::Handle<edm::View<reco::Candidate>>& candidatesPacked) {
     candidatesView = candidatesPacked;
   };
   void setVertex(const math::XYZPoint& pv);
@@ -51,7 +51,7 @@ public:
 private:
   bool usePackedCandidates_;
   //edm::Handle<edm::View< Tcand >> candidatesView;
-  edm::Handle<edm::View<pat::PackedCandidate>> candidatesView;
+  edm::Handle<edm::View<reco::Candidate>> candidatesView;
   reco::Vertex::Point vtx_;
 };
 
