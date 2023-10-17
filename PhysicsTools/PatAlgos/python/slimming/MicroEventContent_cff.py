@@ -160,6 +160,18 @@ _pp_on_AA_extraCommands = [
 from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA
 pp_on_AA.toModify(MicroEventContent, outputCommands = MicroEventContent.outputCommands + _pp_on_AA_extraCommands)
 
+_hiForward_extraCommands = [
+    'keep patPackedCandidates_hiPixelTracks_*_*',
+    'keep floatedmValueMap_packedPFCandidateTrackChi2_*_*',
+    'keep floatedmValueMap_lostTrackChi2_*_*',
+    'keep recoCentrality_hiCentrality_*_*',
+    'keep recoClusterCompatibility_hiClusterCompatibility_*_*',
+    'keep QIE10DataFrameHcalDataFrameContainer_hcalDigis_ZDC_*',
+]
+
+from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
+run3_hiforward_2023.toModify(MicroEventContent, outputCommands = MicroEventContent.outputCommands + _hiForward_extraCommands)
+
 _zdc_extraCommands = ['keep QIE10DataFrameHcalDataFrameContainer_hcalDigis_ZDC_*']
 from Configuration.ProcessModifiers.storeZDCDigis_cff import storeZDCDigis
 storeZDCDigis.toModify(MicroEventContent, outputCommands = MicroEventContent.outputCommands + _zdc_extraCommands)
