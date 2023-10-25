@@ -125,7 +125,6 @@ def miniAOD_customizeCommon(process):
     from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA
     pp_on_AA.toModify(process.selectedPatMuons, cut = "pt > 5 || isPFMuon || (pt > 1.2 && (isGlobalMuon || isStandAloneMuon) )")
     from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
-    run3_hiforward_2023.toModify(process.selectedPatJets, cut = "")
     run3_hiforward_2023.toModify(process.selectedPatMuons, cut = "")
 
     process.selectedPatElectrons.cut = cms.string("")

@@ -38,7 +38,7 @@ egamma_lowPt_exclusive.toModify(trackerClusterCheck,
 from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
 run3_hiforward_2023.toModify(trackerClusterCheck,
                doClusterCheck=True,
-               cut = "strip < 1000 && pixel < 400",
-               MaxNumberOfPixelClusters = 400,
-               MaxNumberOfCosmicClusters = 1000
+               cut = "strip < 30000 && pixel < 10000",
+               MaxNumberOfPixelClusters = 10000,
+               MaxNumberOfCosmicClusters = 30000
                )
