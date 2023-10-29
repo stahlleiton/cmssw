@@ -52,3 +52,6 @@ bParking.toModify(lowPtGsfElectronSeeds,
 
 from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA
 pp_on_AA.toModify(lowPtGsfElectronSeeds,MinPtThreshold = 5.0)
+
+from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
+run3_hiforward_2023.toModify(lowPtGsfElectronSeeds, ModelThresholds = thresholds("VL"), MinPtThreshold = 0.05)

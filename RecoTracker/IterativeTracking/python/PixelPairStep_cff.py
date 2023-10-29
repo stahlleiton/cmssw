@@ -93,6 +93,8 @@ highBetaStar_2018.toModify(pixelPairStepTrackingRegions,RegionPSet = dict(
      fixedError   = 4.
 ))
 fastSim.toModify(pixelPairStepTrackingRegions, RegionPSet=dict(VertexCollection = 'firstStepPrimaryVerticesBeforeMixing'))
+from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
+run3_hiforward_2023.toModify(pixelPairStepTrackingRegions, RegionPSet = dict(originRadius = 0.015))
 
 # SEEDS
 from RecoTracker.TkHitPairs.hitPairEDProducer_cfi import hitPairEDProducer as _hitPairEDProducer
