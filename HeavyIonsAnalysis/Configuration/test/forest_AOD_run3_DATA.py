@@ -1,5 +1,5 @@
 ### HiForest Configuration
-# Input: miniAOD
+# Input: AOD
 # Type: data
 
 import FWCore.ParameterSet.Config as cms
@@ -10,7 +10,7 @@ process = cms.Process('HiForest',Run3_pp_on_PbPb_2023)
 
 # HiForest info
 process.load("HeavyIonsAnalysis.EventAnalysis.HiForestInfo_cfi")
-process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, data")
+process.HiForestInfo.info = cms.vstring("HiForest, AOD, 132X, data")
 
 ###############################################################################
 
@@ -63,7 +63,7 @@ process.centralityBin.centralityVariable = cms.string("HFtowers")
 
 # root output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("HiForestMiniAOD.root"))
+    fileName = cms.string("HiForestAOD_DATA.root"))
 
 ###############################################################################
 
