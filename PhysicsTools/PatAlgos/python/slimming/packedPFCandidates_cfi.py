@@ -58,5 +58,5 @@ run2_miniAOD_pp_on_AA_103X.toModify(packedPFCandidates,
                                     chargedHadronIsolation = ""
                                 )
 
-from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
-run3_hiforward_2023.toModify(packedPFCandidates, minPtForChargedHadronProperties = 0.0, minPtForTrackProperties = 0.0)
+from Configuration.Eras.Modifier_run3_upc_2023_cff import run3_upc_2023
+run3_upc_2023.toModify(packedPFCandidates, minPtForChargedHadronProperties = 0.0, minPtForTrackProperties = 0.0)

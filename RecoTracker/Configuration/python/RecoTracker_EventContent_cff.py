@@ -18,9 +18,9 @@ RecoTrackerAOD = cms.PSet(
     )
 )
 #HI-specific products: needed in AOD, propagate to more inclusive tiers as well
-from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
+from Configuration.Eras.Modifier_run3_upc_2023_cff import run3_upc_2023
 from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA
-(pp_on_AA | run3_hiforward_2023).toModify( RecoTrackerAOD.outputCommands,
+(pp_on_AA | run3_upc_2023).toModify( RecoTrackerAOD.outputCommands,
                    func=lambda outputCommands: outputCommands.extend(['keep recoTracks_hiConformalPixelTracks_*_*'])
 )
 #RECO content
@@ -39,7 +39,7 @@ RecoTrackerRECO = cms.PSet(
     )
 )
 RecoTrackerRECO.outputCommands.extend(RecoTrackerAOD.outputCommands)
-(pp_on_AA | run3_hiforward_2023).toModify( RecoTrackerRECO.outputCommands,
+(pp_on_AA | run3_upc_2023).toModify( RecoTrackerRECO.outputCommands,
                    func=lambda outputCommands: outputCommands.extend([
                        'keep recoTrackExtras_hiConformalPixelTracks_*_*',
                        'keep TrackingRecHitsOwned_hiConformalPixelTracks_*_*'

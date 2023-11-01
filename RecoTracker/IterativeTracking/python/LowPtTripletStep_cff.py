@@ -76,7 +76,8 @@ from RecoTracker.TkTrackingRegions.globalTrackingRegionWithVertices_cff import g
                )
 )
 from Configuration.Eras.Modifier_highBetaStar_2018_cff import highBetaStar_2018
-highBetaStar_2018.toModify(lowPtTripletStepTrackingRegions,RegionPSet = dict(
+from Configuration.Eras.Modifier_highBetaStar_2023_cff import highBetaStar_2023
+(highBetaStar_2018 | highBetaStar_2023).toModify(lowPtTripletStepTrackingRegions,RegionPSet = dict(
      ptMin        = 0.05,
      originRadius = 0.2 )
 )
@@ -130,7 +131,7 @@ trackingPhase2PU140.toReplaceWith(lowPtTripletStepHitTriplets, _caHitTripletEDPr
     CAThetaCut           = 0.002,
     CAPhiCut             = 0.05 )
 )
-highBetaStar_2018.toModify(lowPtTripletStepHitTriplets,CAThetaCut = 0.004,CAPhiCut = 0.1)
+(highBetaStar_2018 | highBetaStar_2023).toModify(lowPtTripletStepHitTriplets,CAThetaCut = 0.004,CAPhiCut = 0.1)
  
 import FastSimulation.Tracking.TrajectorySeedProducer_cfi
 from FastSimulation.Tracking.SeedingMigration import _hitSetProducerToFactoryPSet
@@ -323,7 +324,7 @@ trackdnn.toReplaceWith(lowPtTripletStep, trackTfClassifier.clone(
     src = 'lowPtTripletStepTracks',
     qualityCuts = qualityCutDictionary.LowPtTripletStep.value()
 ))
-highBetaStar_2018.toModify(lowPtTripletStep,qualityCuts = [-0.7,-0.3,-0.1])
+(highBetaStar_2018 | highBetaStar_2023).toModify(lowPtTripletStep,qualityCuts = [-0.7,-0.3,-0.1])
 
 fastSim.toModify(lowPtTripletStep, vertices = 'firstStepPrimaryVerticesBeforeMixing')
 

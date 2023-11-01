@@ -43,7 +43,8 @@ from RecoTracker.TkTrackingRegions.globalTrackingRegionWithVertices_cff import g
                 )
 )
 from Configuration.Eras.Modifier_highBetaStar_2018_cff import highBetaStar_2018
-highBetaStar_2018.toModify(lowPtQuadStepTrackingRegions,RegionPSet = dict(
+from Configuration.Eras.Modifier_highBetaStar_2023_cff import highBetaStar_2023
+(highBetaStar_2018 | highBetaStar_2023).toModify(lowPtQuadStepTrackingRegions,RegionPSet = dict(
      ptMin        = 0.05,
      originRadius = 0.2, )
 )
@@ -76,7 +77,7 @@ lowPtQuadStepHitQuadruplets = _caHitQuadrupletEDProducer.clone(
     CAPhiCut             = 0.3,
 )
 trackingPhase2PU140.toModify(lowPtQuadStepHitQuadruplets,CAThetaCut = 0.0015,CAPhiCut = 0.25)
-highBetaStar_2018.toModify(lowPtQuadStepHitQuadruplets,CAThetaCut = 0.0034,CAPhiCut = 0.6)
+(highBetaStar_2018 | highBetaStar_2023).toModify(lowPtQuadStepHitQuadruplets,CAThetaCut = 0.0034,CAPhiCut = 0.6)
 
 from RecoTracker.TkSeedGenerator.seedCreatorFromRegionConsecutiveHitsEDProducer_cff import seedCreatorFromRegionConsecutiveHitsEDProducer as _seedCreatorFromRegionConsecutiveHitsEDProducer
 lowPtQuadStepSeeds = _seedCreatorFromRegionConsecutiveHitsEDProducer.clone(
@@ -244,7 +245,7 @@ trackdnn.toReplaceWith(lowPtQuadStep, trackTfClassifier.clone(
     src = 'lowPtQuadStepTracks',
     qualityCuts = qualityCutDictionary.LowPtQuadStep.value()
 ))
-highBetaStar_2018.toModify(lowPtQuadStep,qualityCuts = [-0.9,-0.35,-0.15])
+(highBetaStar_2018 | highBetaStar_2023).toModify(lowPtQuadStep,qualityCuts = [-0.9,-0.35,-0.15])
 fastSim.toModify(lowPtQuadStep,vertices = 'firstStepPrimaryVerticesBeforeMixing')
 
 ((~trackingMkFitLowPtQuadStep) & trackdnn).toModify(lowPtQuadStep, mva = dict(tfDnnLabel  = 'trackSelectionTf_CKF'),

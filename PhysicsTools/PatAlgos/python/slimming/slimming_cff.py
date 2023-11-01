@@ -123,5 +123,5 @@ from PhysicsTools.PatAlgos.slimming.patPhotonDRNCorrector_cfi import patPhotonsD
 from Configuration.ProcessModifiers.photonDRN_cff import _photonDRN
 _photonDRN.toReplaceWith(slimmingTask, cms.Task(slimmingTask.copy(), patPhotonsDRN))
 
-from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
-run3_hiforward_2023.toReplaceWith(slimmingTask, cms.Task(slimmingTask.copy(), hiPixelTracks, packedPFCandidateTrackChi2, lostTrackChi2))
+from Configuration.Eras.Modifier_run3_upc_2023_cff import run3_upc_2023
+run3_upc_2023.toReplaceWith(slimmingTask, cms.Task(slimmingTask.copy(), hiPixelTracks, packedPFCandidateTrackChi2, lostTrackChi2))

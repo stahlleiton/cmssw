@@ -39,7 +39,8 @@ from Configuration.Eras.Modifier_phase2_tracker_cff import phase2_tracker
         overlap_frac = 0.5))
 
 from Configuration.Eras.Modifier_highBetaStar_2018_cff import highBetaStar_2018
-highBetaStar_2018.toModify(DA_vectParameters,
+from Configuration.Eras.Modifier_highBetaStar_2023_cff import highBetaStar_2023
+(highBetaStar_2018 | highBetaStar_2023).toModify(DA_vectParameters,
      TkDAClusParameters = dict(
         Tmin = 4.0,
         Tpurge = 1.0,

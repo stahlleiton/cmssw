@@ -9,9 +9,9 @@ selectedPatLowPtElectrons = cms.EDFilter("PATElectronSelector",
     cut = cms.string("pt > 1. && electronID('ID') > -0.25"),
 )
 
-# Modifier for HI Forward
-from Configuration.Eras.Modifier_run3_hiforward_2023_cff import run3_hiforward_2023
-run3_hiforward_2023.toModify(selectedPatLowPtElectrons,cut = "")
+# Modifier for UPC
+from Configuration.Eras.Modifier_run3_upc_2023_cff import run3_upc_2023
+run3_upc_2023.toModify(selectedPatLowPtElectrons,cut = "")
 
 # Modifier for bParking (fully open selection)
 from Configuration.Eras.Modifier_bParking_cff import bParking
