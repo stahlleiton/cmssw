@@ -37,6 +37,7 @@ HiCaloJetAnalyzer::HiCaloJetAnalyzer(const edm::ParameterSet& iConfig) {
   fillGenJets_ = iConfig.getUntrackedParameter<bool>("fillGenJets", false);
 
   doHiJetID_ = iConfig.getUntrackedParameter<bool>("doHiJetID", false);
+  doCaloEnergyFractions_ = iConfig.getUntrackedParameter<bool>("doCaloEnergyFractions", false);
 
   rParam = iConfig.getParameter<double>("rParam");
   hardPtMin_ = iConfig.getUntrackedParameter<double>("hardPtMin", 4);
@@ -117,6 +118,14 @@ void HiCaloJetAnalyzer::beginJob() {
     caloJetTree_->Branch("muN", jets_.muN, "muN[nref]/I");
   }
 
+  // Calorimeter energy fractions
+  if(doCaloEnergyFractions_){
+    caloJetTree_->Branch("emEnergyFraction", jets_.emEnergyFraction, "emEnergyFraction[nref]/F");
+    caloJetTree_->Branch("hadronicEnergyFraction", jets_.hadronicEnergyFraction, "hadronicEnergyFraction[nref]/F");
+  }
+
+
+
   if (isMC_) {
     if (useHepMC_) {
       caloJetTree_->Branch("beamId1", &jets_.beamId1, "beamId1/I");
@@ -170,7 +179,7 @@ void HiCaloJetAnalyzer::analyze(const Event& iEvent, const EventSetup& iSetup) {
   jets_.nref = 0;
 
   for (unsigned int j = 0; j < jets->size(); ++j) {
-    const pat::Jet& jet = (*jets)[j];
+    const reco::CaloJet& jet = (*jets)[j];
 
     auto pt = jet.pt();
     if (pt < jetPtMin_)
@@ -303,6 +312,12 @@ void HiCaloJetAnalyzer::analyze(const Event& iEvent, const EventSetup& iSetup) {
           }
         }
       }
+    }
+
+    // Calorimeter energy fractions
+    if(doCaloEnergyFractions_){
+      jets_.emEnergyFraction[jets_.nref] = jet.emEnergyFraction();
+      jets_.hadronicEnergyFraction[jets_.nref] = jet.energyFractionHadronic();
     }
 
     jets_.rawpt[jets_.nref] = jet.pt();

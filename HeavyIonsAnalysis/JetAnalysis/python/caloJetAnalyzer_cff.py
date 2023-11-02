@@ -16,5 +16,6 @@ caloJetAnalyzer = cms.EDAnalyzer(
     towersSrc = cms.InputTag("towerMaker"),
     useHepMC = cms.untracked.bool(False),
     useQuality = cms.untracked.bool(True),
-    doHiJetID = cms.untracked.bool(False)
+    doHiJetID = cms.untracked.bool(False),
+    doCaloEnergyFractions = cms.untracked.bool(False)
     )

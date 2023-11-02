@@ -64,6 +64,7 @@ private:
   double genPtMin_;
 
   bool doHiJetID_;
+  bool doCaloEnergyFractions_;
 
   double rParam;
   double hardPtMin_;
@@ -82,16 +83,19 @@ private:
     int evt = 0;
     int lumi = 0;
 
+    // Basic jet kinematic variables
     float rawpt[MAXJETS] = {0};
     float jtpt[MAXJETS] = {0};
     float jteta[MAXJETS] = {0};
     float jtphi[MAXJETS] = {0};
 
+    // Advanced jet variables
     float jty[MAXJETS] = {0};
     float jtpu[MAXJETS] = {0};
     float jtm[MAXJETS] = {0};
     float jtarea[MAXJETS] = {0};
 
+    // Arrays for HiJetID
     float trackMax[MAXJETS] = {0};
     float trackSum[MAXJETS] = {0};
     int trackN[MAXJETS] = {0};
@@ -129,6 +133,11 @@ private:
     float signalChargedSum[MAXJETS] = {0};
     float signalHardSum[MAXJETS] = {0};
 
+    // Arrays for calorimeter energy fractions
+    float emEnergyFraction[MAXJETS] = {0};
+    float hadronicEnergyFraction[MAXJETS] = {0};
+
+    // Variables for generator level jets
     float pthat = 0;
     int beamId1 = 0;
     int beamId2 = 0;
