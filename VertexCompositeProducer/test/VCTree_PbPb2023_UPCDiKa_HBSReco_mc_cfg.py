@@ -17,7 +17,7 @@ process.options.numberOfThreads=cms.untracked.uint32(1)
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_231019_221326/STARlight/CohPhiToKK/231019_201346/0000/step3_STARlight_Reco_100.root"),
+    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_231114_035147/STARlight/CohPhiToKK/231114_025227/0000/step3_STARlight_Reco_100.root"),
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
@@ -141,18 +141,19 @@ process.diKaAna = particleAna_mc.clone(
 
 process.generalTracksAna = particleAna_mc.clone(
     recoParticles = cms.InputTag("generalTracks"),
-    maxGenDeltaR = cms.untracked.double(0.03),
+    selectEvents = cms.string(""),
+    maxGenDeltaR = cms.untracked.double(0.3),
     maxGenDeltaPtRel = cms.untracked.double(0.5),
-    eventFilterPaths = event_filter,
-    trig_info = trig_info,
+    eventFilterNames = event_filter,
+    triggerInfo = trig_info,
 )
 
 # process.hiConformalPixelTracksAna = particleAna_mc.clone(
 # 	recoParticles = cms.InputTag("hiConformalPixelTracks"),
 #     maxGenDeltaR = cms.untracked.double(0.03),
 #     maxGenDeltaPtRel = cms.untracked.double(0.5),
-#     eventFilterPaths = event_filter,
-#     trig_info = trig_info,
+#     eventFilterNames = event_filter,
+#     triggerInfo = trig_info,
 # )
 
 # Define the output

@@ -139,18 +139,20 @@ process.diKaAna = particleAna_mc.clone(
 
 process.generalTracksAna = particleAna_mc.clone(
     recoParticles = cms.InputTag("generalTracks"),
-    maxGenDeltaR = cms.untracked.double(0.03),
+    selectEvents = cms.string(""),
+    maxGenDeltaR = cms.untracked.double(0.3),
     maxGenDeltaPtRel = cms.untracked.double(0.5),
-    eventFilterPaths = event_filter,
-    trig_info = trig_info,
+    eventFilterNames = event_filter,
+    triggerInfo = trig_info,
 )
 
 process.hiConformalPixelTracksAna = particleAna_mc.clone(
 	recoParticles = cms.InputTag("hiConformalPixelTracks"),
-    maxGenDeltaR = cms.untracked.double(0.03),
+    selectEvents = cms.string(""),
+    maxGenDeltaR = cms.untracked.double(0.3),
     maxGenDeltaPtRel = cms.untracked.double(0.5),
-    eventFilterPaths = event_filter,
-    trig_info = trig_info,
+    eventFilterNames = event_filter,
+    triggerInfo = trig_info,
 )
 
 # Define the output
