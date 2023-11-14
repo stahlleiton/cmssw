@@ -90,6 +90,7 @@ private:
   int   Ntrkoffline;
   int   NtrkHP;
   int   Npixel;
+  int   NpixelTracks;
   short nPV;
   uint candSize;
   bool  trigHLT[MAXTRG];
@@ -280,6 +281,7 @@ EventInfoTreeProducer::fillRECO(const edm::Event& iEvent, const edm::EventSetup&
     HFsumETPlus = (cent.isValid() ? cent->EtHFtowerSumPlus() : -1.);
     HFsumETMinus = (cent.isValid() ? cent->EtHFtowerSumMinus() : -1.);
     Npixel = (cent.isValid() ? cent->multiplicityPixel() : -1);
+    NpixelTracks = (cent.isValid() ? cent->NpixelTracks() : -1);
     ZDCPlus = (cent.isValid() ? cent->zdcSumPlus() : -1.);
     ZDCMinus = (cent.isValid() ? cent->zdcSumMinus() : -1.);
     Ntrkoffline = (cent.isValid() ? cent->Ntracks() : -1);
@@ -359,6 +361,7 @@ EventInfoTreeProducer::initTree()
   {
     EventInfoNtuple->Branch("centrality",&centrality,"centrality/S");
     EventInfoNtuple->Branch("Npixel",&Npixel,"Npixel/I");
+    EventInfoNtuple->Branch("NpixelTracks",&NpixelTracks,"NpixelTracks/I");
     EventInfoNtuple->Branch("HFsumETPlus",&HFsumETPlus,"HFsumETPlus/F");
     EventInfoNtuple->Branch("HFsumETMinus",&HFsumETMinus,"HFsumETMinus/F");
     EventInfoNtuple->Branch("ZDCPlus",&ZDCPlus,"ZDCPlus/F");

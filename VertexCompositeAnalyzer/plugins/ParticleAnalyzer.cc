@@ -650,6 +650,7 @@ ParticleAnalyzer::fillEventInfo(const edm::Event& iEvent)
     eventInfo_.add("HFsumETPlus", cent->EtHFtowerSumPlus());
     eventInfo_.add("HFsumETMinus", cent->EtHFtowerSumMinus());
     eventInfo_.add("Npixel", cent->multiplicityPixel());
+    eventInfo_.add("NpixelTracks", cent->NpixelTracks());
     eventInfo_.add("ZDCPlus", cent->zdcSumPlus());
     eventInfo_.add("ZDCMinus", cent->zdcSumMinus());
     eventInfo_.add("Ntrkoffline", getUShort(cent->Ntracks(), "Ntrkoffline"));
