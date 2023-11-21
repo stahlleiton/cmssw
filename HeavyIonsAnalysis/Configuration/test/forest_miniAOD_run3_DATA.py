@@ -25,7 +25,7 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, data")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-        'root://eoscms.cern.ch//store/group/phys_heavyions/wangj/RECO2023/miniaod_PhysicsHIForward0_374596/reco_run374596_ls0274_streamPhysicsHIForward0_StorageManager.root'
+        'root://xrootd-cms.infn.it//store/hidata/HIRun2023A/HIPhysicsRawPrime0/MINIAOD/PromptReco-v2/000/375/790/00000/56ad580f-b228-4f3c-b8e3-17f9d95c7654.root'
     ), 
 )
 
@@ -34,7 +34,7 @@ process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/cms/store/gro
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(25)
+    input = cms.untracked.int32(20)
     )
 
 ###############################################################################
@@ -244,7 +244,7 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         process.ak04PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
         process.ak4PFJetAnalyzer.jetTag = "ak04PFpatJets"
         process.ak4PFJetAnalyzer.jetName = "ak04PF"
-        process.forest += process.extraJetsData * process.unsubtractedJetR4 * process.ak4PFJetAnalyzer
+        process.forest += process.unsubtractedJetR4 * process.ak4PFJetAnalyzer
 
 
 if addCandidateTagging:

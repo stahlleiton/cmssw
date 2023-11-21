@@ -163,7 +163,7 @@ if addR2Jets or addR3Jets or addR4Jets or addR8Jets:
         process.ak2PFpatJetCorrFactors.primaryVertices = "offlineSlimmedPrimaryVertices"
         process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
         process.ak2PFJetAnalyzer = process.ak4PFJetAnalyzer.clone(jetTag = "ak2PFpatJets", jetName = 'ak2PF', genjetTag = "ak2GenJetsNoNu")
-        process.forest += process.extraJetsData * process.jetsR2 * process.ak2PFJetAnalyzer
+        process.forest += process.jetsR2 * process.ak2PFJetAnalyzer
 
     if addR3Jets :
         process.jetsR3 = cms.Sequence()
@@ -172,7 +172,7 @@ if addR2Jets or addR3Jets or addR4Jets or addR8Jets:
         process.ak3PFpatJetCorrFactors.primaryVertices = "offlineSlimmedPrimaryVertices"
         process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
         process.ak3PFJetAnalyzer = process.ak4PFJetAnalyzer.clone(jetTag = "ak3PFpatJets", jetName = 'ak3PF', genjetTag = "ak3GenJetsNoNu")
-        process.forest += process.extraJetsData * process.jetsR3 * process.ak3PFJetAnalyzer
+        process.forest += process.jetsR3 * process.ak3PFJetAnalyzer
 
     if addR4Jets :
         # Recluster using an alias "0" in order not to get mixed up with the default AK4 collections
@@ -184,7 +184,7 @@ if addR2Jets or addR3Jets or addR4Jets or addR8Jets:
         process.ak4PFJetAnalyzer.jetTag = 'ak04PFpatJets'
         process.ak4PFJetAnalyzer.jetName = 'ak04PF'
         process.ak4PFJetAnalyzer.doSubEvent = False # Need to disable this, since there is some issue with the gen jet constituents. More debugging needed is want to use constituents.
-        process.forest += process.extraJetsData * process.jetsR4 * process.ak4PFJetAnalyzer
+        process.forest += process.jetsR4 * process.ak4PFJetAnalyzer
 
     if addR8Jets :
         process.jetsR8 = cms.Sequence()
@@ -193,4 +193,4 @@ if addR2Jets or addR3Jets or addR4Jets or addR8Jets:
         process.ak8PFpatJetCorrFactors.primaryVertices = "offlineSlimmedPrimaryVertices"
         process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
         process.ak8PFJetAnalyzer = process.ak4PFJetAnalyzer.clone(jetTag = "ak8PFpatJets", jetName = 'ak8PF', genjetTag = "ak8GenJetsNoNu")
-        process.forest += process.extraJetsData * process.jetsR8 * process.ak8PFJetAnalyzer
+        process.forest += process.jetsR8 * process.ak8PFJetAnalyzer
