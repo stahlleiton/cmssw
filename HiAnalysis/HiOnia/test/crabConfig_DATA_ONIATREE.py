@@ -29,7 +29,7 @@ config.Data.allowNonValidInputDataset = True
 config.Data.outLFNDirBase = '/store/user/fdamas/%s' % (config.General.requestName)
 config.Data.publication = False
 config.Data.runRange = '374345-374828'
-config.Data.lumiMask = '/eos/cms/store/group/phys_heavyions/sayan/HIN_run3_pseudo_JSON/HIPhysicsRawPrime/Muon_Online_live.json'
+config.Data.lumiMask = 'https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions23HI/Cert_Collisions2023HI_374288_375823_Muon.json'
 
 config.section_("Site")
 config.Site.storageSite = "T2_FR_GRIF_LLR"
