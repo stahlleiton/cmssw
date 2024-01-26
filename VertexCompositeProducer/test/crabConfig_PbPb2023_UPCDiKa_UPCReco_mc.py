@@ -10,7 +10,7 @@ request_name    = 'VCTree_STARlight_UPCDiKa_UPCReco_mc'
 channel         = 'CohPhiToKK'
 request_name    += '_%s' % datetime.now().strftime('%y%m%d_%H%M%S')
 
-input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/STARlight/CohPhiToKK_132X_Reco_UPCReco.txt'
+input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/STARlight/CohPhiToKK_132X_Reco.txt'
 # input_dataset	= ''
 
 output_pd       = 'STARlight'

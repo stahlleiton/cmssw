@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process('ANASKIM',eras.Run3_UPC_2023)
+process = cms.Process('ANASKIM',eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -15,13 +15,13 @@ process.options.numberOfThreads=cms.untracked.uint32(1)
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_UPCReco_Reco_132X_231107_005808/STARlight/CohPhiToKK/231106_235909/0000/step3_STARlight_Reco_10.root"),
+    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_240125_044529/STARlight/CohPhiToKK/240125_034539/0000/step3_STARlight_Reco_10.root"),
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v5')
+process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v9')
 
 
 ## ##############################################################################################################################
