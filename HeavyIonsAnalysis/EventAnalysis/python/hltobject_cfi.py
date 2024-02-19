@@ -12,8 +12,8 @@ trigger_list_data_2023_skimmed = cms.vstring(
    'HLT_HIZeroBias_v',
    'HLT_HIMinimumBiasHF1AND_v',
    'HLT_HIMinimumBiasHF1ANDZDC2nOR_v',
-   'HLT_HIPuAK4CaloJet40Eta5p1_v',
-   'HLT_HIPuAK4CaloJet60Eta5p1_v',
+   #'HLT_HIPuAK4CaloJet40Eta5p1_v', #not found in HLTMenu. Skipping
+   #'HLT_HIPuAK4CaloJet60Eta5p1_v', #not found in HLTMenu. Skipping
    'HLT_HIPuAK4CaloJet80Eta5p1_v',
    'HLT_HIPuAK4CaloJet100Eta5p1_v',
    'HLT_HIPuAK4CaloJet120Eta2p1_v',
