@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process('ANASKIM',eras.Run3_2023_UPC)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -68,6 +68,7 @@ process.diKa = generalParticles.clone(
         cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
     ]),
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
+    # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits')
 )
 process.oneDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diKa"), minNumber = cms.uint32(1))
 
@@ -102,7 +103,6 @@ process.goodDiKaons = cms.EDProducer("CandViewShallowCloneCombiner",
 process.oneGoodDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("goodDiKaons"), minNumber = cms.uint32(1))
 process.diKaEvtSel = cms.Sequence(process.twoTracks * process.hpTracks * process.hpCands * process.maxTwoHPCands * process.goodTracks * process.twoGoodTracks * process.goodKaons * process.goodDiKaons * process.oneGoodDiKa)
 
-process.diKa_seq = cms.Sequence(process.diKaEvtSel * process.diKa * process.oneDiKa * process.cent_seq)
 
 # Add PbPb collision event selection
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.collisionEventSelection_cff')
@@ -111,10 +111,7 @@ process.colEvtSel = cms.Sequence(process.hiClusterCompatibility * process.primar
 
 # Define the event selection sequence
 process.eventFilter_HM = cms.Sequence(
-    process.hiClusterCompatibility *
-    process.primaryVertexFilter *
-    process.hfPosFilterNTh8_seq *
-    process.hfNegFilterNTh8_seq
+    process.colEvtSel
 )
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
@@ -128,15 +125,13 @@ event_filter = cms.untracked.vstring(
         "Flag_colEvtSel",
         "Flag_clusterCompatibilityFilter",
         "Flag_primaryVertexFilter",
-        "Flag_diKaFilter",
+        "Flag_primaryVertexFilter2",
         "Flag_hfPosFilterNTh7",
         "Flag_hfPosFilterNTh7p3",
         "Flag_hfPosFilterNTh8",
-        "Flag_hfPosFilterNTh10",
         "Flag_hfNegFilterNTh7",
         "Flag_hfNegFilterNTh7p6",
         "Flag_hfNegFilterNTh8",
-        "Flag_hfNegFilterNTh10"
     )
 
 trig_info = cms.untracked.VPSet([
@@ -188,7 +183,7 @@ process.p = cms.EndPath(process.diKaAna * process.generalTracksAna * process.hiC
 process.schedule = cms.Schedule(
     process.eventFilter_HM_step,
     process.diKa_rereco_step,
-    process.track_step,
+    # process.track_step,
     process.p
 )
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -197,17 +192,16 @@ process.schedule = cms.Schedule(
 process.Flag_colEvtSel = cms.Path(process.colEvtSel)
 process.Flag_clusterCompatibilityFilter = cms.Path(process.hiClusterCompatibility)
 process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter)
-process.Flag_diKaFilter = cms.Path(process.diKa_seq)
+process.primaryVertexFilter2 =  process.primaryVertexFilter.clone(src = cms.InputTag("offlinePrimaryVerticesUPCHI"))
+process.Flag_primaryVertexFilter2 = cms.Path(process.primaryVertexFilter2)
 process.Flag_hfPosFilterNTh7 = cms.Path(process.hfPosFilterNTh7_seq)
 process.Flag_hfPosFilterNTh7p3 = cms.Path(process.hfPosFilterNTh7p3_seq)
 process.Flag_hfPosFilterNTh8 = cms.Path(process.hfPosFilterNTh8_seq)
-process.Flag_hfPosFilterNTh10 = cms.Path(process.hfPosFilterNTh10_seq)
 process.Flag_hfNegFilterNTh7 = cms.Path(process.hfNegFilterNTh7_seq)
 process.Flag_hfNegFilterNTh7p6 = cms.Path(process.hfNegFilterNTh7p6_seq)
 process.Flag_hfNegFilterNTh8 = cms.Path(process.hfNegFilterNTh8_seq)
-process.Flag_hfNegFilterNTh10 = cms.Path(process.hfNegFilterNTh10_seq)
 
-eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_diKaFilter , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfPosFilterNTh10 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 , process.Flag_hfNegFilterNTh10 ]
+eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_primaryVertexFilter2 , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 ]
 
 #! Adding the process schedule !!!!!!!!!!!!!!!!!!
 for P in eventFilterPaths:

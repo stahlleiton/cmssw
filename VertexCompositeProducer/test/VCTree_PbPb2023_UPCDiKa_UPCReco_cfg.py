@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process('ANASKIM',eras.Run3_UPC_2023)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -16,13 +16,17 @@ process.options.numberOfThreads=cms.untracked.uint32(1)
 # Define the input source
 process.source = cms.Source("PoolSource",
     # fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/SKIM/HIFW_EG/HIForward6/SKIM_EG_AOD_HIFORWARD_HIForward6_HIRun2023A_2023_10_29/231029_113348/0000/reco_RAW2DIGI_L1Reco_RECO_HIFORWARD_10.root"),
-    fileNames = cms.untracked.vstring("root://cmsxrootd.fnal.gov///store/user/anstahll/PbPb2023/SKIM/HIFW_TR/HIForward0/SKIM_TR_AOD_HIFORWARD_HIForward0_HIRun2023A_2023_11_02/231102_064450/0000/reco_RAW2DIGI_L1Reco_RECO_HIFORWARD_10.root"),
+    # fileNames = cms.untracked.vstring("root://cmsxrootd.fnal.gov///store/user/anstahll/PbPb2023/SKIM/HIFW_TR/HIForward0/SKIM_TR_AOD_HIFORWARD_HIForward0_HIRun2023A_2023_11_02/231102_064450/0000/reco_RAW2DIGI_L1Reco_RECO_HIFORWARD_10.root"),
+    # fileNames = cms.untracked.vstring("root://cmsxrootd.fnal.gov///store/user/anstahll/PbPb2023/SKIM/HIFW_TR/2024_01_08/HIForward0/SKIM_TR_AOD_HIFORWARD_HIForward0_HIRun2023A_2024_01_08/240108_190123/0000/reco_RAW2DIGI_L1Reco_RECO_UPC_10.root"),
+    fileNames = cms.untracked.vstring("root://cmsxrootd.fnal.gov///store/user/anstahll/PbPb2023/SKIM/HIFW_TR/2024_02_17/HIForward0/SKIM_TR_AOD_HIFORWARD_HIForward0_HIRun2023A_2024_02_17/240217_172537/0000/reco_RAW2DIGI_L1Reco_RECO_UPC_10.root"),
+
 )
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2000))
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = cms.string('132X_dataRun3_Prompt_v4')
+# process.GlobalTag.globaltag = cms.string('132X_dataRun3_Prompt_HI_LowPtPhotonReg_v2')
 
 
 ## ##############################################################################################################################
@@ -69,6 +73,7 @@ process.diKa = generalParticles.clone(
         cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
     ]),
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
+    # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits')
 )
 process.oneDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diKa"), minNumber = cms.uint32(1))
 
@@ -122,8 +127,6 @@ process.colEvtSel = cms.Sequence(process.hiClusterCompatibility * process.primar
 process.eventFilter_HM = cms.Sequence(
     process.hltFilter *
     process.colEvtSel *
-    process.hfPosFilterNTh8_seq *
-    process.hfNegFilterNTh8_seq *
     process.diKaEvtSel
 )
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
@@ -137,14 +140,13 @@ event_filter = cms.untracked.vstring(
         "Flag_colEvtSel",
         "Flag_clusterCompatibilityFilter",
         "Flag_primaryVertexFilter",
+        "Flag_primaryVertexFilter2",
         "Flag_hfPosFilterNTh7",
         "Flag_hfPosFilterNTh7p3",
         "Flag_hfPosFilterNTh8",
-        "Flag_hfPosFilterNTh10",
         "Flag_hfNegFilterNTh7",
         "Flag_hfNegFilterNTh7p6",
         "Flag_hfNegFilterNTh8",
-        "Flag_hfNegFilterNTh10"
     )
 
 trig_info = cms.untracked.VPSet([
@@ -186,16 +188,16 @@ process.schedule = cms.Schedule(
 process.Flag_colEvtSel = cms.Path(process.colEvtSel)
 process.Flag_clusterCompatibilityFilter = cms.Path(process.hiClusterCompatibility)
 process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter)
+process.primaryVertexFilter2 =  process.primaryVertexFilter.clone(src = cms.InputTag("offlinePrimaryVerticesUPCHI"))
+process.Flag_primaryVertexFilter2 = cms.Path(process.primaryVertexFilter2)
 process.Flag_hfPosFilterNTh7 = cms.Path(process.hfPosFilterNTh7_seq)
 process.Flag_hfPosFilterNTh7p3 = cms.Path(process.hfPosFilterNTh7p3_seq)
 process.Flag_hfPosFilterNTh8 = cms.Path(process.hfPosFilterNTh8_seq)
-process.Flag_hfPosFilterNTh10 = cms.Path(process.hfPosFilterNTh10_seq)
 process.Flag_hfNegFilterNTh7 = cms.Path(process.hfNegFilterNTh7_seq)
 process.Flag_hfNegFilterNTh7p6 = cms.Path(process.hfNegFilterNTh7p6_seq)
 process.Flag_hfNegFilterNTh8 = cms.Path(process.hfNegFilterNTh8_seq)
-process.Flag_hfNegFilterNTh10 = cms.Path(process.hfNegFilterNTh10_seq)
 
-eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfPosFilterNTh10 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 , process.Flag_hfNegFilterNTh10 ]
+eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_primaryVertexFilter2 , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 ]
 
 #! Adding the process schedule !!!!!!!!!!!!!!!!!!
 for P in eventFilterPaths:

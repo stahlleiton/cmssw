@@ -11,7 +11,9 @@ channel         = 'CohPhiToKK'
 request_name    += '_%s' % datetime.now().strftime('%y%m%d_%H%M%S')
 
 # input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/skim_track_hiforward_reco_test.txt'
-input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/skim_track_hiforward_reco.txt'
+# input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/skim_track_hiforward_reco.txt'
+# input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/hiforward_skim_track_upcreco.txt'
+input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/hiforward_skim_track_dEdx_upcreco.txt'
 # input_dataset	= ''
 
 output_pd       = 'PbPb2023'
@@ -53,11 +55,10 @@ config.Data.outputPrimaryDataset = output_pd
 # config.Data.outputDatasetTag = config.General.requestName
 config.Data.outputDatasetTag = channel
 config.Data.outLFNDirBase = output_dir
-config.Data.ignoreLocality = True
 
 ## Site #####################################################################################
 config.section_('Site')
-config.Site.whitelist = ['T2_CH_CERN']
+config.Site.whitelist = ['T2_US_Vanderbilt']
 config.Site.storageSite = 'T2_CH_CERN'
 
 #############################################################################################

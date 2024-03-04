@@ -52,7 +52,6 @@ config.Data.outputPrimaryDataset = output_pd
 # config.Data.outputDatasetTag = config.General.requestName
 config.Data.outputDatasetTag = channel
 config.Data.outLFNDirBase = output_dir
-config.Data.ignoreLocality = True
 
 ## Site #####################################################################################
 config.section_('Site')
