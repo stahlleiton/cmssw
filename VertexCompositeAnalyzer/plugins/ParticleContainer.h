@@ -6,6 +6,7 @@
 
 // user include files
 #include "DataFormats/Candidate/interface/Candidate.h"
+#include "SimDataFormats/Associations/interface/TrackAssociation.h"
 
 //
 // class decleration for containers
@@ -376,6 +377,11 @@ class ParticleContainer
   Particle getPar(const reco::Track& track) const
   {
     return Particle(track.pt(), track.eta(), track.phi(), 0.0, track.charge(), 0);
+  };
+
+  Particle getPar(const TrackingParticle& sim) const
+  {
+    return Particle(sim.pt(), sim.eta(), sim.phi(), sim.mass(), sim.charge(), sim.pdgId());
   };
 
   size_t size_;

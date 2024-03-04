@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process('ANASKIM', eras.Run3_2023)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -14,37 +14,33 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/SUPERCHIC/2023_10_23/SUPERCHIC_5p36TeV_2023Run3/ChiC_SUPERCHIC_5p36TeV_2023Run3_HIFwd_RECO_AOD_2023_10_23/231022_221941/0000/SUPERCHIC_chiC_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/afs/cern.ch/user/a/anstahll/work/Run3_2023/ERA/CMSSW_13_2_6_patch2/src/STARLIGHT/STARLIGHT_QED_elec_RECO_DEBUG.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/STARLIGHT/2023_10_23/STARLIGHT_5p36TeV_2023Run3/double_diff_STARLIGHT_5p36TeV_2023Run3_pp_RECO_AOD_2023_10_23/231022_214327/0000/STARLIGHT_double_diff_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/STARLIGHT/2023_10_26/STARLIGHT_5p36TeV_2023Run3/double_diff_STARLIGHT_5p36TeV_2023Run3_pp_RECO_AOD_2023_10_26/231026_194253/0000/STARLIGHT_double_diff_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/SUPERCHIC/2023_10_23/SUPERCHIC_5p36TeV_2023Run3/LbyL_SUPERCHIC_5p36TeV_2023Run3_HIFwd_RECO_AOD_2023_10_23/231022_221920/0000/SUPERCHIC_LbyL_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/SUPERCHIC/2023_10_23/SUPERCHIC_5p36TeV_2023Run3/ChiC_SUPERCHIC_5p36TeV_2023Run3_HIFwd_RECO_AOD_2023_10_23/231022_221941/0000/SUPERCHIC_chiC_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/SUPERCHIC/2023_10_23/SUPERCHIC_5p36TeV_2023Run3/ChiC_SUPERCHIC_5p36TeV_2023Run3_HIFwd_RECO_MOD_AOD_2023_10_23/231022_222620/0000/SUPERCHIC_chiC_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/SUPERCHIC/2023_10_23/SUPERCHIC_5p36TeV_2023Run3/ChiC_SUPERCHIC_5p36TeV_2023Run3_pp_RECO_AOD_2023_10_23/231022_215005/0000/SUPERCHIC_chiC_RECO_1.root"),
-    #fileNames = cms.untracked.vstring("file:/afs/cern.ch/user/a/anstahll/work/Run3_2023/ERA/CMSSW_13_2_6_patch2/src/SUPERCHIC/SUPERCHIC_chiC_RECO.root"),
-    #fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/STARLIGHT/2023_10_23/STARLIGHT_5p36TeV_2023Run3/QED_muon_STARLIGHT_5p36TeV_2023Run3_pp_RECO_AOD_2023_10_23/231022_214310/0000/STARLIGHT_QED_muon_RECO_1.root"),
+    #fileNames = cms.untracked.vstring("file:/afs/cern.ch/user/a/anstahll/work/Run3_2023/Simulation/Production/Reconstruction/CMSSW_13_2_10/src/UPCReco/STARLIGHT/STARLIGHT_double_diff_RECO.root"),
+    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/STARLIGHT/2024_01_06/STARLIGHT_5p36TeV_2023Run3/double_diff_STARLIGHT_5p36TeV_2023Run3_UPCRECO_2024_01_06/240106_193637/0000/STARLIGHT_double_diff_RECO_1.root"),
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v5')
+process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v7')
 
 # Add the Particle producer
 from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import generalParticles
 
-process.muons = generalParticles.clone(
-    pdgId = cms.uint32(13),
-    muons = cms.InputTag('patMuons')
+generalTrackParticles = generalParticles.clone(
+    recoToSimTrackMap = cms.InputTag('trackingParticleRecoTrackAsssociation')
 )
 
-process.electrons = generalParticles.clone(
+process.muons = generalTrackParticles.clone(
+    pdgId = cms.uint32(13),
+    muons = cms.InputTag('patMuons'),
+)
+
+process.electrons = generalTrackParticles.clone(
     pdgId = cms.uint32(11),
     electrons = cms.InputTag('patElectrons')
 )
 
-process.lowPtElectrons = generalParticles.clone(
+process.lowPtElectrons = generalTrackParticles.clone(
     pdgId = cms.uint32(11),
     electrons = cms.InputTag('patLowPtElectrons')
 )
@@ -59,16 +55,17 @@ process.convertedPhotons = generalParticles.clone(
     conversions = cms.InputTag('allConversions')
 )
 
-process.tracks = generalParticles.clone(
+process.tracks = generalTrackParticles.clone(
     tracks = cms.InputTag('generalTracks'),
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
 )
 
 process.pixelTracks = generalParticles.clone(
-    tracks = cms.InputTag('hiConformalPixelTracks')
+    tracks = cms.InputTag('hiConformalPixelTracks'),
+    recoToSimTrackMap = cms.InputTag('trackingParticlePixelTrackAsssociation')
 )
 
-process.pfCandidates = generalParticles.clone(
+process.pfCandidates = generalTrackParticles.clone(
     pfParticles = cms.InputTag('particleFlow'),
     tracks = cms.InputTag('')
 )
@@ -83,11 +80,18 @@ doPATPhotons(process)
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.collisionEventSelection_cff')
 process.colEvtSel = cms.Sequence(process.hiClusterCompatibility * process.primaryVertexFilter)
 
+# Add sim-reco matching
+process.load('SimTracker.TrackAssociation.trackingParticleRecoTrackAsssociation_cff')
+process.load('SimTracker.TrackAssociatorProducers.quickTrackAssociatorByHits_cfi')
+process.load('SimTracker.TrackerHitAssociation.tpClusterProducer_cfi')
+process.trackingParticlePixelTrackAsssociation = process.trackingParticleRecoTrackAsssociation.clone(label_tr = cms.InputTag("hiConformalPixelTracks"))
+process.simRecoTrackAssocSeq = cms.Sequence(process.tpClusterProducer * process.quickTrackAssociatorByHitsTrackerHitAssociator * process.trackingParticleRecoTrackAsssociation * process.trackingParticlePixelTrackAsssociation)
+
 # Define the analysis steps
-process.muon_step = cms.Path(process.patMuonSequence * process.muons)
-process.electron_step = cms.Path(process.patElectronSequence * process.electrons * process.lowPtElectrons)
+process.muon_step = cms.Path(process.simRecoTrackAssocSeq * process.patMuonSequence * process.muons)
+process.electron_step = cms.Path(process.simRecoTrackAssocSeq * process.patElectronSequence * process.electrons * process.lowPtElectrons)
 process.photon_step = cms.Path(process.patPhotonSequence * process.photons * process.convertedPhotons)
-process.track_step = cms.Path(process.tracks * process.pixelTracks * process.pfCandidates)
+process.track_step = cms.Path(process.simRecoTrackAssocSeq * process.tracks * process.pixelTracks * process.pfCandidates)
 
 # Add the Particle tree
 from VertexCompositeAnalysis.VertexCompositeAnalyzer.particle_tree_cff import particleAna_mc
@@ -102,19 +106,19 @@ process.muonAna = particleAna_mc.clone(
 process.elecAna = particleAna_mc.clone(
   recoParticles = cms.InputTag("electrons"),
   maxGenDeltaR = cms.untracked.double(0.03),
-  maxGenDeltaPtRel = cms.untracked.double(0.5),
+  maxGenDeltaPtRel = cms.untracked.double(1.0),
 )
 
 process.lowPtElecAna = particleAna_mc.clone(
   recoParticles = cms.InputTag("lowPtElectrons"),
-  maxGenDeltaR = cms.untracked.double(0.3),
-  maxGenDeltaPtRel = cms.untracked.double(10.0),
+  maxGenDeltaR = cms.untracked.double(0.03),
+  maxGenDeltaPtRel = cms.untracked.double(1.0),
 )
 
 process.phoAna = particleAna_mc.clone(
   recoParticles = cms.InputTag("photons"),
   maxGenDeltaR = cms.untracked.double(0.3),
-  maxGenDeltaPtRel = cms.untracked.double(10.0),
+  maxGenDeltaPtRel = cms.untracked.double(1.0),
 )
 
 process.convAna = particleAna_mc.clone(
@@ -146,12 +150,12 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string('obj_an
 process.p = cms.EndPath(process.muonAna * process.elecAna * process.lowPtElecAna * process.phoAna * process.convAna * process.trackAna * process.pixelTrackAna * process.pfAna)
 
 # Add fix for SuperChic
-process.genParticles = cms.EDProducer('GenParticleSuperChicFixer', genPars = cms.InputTag('genParticles::SIM'))
-process.gen_step = cms.Path(process.genParticles)
+#process.genParticles = cms.EDProducer('GenParticleSuperChicFixer', genPars = cms.InputTag('genParticles::SIM'))
+#process.gen_step = cms.Path(process.genParticles)
 
 # Define the process schedule
 process.schedule = cms.Schedule(
-    process.gen_step,
+    #process.gen_step,
     process.muon_step,
     process.electron_step,
     process.photon_step,

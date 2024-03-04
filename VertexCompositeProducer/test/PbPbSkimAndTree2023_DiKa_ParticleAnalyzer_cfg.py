@@ -1,8 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-from Configuration.Eras.Modifier_highBetaStar_2018_cff import highBetaStar_2018
-Run3_2023_highBetaStar = cms.ModifierChain(eras.Run3_2023, highBetaStar_2018)
-process = cms.Process('ANASKIM', Run3_2023_highBetaStar)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -16,7 +14,8 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/SKIM/HBS/HIForward0/SKIM_AOD_HIGHBETASTAR_HIForward0_HIRun2023A_2023_10_13/231013_081452/0000/reco_RAW2DIGI_L1Reco_RECO_HIGHBETASTAR_73.root"),
+    fileNames = cms.untracked.vstring("root://xrootd-cms.infn.it//store/user/anstahll/PbPb2023/SKIM/HIFW_TR/2024_02_17/HIForward2/SKIM_TR_AOD_HIFORWARD_HIForward2_HIRun2023A_2024_02_17/240217_172548/0000/reco_RAW2DIGI_L1Reco_RECO_UPC_740.root"),
+    #fileNames = cms.untracked.vstring("file:/afs/cern.ch/user/a/anstahll/work/Run3_2023/UPCRECO/Production/dEdxAndPV/CMSSW_13_2_10/src/reco_RAW2DIGI_L1Reco_RECO_UPC.root")
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
@@ -53,18 +52,18 @@ process.cent_seq = cms.Sequence(process.centralityBin)
 from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import generalParticles
 
 # DiKa selection
-kaonSelection = cms.string("")#(pt > 0.0 && abs(eta) < 3.0) && quality(\"highPurity\")")
+kaonSelection = cms.string("(pt > 0.0 && abs(eta) < 3.0) && quality(\"highPurity\")")
 kaonFinalSelection = cms.string("")#abs(userFloat(\"dzSig\"))<3.0 && abs(userFloat(\"dxySig\"))<3.0")
 diKaSelection = cms.string("charge==0")
 process.diKa = generalParticles.clone(
-    pdgId = cms.int32(333),
+    pdgId = cms.uint32(333),
     preSelection = diKaSelection,
     # daughter information
     daughterInfo = cms.VPSet([
-        cms.PSet(pdgId = cms.int32(321), charge = cms.int32(+1), selection = kaonSelection, finalSelection = kaonFinalSelection),
-        cms.PSet(pdgId = cms.int32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
+        cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(+1), selection = kaonSelection, finalSelection = kaonFinalSelection),
+        cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
     ]),
-    dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
+    dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits')
 )
 process.oneDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diKa"), minNumber = cms.uint32(1))
 
@@ -97,12 +96,10 @@ process.hltFilter.andOr = cms.bool(True)
 process.hltFilter.throw = cms.bool(False)
 process.hltFilter.HLTPaths = [
     # UPC zero bias triggers
-    'HLT_HIZeroBias_v*',
-    'HLT_HIZeroBias_HighRate_v*',
     'HLT_HIUPC_ZeroBias_SinglePixelTrack_MaxPixelTrack_v*',
     'HLT_HIUPC_ZeroBias_SinglePixelTrackLowPt_MaxPixelCluster400_v*',
     'HLT_HIUPC_ZeroBias_MinPixelCluster400_MaxPixelCluster10000_v*',
-    # UPC SDC triggers
+    # UPC ZDC triggers
     'HLT_HIUPC_ZDC1nOR_SinglePixelTrack_MaxPixelTrack_v*',
     'HLT_HIUPC_ZDC1nOR_SinglePixelTrackLowPt_MaxPixelCluster400_v*',
     'HLT_HIUPC_ZDC1nOR_MinPixelCluster400_MaxPixelCluster10000_v*',
@@ -111,7 +108,7 @@ process.hltFilter.HLTPaths = [
 # Add PbPb collision event selection
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.collisionEventSelection_cff')
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.hfCoincFilter_cff')
-process.colEvtSel = cms.Sequence(process.primaryVertexFilter)
+process.colEvtSel = cms.Sequence(process.primaryVertexFilter * process.clusterCompatibilityFilter)
 
 # Define the event selection sequence
 process.eventFilter_HM = cms.Sequence(
@@ -130,16 +127,15 @@ process.diKaAna = particleAna.clone(
   selectEvents = cms.string("diKa_rereco_step"),
   eventFilterNames = cms.untracked.vstring(
       'Flag_colEvtSel',
-      'Flag_hfCoincFilter2Th4',
+      'Flag_clusterCompatibilityFilter',
       'Flag_primaryVertexFilter',
+      'Flag_primaryVertexFilter2',
   ),
   triggerInfo = cms.untracked.VPSet([
     # UPC low pT triggers
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrackLowPt_MaxPixelCluster400_v*')),
     cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_SinglePixelTrackLowPt_MaxPixelCluster400_v*')),
     # UPC zero bias triggers
-    cms.PSet(path = cms.string('HLT_HIZeroBias_v*')),
-    cms.PSet(path = cms.string('HLT_HIZeroBias_HighRate_v*')),
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrack_MaxPixelTrack_v*')),
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_MinPixelCluster400_MaxPixelCluster10000_v*')),
     # UPC ZDC triggers
@@ -163,14 +159,18 @@ process.schedule = cms.Schedule(
 process.Flag_colEvtSel = cms.Path(process.eventFilter_HM * process.colEvtSel)
 process.Flag_hfCoincFilter2Th4 = cms.Path(process.eventFilter_HM * process.hfCoincFilter2Th4)
 process.Flag_primaryVertexFilter = cms.Path(process.eventFilter_HM * process.primaryVertexFilter)
+process.primaryVertexFilter2 =  process.primaryVertexFilter.clone(src = cms.InputTag("offlinePrimaryVerticesUPCHI"))
+process.Flag_primaryVertexFilter2 = cms.Path(process.eventFilter_HM * process.primaryVertexFilter2)
+process.Flag_clusterCompatibilityFilter = cms.Path(process.eventFilter_HM * process.clusterCompatibilityFilter)
 
-eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_hfCoincFilter2Th4 , process.Flag_primaryVertexFilter ]
+eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_hfCoincFilter2Th4 , process.Flag_primaryVertexFilter , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter2 ]
 
 process.eventFilter_HM = cms.Sequence(
     process.hltFilter *
+    process.clusterCompatibilityFilter *
     process.primaryVertexFilter *
-    process.hfPosFilterNTh8_seq *
-    process.hfNegFilterNTh8_seq *
+    process.hfPosFilterNTh9p3_seq *
+    process.hfNegFilterNTh8p6_seq *
     process.diKaEvtSel
 )
 

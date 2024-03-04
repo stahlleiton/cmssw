@@ -75,7 +75,7 @@ def doPATElectrons(process):
         embedPflowPreshowerClusters = cms.bool(False),
         embedPFCandidate            = cms.bool(False),
         # extra information
-        addMVAVariables         = cms.bool(False),
+        addMVAVariables         = cms.bool(True),
         isoDeposits             = cms.PSet(),
         isolationValues         = cms.PSet(),
         isolationValuesNoPFId   = cms.PSet(),
@@ -128,6 +128,28 @@ def doPATPhotons(process):
 
     # Make a sequence
     process.patPhotonSequence = cms.Sequence( process.patPhotons )
+
+
+def doPATMET(process):
+    # Check if sequence already ran
+    if hasattr(process, 'patMETs'): return
+
+    # Make PAT MET
+    from PhysicsTools.PatAlgos.producersLayer1.metProducer_cfi import patMETs
+    process.patMETs = patMETs.clone(
+        metSource = cms.InputTag("pfMet"),
+        # gen information
+        addGenMET = cms.bool(False),
+        genMETSource = cms.InputTag(""),
+    )
+
+    process.patPhotons.userData.userInts.src    = []
+    process.patPhotons.userData.userFloats.src  = []
+    process.patPhotons.userData.userCands.src   = []
+    process.patPhotons.userData.userClasses.src = []
+
+    # Make a sequence
+    process.patMETSequence = cms.Sequence( process.patMETs )
 
 
 def changeToMiniAOD(process):

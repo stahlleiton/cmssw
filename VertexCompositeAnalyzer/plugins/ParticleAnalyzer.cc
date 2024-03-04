@@ -43,6 +43,7 @@
 #include "DataFormats/Math/interface/angle.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/Associations/interface/TrackAssociation.h"
 #include "CondFormats/DataRecord/interface/L1TGlobalPrescalesVetosRcd.h"
 #include "CondFormats/L1TObjects/interface/L1TGlobalPrescalesVetos.h"
 
@@ -84,6 +85,7 @@ private:
   virtual void fillLumiInfo(const edm::Event&);
   virtual void fillRecoParticleInfo(const edm::Event&);
   virtual void fillGenParticleInfo(const edm::Event&);
+  virtual void fillSimParticleInfo(const edm::Event&);
   virtual void endJob();
   virtual void initTree();
   virtual void initNTuple();
@@ -103,6 +105,7 @@ private:
   UShort_t fillTauInfo(const pat::GenericParticle&, const UInt_t&, const bool& force=false);
   UShort_t fillPFCandidateInfo(const pat::GenericParticle&, const UInt_t&, const bool& force=false);
   UShort_t fillGenParticleInfo(const reco::GenParticleRef&, const UInt_t& candIdx=UINT_MAX, const bool& force=false);
+  UShort_t fillSimParticleInfo(const TrackingParticleRef&, const UInt_t& candIdx=UINT_MAX, const bool& force=false);
 
   void initParticleInfo(const std::string&, const Token& sid=Token::Unknown);
   void addTriggerObject(pat::GenericParticle&);
@@ -179,11 +182,13 @@ private:
   const edm::EDGetTokenT<reco::TrackCollection> tok_trackSrc_;
   const edm::EDGetTokenT<QIE10DigiCollection> tok_zdcDigiSrc_;
   const edm::EDGetTokenT<reco::PFCandidateCollection> tok_pfCandSrc_;
+  const edm::EDGetTokenT<CaloTowerCollection> tok_towerSrc_;
+  const edm::EDGetTokenT<TrackingParticleCollection> tok_simParticle_;
 
   // input data
   const std::vector<edm::ParameterSet> triggerInfo_, matchInfo_;
   const std::vector<std::string> eventFilters_;
-  const std::string selectEvents_;
+  const std::string dataset_, selectEvents_;
   const bool saveTree_;
   const int maxGenIter_;
   const double maxGenDeltaR_, maxGenDeltaPtRel_;
@@ -196,6 +201,8 @@ private:
   HLTPrescaleProvider hltPrescaleProvider_;
   std::vector<std::vector<double> > l1PrescaleTable_;
   std::map<std::string, std::vector<size_t> > hltPathIdx_;
+  std::vector<size_t> datasetPathIdx_;
+  char datasetN_;
 
   // attributes
   edm::Service<TFileService> fileService_;
@@ -248,9 +255,12 @@ ParticleAnalyzer::ParticleAnalyzer(const edm::ParameterSet& iConfig) :
   tok_trackSrc_(consumes<reco::TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("recoTracks", edm::InputTag("generalTracks")))),
   tok_zdcDigiSrc_(consumes<QIE10DigiCollection>(iConfig.getUntrackedParameter<edm::InputTag>("zdcDigis", edm::InputTag("hcalDigis:ZDC")))),
   tok_pfCandSrc_(consumes<reco::PFCandidateCollection>(iConfig.getUntrackedParameter<edm::InputTag>("pfCandidates", edm::InputTag("particleFlow")))),
+  tok_towerSrc_(consumes<CaloTowerCollection>(iConfig.getUntrackedParameter<edm::InputTag>("towers", edm::InputTag("towerMaker")))),
+  tok_simParticle_(consumes<TrackingParticleCollection>(iConfig.getUntrackedParameter<edm::InputTag>("towers", edm::InputTag("mix:MergedTrackTruth")))),
   triggerInfo_(iConfig.getUntrackedParameter<std::vector<edm::ParameterSet> >("triggerInfo")),
   matchInfo_(iConfig.getUntrackedParameter<std::vector<edm::ParameterSet> >("matchInfo")),
   eventFilters_(iConfig.getUntrackedParameter<std::vector<std::string> >("eventFilterNames")),
+  dataset_(iConfig.getUntrackedParameter<std::string>("dataset", "")),
   selectEvents_(iConfig.getParameter<std::string>("selectEvents")),
   saveTree_(iConfig.getUntrackedParameter<bool>("saveTree", true)),
   maxGenIter_(iConfig.getUntrackedParameter<int>("maxGenIter", 0)),
@@ -311,6 +321,7 @@ ParticleAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fillLumiInfo(iEvent);
   fillRecoParticleInfo(iEvent);
   fillGenParticleInfo(iEvent);
+  fillSimParticleInfo(iEvent);
 
   // check information
   check();
@@ -373,7 +384,7 @@ ParticleAnalyzer::getEventData(const edm::Event& iEvent, const edm::EventSetup& 
     // generated primary vertex information
     for (const auto& p : *genParticles)
     {
-      if (p.statusFlags().isLastCopy() && (p.pdgId()==21 || std::abs(p.pdgId())<=6))
+      if (p.statusFlags().isLastCopy() && (p.pdgId()==21 || std::abs(p.pdgId())<=6 || p.numberOfMothers()==0))
       {
         genVertex_ = p.vertex();
         break;
@@ -416,6 +427,13 @@ ParticleAnalyzer::getEventData(const edm::Event& iEvent, const edm::EventSetup& 
     // fill generated particle multiplicity
     eventInfo_.add("Ntrkgen", nGenTracks);
   }
+
+  // simulated particle information
+  if (isMC_ && addInfo_["sim"])
+  {
+    // initialize simulated particle container
+    initParticleInfo("sim");
+  }
 }
 
 
@@ -424,9 +442,20 @@ ParticleAnalyzer::getTriggerData(const edm::Event& iEvent, const edm::EventSetup
 {
   if (triggerInfo_.empty()) return;
 
+  const auto& triggerResults = iEvent.getHandle(tok_triggerResults_);
+
+  // get current dataset
+  datasetN_ = -1;
+  if (triggerResults.isValid())
+  {
+    for (const auto& dsIdx : datasetPathIdx_)
+    {
+      if (triggerResults->accept(dsIdx)) { datasetN_ = (dsIdx - datasetPathIdx_[0]); break; }
+    }
+  }
+
   // get trigger data
   const auto& triggerEvent = iEvent.getHandle(tok_triggerEvent_);
-  const auto& triggerResults = iEvent.getHandle(tok_triggerResults_);
   const auto& isTrgEvtValid = triggerEvent.isValid();
   if (triggerResults.isValid())
   {
@@ -724,11 +753,10 @@ ParticleAnalyzer::fillEventInfo(const edm::Event& iEvent)
   }
 
   // fill PF information
-  float PFHFmaxEPlus(-1), PFHFmaxEMinus(-1), PFHFsumETPlus(0), PFHFsumETMinus(0);
   const auto& pfCandidates = iEvent.getHandle(tok_pfCandSrc_);
   if (pfCandidates.isValid())
   {
-    //float PFHFmaxEPlus(-1), PFHFmaxEMinus(-1), PFHFsumETPlus(0), PFHFsumETMinus(0);
+    float PFHFmaxEPlus(-1), PFHFmaxEMinus(-1), PFHFsumETPlus(0), PFHFsumETMinus(0);
     for (const auto& pf : *pfCandidates) {
       if (pf.particleId() < 6) continue;
       (pf.eta() > 0 ? PFHFsumETPlus : PFHFsumETMinus) += pf.pt();
@@ -743,6 +771,27 @@ ParticleAnalyzer::fillEventInfo(const edm::Event& iEvent)
     eventInfo_.add("PFHFsumETMinus", PFHFsumETMinus);
     eventInfo_.add("PFHFmaxEPlus", PFHFmaxEPlus);
     eventInfo_.add("PFHFmaxEMinus", PFHFmaxEMinus);
+  }
+
+  // fill Tower information
+  const auto& towers = iEvent.getHandle(tok_towerSrc_);
+  if (towers.isValid())
+  {
+    float TWHFmaxEPlus(-1), TWHFmaxEMinus(-1), TWHFsumETPlus(0), TWHFsumETMinus(0);
+    for (const auto& tower : *towers) {
+      if (tower.ietaAbs() <= 29) continue;
+      (tower.eta() > 0 ? TWHFsumETPlus : TWHFsumETMinus) += tower.pt();
+      const auto aeta = std::abs(tower.eta());
+      if (aeta < 3.0 || aeta > 6.0) continue;
+      if (tower.eta() > 0 && TWHFmaxEPlus < tower.energy())
+        TWHFmaxEPlus = tower.energy();
+      if (tower.eta() < 0 && TWHFmaxEMinus < tower.energy())
+        TWHFmaxEMinus = tower.energy();
+    }
+    eventInfo_.add("TWHFsumETPlus", TWHFsumETPlus);
+    eventInfo_.add("TWHFsumETMinus", TWHFsumETMinus);
+    eventInfo_.add("TWHFmaxEPlus", TWHFmaxEPlus);
+    eventInfo_.add("TWHFmaxEMinus", TWHFmaxEMinus);
   }
 }
 
@@ -802,6 +851,12 @@ ParticleAnalyzer::fillTriggerInfo(const edm::Event& iEvent)
       eventInfo_.push("hltRecordLumi", data.recordLumi());
     }
   }
+
+  // fill dataset information
+  if (dataset_!="")
+  {
+    eventInfo_.add("datasetN", datasetN_);
+  }
 }
 
 
@@ -814,12 +869,14 @@ ParticleAnalyzer::initParticleInfo(const std::string& type, const Token& sid)
   if      (type=="trig" && (triggerData_.empty() || !addInfo_.at("trgObj"))) return;
   else if (type=="trk"  && !addInfo_.at("track")) return;
   else if (type=="gen"  && !isMC_) return;
+  else if (type=="sim"  && !(isMC_ && addInfo_.at("sim"))) return;
   else if (type=="src"  && !addInfo_.at("source")) return;
   // proceed to initialize with dummy value
   pat::GenericParticle cand; cand.addUserInt("sourceId", sid);
   if      (type=="cand") fillRecoParticleInfo(pat::GenericParticle(), 0);
   else if (type=="trig") fillTriggerObjectInfo(pat::TriggerObjectStandAlone(), 0, 0, 0);
   else if (type=="gen" ) fillGenParticleInfo(reco::GenParticleRef(), 0, true);
+  else if (type=="sim" ) fillSimParticleInfo(TrackingParticleRef(), 0, true);
   else if (type=="trk" ) fillTrackInfo(pat::GenericParticle(), 0, true);
   else if (type=="src" ) fillSourceInfo(cand, 0, true);
   // clear the initialized info
@@ -828,7 +885,7 @@ ParticleAnalyzer::initParticleInfo(const std::string& type, const Token& sid)
   {
     for (auto& p : particleInfo_)
     {
-      if (p.first!="cand" && p.first!="trig" && p.first!="gen" && p.first!="trk") { p.second.clear(); }
+      if (p.first!="cand" && p.first!="trig" && p.first!="gen" && p.first!="sim" && p.first!="trk") { p.second.clear(); }
     }
   }
 }
@@ -1009,6 +1066,14 @@ ParticleAnalyzer::fillRecoParticleInfo(const pat::GenericParticle& cand, const U
     info.add("momMatchIdx", momMatchGEN ? momIdx : UShort_t(-1));
   }
 
+  // simulated particle information
+  if (isMC_ && addInfo_.at("sim")) {
+    const auto& simPar = cand.hasUserData("simRef") ? *cand.userData<TrackingParticleRef>("simRef") : TrackingParticleRef();
+    info.add("simIdx", fillSimParticleInfo(simPar, idx));
+    info.add("matchSIM", simPar.isNonnull());
+    info.add("simPdgId", (simPar.isNonnull() ? simPar->pdgId() : 0));
+  }
+
   // initialize daughter information
   info.add("dauIdx", std::vector<UInt_t>());
   info.add("pTDau", std::vector<float>());
@@ -1119,7 +1184,7 @@ ParticleAnalyzer::addTriggerObject(pat::GenericParticle& cand, const math::XYZTL
           cand.addTriggerObjectMatch(mObj);
         }
         const auto& mObj = cand.triggerObjectMatchByCollection(c.first);
-        if (mObj->hasFilterLabel(filterName)) triggerObjects.emplace_back(*mObj);
+        if (mObj && mObj->hasFilterLabel(filterName)) triggerObjects.emplace_back(*mObj);
       }
     }
     // case: decayed particle (daughter matching)
@@ -1185,7 +1250,8 @@ ParticleAnalyzer::fillTrackInfo(const pat::GenericParticle& cand, const UInt_t& 
   if (addInfo_.at("dEdxs")) {
     for (const auto& input : dedxInfo_) {
       std::string dedxName = "dEdx_" + input;
-      info.add(dedxName, getFloat(cand, dedxName));
+      std::replace(dedxName.begin(), dedxName.end(), ':', '_');
+      info.add(dedxName, getFloat(cand, "dEdx_"+input));
     }
   }
 
@@ -1277,7 +1343,7 @@ ParticleAnalyzer::fillMuonInfo(const pat::GenericParticle& cand, const UInt_t& c
                          );
   info.add("tightID", tightmuon);
 
-  // soft ID muon POG Run 2
+  // soft ID muon POG Run >= 2
   info.add("isOneStTight", bool(selectionType & (1U<<muon::SelectionType::TMOneStationTight)));
   info.add("nPixelLayer", getChar(iTrack.isNonnull() ? iTrack->hitPattern().pixelLayersWithMeasurement() : -1, "nPixelLayer"));
   info.add("dXY", (iTrack.isNonnull() ? iTrack->dxy(vertex) : -99.9));
@@ -1293,7 +1359,7 @@ ParticleAnalyzer::fillMuonInfo(const pat::GenericParticle& cand, const UInt_t& c
                         );
   info.add("softID", softmuon);
 
-  // hybrid soft ID HIN PAG Run 2 PbPb
+  // hybrid soft ID HIN PAG Run >= 2 PbPb
   info.add("isTracker", muon.isTrackerMuon());
   const auto hybridmuon = (
                            muon.isTrackerMuon() &&
@@ -1380,20 +1446,29 @@ ParticleAnalyzer::fillElectronInfo(const pat::GenericParticle& cand, const UInt_
   // electron information
   info.add("sigmaIEtaIEta", electron.full5x5_sigmaIetaIeta());
   info.add("sigmaIPhiIPhi", electron.full5x5_sigmaIphiIphi());
-  info.add("dEtaSeedAtVtx", (sCluster.isNonnull() ? electron.deltaEtaSeedClusterTrackAtVtx() : -99.9));
+  info.add("dEtaSeedAtVtx", (sCluster.isNonnull() ? electron.deltaEtaSeedClusterTrackAtVtx() : 99.9));
   info.add("dEtaAtVtx", electron.deltaEtaSuperClusterTrackAtVtx());
   info.add("dPhiAtVtx", electron.deltaPhiSuperClusterTrackAtVtx());
   info.add("eOverPInv", (1./electron.ecalEnergy() - 1./electron.trackMomentumAtVtx().R()));
   info.add("hOverEBc", electron.hcalOverEcalBc());
+  info.add("hOverE", electron.hcalOverEcal());
 
   // super cluster information
   info.add("sCEta", (sCluster.isNonnull() ? sCluster->eta() : -99.9));
   info.add("sCPhi", (sCluster.isNonnull() ? sCluster->phi() : -99.9));
 
   // gsf track information
-  const auto ip3D = (gsfTrack.isNonnull() ? IPTools::absoluteImpactParameter3D(reco::TransientTrack(*gsfTrack, magField_), vertex).second.value() : -99.9);
+  const auto ip3D = (gsfTrack.isNonnull() ? IPTools::absoluteImpactParameter3D(reco::TransientTrack(*gsfTrack, magField_), vertex).second.value() : 99.9);
   info.add("ip3D", ip3D);
-  info.add("nLostHits", getChar(gsfTrack.isNonnull() ? gsfTrack->numberOfLostHits() : -1, "nLostHits"));
+  info.add("nMissTrackHits", getUChar(gsfTrack.isNonnull() ? gsfTrack->numberOfLostHits() : 254, "nMissTrackHits"));
+  info.add("nMissInnerHits", getUChar(gsfTrack.isNonnull() ? gsfTrack->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) : 254, "nMissInnerHits"));
+
+  // UPC ID electron Run 2
+  const bool upcID = (gsfTrack.isNonnull() &&
+                      gsfTrack->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) <= 1 &&
+                      electron.deltaEtaSuperClusterTrackAtVtx() < 0.1 &&
+                      electron.hcalOverEcal() < 0.005);
+  info.add("upcID", upcID);
 
   // push data and return index
   info.pushData(electron);
@@ -1832,6 +1907,62 @@ ParticleAnalyzer::findGenMother(const reco::GenParticleRef& par)
 
 
 void
+ParticleAnalyzer::fillSimParticleInfo(const edm::Event& iEvent)
+{
+  if (!isMC_ || !addInfo_.at("sim")) return;
+
+  // fill simulated particle information
+  const auto& simParticles = iEvent.getHandle(tok_simParticle_);
+  if (simParticles.isValid())
+  {
+    for (size_t i=0; i<simParticles->size(); i++)
+    {
+      const auto& simParticle = TrackingParticleRef(simParticles, i);
+      if (simParticle->decayVertices().empty())
+        fillSimParticleInfo(simParticle);
+    }
+  }
+}
+
+
+UShort_t
+ParticleAnalyzer::fillSimParticleInfo(const TrackingParticleRef& candR, const UInt_t& candIdx, const bool& force)
+{
+  const bool hasSim = candR.isNonnull();
+  if (!force && !hasSim) return USHRT_MAX;
+
+  // fill simulated particle information
+  auto& info = particleInfo_["sim"];
+
+  const auto& cand = (hasSim ? *candR : TrackingParticle({}, {}));
+
+  // add input information
+  size_t index;
+  const bool found = info.getIndex(index, cand);
+  if (force || candIdx!=UINT_MAX)
+    info.push(index, "candIdx", candIdx, true);
+  const auto& idx = getUShort(index, "sim_idx");
+  // return if already added
+  if (found) return idx;
+
+  // basic information
+  info.add("pT", cand.pt());
+  info.add("eta", cand.eta());
+  info.add("phi", cand.phi());
+  info.add("mass", cand.mass());
+  info.add("charge", getChar(cand.charge(), "gen_charge"));
+  info.add("pdgId", cand.pdgId());
+  info.add("status", getUChar(std::abs(cand.status()), "gen_status"));
+
+  // push data
+  info.pushData(cand);
+
+  // return index
+  return idx;
+}
+
+
+void
 ParticleAnalyzer::initTree()
 {
   if (tree_) return;
@@ -1841,7 +1972,7 @@ ParticleAnalyzer::initTree()
   eventInfo_.initTree(*tree_);
 
   // add particle branches
-  for (const auto& p : std::vector<std::string>({"cand", "trk", "elec", "muon", "tau", "pho", "conv", "jet", "pf", "gen", "trig"}))
+  for (const auto& p : std::vector<std::string>({"cand", "trk", "elec", "muon", "tau", "pho", "conv", "jet", "pf", "gen", "sim", "trig"}))
   {
     if (particleInfo_.find(p)!=particleInfo_.end())
     {
@@ -1880,6 +2011,7 @@ ParticleAnalyzer::addParticleToNtuple(const size_t& i, const std::pair<int, int>
     if      (p.first=="cand") { p.second.copyData(ntupleInfo_, UInt_t(i), "cand_"+label); }
     else if (p.first=="trig") { idx = cand.get(i, "trigIdx", idx); }
     else if (p.first=="gen" ) { idx = cand.get(i, "genIdx",  idx); }
+    else if (p.first=="sim" ) { idx = cand.get(i, "simIdx",  idx); }
     else if (p.first=="trk" ) { idx = cand.get(i, "trkIdx",  idx); }
     else if (p.first=="jet"  && sid==Token::Jet       ) { idx = cand.get(i, "srcIdx",  idx); }
     else if (p.first=="elec" && sid==Token::Electron  ) { idx = cand.get(i, "srcIdx",  idx); }
@@ -1887,7 +2019,7 @@ ParticleAnalyzer::addParticleToNtuple(const size_t& i, const std::pair<int, int>
     else if (p.first=="tau"  && sid==Token::Tau       ) { idx = cand.get(i, "srcIdx",  idx); }
     else if (p.first=="pho"  && sid==Token::Photon    ) { idx = cand.get(i, "srcIdx",  idx); }
     else if (p.first=="conv" && sid==Token::Conversion) { idx = cand.get(i, "srcIdx",  idx); }
-    if (p.first=="trig" || p.first=="gen" || p.first=="trk" || idx<USHRT_MAX)
+    if (p.first=="trig" || p.first=="gen" || p.first=="sim" || p.first=="trk" || idx<USHRT_MAX)
     {
       p.second.copyData(ntupleInfo_, idx, p.first+"_"+label);
     }
@@ -1952,11 +2084,13 @@ ParticleAnalyzer::fillNTuple(const bool& fill)
 void
 ParticleAnalyzer::check()
 {
+  if (particleInfo_.find("cand")==particleInfo_.end())
+    return;
   const auto& cand_size = particleInfo_.at("cand").size();
   for (const auto& p : particleInfo_) {
     p.second.check(p.first);
     if (p.first!="cand") {
-      const std::string n = ((p.first=="gen" || p.first=="trk") ? p.first+"Idx" : "srcIdx");
+      const std::string n = ((p.first=="gen" || p.first=="sim" || p.first=="trk") ? p.first+"Idx" : "srcIdx");
       const auto& s = p.second.size();
       if (p.second.hasUIntV("candIdx"))
         for (size_t i=0; i<s; i++)
@@ -2022,7 +2156,7 @@ ParticleAnalyzer::loadConfiguration(const edm::ParameterSet& config, const edm::
   }
 
   Token sid(Token::Unknown);
-  if (!config.existsAs<std::vector<edm::ParameterSet> >("daughterInfo"))
+  if (!config.existsAs<std::vector<edm::ParameterSet> >("daughterInfo") || config.getParameter<std::vector<edm::ParameterSet> >("daughterInfo").empty())
   {
     if (config.existsAs<UInt_t>("sourceId"))
     {
@@ -2032,7 +2166,7 @@ ParticleAnalyzer::loadConfiguration(const edm::ParameterSet& config, const edm::
       getSourceId(sid, pdgId, config, config);
     }
   }
-  if (sid>=Token::ParticleFlow) {
+  if (sid>=Token::ParticleFlow && sid<=Token::Jet) {
     sourceId_.insert(sid);
   }
 
@@ -2060,6 +2194,11 @@ ParticleAnalyzer::loadConfiguration(const edm::ParameterSet& config, const edm::
   if (!addInfo_["muonL1"] && sid==Token::Muon)
   {
     addInfo_["muonL1"] = (!config.existsAs<bool>("propToMuon") || config.getParameter<bool>("propToMuon"));
+  }
+
+  if (!addInfo_["sim"] && addInfo_.at("track") && config.existsAs<edm::InputTag>("recoToSimTrackMap"))
+  {
+    addInfo_["sim"] = config.getParameter<edm::InputTag>("recoToSimTrackMap").label()!="";
   }
 
   if (config.existsAs<edm::InputTag>("source"))
@@ -2106,8 +2245,16 @@ ParticleAnalyzer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup)
       l1PrescaleTable_ = l1GtPrescalesVetoes->prescale_table_;
     }
   }
+  // extract paths
+  std::map<std::string, size_t> hltPaths, datasetPaths;
+  const auto& paths = hltPrescaleProvider_.hltConfigProvider().triggerNames();
+  for (size_t idx=0; idx<paths.size(); idx++)
+  {
+    const auto& path = paths[idx];
+    if (!triggerInfo_.empty() && path.rfind("HLT_",0)==0) { hltPaths[path] = idx; }
+    else if (dataset_!="" && path.rfind("Dataset_",0)==0) { datasetPaths[path] = idx; }
+  }
   // extract the trigger index
-  const auto& hltPaths = hltPrescaleProvider_.hltConfigProvider().triggerNames();
   for (size_t iTrg=0; iTrg<triggerInfo_.size(); iTrg++)
   {
     const auto& pSet = triggerInfo_[iTrg];
@@ -2115,12 +2262,21 @@ ParticleAnalyzer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup)
     if (pathLabel!="")
     {
       hltPathIdx_[pathLabel].clear();
-      for (size_t trgIdx=0; trgIdx<hltPaths.size(); trgIdx++)
+      const TRegexp reg(pathLabel.c_str(), pathLabel.rfind("*")!=std::string::npos);
+      for (const auto& h : hltPaths)
       {
-        const auto& hltPath = hltPaths[trgIdx];
-        const TRegexp reg(pathLabel.c_str(), pathLabel.rfind("*")!=std::string::npos);
-        if (hltPath.rfind("HLT_",0)==0 && TString(hltPath).Contains(reg)) { hltPathIdx_[pathLabel].emplace_back(trgIdx); }
+        if (TString(h.first).Contains(reg)) { hltPathIdx_[pathLabel].emplace_back(h.second); }
       }
+    }
+  }
+  // extract the dataset index
+  if (dataset_!="")
+  {
+    datasetPathIdx_.clear();
+    const TRegexp reg(dataset_.c_str(), dataset_.rfind("*")!=std::string::npos);
+    for (const auto& d : datasetPaths)
+    {
+      if (TString(d.first).Contains(reg)) { datasetPathIdx_.emplace_back(d.second); }
     }
   }
   // load configuration
