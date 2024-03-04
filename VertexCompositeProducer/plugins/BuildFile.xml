@@ -8,4 +8,5 @@
 <use name="TrackingTools/IPTools"/>
 <use name="CalibFormats/HcalObjects"/>
 <use name="MuonAnalysis/MuonAssociators"/>
+<use name="SimTracker/TrackAssociation"/>
 <flags EDM_PLUGIN="1"/>

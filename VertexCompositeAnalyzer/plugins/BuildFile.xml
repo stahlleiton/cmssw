@@ -13,6 +13,7 @@
 <use name="MagneticField/Records"/>
 <use name="CondFormats/GBRForest"/>
 <use name="SimDataFormats/GeneratorProducts"/>
+<use name="SimDataFormats/Associations"/>
 <use name="HLTrigger/HLTcore"/>
 <use name="heppdt"/>
 <flags EDM_PLUGIN="1"/>

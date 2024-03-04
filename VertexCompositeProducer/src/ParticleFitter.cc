@@ -29,6 +29,7 @@ ParticleFitter::ParticleFitter(const edm::ParameterSet& theParameters, edm::Cons
   token_photons_(iC.consumes<pat::PhotonCollection>(theParameters.getParameter<edm::InputTag>("photons"))),
   token_convPhotons_(iC.consumes<reco::ConversionCollection>(theParameters.getParameter<edm::InputTag>("conversions"))),
   token_jets_(iC.consumes<pat::JetCollection>(theParameters.getParameter<edm::InputTag>("jets"))),
+  token_met_(iC.consumes<pat::METCollection>(theParameters.getParameter<edm::InputTag>("met"))),
   preSelection_(theParameters.getParameter<std::string>("preSelection")),
   preMassSelection_(theParameters.getParameter<std::string>("preMassSelection")),
   pocaSelection_(theParameters.getParameter<std::string>("pocaSelection")),
@@ -167,9 +168,9 @@ void ParticleFitter::addParticles(ParticleDaughter& d, const edm::Event& iEvent)
   else if (sid==Token::Electron       ) { d.addParticles(iEvent, token_electrons_, vertex);   }
   else if (sid==Token::Muon           ) { d.addParticles(iEvent, token_muons_, vertex);       }
   else if (sid==Token::Tau            ) { d.addParticles(iEvent, token_taus_, vertex);        }
-  else if (sid==Token::Photon         ) { d.addParticles(iEvent, token_photons_, vertex);     }
+  else if (sid==Token::Photon         ) { d.addParticles(iEvent, token_photons_);             }
   else if (sid==Token::Conversion     ) { d.addParticles(iEvent, token_convPhotons_, vertex); }
-  else if (sid==Token::Jet            ) { d.addParticles(iEvent, token_jets_, vertex);        }
+  else if (sid==Token::MET            ) { d.addParticles(iEvent, token_met_);                 }
   else { throw std::logic_error(Form("[ERROR] Source ID %u is not valid!", sid)); }
 };
 
@@ -807,6 +808,12 @@ void ParticleDaughter::fillInfo(const edm::ParameterSet& pSet, const edm::Parame
   if (pSet.existsAs<unsigned int>("pdgId")) {
     pdgId_ = pSet.getParameter<unsigned int>("pdgId");
   }
+  else if (pSet.existsAs<int>("pdgId")) {
+    throw std::logic_error("ERROR: Duaghter pdgId should be unsigned integer (uint32)");
+  }
+  else {
+    throw std::logic_error("ERROR: Duaghter pdgId not defined!");
+  }
   if (pSet.existsAs<int>("charge")) {
     charge_ = pSet.getParameter<int>("charge");
   }
@@ -835,7 +842,7 @@ void ParticleDaughter::fillInfo(const edm::ParameterSet& pSet, const edm::Parame
   }
   else if (pSet.existsAs<unsigned int>("sourceId")) {
     const auto& sid = pSet.getParameter<unsigned int>("sourceId");
-    if (sid>Token::Jet) { throw std::logic_error(Form("[ERROR] Source ID %u is not valid!", sid)); }
+    if (sid>=Token::All) { throw std::logic_error(Form("[ERROR] Source ID %u is not valid!", sid)); }
     source_id_ = Token(sid);
   }
   if (source_id_==Token::Unknown) {
@@ -858,7 +865,14 @@ void ParticleDaughter::fillInfo(const edm::ParameterSet& pSet, const edm::Parame
     conf.addParameter("fallbackToME1", (pSet.existsAs<bool>("fallbackToME1") ? pSet.getParameter<bool>("fallbackToME1") : true)); // default: true
     conf.addParameter("useMB2InOverlap", (pSet.existsAs<bool>("useMB2InOverlap") ? pSet.getParameter<bool>("useMB2InOverlap") : true)); // default: true
     conf.addParameter("useStation2", (pSet.existsAs<bool>("useStation2") ? pSet.getParameter<bool>("useStation2") : true)); // default: true
+    conf.addParameter("cosmicPropagationHypothesis", (pSet.existsAs<bool>("cosmicPropagationHypothesis") ? pSet.getParameter<bool>("cosmicPropagationHypothesis") : false)); // default: false
+    conf.addParameter("propagatorAlong", edm::ESInputTag("", "SteppingHelixPropagatorAlong"));
+    conf.addParameter("propagatorAny", edm::ESInputTag("", "SteppingHelixPropagatorAny"));
+    conf.addParameter("propagatorOpposite", edm::ESInputTag("", "SteppingHelixPropagatorOpposite"));
     propToMuonSetup_ = new PropagateToMuonSetup(conf, iC);
+  }
+  if (config.existsAs<edm::InputTag>("recoToSimTrackMap")) {
+    token_recoToSimTrackMap_ = iC.consumes<reco::RecoToSimCollection>(config.getParameter<edm::InputTag>("recoToSimTrackMap"));
   }
 };
 
@@ -881,6 +895,7 @@ void ParticleDaughter::addParticles(const edm::Event& event, const edm::EDGetTok
     dEdxMaps.emplace(tokenMap.first, event.getHandle(tokenMap.second));
   }
   const auto& mvaColl = event.getHandle(token_mva_);
+  const auto& recoToSimTrackMap = event.getHandle(token_recoToSimTrackMap_);
   // set selections
   StringCutObjectSelector<T, true> selection(selection_);
   StringCutObjectSelector<pat::GenericParticle, true> finalSelection(finalSelection_);
@@ -911,6 +926,7 @@ void ParticleDaughter::addParticles(const edm::Event& event, const edm::EDGetTok
     cand.addUserFloat("width", width_);
     setDeDx(cand, dEdxMaps);
     setMVA(cand, i, mvaColl);
+    setSim(cand, recoToSimTrackMap);
     if (finalSelection(cand)) {
       particles.insert(cand);
     }
@@ -1046,6 +1062,7 @@ void ParticleDaughter::addData(pat::GenericParticle& c, const pat::ElectronRef& 
 {
   const auto& trkC = reco::TrackCollection({*dynamic_cast<const reco::Track*>(p->gsfTrack().get())});
   c.setTrack(reco::TrackRef(&trkC, 0), true);
+  c.addUserData<reco::TrackRef>("trackRef", p->core()->ctfTrack());
   c.addUserData<pat::Electron>("src", *p);
 };
 
@@ -1070,4 +1087,15 @@ void ParticleDaughter::setDeDx(pat::GenericParticle& c,
       c.addUserFloat("dEdx_"+dEdxMapPair.first, dEdx);
     }
   }
+};
+
+
+void ParticleDaughter::setSim(pat::GenericParticle& c, const edm::Handle<reco::RecoToSimCollection>& recToSimMap)
+{
+  if (not recToSimMap.isValid()) return;
+  const auto& track = (c.hasUserData("trackRef") ? *c.userData<reco::TrackRef>("trackRef") : c.track());
+  if (track.isNull() || track.id()!=recToSimMap->refProd().key.id()) return;
+  const auto& matchedSim = recToSimMap->find(edm::RefToBase<reco::Track>(track));
+  if (matchedSim != recToSimMap->end())
+    c.addUserData<TrackingParticleRef>("simRef", matchedSim->val.front().first);
 };

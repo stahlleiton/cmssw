@@ -35,8 +35,10 @@
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/GenericParticle.h"
 #include "DataFormats/Math/interface/angle.h"
+#include "SimDataFormats/Associations/interface/TrackAssociation.h"
 
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
@@ -108,7 +110,7 @@ struct ParticleMassComparator : ParticleComparator {
 
 
 const std::map<uint, double> MASS_ = {
-  {11, 0.000511}, {13, 0.10565837}, {15, 1.77686}, // leptons
+  {11, 0.000511}, {12, 0}, {13, 0.10565837}, {14, 0}, {15, 1.77686}, {16, 0}, // leptons
   {22, 0}, {23, 91.188}, {24, 80.38}, // bosons
   {113, 0.77526}, {211, 0.13957018}, {310, 0.497614}, {321, 0.493677}, {333, 1.019445}, // light and strange mesons
   {411, 1.86962}, {421, 1.86484}, {431, 1.96847}, {511, 5.27929}, // charmed and bottom mesons
@@ -118,7 +120,7 @@ const std::map<uint, double> MASS_ = {
 };
 const std::map<uint, float> WIDTH_ = {{211, 3.5E-7f}, {321, 1.6E-5f}, {2212, 1.6E-5f}};
 
-enum Token { Unknown = 0, GenericParticle = 1, Track = 2, ParticleFlow = 3, Electron = 4, Muon = 5, Tau = 6, Conversion = 7, Photon = 8, Jet = 9 };
+enum Token { Unknown = 0, GenericParticle = 1, Track = 2, ParticleFlow = 3, Electron = 4, Muon = 5, Tau = 6, Conversion = 7, Photon = 8, Jet = 9, MET = 10, All=11 };
 
 typedef std::set<pat::GenericParticleRef, ParticleComparator> ParticleRefSet;
 typedef std::set<pat::GenericParticle, ParticleMassComparator> ParticleMassSet;
@@ -133,6 +135,7 @@ inline void getSourceId(Token& sid, const UInt_t& pid, const edm::ParameterSet& 
   else if (pid==11) { sid = Token::Electron; }
   else if (pid==13) { sid = Token::Muon; }
   else if (pid==15) { sid = Token::Tau; }
+  else if (pid==12 || pid==14 || pid==16) { sid = Token::MET; }
   else if (pid==22) {
     const bool usePhoton = c.existsAs<edm::InputTag>("photons") && !c.getParameter<edm::InputTag>("photons").label().empty();
     sid = usePhoton ? Token::Photon : Token::Conversion;
@@ -159,7 +162,7 @@ class ParticleDaughter {
   const GenericParticleRefCollection& particlesRef() const { return particlesRef_; }
   
   template <class T>
-  void addParticles(const edm::Event& event, const edm::EDGetTokenT<std::vector<T> >& token, const reco::Vertex& vertex, const bool embedInfo=true);
+  void addParticles(const edm::Event& event, const edm::EDGetTokenT<std::vector<T> >& token, const reco::Vertex& vertex={}, const bool embedInfo=true);
   void addParticles(const edm::Event& event);
   void fillInfo(const edm::ParameterSet& pSet, const edm::ParameterSet& config, edm::ConsumesCollector& iC);
   void init(const edm::EventSetup& iSetup);
@@ -182,6 +185,7 @@ class ParticleDaughter {
   void addData(pat::GenericParticle& c, const pat::ElectronRef& p, const bool& embedInfo);
   void setMVA (pat::GenericParticle& c, const size_t& i, const edm::Handle<std::vector<float> >& m);
   void setDeDx(pat::GenericParticle& c, const std::map<std::string, edm::Handle<edm::ValueMap<reco::DeDxData> > >& m);
+  void setSim (pat::GenericParticle& c, const edm::Handle<reco::RecoToSimCollection>& m);
   void addMuonL1Info(pat::GenericParticle& c, const edm::Handle<pat::TriggerObjectStandAloneMatch>& m);
 
   unsigned int pdgId_;
@@ -198,6 +202,7 @@ class ParticleDaughter {
   edm::EDGetTokenT<pat::GenericParticleCollection> token_source_;
   edm::EDGetTokenT<std::vector<float> >            token_mva_;
   edm::EDGetTokenT<pat::TriggerObjectStandAloneMatch> token_muonL1Info_;
+  edm::EDGetTokenT<reco::RecoToSimCollection> token_recoToSimTrackMap_;
 
   std::map<std::string, edm::EDGetTokenT<edm::ValueMap<reco::DeDxData> > > tokens_dedx_;
 };
@@ -267,6 +272,7 @@ class ParticleFitter {
   const edm::EDGetTokenT<pat::PhotonCollection> token_photons_;
   const edm::EDGetTokenT<reco::ConversionCollection> token_convPhotons_;
   const edm::EDGetTokenT<pat::JetCollection> token_jets_;
+  const edm::EDGetTokenT<pat::METCollection> token_met_;
 
   const StringCutObjectSelector<pat::GenericParticle, false> preSelection_;
   const StringCutObjectSelector<pat::GenericParticle, false> preMassSelection_;

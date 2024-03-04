@@ -16,6 +16,8 @@ towersAboveThresholdTh7 = towersAboveThreshold.clone(cut = cms.string(hfCut+"ene
 towersAboveThresholdTh8 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 8.0"))
 towersAboveThresholdTh7p3 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 7.3"))
 towersAboveThresholdTh7p6 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 7.6"))
+towersAboveThresholdTh8p6 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 8.6"))
+towersAboveThresholdTh9p3 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 9.3"))
 towersAboveThresholdTh10 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 10.0"))
 towersAboveThresholdTh200 = towersAboveThreshold.clone(cut = cms.string(hfCut+"energy >= 200.0"))
 
@@ -46,6 +48,8 @@ hfPosTowersTh8 = hfPosTowers.clone(src=cms.InputTag("towersAboveThresholdTh8"))
 hfNegTowersTh8 = hfNegTowers.clone(src=cms.InputTag("towersAboveThresholdTh8"))
 hfPosTowersTh7p3 = hfPosTowers.clone(src=cms.InputTag("towersAboveThresholdTh7p3"))
 hfNegTowersTh7p6 = hfNegTowers.clone(src=cms.InputTag("towersAboveThresholdTh7p6"))
+hfPosTowersTh9p3 = hfPosTowers.clone(src=cms.InputTag("towersAboveThresholdTh9p3"))
+hfNegTowersTh8p6 = hfNegTowers.clone(src=cms.InputTag("towersAboveThresholdTh8p6"))
 hfPosTowersTh10 = hfPosTowers.clone(src=cms.InputTag("towersAboveThresholdTh10"))
 hfNegTowersTh10 = hfNegTowers.clone(src=cms.InputTag("towersAboveThresholdTh10"))
 hfPosTowersTh200 = hfPosTowers.clone(src=cms.InputTag("towersAboveThresholdTh200"))
@@ -78,6 +82,8 @@ hfPosFilterTh8 =hfPosFilter.clone(src="hfPosTowersTh8")
 hfNegFilterTh8 =hfNegFilter.clone(src="hfNegTowersTh8")
 hfPosFilterTh7p3 =hfPosFilter.clone(src="hfPosTowersTh7p3")
 hfNegFilterTh7p6 =hfNegFilter.clone(src="hfNegTowersTh7p6")
+hfPosFilterTh9p3 =hfPosFilter.clone(src="hfPosTowersTh9p3")
+hfNegFilterTh8p6 =hfNegFilter.clone(src="hfNegTowersTh8p6")
 hfPosFilterTh10 =hfPosFilter.clone(src="hfPosTowersTh10")
 hfNegFilterTh10 =hfNegFilter.clone(src="hfNegTowersTh10")
 hfPosFilterTh200 =hfPosFilter.clone(src="hfPosTowersTh200")
@@ -191,6 +197,16 @@ hfNegFilterNTh7p6_seq = cms.Sequence(
     towersAboveThresholdTh7p6 *
     hfNegTowersTh7p6 *
     ~hfNegFilterTh7p6)
+
+hfPosFilterNTh9p3_seq = cms.Sequence(
+    towersAboveThresholdTh9p3 *
+    hfPosTowersTh9p3 *
+    ~hfPosFilterTh9p3)
+
+hfNegFilterNTh8p6_seq = cms.Sequence(
+    towersAboveThresholdTh8p6 *
+    hfNegTowersTh8p6 *
+    ~hfNegFilterTh8p6)
 
 hfPosFilterNTh10_seq = cms.Sequence(
     towersAboveThresholdTh10 *

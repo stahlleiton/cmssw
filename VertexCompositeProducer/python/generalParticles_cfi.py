@@ -32,6 +32,8 @@ generalParticles = cms.EDProducer("ParticleProducer",
     pfParticles = cms.InputTag(''),
     jets = cms.InputTag(''),
     conversions = cms.InputTag(''),
+    met = cms.InputTag(''),
     mva = cms.InputTag(''),
     dEdxInputs = cms.vstring(),
+    recoToSimTrackMap = cms.InputTag(''),
 )

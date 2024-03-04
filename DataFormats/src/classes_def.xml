@@ -11,4 +11,6 @@
   <class name="pat::UserHolder<KinematicParametersError>" />
   <class name="pat::UserHolder<reco::TrackRef>" />
   <class name="pat::UserHolder<reco::Conversion>" />
+  <class name="pat::UserHolder<pat::MET>" />
+  <class name="pat::UserHolder<TrackingParticleRef>" />
 </lcgdict>
