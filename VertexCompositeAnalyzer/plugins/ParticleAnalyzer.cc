@@ -1239,7 +1239,15 @@ ParticleAnalyzer::fillTrackInfo(const pat::GenericParticle& cand, const UInt_t& 
   info.add("nChi2", track.normalizedChi2());
   info.add("pTErr", track.ptError());
   info.add("nHit", track.numberOfValidHits());
+  info.add("nHitPixel", track.hitPattern().numberOfValidPixelHits());
+  info.add("nHitPixelBarrel", track.hitPattern().numberOfValidPixelBarrelHits());
+  info.add("nHitPixelEndcap", track.hitPattern().numberOfValidPixelEndcapHits());
+  info.add("nHitStrip", track.hitPattern().numberOfValidStripHits());
   info.add("nLayer", track.hitPattern().trackerLayersWithMeasurement());
+  info.add("nLayerPixel", track.hitPattern().pixelLayersWithMeasurement());
+  info.add("nLayerPixelBarrel", track.hitPattern().pixelBarrelLayersWithMeasurement());
+  info.add("nLayerPixelEndcap", track.hitPattern().pixelEndcapLayersWithMeasurement());
+  info.add("nLayerStrip", track.hitPattern().stripLayersWithMeasurement());
   info.add("algo", getUShort(track.algo(), "algo"));
 
   // dca information
