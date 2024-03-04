@@ -125,7 +125,6 @@ event_filter = cms.untracked.vstring(
         "Flag_colEvtSel",
         "Flag_clusterCompatibilityFilter",
         "Flag_primaryVertexFilter",
-        "Flag_primaryVertexFilter2",
         "Flag_hfPosFilterNTh7",
         "Flag_hfPosFilterNTh7p3",
         "Flag_hfPosFilterNTh8",
@@ -192,8 +191,6 @@ process.schedule = cms.Schedule(
 process.Flag_colEvtSel = cms.Path(process.colEvtSel)
 process.Flag_clusterCompatibilityFilter = cms.Path(process.hiClusterCompatibility)
 process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter)
-process.primaryVertexFilter2 =  process.primaryVertexFilter.clone(src = cms.InputTag("offlinePrimaryVerticesUPCHI"))
-process.Flag_primaryVertexFilter2 = cms.Path(process.primaryVertexFilter2)
 process.Flag_hfPosFilterNTh7 = cms.Path(process.hfPosFilterNTh7_seq)
 process.Flag_hfPosFilterNTh7p3 = cms.Path(process.hfPosFilterNTh7p3_seq)
 process.Flag_hfPosFilterNTh8 = cms.Path(process.hfPosFilterNTh8_seq)
@@ -201,7 +198,7 @@ process.Flag_hfNegFilterNTh7 = cms.Path(process.hfNegFilterNTh7_seq)
 process.Flag_hfNegFilterNTh7p6 = cms.Path(process.hfNegFilterNTh7p6_seq)
 process.Flag_hfNegFilterNTh8 = cms.Path(process.hfNegFilterNTh8_seq)
 
-eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_primaryVertexFilter2 , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 ]
+eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 ]
 
 #! Adding the process schedule !!!!!!!!!!!!!!!!!!
 for P in eventFilterPaths:
