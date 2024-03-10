@@ -216,8 +216,9 @@ if addCandidateTagging:
     )
 
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
+    process.akCs4PFJetAnalyzer.useNewBtaggers = True
 
-    process.forest += process.candidateBtagging*process.updatedPatJets * process.akCs4PFJetAnalyzer
+    process.forest += process.candidateBtagging * process.updatedPatJets * process.akCs4PFJetAnalyzer
 
 
 #########################

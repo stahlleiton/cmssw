@@ -223,10 +223,8 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
         mIdx = unsubJet_n;
       }
     }
-    if(mIdx <0 ) continue;
 
-    const auto &unsubJet = (*unsubJets)[mIdx];
-    edm::RefToBase<reco::Jet> unsubJet_ref(unsubJets, mIdx);
+    const auto &unsubJet = mIdx >= 0 ? (*unsubJets)[mIdx] : reco::Jet();
 
     if (features.is_filled) {
       math::XYZVector jet_dir = jet.momentum().Unit();

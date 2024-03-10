@@ -30,4 +30,5 @@ inclusiveJetAnalyzer = cms.EDAnalyzer(
     doSubEvent = cms.untracked.bool(False),
     doLegacyBtagging = cms.untracked.bool(False),
     doCandidateBtagging = cms.untracked.bool(True),
+    useNewBtaggers = cms.untracked.bool(False),
     )

@@ -294,10 +294,8 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
         mIdx = unsubJet_n;
       }
     }
-    if(mIdx <0 ) continue;
 
-    const auto &unsubJet = (*unsubJets)[mIdx];
-    edm::RefToBase<reco::Jet> unsubJet_ref(unsubJets, mIdx);
+    const auto &unsubJet = mIdx >= 0 ? (*unsubJets)[mIdx] : reco::Jet();
 
     // create jet features
     DeepBoostedJetFeatures features;

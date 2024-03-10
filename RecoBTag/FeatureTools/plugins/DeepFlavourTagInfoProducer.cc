@@ -275,10 +275,8 @@ void DeepFlavourTagInfoProducer::produce(edm::Event& iEvent, const edm::EventSet
         mIdx = unsubJet_n;
       }
     }
-    if(mIdx <0 ) continue;
 
-    const auto &unsubJet = (*unsubJets)[mIdx];
-    edm::RefToBase<reco::Jet> unsubJet_ref(unsubJets, mIdx);
+    const auto &unsubJet = mIdx >= 0 ? (*unsubJets)[mIdx] : reco::Jet();
 
     // TagInfoCollection not in an associative container so search for matchs
     const edm::View<reco::ShallowTagInfo>& taginfos = *shallow_tag_infos;

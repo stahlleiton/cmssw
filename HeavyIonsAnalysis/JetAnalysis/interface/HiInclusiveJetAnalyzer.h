@@ -97,6 +97,7 @@ private:
   double genPtMin_;
   bool doLegacyBtagging_;
   bool doCandidateBtagging_;
+  bool useNewBtaggers_;
 
   bool doHiJetID_;
   bool doStandardJetID_;
