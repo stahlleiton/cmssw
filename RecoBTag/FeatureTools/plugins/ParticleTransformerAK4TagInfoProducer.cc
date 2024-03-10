@@ -78,6 +78,7 @@ private:
   const bool flip_;
 
   const edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
+  const edm::EDGetTokenT<edm::View<reco::Jet>> unsubJet_token_;
   const edm::EDGetTokenT<VertexCollection> vtx_token_;
   const edm::EDGetTokenT<SVCollection> sv_token_;
   edm::EDGetTokenT<edm::ValueMap<float>> puppi_value_map_token_;
@@ -102,6 +103,7 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
       min_candidate_pt_(iConfig.getParameter<double>("min_candidate_pt")),
       flip_(iConfig.getParameter<bool>("flip")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
+      unsubJet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       candidateToken_(consumes<edm::View<reco::Candidate>>(iConfig.getParameter<edm::InputTag>("candidates"))),
@@ -143,6 +145,7 @@ void ParticleTransformerAK4TagInfoProducer::fillDescriptions(edm::ConfigurationD
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak4PFJetsCHS"));
+  desc.add<edm::InputTag>("unsubJets", edm::InputTag("unsubJets"));
   desc.add<edm::InputTag>("candidates", edm::InputTag("packedPFCandidates"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   desc.add<bool>("fallback_puppi_weight", false);
@@ -157,6 +160,9 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
   auto output_tag_infos = std::make_unique<ParticleTransformerAK4TagInfoCollection>();
   edm::Handle<edm::View<reco::Jet>> jets;
   iEvent.getByToken(jet_token_, jets);
+
+  edm::Handle<edm::View<reco::Jet>> unsubJets;
+  iEvent.getByToken(unsubJet_token_, unsubJets);
 
   edm::Handle<VertexCollection> vtxs;
   iEvent.getByToken(vtx_token_, vtxs);
@@ -205,6 +211,23 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
     const auto* pat_jet = dynamic_cast<const pat::Jet*>(&jet);
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
 
+    float mDist = 999;
+    int mIdx = -1;
+    for (std::size_t unsubJet_n = 0; unsubJet_n < unsubJets->size(); unsubJet_n++) {
+      const auto &unsubJet = (*unsubJets)[unsubJet_n];
+      float mPhi = acos(cos(jet.phi()-unsubJet.phi()));
+      float mEta = jet.eta()-unsubJet.eta();
+      float mDr = mPhi*mPhi + mEta*mEta;
+      if(mDr < mDist){
+        mDist = mDr;
+        mIdx = unsubJet_n;
+      }
+    }
+    if(mIdx <0 ) continue;
+
+    const auto &unsubJet = (*unsubJets)[mIdx];
+    edm::RefToBase<reco::Jet> unsubJet_ref(unsubJets, mIdx);
+
     if (features.is_filled) {
       math::XYZVector jet_dir = jet.momentum().Unit();
       GlobalVector jet_ref_track_dir(jet.px(), jet.py(), jet.pz());
@@ -237,8 +260,8 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
       // unsorted reference to sv
       const auto& svs_unsorted = *svs;
       // fill collection, from DeepTNtuples plus some styling
-      for (unsigned int i = 0; i < jet.numberOfDaughters(); i++) {
-        auto cand = jet.daughter(i);
+      for (unsigned int i = 0; i < unsubJet.numberOfDaughters(); i++) {
+        auto cand = unsubJet.daughter(i);
         if (cand) {
           // candidates under 950MeV (configurable) are not considered
           // might change if we use also white-listing
@@ -274,9 +297,9 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
       features.n_pf_features.clear();
       features.n_pf_features.resize(n_sorted.size());
 
-      for (unsigned int i = 0; i < jet.numberOfDaughters(); i++) {
+      for (unsigned int i = 0; i < unsubJet.numberOfDaughters(); i++) {
         // get pointer and check that is correct
-        auto cand = dynamic_cast<const reco::Candidate*>(jet.daughter(i));
+        auto cand = dynamic_cast<const reco::Candidate*>(unsubJet.daughter(i));
         if (!cand)
           continue;
         // candidates under 950MeV are not considered

@@ -44,7 +44,7 @@ private:
   void produce(edm::Event &, const edm::EventSetup &) override;
   void endStream() override {}
 
-  void fillParticleFeatures(DeepBoostedJetFeatures &fts, const reco::Jet &jet);
+  void fillParticleFeatures(DeepBoostedJetFeatures &fts, const reco::Jet &unsubJet, const reco::Jet &jet);
   void fillSVFeatures(DeepBoostedJetFeatures &fts, const reco::Jet &jet);
   void fillParticleFeaturesHLT(DeepBoostedJetFeatures &fts, const reco::Jet &jet, const reco::VertexRefProd &PVRefProd);
   void fillSVFeaturesHLT(DeepBoostedJetFeatures &fts, const reco::Jet &jet);
@@ -66,6 +66,7 @@ private:
   const bool use_hlt_features_;
 
   edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
+  edm::EDGetTokenT<edm::View<reco::Jet>> unsubJet_token_;
   edm::EDGetTokenT<VertexCollection> vtx_token_;
   edm::EDGetTokenT<SVCollection> sv_token_;
   edm::EDGetTokenT<CandidateView> pfcand_token_;
@@ -189,6 +190,7 @@ DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::Paramete
       max_sip3dsig_(iConfig.getParameter<double>("sip3dSigMax")),
       use_hlt_features_(iConfig.getParameter<bool>("use_hlt_features")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
+      unsubJet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       pfcand_token_(consumes<CandidateView>(iConfig.getParameter<edm::InputTag>("pf_candidates"))),
@@ -236,6 +238,7 @@ void DeepBoostedJetTagInfoProducer::fillDescriptions(edm::ConfigurationDescripti
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("pf_candidates", edm::InputTag("particleFlow"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak8PFJetsPuppi"));
+  desc.add<edm::InputTag>("unsubJets", edm::InputTag("unsubJets"));
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   descriptions.add("pfDeepBoostedJetTagInfos", desc);
@@ -246,6 +249,7 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
   auto output_tag_infos = std::make_unique<DeepBoostedJetTagInfoCollection>();
   // Input jets
   auto jets = iEvent.getHandle(jet_token_);
+  auto unsubJets = iEvent.getHandle(unsubJet_token_);
   // Primary vertexes
   iEvent.getByToken(vtx_token_, vtxs_);
   if (vtxs_->empty()) {
@@ -278,6 +282,23 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
     const auto &jet = (*jets)[jet_n];
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
 
+    float mDist = 999;
+    int mIdx = -1;
+    for (std::size_t unsubJet_n = 0; unsubJet_n < unsubJets->size(); unsubJet_n++) {
+      const auto &unsubJet = (*unsubJets)[unsubJet_n];
+      float mPhi = acos(cos(jet.phi()-unsubJet.phi()));
+      float mEta = jet.eta()-unsubJet.eta();
+      float mDr = mPhi*mPhi + mEta*mEta;
+      if(mDr < mDist){
+        mDist = mDr;
+        mIdx = unsubJet_n;
+      }
+    }
+    if(mIdx <0 ) continue;
+
+    const auto &unsubJet = (*unsubJets)[mIdx];
+    edm::RefToBase<reco::Jet> unsubJet_ref(unsubJets, mIdx);
+
     // create jet features
     DeepBoostedJetFeatures features;
     if (not use_hlt_features_) {
@@ -301,12 +322,12 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
     bool fill_vars = true;
     if (jet.pt() < min_jet_pt_ or std::abs(jet.eta()) > max_jet_eta_)
       fill_vars = false;
-    if (jet.numberOfDaughters() == 0)
+    if (unsubJet.numberOfDaughters() == 0)
       fill_vars = false;
 
     // fill features
     if (fill_vars) {
-      fillParticleFeatures(features, jet);
+      fillParticleFeatures(features, unsubJet, jet);
       fillSVFeatures(features, jet);
       if (use_hlt_features_) {
         features.check_consistency(particle_features_hlt_);
@@ -350,7 +371,7 @@ bool DeepBoostedJetTagInfoProducer::useTrackProperties(const reco::PFCandidate *
   return track != nullptr and track->pt() > min_pt_for_track_properties_;
 };
 
-void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures &fts, const reco::Jet &jet) {
+void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures &fts, const reco::Jet &unsubJet, const reco::Jet &jet) {
   // some jet properties
   math::XYZVector jet_dir = jet.momentum().Unit();
   TVector3 jet_direction(jet.momentum().Unit().x(), jet.momentum().Unit().y(), jet.momentum().Unit().z());
@@ -363,7 +384,7 @@ void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures 
 
   // make list of pf-candidates to be considered
   std::vector<reco::CandidatePtr> daughters;
-  for (const auto &dau : jet.daughterPtrVector()) {
+  for (const auto &dau : unsubJet.daughterPtrVector()) {
     // remove particles w/ extremely low puppi weights
     // [Note] use jet daughters here to get the puppiWgt correctly
     if ((puppiWgt(dau)) < min_puppi_wgt_)
