@@ -34,7 +34,7 @@ process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/user/c/cmsdqm
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(20)
+    input = cms.untracked.int32(-1)
     )
 
 ###############################################################################
@@ -169,7 +169,7 @@ process.forest = cms.Path(
     process.hltobject +
     process.l1object +
     process.trackSequencePbPb +
-    #process.particleFlowAnalyser +
+    process.particleFlowAnalyser +
     process.ggHiNtuplizer +
     #process.zdcdigi +
     #process.QWzdcreco +
@@ -185,7 +185,7 @@ process.forest = cms.Path(
 addR3Jets = False
 addR3FlowJets = False
 addR4Jets = True
-addR4FlowJets = True
+addR4FlowJets = False
 addUnsubtractedR4Jets = True
 
 # Choose which additional information is added to jet trees
@@ -193,7 +193,7 @@ doHIJetID = True             # Fill jet ID and composition information branches
 doWTARecluster = True        # Add jet phi and eta for WTA axis
 
 # this is only for non-reclustered jets
-addCandidateTagging = False
+addCandidateTagging = True
 
 
 if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4Jets :
@@ -224,7 +224,8 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         process.akCs4PFJetAnalyzer.jetName = 'akCs0PF'
         process.akCs4PFJetAnalyzer.doHiJetID = doHIJetID
         process.akCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
-        process.forest += process.extraJetsData * process.jetsR4 * process.akCs4PFJetAnalyzer
+        process.forest += process.extraJetsData * process.jetsR4
+        process.akCs0PFpatJets.embedPFCandidates = True
 
     if addR4FlowJets :
         process.jetsR4flow = cms.Sequence()
@@ -241,10 +242,12 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupPprefJets
         process.unsubtractedJetR4 = cms.Sequence()
         setupPprefJets('ak04PF', process.unsubtractedJetR4, process, isMC = 0, radius = 0.40, JECTag = 'AK4PF')
+        process.ak04PFJets.jetPtMin = process.akCs0PFJets.jetPtMin
         process.ak04PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
         process.ak4PFJetAnalyzer.jetTag = "ak04PFpatJets"
         process.ak4PFJetAnalyzer.jetName = "ak04PF"
-        process.forest += process.unsubtractedJetR4 * process.ak4PFJetAnalyzer
+        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcherDR", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak04PFpatJets"))
+        process.forest += process.unsubtractedJetR4 * process.ak4PFJetAnalyzer * process.ak4PFMatchedForakCs0PFpatJets
 
 
 if addCandidateTagging:
@@ -253,7 +256,7 @@ if addCandidateTagging:
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     updateJetCollection(
         process,
-        jetSource = cms.InputTag('slimmedJets'),
+        jetSource = cms.InputTag('akCs0PFpatJets'),
         jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute']), 'None'),
         btagDiscriminators = ['pfCombinedSecondaryVertexV2BJetTags', 'pfDeepCSVDiscriminatorsJetTags:BvsAll', 'pfDeepCSVDiscriminatorsJetTags:CvsB', 'pfDeepCSVDiscriminatorsJetTags:CvsL'], ## to add discriminators,
         btagPrefix = 'TEST',
@@ -261,15 +264,16 @@ if addCandidateTagging:
 
     process.updatedPatJets.addJetCorrFactors = False
     process.updatedPatJets.discriminatorSources = cms.VInputTag(
-        cms.InputTag('pfDeepCSVJetTags:probb'),
-        cms.InputTag('pfDeepCSVJetTags:probc'),
-        cms.InputTag('pfDeepCSVJetTags:probudsg'),
-        cms.InputTag('pfDeepCSVJetTags:probbb'),
+        cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probb"),cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probbb"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probc"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probg"), cms.                             InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","problepb"),
+        cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probuds"),
+        cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probb"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probbb"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probc"),
+        cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probg"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","problepb"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probuds"),
     )
 
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
+    process.akCs4PFJetAnalyzer.useNewBtaggers = True
 
-    process.forest.insert(1,process.candidateBtagging*process.updatedPatJets)
+    process.forest += process.candidateBtagging * process.updatedPatJets * process.akCs4PFJetAnalyzer
 
 #########################
 # Event Selection -> add the needed filters here
