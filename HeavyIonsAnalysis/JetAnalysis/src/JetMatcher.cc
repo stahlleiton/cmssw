@@ -15,7 +15,7 @@ public:
     produces<JetMatchMap>();
   };
   ~JetMatcher() override{};
-  void produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const override;
+  void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
 
 private:
   const edm::EDGetTokenT<reco::JetView> sourceToken_;
@@ -25,7 +25,6 @@ private:
 void JetMatcher::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const {
   const auto& source = iEvent.getHandle(sourceToken_);
   const auto& matched = iEvent.getHandle(matchedToken_);
- 
   auto matching = std::make_unique<JetMatchMap>(source, matched);
   for (size_t i = 0; i < source->size(); i++) {
     std::pair<int, float> m(-1, 999.f);
