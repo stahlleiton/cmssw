@@ -28,13 +28,13 @@ void JetMatcher::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetu
  
   auto matching = std::make_unique<JetMatchMap>(source, matched);
   for (size_t i = 0; i < source->size(); i++) {
-    std::pair<float, int> m(999, -1);
+    std::pair<int, float> m(-1, 999.f);
     for (size_t j = 0; j < matched->size(); j++) {
       const auto dR = deltaR((*source)[i].p4(), (*matched)[j].p4());
-      if (dR < m.first)
-        m = {dR, j};
+      if (dR < m.second)
+        m = {j, dR};
     }
-    matching->insert(source->refAt(i), m.second>=0 ? matched->refAt(m.second) : edm::RefToBase<reco::Jet>());
+    matching->insert(source->refAt(i), m.first>=0 ? matched->refAt(m.first) : reco::JetBaseRef());
   }
   iEvent.put(std::move(matching));
 }
