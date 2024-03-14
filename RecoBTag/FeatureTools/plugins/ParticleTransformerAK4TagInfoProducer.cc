@@ -80,9 +80,9 @@ private:
   const bool flip_;
 
   const edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
-  const edm::EDGetTokenT<JetMatchMap> unsubJet_token_;
   const edm::EDGetTokenT<VertexCollection> vtx_token_;
   const edm::EDGetTokenT<SVCollection> sv_token_;
+  edm::EDGetTokenT<JetMatchMap> unsubjet_map_token_;
   edm::EDGetTokenT<edm::ValueMap<float>> puppi_value_map_token_;
   edm::EDGetTokenT<edm::ValueMap<int>> pvasq_value_map_token_;
   edm::EDGetTokenT<edm::Association<VertexCollection>> pvas_token_;
@@ -106,7 +106,6 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
       min_candidate_pt_(iConfig.getParameter<double>("min_candidate_pt")),
       flip_(iConfig.getParameter<bool>("flip")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
-      unsubJet_token_(consumes<JetMatchMap>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       candidateToken_(consumes<edm::View<reco::Candidate>>(iConfig.getParameter<edm::InputTag>("candidates"))),
@@ -114,6 +113,7 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
           esConsumes<TransientTrackBuilder, TransientTrackRecord>(edm::ESInputTag("", "TransientTrackBuilder"))),
       use_puppi_value_map_(false),
       use_pvasq_value_map_(false),
+      use_unsubjet_map_(false),
       fallback_puppi_weight_(iConfig.getParameter<bool>("fallback_puppi_weight")),
       fallback_vertex_association_(iConfig.getParameter<bool>("fallback_vertex_association")),
       is_weighted_jet_(iConfig.getParameter<bool>("is_weighted_jet")),
@@ -136,7 +136,12 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
     pvas_token_ = consumes<edm::Association<VertexCollection>>(pvas_tag);
     use_pvasq_value_map_ = true;
   }
-  use_unsubjet_map_ = !iConfig.getParameter<edm::InputTag>("unsubJets").label().empty();
+
+  const auto &unsubjet_map_tag = iConfig.getUntrackedParameter<edm::InputTag>("unsubjet_map", {});
+  if (!unsubjet_map_tag.label().empty()) {
+    unsubjet_map_token_ = consumes<JetMatchMap>(unsubjet_map_tag);
+    use_unsubjet_map_ = true;
+  }
 }
 
 void ParticleTransformerAK4TagInfoProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -149,7 +154,7 @@ void ParticleTransformerAK4TagInfoProducer::fillDescriptions(edm::ConfigurationD
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak4PFJetsCHS"));
-  desc.add<edm::InputTag>("unsubJets", edm::InputTag(""));
+  desc.addUntracked<edm::InputTag>("unsubjet_map", {});
   desc.add<edm::InputTag>("candidates", edm::InputTag("packedPFCandidates"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   desc.add<bool>("fallback_puppi_weight", false);
@@ -164,7 +169,10 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
   auto output_tag_infos = std::make_unique<ParticleTransformerAK4TagInfoCollection>();
   edm::Handle<edm::View<reco::Jet>> jets;
   iEvent.getByToken(jet_token_, jets);
-  auto unsubJets = iEvent.getHandle(unsubJet_token_);
+
+  edm::Handle<JetMatchMap> unsubjet_map;
+  if (use_unsubjet_map_)
+    iEvent.getByToken(unsubjet_map_token_, unsubjet_map);
 
   edm::Handle<VertexCollection> vtxs;
   iEvent.getByToken(vtx_token_, vtxs);
@@ -212,7 +220,7 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
     const auto* pf_jet = dynamic_cast<const reco::PFJet*>(&jet);
     const auto* pat_jet = dynamic_cast<const pat::Jet*>(&jet);
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-    const auto& unsubJet = (use_unsubjet_map_ && (*unsubJets)[jet_ref].isNonnull()) ? *(*unsubJets)[jet_ref] : jet;
+    const auto& unsubJet = (use_unsubjet_map_ && (*unsubjet_map)[jet_ref].isNonnull()) ? *(*unsubjet_map)[jet_ref] : jet;
 
     if (features.is_filled) {
       math::XYZVector jet_dir = jet.momentum().Unit();

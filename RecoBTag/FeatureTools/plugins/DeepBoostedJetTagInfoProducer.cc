@@ -68,7 +68,7 @@ private:
   const bool use_hlt_features_;
 
   edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
-  edm::EDGetTokenT<JetMatchMap> unsubJet_token_;
+  edm::EDGetTokenT<JetMatchMap> unsubjet_map_token_;
   edm::EDGetTokenT<VertexCollection> vtx_token_;
   edm::EDGetTokenT<SVCollection> sv_token_;
   edm::EDGetTokenT<CandidateView> pfcand_token_;
@@ -193,12 +193,12 @@ DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::Paramete
       max_sip3dsig_(iConfig.getParameter<double>("sip3dSigMax")),
       use_hlt_features_(iConfig.getParameter<bool>("use_hlt_features")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
-      unsubJet_token_(consumes<JetMatchMap>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       pfcand_token_(consumes<CandidateView>(iConfig.getParameter<edm::InputTag>("pf_candidates"))),
       use_puppi_value_map_(false),
       use_pvasq_value_map_(false),
+      use_unsubjet_map_(false),
       track_builder_token_(
           esConsumes<TransientTrackBuilder, TransientTrackRecord>(edm::ESInputTag("", "TransientTrackBuilder"))) {
   const auto &puppi_value_map_tag = iConfig.getParameter<edm::InputTag>("puppi_value_map");
@@ -216,7 +216,12 @@ DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::Paramete
     pvas_token_ = consumes<edm::Association<VertexCollection>>(pvas_tag);
     use_pvasq_value_map_ = true;
   }
-  use_unsubjet_map_ = !iConfig.getParameter<edm::InputTag>("unsubJets").label().empty();
+
+  const auto &unsubjet_map_tag = iConfig.getUntrackedParameter<edm::InputTag>("unsubjet_map", {});
+  if (!unsubjet_map_tag.label().empty()) {
+    unsubjet_map_token_ = consumes<JetMatchMap>(unsubjet_map_tag);
+    use_unsubjet_map_ = true;
+  }
 
   produces<DeepBoostedJetTagInfoCollection>();
 }
@@ -242,7 +247,7 @@ void DeepBoostedJetTagInfoProducer::fillDescriptions(edm::ConfigurationDescripti
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("pf_candidates", edm::InputTag("particleFlow"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak8PFJetsPuppi"));
-  desc.add<edm::InputTag>("unsubJets", edm::InputTag(""));
+  desc.addUntracked<edm::InputTag>("unsubjet_map", {});
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   descriptions.add("pfDeepBoostedJetTagInfos", desc);
@@ -253,7 +258,7 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
   auto output_tag_infos = std::make_unique<DeepBoostedJetTagInfoCollection>();
   // Input jets
   auto jets = iEvent.getHandle(jet_token_);
-  auto unsubJets = iEvent.getHandle(unsubJet_token_);
+  auto unsubjet_map = use_unsubjet_map_ ? iEvent.getHandle(unsubjet_map_token_) : edm::Handle<JetMatchMap>();
   // Primary vertexes
   iEvent.getByToken(vtx_token_, vtxs_);
   if (vtxs_->empty()) {
@@ -285,7 +290,7 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
   for (std::size_t jet_n = 0; jet_n < jets->size(); jet_n++) {
     const auto &jet = (*jets)[jet_n];
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-    const auto& unsubJet = (use_unsubjet_map_ && (*unsubJets)[jet_ref].isNonnull()) ? *(*unsubJets)[jet_ref] : jet;
+    const auto &unsubJet = (use_unsubjet_map_ && (*unsubjet_map)[jet_ref].isNonnull()) ? *(*unsubjet_map)[jet_ref] : jet;
 
     // create jet features
     DeepBoostedJetFeatures features;

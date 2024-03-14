@@ -1,3 +1,11 @@
+/* \class JetMatcherDR
+ *
+ * Producer for association map:
+ * class to match two collections of jet with one-to-one matching
+ * All elements of class "matched" are matched to each element of class "source" minimizing DeltaR
+ *
+ */
+
 #include "FWCore/Framework/interface/global/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/makeRefToBaseProdFrom.h"
@@ -6,15 +14,15 @@
 #include "DataFormats/JetReco/interface/JetCollection.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
-class JetMatcher : public edm::global::EDProducer<> {
+class JetMatcherDR : public edm::global::EDProducer<> {
 public:
   typedef edm::AssociationMap<edm::OneToOne<reco::JetView, reco::JetView> > JetMatchMap;
-  explicit JetMatcher(const edm::ParameterSet& iConfig)
+  explicit JetMatcherDR(const edm::ParameterSet& iConfig)
       : sourceToken_(consumes<reco::JetView>(iConfig.getParameter<edm::InputTag>("source"))),
         matchedToken_(consumes<reco::JetView>(iConfig.getParameter<edm::InputTag>("matched"))) {
     produces<JetMatchMap>();
   };
-  ~JetMatcher() override{};
+  ~JetMatcherDR() override{};
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
 
 private:
@@ -22,7 +30,7 @@ private:
   const edm::EDGetTokenT<reco::JetView> matchedToken_;
 };
 
-void JetMatcher::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const {
+void JetMatcherDR::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const {
   const auto& source = iEvent.getHandle(sourceToken_);
   const auto& matched = iEvent.getHandle(matchedToken_);
   auto matching = std::make_unique<JetMatchMap>(source, matched);
@@ -39,4 +47,4 @@ void JetMatcher::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetu
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(JetMatcher);
+DEFINE_FWK_MODULE(JetMatcherDR);

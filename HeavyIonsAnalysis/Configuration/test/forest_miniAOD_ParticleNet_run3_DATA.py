@@ -246,7 +246,7 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         process.ak04PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
         process.ak4PFJetAnalyzer.jetTag = "ak04PFpatJets"
         process.ak4PFJetAnalyzer.jetName = "ak04PF"
-        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcher", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak04PFpatJets"))
+        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcherDR", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak04PFpatJets"))
         process.forest += process.unsubtractedJetR4 * process.ak4PFJetAnalyzer * process.ak4PFMatchedForakCs0PFpatJets
 
 

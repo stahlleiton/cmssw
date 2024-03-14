@@ -179,7 +179,7 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets :
         process.akCs4PFJetAnalyzer.matchTag = 'ak4PFMatchingFor' + jetName + 'patJets'
         process.akCs4PFJetAnalyzer.doHiJetID = doHIJetID
         process.akCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
-        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcher", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak4PFMatchingForakCs0PFpatJets"))
+        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcherDR", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak4PFMatchingForakCs0PFpatJets"))
         process.forest += process.extraJetsMC * process.jetsR4 * process.ak4PFMatchedForakCs0PFpatJets
         process.akCs0PFpatJets.embedPFCandidates = True
 
