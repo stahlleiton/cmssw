@@ -56,6 +56,7 @@ class HistogramProbabilityEstimator;
 #include "FWCore/Framework/interface/EventSetupRecord.h"
 #include "FWCore/Framework/interface/EventSetupRecordImplementation.h"
 #include "FWCore/Framework/interface/EventSetupRecordKey.h"
+#include "DataFormats/Common/interface/AssociationMap.h"
 
 class ParticleTransformerAK4TagInfoProducer : public edm::stream::EDProducer<> {
 public:
@@ -68,6 +69,7 @@ private:
   typedef std::vector<reco::ParticleTransformerAK4TagInfo> ParticleTransformerAK4TagInfoCollection;
   typedef reco::VertexCompositePtrCandidateCollection SVCollection;
   typedef reco::VertexCollection VertexCollection;
+  typedef edm::AssociationMap<edm::OneToOne<reco::JetView, reco::JetView>> JetMatchMap;
 
   void beginStream(edm::StreamID) override {}
   void produce(edm::Event&, const edm::EventSetup&) override;
@@ -78,7 +80,7 @@ private:
   const bool flip_;
 
   const edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
-  const edm::EDGetTokenT<edm::View<reco::Jet>> unsubJet_token_;
+  const edm::EDGetTokenT<JetMatchMap> unsubJet_token_;
   const edm::EDGetTokenT<VertexCollection> vtx_token_;
   const edm::EDGetTokenT<SVCollection> sv_token_;
   edm::EDGetTokenT<edm::ValueMap<float>> puppi_value_map_token_;
@@ -88,6 +90,7 @@ private:
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> track_builder_token_;
   bool use_puppi_value_map_;
   bool use_pvasq_value_map_;
+  bool use_unsubjet_map_;
 
   const bool fallback_puppi_weight_;
   const bool fallback_vertex_association_;
@@ -103,7 +106,7 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
       min_candidate_pt_(iConfig.getParameter<double>("min_candidate_pt")),
       flip_(iConfig.getParameter<bool>("flip")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
-      unsubJet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
+      unsubJet_token_(consumes<JetMatchMap>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       candidateToken_(consumes<edm::View<reco::Candidate>>(iConfig.getParameter<edm::InputTag>("candidates"))),
@@ -133,6 +136,7 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
     pvas_token_ = consumes<edm::Association<VertexCollection>>(pvas_tag);
     use_pvasq_value_map_ = true;
   }
+  use_unsubjet_map_ = !iConfig.getParameter<edm::InputTag>("unsubJets").label().empty();
 }
 
 void ParticleTransformerAK4TagInfoProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -145,7 +149,7 @@ void ParticleTransformerAK4TagInfoProducer::fillDescriptions(edm::ConfigurationD
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak4PFJetsCHS"));
-  desc.add<edm::InputTag>("unsubJets", edm::InputTag("unsubJets"));
+  desc.add<edm::InputTag>("unsubJets", edm::InputTag(""));
   desc.add<edm::InputTag>("candidates", edm::InputTag("packedPFCandidates"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   desc.add<bool>("fallback_puppi_weight", false);
@@ -160,9 +164,7 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
   auto output_tag_infos = std::make_unique<ParticleTransformerAK4TagInfoCollection>();
   edm::Handle<edm::View<reco::Jet>> jets;
   iEvent.getByToken(jet_token_, jets);
-
-  edm::Handle<edm::View<reco::Jet>> unsubJets;
-  iEvent.getByToken(unsubJet_token_, unsubJets);
+  auto unsubJets = iEvent.getHandle(unsubJet_token_);
 
   edm::Handle<VertexCollection> vtxs;
   iEvent.getByToken(vtx_token_, vtxs);
@@ -210,21 +212,7 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
     const auto* pf_jet = dynamic_cast<const reco::PFJet*>(&jet);
     const auto* pat_jet = dynamic_cast<const pat::Jet*>(&jet);
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-
-    float mDist = 999;
-    int mIdx = -1;
-    for (std::size_t unsubJet_n = 0; unsubJet_n < unsubJets->size(); unsubJet_n++) {
-      const auto &unsubJet = (*unsubJets)[unsubJet_n];
-      float mPhi = acos(cos(jet.phi()-unsubJet.phi()));
-      float mEta = jet.eta()-unsubJet.eta();
-      float mDr = mPhi*mPhi + mEta*mEta;
-      if(mDr < mDist){
-        mDist = mDr;
-        mIdx = unsubJet_n;
-      }
-    }
-
-    const auto &unsubJet = mIdx >= 0 ? (*unsubJets)[mIdx] : reco::Jet();
+    const auto& unsubJet = (use_unsubjet_map_ && (*unsubJets)[jet_ref].isNonnull()) ? *(*unsubJets)[jet_ref] : jet;
 
     if (features.is_filled) {
       math::XYZVector jet_dir = jet.momentum().Unit();

@@ -24,6 +24,7 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 
 #include "DataFormats/BTauReco/interface/DeepBoostedJetTagInfo.h"
+#include "DataFormats/Common/interface/AssociationMap.h"
 
 using namespace btagbtvdeep;
 
@@ -39,6 +40,7 @@ private:
   typedef reco::VertexCompositePtrCandidateCollection SVCollection;
   typedef reco::VertexCollection VertexCollection;
   typedef edm::View<reco::Candidate> CandidateView;
+  typedef edm::AssociationMap<edm::OneToOne<reco::JetView, reco::JetView>> JetMatchMap;
 
   void beginStream(edm::StreamID) override {}
   void produce(edm::Event &, const edm::EventSetup &) override;
@@ -66,7 +68,7 @@ private:
   const bool use_hlt_features_;
 
   edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
-  edm::EDGetTokenT<edm::View<reco::Jet>> unsubJet_token_;
+  edm::EDGetTokenT<JetMatchMap> unsubJet_token_;
   edm::EDGetTokenT<VertexCollection> vtx_token_;
   edm::EDGetTokenT<SVCollection> sv_token_;
   edm::EDGetTokenT<CandidateView> pfcand_token_;
@@ -74,6 +76,7 @@ private:
   bool use_puppi_value_map_;
   bool use_pvasq_value_map_;
   bool is_packed_pf_candidate_collection_;
+  bool use_unsubjet_map_;
 
   edm::EDGetTokenT<edm::ValueMap<float>> puppi_value_map_token_;
   edm::EDGetTokenT<edm::ValueMap<int>> pvasq_value_map_token_;
@@ -190,7 +193,7 @@ DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::Paramete
       max_sip3dsig_(iConfig.getParameter<double>("sip3dSigMax")),
       use_hlt_features_(iConfig.getParameter<bool>("use_hlt_features")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
-      unsubJet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
+      unsubJet_token_(consumes<JetMatchMap>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       pfcand_token_(consumes<CandidateView>(iConfig.getParameter<edm::InputTag>("pf_candidates"))),
@@ -213,6 +216,7 @@ DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::Paramete
     pvas_token_ = consumes<edm::Association<VertexCollection>>(pvas_tag);
     use_pvasq_value_map_ = true;
   }
+  use_unsubjet_map_ = !iConfig.getParameter<edm::InputTag>("unsubJets").label().empty();
 
   produces<DeepBoostedJetTagInfoCollection>();
 }
@@ -238,7 +242,7 @@ void DeepBoostedJetTagInfoProducer::fillDescriptions(edm::ConfigurationDescripti
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("pf_candidates", edm::InputTag("particleFlow"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak8PFJetsPuppi"));
-  desc.add<edm::InputTag>("unsubJets", edm::InputTag("unsubJets"));
+  desc.add<edm::InputTag>("unsubJets", edm::InputTag(""));
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   descriptions.add("pfDeepBoostedJetTagInfos", desc);
@@ -281,21 +285,7 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
   for (std::size_t jet_n = 0; jet_n < jets->size(); jet_n++) {
     const auto &jet = (*jets)[jet_n];
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-
-    float mDist = 999;
-    int mIdx = -1;
-    for (std::size_t unsubJet_n = 0; unsubJet_n < unsubJets->size(); unsubJet_n++) {
-      const auto &unsubJet = (*unsubJets)[unsubJet_n];
-      float mPhi = acos(cos(jet.phi()-unsubJet.phi()));
-      float mEta = jet.eta()-unsubJet.eta();
-      float mDr = mPhi*mPhi + mEta*mEta;
-      if(mDr < mDist){
-        mDist = mDr;
-        mIdx = unsubJet_n;
-      }
-    }
-
-    const auto &unsubJet = mIdx >= 0 ? (*unsubJets)[mIdx] : reco::Jet();
+    const auto& unsubJet = (use_unsubjet_map_ && (*unsubJets)[jet_ref].isNonnull()) ? *(*unsubJets)[jet_ref] : jet;
 
     // create jet features
     DeepBoostedJetFeatures features;

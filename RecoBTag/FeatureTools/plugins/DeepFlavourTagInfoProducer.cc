@@ -57,6 +57,7 @@ class HistogramProbabilityEstimator;
 #include "FWCore/Framework/interface/EventSetupRecord.h"
 #include "FWCore/Framework/interface/EventSetupRecordImplementation.h"
 #include "FWCore/Framework/interface/EventSetupRecordKey.h"
+#include "DataFormats/Common/interface/AssociationMap.h"
 
 class DeepFlavourTagInfoProducer : public edm::stream::EDProducer<> {
 public:
@@ -70,6 +71,7 @@ private:
   typedef reco::VertexCompositePtrCandidateCollection SVCollection;
   typedef reco::VertexCollection VertexCollection;
   typedef edm::View<reco::ShallowTagInfo> ShallowTagInfoCollection;
+  typedef edm::AssociationMap<edm::OneToOne<reco::JetView, reco::JetView>> JetMatchMap;
 
   void beginStream(edm::StreamID) override {}
   void produce(edm::Event&, const edm::EventSetup&) override;
@@ -80,7 +82,7 @@ private:
   const bool flip_;
 
   edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
-  edm::EDGetTokenT<edm::View<reco::Jet>> unsubJet_token_;
+  edm::EDGetTokenT<JetMatchMap> unsubJet_token_;
   edm::EDGetTokenT<VertexCollection> vtx_token_;
   edm::EDGetTokenT<SVCollection> sv_token_;
   edm::EDGetTokenT<ShallowTagInfoCollection> shallow_tag_info_token_;
@@ -94,6 +96,7 @@ private:
 
   bool use_puppi_value_map_;
   bool use_pvasq_value_map_;
+  bool use_unsubjet_map_;
 
   bool fallback_puppi_weight_;
   bool fallback_vertex_association_;
@@ -118,7 +121,7 @@ DeepFlavourTagInfoProducer::DeepFlavourTagInfoProducer(const edm::ParameterSet& 
       min_candidate_pt_(iConfig.getParameter<double>("min_candidate_pt")),
       flip_(iConfig.getParameter<bool>("flip")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
-      unsubJet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
+      unsubJet_token_(consumes<JetMatchMap>(iConfig.getParameter<edm::InputTag>("unsubJets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
       shallow_tag_info_token_(
@@ -156,6 +159,7 @@ DeepFlavourTagInfoProducer::DeepFlavourTagInfoProducer(const edm::ParameterSet& 
     calib2d_token_ = esConsumes<TrackProbabilityCalibration, BTagTrackProbability2DRcd>();
     calib3d_token_ = esConsumes<TrackProbabilityCalibration, BTagTrackProbability3DRcd>();
   }
+  use_unsubjet_map_ = !iConfig.getParameter<edm::InputTag>("unsubJets").label().empty();
 }
 
 DeepFlavourTagInfoProducer::~DeepFlavourTagInfoProducer() {}
@@ -171,7 +175,7 @@ void DeepFlavourTagInfoProducer::fillDescriptions(edm::ConfigurationDescriptions
   desc.add<edm::InputTag>("puppi_value_map", edm::InputTag("puppi"));
   desc.add<edm::InputTag>("secondary_vertices", edm::InputTag("inclusiveCandidateSecondaryVertices"));
   desc.add<edm::InputTag>("jets", edm::InputTag("ak4PFJetsCHS"));
-  desc.add<edm::InputTag>("unsubJets", edm::InputTag("unsubPatJets"));
+  desc.add<edm::InputTag>("unsubJets", edm::InputTag(""));
   desc.add<edm::InputTag>("candidates", edm::InputTag("packedPFCandidates"));
   desc.add<edm::InputTag>("vertex_associator", edm::InputTag("primaryVertexAssociation", "original"));
   desc.add<bool>("fallback_puppi_weight", false);
@@ -191,9 +195,7 @@ void DeepFlavourTagInfoProducer::produce(edm::Event& iEvent, const edm::EventSet
 
   edm::Handle<edm::View<reco::Jet>> jets;
   iEvent.getByToken(jet_token_, jets);
-
-  edm::Handle<edm::View<reco::Jet>> unsubJets;
-  iEvent.getByToken(unsubJet_token_, unsubJets);
+  auto unsubJets = iEvent.getHandle(unsubJet_token_);
 
   edm::Handle<VertexCollection> vtxs;
   iEvent.getByToken(vtx_token_, vtxs);
@@ -262,22 +264,7 @@ void DeepFlavourTagInfoProducer::produce(edm::Event& iEvent, const edm::EventSet
     const auto* pf_jet = dynamic_cast<const reco::PFJet*>(&jet);
     const auto* pat_jet = dynamic_cast<const pat::Jet*>(&jet);
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-
-    float mDist = 999;
-    int mIdx = -1;
-    for (std::size_t unsubJet_n = 0; unsubJet_n < unsubJets->size(); unsubJet_n++) {
-      const auto &unsubJet = (*unsubJets)[unsubJet_n];
-      float mPhi = acos(cos(jet.phi()-unsubJet.phi()));
-      float mEta = jet.eta()-unsubJet.eta();
-      float mDr = mPhi*mPhi + mEta*mEta;
-      if(mDr < mDist){
-        mDist = mDr;
-        mIdx = unsubJet_n;
-      }
-    }
-
-    const auto &unsubJet = mIdx >= 0 ? (*unsubJets)[mIdx] : reco::Jet();
-
+    const auto& unsubJet = (use_unsubjet_map_ && (*unsubJets)[jet_ref].isNonnull()) ? *(*unsubJets)[jet_ref] : jet;
     // TagInfoCollection not in an associative container so search for matchs
     const edm::View<reco::ShallowTagInfo>& taginfos = *shallow_tag_infos;
     edm::Ptr<reco::ShallowTagInfo> match;

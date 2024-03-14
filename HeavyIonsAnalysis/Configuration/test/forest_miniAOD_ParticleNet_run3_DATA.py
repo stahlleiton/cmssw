@@ -216,10 +216,6 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         process.forest += process.extraFlowJetsData * process.jetsR3flow * process.akFlowPuCs3PFJetAnalyzer
 
     if addR4Jets :
-        # Derive unsubstracted jets for b-taggers 
-        process.unsubJetsR4 = cms.Sequence()
-        from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupPprefJets
-        setupPprefJets('ak4PFMatchingForakCs0PF', process.unsubJetsR4, process, isMC = 0, radius = 0.40, JECTag = 'AK4PF')
         # Recluster using an alias "0" in order not to get mixed up with the default AK4 collections
         process.jetsR4 = cms.Sequence()
         setupHeavyIonJets('akCs0PF', process.jetsR4, process, isMC = 0, radius = 0.40, JECTag = 'AK4PF', doFlow = False)
@@ -228,7 +224,7 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         process.akCs4PFJetAnalyzer.jetName = 'akCs0PF'
         process.akCs4PFJetAnalyzer.doHiJetID = doHIJetID
         process.akCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
-        process.forest += process.extraJetsData * process.jetsR4 * process.unsubJetsR4
+        process.forest += process.extraJetsData * process.jetsR4
         process.akCs0PFpatJets.embedPFCandidates = True
 
     if addR4FlowJets :
@@ -246,10 +242,12 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupPprefJets
         process.unsubtractedJetR4 = cms.Sequence()
         setupPprefJets('ak04PF', process.unsubtractedJetR4, process, isMC = 0, radius = 0.40, JECTag = 'AK4PF')
+        process.ak04PFJets.jetPtMin = process.akCs0PFJets.jetPtMin
         process.ak04PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
         process.ak4PFJetAnalyzer.jetTag = "ak04PFpatJets"
         process.ak4PFJetAnalyzer.jetName = "ak04PF"
-        process.forest += process.unsubtractedJetR4 * process.ak4PFJetAnalyzer
+        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcher", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak04PFpatJets"))
+        process.forest += process.unsubtractedJetR4 * process.ak4PFJetAnalyzer * process.ak4PFMatchedForakCs0PFpatJets
 
 
 if addCandidateTagging:

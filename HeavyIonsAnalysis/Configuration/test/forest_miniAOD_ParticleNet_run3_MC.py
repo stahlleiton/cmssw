@@ -24,7 +24,7 @@ process.source = cms.Source("PoolSource",
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(20)
+    input = cms.untracked.int32(-1)
     )
 
 ###############################################################################
@@ -171,6 +171,7 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets :
         process.jetsR4 = cms.Sequence()
         jetName = 'akCs0PF'
         setupHeavyIonJets(jetName, process.jetsR4, process, isMC = 1, radius = 0.40, JECTag = 'AK4PF', doFlow = False, matchJets = matchJets)
+        process.ak4PFMatchingForakCs0PFJets.jetPtMin = process.akCs0PFJets.jetPtMin
         process.akCs0PFpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
         process.akCs4PFJetAnalyzer.jetTag = jetName + 'patJets'
         process.akCs4PFJetAnalyzer.jetName = jetName
@@ -178,7 +179,8 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets :
         process.akCs4PFJetAnalyzer.matchTag = 'ak4PFMatchingFor' + jetName + 'patJets'
         process.akCs4PFJetAnalyzer.doHiJetID = doHIJetID
         process.akCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
-        process.forest += process.extraJetsMC * process.jetsR4
+        process.ak4PFMatchedForakCs0PFpatJets = cms.EDProducer("JetMatcher", source = cms.InputTag("akCs0PFpatJets"), matched = cms.InputTag("ak4PFMatchingForakCs0PFpatJets"))
+        process.forest += process.extraJetsMC * process.jetsR4 * process.ak4PFMatchedForakCs0PFpatJets
         process.akCs0PFpatJets.embedPFCandidates = True
 
     if addR4FlowJets :
