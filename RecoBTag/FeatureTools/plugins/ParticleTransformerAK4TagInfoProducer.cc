@@ -137,7 +137,7 @@ ParticleTransformerAK4TagInfoProducer::ParticleTransformerAK4TagInfoProducer(con
     use_pvasq_value_map_ = true;
   }
 
-  const auto &unsubjet_map_tag = iConfig.getUntrackedParameter<edm::InputTag>("unsubjet_map", {});
+  const auto& unsubjet_map_tag = iConfig.getUntrackedParameter<edm::InputTag>("unsubjet_map", {});
   if (!unsubjet_map_tag.label().empty()) {
     unsubjet_map_token_ = consumes<JetMatchMap>(unsubjet_map_tag);
     use_unsubjet_map_ = true;
@@ -220,7 +220,8 @@ void ParticleTransformerAK4TagInfoProducer::produce(edm::Event& iEvent, const ed
     const auto* pf_jet = dynamic_cast<const reco::PFJet*>(&jet);
     const auto* pat_jet = dynamic_cast<const pat::Jet*>(&jet);
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-    const auto& unsubJet = (use_unsubjet_map_ && (*unsubjet_map)[jet_ref].isNonnull()) ? *(*unsubjet_map)[jet_ref] : jet;
+    const auto& unsubJet =
+        (use_unsubjet_map_ && (*unsubjet_map)[jet_ref].isNonnull()) ? *(*unsubjet_map)[jet_ref] : jet;
 
     if (features.is_filled) {
       math::XYZVector jet_dir = jet.momentum().Unit();

@@ -102,14 +102,14 @@ HiInclusiveJetAnalyzer::HiInclusiveJetAnalyzer(const edm::ParameterSet& iConfig)
     pfJPJetTags_ = jetName_ + "pfJetProbabilityBJetTags";
   }
   if (doCandidateBtagging_ && useNewBtaggers_) {
-    deepCSVJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepCSVJetTags",("pfDeepCSVJetTags:probb")));
-    deepCSVJetTagsBBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepCSVJetTags",("pfDeepCSVJetTags:probbb")));
-    deepFlavourJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepFlavourJetTagsSlimmedDeepFlavour",("pfDeepFlavourJetTagsSlimmedDeepFlavour:probb")));
-    deepFlavourJetTagsBBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepFlavourJetTagsSlimmedDeepFlavour",("pfDeepFlavourJetTagsSlimmedDeepFlavour:probbb")));
-    deepFlavourJetTagsLepBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepFlavourJetTagsSlimmedDeepFlavour",("pfDeepFlavourJetTagsSlimmedDeepFlavour:problepb")));
-    particleTransformerJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour",("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour:probb")));
-    particleTransformerJetTagsBBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour",("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour:probbb")));
-    particleTransformerJetTagsLepBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour",("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour:problepb")));
+    deepCSVJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepCSVJetTags",("pfDeepCSVJetTags"))+std::string(":probb"));
+    deepCSVJetTagsBBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepCSVJetTags",("pfDeepCSVJetTags"))+std::string(":probbb"));
+    deepFlavourJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepFlavourJetTagsSlimmedDeepFlavour",("pfDeepFlavourJetTagsSlimmedDeepFlavour"))+std::string(":probb"));
+    deepFlavourJetTagsBBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepFlavourJetTagsSlimmedDeepFlavour",("pfDeepFlavourJetTagsSlimmedDeepFlavour"))+std::string(":probbb"));
+    deepFlavourJetTagsLepBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfDeepFlavourJetTagsSlimmedDeepFlavour",("pfDeepFlavourJetTagsSlimmedDeepFlavour"))+std::string(":problepb"));
+    particleTransformerJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour",("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour"))+std::string(":probb"));
+    particleTransformerJetTagsBBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour",("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour"))+std::string(":probbb"));
+    particleTransformerJetTagsLepBTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour",("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour"))+std::string(":problepb"));
     pfJPJetTagsTkn_ = consumes<JetTagCollection> (iConfig.getUntrackedParameter<string>("pfJetProbabilityBJetTag",("pfJetProbabilityBJetTags")));
   }
   doSubEvent_ = false;
