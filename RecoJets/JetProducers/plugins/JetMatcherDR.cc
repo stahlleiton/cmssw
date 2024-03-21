@@ -41,7 +41,7 @@ void JetMatcherDR::produce(edm::StreamID, edm::Event& iEvent, const edm::EventSe
       if (dR < m.second)
         m = {j, dR};
     }
-    matching->insert(source->refAt(i), m.first>=0 ? matched->refAt(m.first) : reco::JetBaseRef());
+    matching->insert(source->refAt(i), m.first >= 0 ? matched->refAt(m.first) : reco::JetBaseRef());
   }
   iEvent.put(std::move(matching));
 }

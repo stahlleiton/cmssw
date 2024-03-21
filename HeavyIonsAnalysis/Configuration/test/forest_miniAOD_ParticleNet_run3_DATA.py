@@ -4,20 +4,13 @@
 
 import FWCore.ParameterSet.Config as cms
 from Configuration.Eras.Era_Run3_pp_on_PbPb_2023_cff import Run3_pp_on_PbPb_2023
-process = cms.Process('HiForest',Run3_pp_on_PbPb_2023)
+process = cms.Process('HiForest', Run3_pp_on_PbPb_2023)
 
 ###############################################################################
 
 # HiForest info
 process.load("HeavyIonsAnalysis.EventAnalysis.HiForestInfo_cfi")
 process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, data")
-
-# import subprocess, os
-# version = subprocess.check_output(
-#     ['git', '-C', os.path.expandvars('$CMSSW_BASE/src'), 'describe', '--tags'])
-# if version == '':
-#     version = 'no git info'
-# process.HiForestInfo.HiForestVersion = cms.string(version)
 
 ###############################################################################
 
@@ -89,7 +82,6 @@ process.TFileService = cms.Service("TFileService",
 # event analysis
 process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi')
-process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
@@ -104,17 +96,15 @@ process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 ################################
 # electrons, photons, muons
 process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
-process.ggHiNtuplizer.doMuons = cms.bool(False)
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
 # jet reco sequence
 process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_data_cff')
-process.load('HeavyIonsAnalysis.JetAnalysis.akPu4CaloJetSequence_pponPbPb_data_cff')
-process.akPu4CaloJetAnalyzer.doHiJetID = True
+process.load('HeavyIonsAnalysis.JetAnalysis.hiFJRhoAnalyzer_cff')
 ################################
 # tracks
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
-# muons (FTW)
+# muons
 process.load("HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi")
 process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
 ###############################################################################
@@ -170,13 +160,13 @@ process.forest = cms.Path(
     process.l1object +
     process.trackSequencePbPb +
     process.particleFlowAnalyser +
+    process.unpackedMuons +
     process.ggHiNtuplizer +
+    process.rhoSequence +
     #process.zdcdigi +
     #process.QWzdcreco +
     process.zdcanalyzer +
-    process.unpackedMuons +
-    process.muonAnalyzer +
-    process.akPu4CaloJetAnalyzer
+    process.muonAnalyzer
     )
 
 #customisation
@@ -264,7 +254,7 @@ if addCandidateTagging:
 
     process.updatedPatJets.addJetCorrFactors = False
     process.updatedPatJets.discriminatorSources = cms.VInputTag(
-        cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probb"),cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probbb"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probc"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probg"), cms.                             InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","problepb"),
+        cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probb"),cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probbb"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probc"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probg"), cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","problepb"),
         cms.InputTag("pfDeepFlavourJetTagsSlimmedDeepFlavour","probuds"),
         cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probb"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probbb"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probc"),
         cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probg"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","problepb"), cms.InputTag("pfParticleTransformerAK4JetTagsSlimmedDeepFlavour","probuds"),

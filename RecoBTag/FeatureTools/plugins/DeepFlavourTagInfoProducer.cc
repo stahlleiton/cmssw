@@ -160,7 +160,7 @@ DeepFlavourTagInfoProducer::DeepFlavourTagInfoProducer(const edm::ParameterSet& 
     calib3d_token_ = esConsumes<TrackProbabilityCalibration, BTagTrackProbability3DRcd>();
   }
 
-  const auto &unsubjet_map_tag = iConfig.getUntrackedParameter<edm::InputTag>("unsubjet_map", {});
+  const auto& unsubjet_map_tag = iConfig.getUntrackedParameter<edm::InputTag>("unsubjet_map", {});
   if (!unsubjet_map_tag.label().empty()) {
     unsubjet_map_token_ = consumes<JetMatchMap>(unsubjet_map_tag);
     use_unsubjet_map_ = true;
@@ -272,7 +272,8 @@ void DeepFlavourTagInfoProducer::produce(edm::Event& iEvent, const edm::EventSet
     const auto* pf_jet = dynamic_cast<const reco::PFJet*>(&jet);
     const auto* pat_jet = dynamic_cast<const pat::Jet*>(&jet);
     edm::RefToBase<reco::Jet> jet_ref(jets, jet_n);
-    const auto& unsubJet = (use_unsubjet_map_ && (*unsubjet_map)[jet_ref].isNonnull()) ? *(*unsubjet_map)[jet_ref] : jet;
+    const auto& unsubJet =
+        (use_unsubjet_map_ && (*unsubjet_map)[jet_ref].isNonnull()) ? *(*unsubjet_map)[jet_ref] : jet;
     // TagInfoCollection not in an associative container so search for matchs
     const edm::View<reco::ShallowTagInfo>& taginfos = *shallow_tag_infos;
     edm::Ptr<reco::ShallowTagInfo> match;
