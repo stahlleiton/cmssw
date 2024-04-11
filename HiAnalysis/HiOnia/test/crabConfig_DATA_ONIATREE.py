@@ -16,7 +16,7 @@ config.JobType.numCores = 4
 config.JobType.allowUndistributedCMSSW = True #Problems with slc7
 #config.JobType.maxJobRuntimeMin = 1000 #2750    # request longer runtime, ~48 hours.
 
-config.JobType.inputFiles = ["CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db"]
+config.JobType.inputFiles = ["CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374810db"]
 
 config.section_("Data")
 config.Data.inputDataset = '/HIPhysicsRawPrime0/HIRun2023A-PromptReco-v2/MINIAOD'
@@ -28,7 +28,7 @@ config.Data.allowNonValidInputDataset = True
 
 config.Data.outLFNDirBase = '/store/user/fdamas/%s' % (config.General.requestName)
 config.Data.publication = False
-config.Data.runRange = '374345-374828'
+config.Data.runRange = '374345-375828'
 config.Data.lumiMask = 'https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions23HI/Cert_Collisions2023HI_374288_375823_Muon.json'
 
 config.section_("Site")
