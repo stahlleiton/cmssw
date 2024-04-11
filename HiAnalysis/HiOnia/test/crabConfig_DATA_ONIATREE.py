@@ -16,7 +16,7 @@ config.JobType.numCores = 4
 config.JobType.allowUndistributedCMSSW = True #Problems with slc7
 #config.JobType.maxJobRuntimeMin = 1000 #2750    # request longer runtime, ~48 hours.
 
-config.JobType.inputFiles = ["CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374810db"]
+config.JobType.inputFiles = ["CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374810.db"]
 
 config.section_("Data")
 config.Data.inputDataset = '/HIPhysicsRawPrime0/HIRun2023A-PromptReco-v2/MINIAOD'
