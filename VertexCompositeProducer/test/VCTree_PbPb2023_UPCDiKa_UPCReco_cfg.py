@@ -63,7 +63,7 @@ from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import
 kaonSelection = cms.string("")#(pt > 0.0 && abs(eta) < 3.0) && quality(\"highPurity\")")
 kaonFinalSelection = cms.string("")#abs(userFloat(\"dzSig\"))<3.0 && abs(userFloat(\"dxySig\"))<3.0")
 diKaSelection = cms.string("charge==0")
-process.diKa_OldPV = generalParticles.clone(
+process.diKaOldPV = generalParticles.clone(
     pdgId = cms.uint32(333),
     preSelection = diKaSelection,
     # daughter information
@@ -74,7 +74,7 @@ process.diKa_OldPV = generalParticles.clone(
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
     # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits')
 )
-process.diKa = process.diKa_OldPV.clone(primaryVertices = "primaryVertexRecoveryForUPC")
+process.diKa = process.diKaOldPV.clone(primaryVertices = "primaryVertexRecoveryForUPC")
 process.oneDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diKa"), minNumber = cms.uint32(1))
 
 # Add diKa event selection
@@ -135,7 +135,7 @@ process.eventFilter_HM = cms.Sequence(
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 # Define the analysis steps
-process.diKa_rereco_step = cms.Path(process.eventFilter_HM * process.diKa * process.oneDiKa * process.cent_seq)
+process.diKa_rereco_step = cms.Path(process.eventFilter_HM * process.diKaOldPV * process.diKa * process.oneDiKa * process.cent_seq)
 
 ## Adding the VertexComposite tree ################################################################################################
 
