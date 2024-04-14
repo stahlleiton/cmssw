@@ -131,7 +131,7 @@ process.eventFilter_HM = cms.Sequence(
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 # Define the analysis steps
-process.diKa_rereco_step = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh10_seq * process.hfNegFilterNTh10_seq * process.diKaOldPV * process.diKa * process.oneDiKa * process.cent_seq)
+process.diKa_rereco_step = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh8_seq * process.hfNegFilterNTh8_seq * process.diKaOldPV * process.diKa * process.oneDiKa * process.cent_seq)
 
 ## Adding the VertexComposite tree ################################################################################################
 
