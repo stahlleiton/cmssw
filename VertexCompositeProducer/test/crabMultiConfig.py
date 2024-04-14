@@ -24,7 +24,7 @@ config.JobType.psetName = pset_name
 config.JobType.scriptExe = 'submitScript.sh'
 config.JobType.inputFiles = ['emap_2023_newZDC_v3.txt', 'CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db']
 config.JobType.maxMemoryMB = 2500
-config.JobType.maxJobRuntimeMin = 720
+# config.JobType.maxJobRuntimeMin = 720
 
 ## Data #####################################################################################
 config.section_('Data')
