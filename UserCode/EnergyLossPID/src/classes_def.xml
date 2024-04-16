@@ -1,0 +1,7 @@
+<lcgdict>
+   <class name="TBunchCrossing" />
+   <class name="TPixelHit" />
+   <class name="TStripHit" />
+   <class name="TTrack" />
+   <class name="TVertex" />
+</lcgdict>

@@ -1,0 +1,12 @@
+<use name="DataFormats/CTPPSReco"/>
+<use name="DataFormats/CTPPSDetId"/>
+<use name="UserCode/EnergyLossPID"/>
+<use name="RecoVertex/KalmanVertexFit"/>
+<use name="RecoVertex/TrimmedVertexFit"/>
+<use name="RecoVertex/AdaptiveVertexFit"/>
+<use name="DataFormats/TrackerRecHit2D"/>
+<use name="DataFormats/VertexReco"/>
+<use name="RecoVertex/PrimaryVertexProducer"/>
+<library file="*.cc" name="UserCodeEnergyLossPIDPlugins">
+ <flags EDM_PLUGIN="1"/>
+</library>

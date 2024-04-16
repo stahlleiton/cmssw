@@ -1,0 +1,12 @@
+<use name="TrackingTools/PatternTools"/>
+<use name="Geometry/TrackerGeometryBuilder"/>
+<use name="Geometry/CaloGeometry"/>
+<use name="RecoTracker/PixelLowPtUtilities"/>
+<use name="CalibTracker/SiPixelESProducers"/>
+<use name="clhep"/>
+<use name="boost"/>
+<use name="rootrflx"/>
+<use name="root"/>
+<export>
+  <lib name="1"/>
+</export>
