@@ -7,7 +7,10 @@
 <use name="Geometry/TrackerGeometryBuilder"/>
 <use name="CondFormats/PhysicsToolsObjects"/>
 <use name="CondFormats/DataRecord"/>
+<use name="CondFormats/SiStripObjects"/>
 <use name="TrackingTools/TrajectoryState"/>
+<use name="CalibTracker/SiPixelESProducers"/>
+<use name="RecoTracker/PixelLowPtUtilities"/>
 <use name="rootcore"/>
 <use name="root"/>
 <use name="clhep"/>

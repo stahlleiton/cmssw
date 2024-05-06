@@ -61,4 +61,6 @@ class SiStripApvSimulationParametersRcd
 /*Records for upgrade */
 class Phase2TrackerCablingRcd : public edm::eventsetup::EventSetupRecordImplementation<Phase2TrackerCablingRcd> {};
 
+class DeDxCalibrationRcd : public edm::eventsetup::EventSetupRecordImplementation<DeDxCalibrationRcd> {};
+
 #endif

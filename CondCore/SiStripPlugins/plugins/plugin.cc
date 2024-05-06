@@ -78,3 +78,6 @@ namespace {
   };
 }  // namespace
 REGISTER_PLUGIN_INIT(Phase2TrackerCablingRcd, Phase2TrackerCabling, initializeCabling);
+
+#include "CondFormats/SiStripObjects/interface/DeDxCalibration.h"
+REGISTER_PLUGIN(DeDxCalibrationRcd, DeDxCalibration);

@@ -17,6 +17,9 @@ dedxHitInfo = cms.EDProducer("DeDxHitInfoProducer",
     calibrationPath    = cms.string("file:Gains.root"),
     shapeTest          = cms.bool(True),
 
+    clusterShapeCache  = cms.InputTag(""),
+    useCompatibleClusters = cms.bool(False),
+
     lowPtTracksPrescalePass = cms.uint32(100),   # prescale factor for low pt tracks above the dEdx cut
     lowPtTracksPrescaleFail = cms.uint32(2000), # prescale factor for low pt tracks below the dEdx cut
     lowPtTracksEstimatorParameters = cms.PSet( # generalized truncated average

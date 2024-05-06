@@ -403,6 +403,7 @@
        <version ClassVersion="12" checksum="3747851168"/>       
       </class>
       <class name="reco::DeDxHitCollection" />
+      <class name="std::vector<reco::DeDxHitCollection>" />
 
   <!-- <class pattern="edm::AssociationVector<*>">
     <field name="transientVector_" transient="true"/>
@@ -422,6 +423,7 @@
   <class name="edm::AssociationVector<edm::RefProd<std::vector<reco::Track> >,std::vector<std::vector<reco::DeDxHit> >,edm::Ref<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> >,unsigned int,edm::helper::AssociationIdenticalKeyReference>" >
     <field name="transientVector_" transient="true"/>
   </class>
+  <class name="std::pair<edm::Ref<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> >,std::vector<reco::DeDxHit> >" />
      <!--   <class name="reco::DeDxDataCollection"/> -->
      <class name="reco::DeDxData" ClassVersion="10">
       <version ClassVersion="10" checksum="204721063"/>

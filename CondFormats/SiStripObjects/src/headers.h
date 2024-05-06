@@ -16,3 +16,4 @@
 #include "CondFormats/SiStripObjects/interface/SiStripApvSimulationParameters.h"
 #include "CondFormats/SiStripObjects/interface/Phase2TrackerModule.h"
 #include "CondFormats/SiStripObjects/interface/Phase2TrackerCabling.h"
+#include "CondFormats/SiStripObjects/interface/DeDxCalibration.h"
