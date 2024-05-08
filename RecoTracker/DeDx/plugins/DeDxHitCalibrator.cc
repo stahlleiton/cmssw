@@ -2,6 +2,7 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 
 #include "DataFormats/TrackReco/interface/Track.h"
@@ -27,9 +28,10 @@ public:
 
   explicit DeDxHitCalibrator(const edm::ParameterSet&);
   ~DeDxHitCalibrator() override{};
+  static void fillDescriptions(edm::ConfigurationDescriptions&);
 
 private:
-  void beginRun(edm::Run const& run, const edm::EventSetup& iSetup) override;
+  void beginRun(edm::Run const&, const edm::EventSetup&) override;
   void produce(edm::Event&, const edm::EventSetup&) override;
 
   int getDetId(const uint32_t&, const float&);
@@ -67,6 +69,14 @@ DeDxHitCalibrator::DeDxHitCalibrator(const edm::ParameterSet& iConfig)
   produces<reco::TrackDeDxHitsCollection>("StripHits");
 }
 
+void DeDxHitCalibrator::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.add<bool>("applyGain", true);
+  desc.add<edm::InputTag>("trackProducer", edm::InputTag("generalTracks"));
+  desc.add<edm::InputTag>("dedxHitInfo", edm::InputTag("dedxHitInfo"));
+  descriptions.add("dedxHitCalibrator", desc);
+}
+
 void DeDxHitCalibrator::beginRun(edm::Run const&, const edm::EventSetup& iSetup) {
   dedxCalib_ = iSetup.getHandle(dedxCalibToken_);
   tkGeom_ = iSetup.getHandle(tkGeomToken_);
@@ -101,11 +111,15 @@ void DeDxHitCalibrator::processHitInfo(const reco::DeDxHitInfo& info,
                                        reco::DeDxHitCollection& pixelHits,
                                        reco::DeDxHitCollection& stripHits) {
   for (size_t i = 0; i < info.size(); i++) {
-    const DetId& detId = info.detId(i);
+    // Require hits to be complete and compatible
+    const auto& type = info.type(i);
+    if (!(type & (1 << reco::DeDxHitInfo::Complete)) || !(type & (1 << reco::DeDxHitInfo::Compatible)))
+      continue;
 
     // Effective path length
     const auto& pl = info.pathlength(i);
     const auto pathLength = pl * (1. + 0.07 * std::log(pl / 450e-4));
+    const DetId& detId = info.detId(i);
 
     // Strip
     if (const auto& stripCluster = info.stripCluster(i)) {

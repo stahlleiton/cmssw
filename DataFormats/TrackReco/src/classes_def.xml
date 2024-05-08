@@ -492,8 +492,9 @@
     <class name="edm::Association<std::vector<reco::TrackExtra>>"/>
     <class name="edm::Wrapper<edm::Association<std::vector<reco::TrackExtra>>>"/>
 
-   <class name="reco::DeDxHitInfo::DeDxHitInfoContainer" ClassVersion="2">
+   <class name="reco::DeDxHitInfo::DeDxHitInfoContainer" ClassVersion="3">
     <version ClassVersion="2" checksum="3964047764"/>
+    <version ClassVersion="3" checksum="4148946944"/>
    </class>
    <class name="reco::DeDxHitInfo::DeDxHitInfoContainerCollection"/>
 

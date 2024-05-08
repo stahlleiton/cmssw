@@ -75,7 +75,6 @@ private:
   const std::string calibrationPath_;
   const bool useCalibration_;
   const bool doShapeTest_;
-  const bool useCompCluster_;
 
   const unsigned int lowPtTracksPrescalePass_, lowPtTracksPrescaleFail_;
   GenericTruncatedAverageDeDxEstimator lowPtTracksEstimator_;
@@ -115,7 +114,6 @@ DeDxHitInfoProducer::DeDxHitInfoProducer(const edm::ParameterSet& iConfig)
       calibrationPath_(iConfig.getParameter<string>("calibrationPath")),
       useCalibration_(iConfig.getParameter<bool>("useCalibration")),
       doShapeTest_(iConfig.getParameter<bool>("shapeTest")),
-      useCompCluster_(iConfig.getParameter<bool>("useCompatibleClusters")),
       lowPtTracksPrescalePass_(iConfig.getParameter<uint32_t>("lowPtTracksPrescalePass")),
       lowPtTracksPrescaleFail_(iConfig.getParameter<uint32_t>("lowPtTracksPrescaleFail")),
       lowPtTracksEstimator_(iConfig.getParameter<edm::ParameterSet>("lowPtTracksEstimatorParameters")),
@@ -150,10 +148,8 @@ void DeDxHitInfoProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(tracksToken_, trackCollectionHandle);
   const TrackCollection& trackCollection(*trackCollectionHandle.product());
 
-  if (useCompCluster_) {
-    clShape_ = iSetup.getHandle(clShapeToken_);
-    pixShapeCache_ = iEvent.getHandle(pixShapeCacheToken_);
-  }
+  clShape_ = iSetup.getHandle(clShapeToken_);
+  pixShapeCache_ = iEvent.getHandle(pixShapeCacheToken_);
 
   // creates the output collection
   auto resultdedxHitColl = std::make_unique<reco::DeDxHitInfoCollection>();
@@ -254,13 +250,16 @@ void DeDxHitInfoProducer::processRec(reco::DeDxHitInfo& hitDeDxInfo,
                                      const LocalPoint& lpos,
                                      const LocalVector& ldir,
                                      const float& cos) {
-  if (useCompCluster_) {
-    int meas;
-    float pred;
-    if (!clShape_->getSizes(recHit, {}, ldir, meas, pred) || !clShape_->isCompatible(recHit, ldir) ||
-        meas > int(std::abs(pred)) + 4)
-      return;
-  }
+  uint8_t type(0);
+  int meas;
+  float pred;
+  const auto& usable = clShape_->getSizes(recHit, {}, ldir, meas, pred);
+  if (usable && meas <= int(std::abs(pred)) + 4)
+    type |= (1 << reco::DeDxHitInfo::Complete);
+  if (clShape_->isCompatible(recHit, ldir))
+    type |= (1 << reco::DeDxHitInfo::Compatible);
+  if (usable)
+    type |= (1 << reco::DeDxHitInfo::Calibration);
 
   int NSaturating(0);
   const auto& detId = recHit.geographicalId();
@@ -269,7 +268,7 @@ void DeDxHitInfoProducer::processRec(reco::DeDxHitInfo& hitDeDxInfo,
     detUnit = tkGeom_->idToDet(detId);
   const auto pathLen = detUnit->surface().bounds().thickness() / cos;
   float chargeAbs = deDxTools::getCharge(&(recHit.stripCluster()), NSaturating, *detUnit, calibGains_, offsetDU_);
-  hitDeDxInfo.addHit(chargeAbs, pathLen, detId, lpos, recHit.stripCluster());
+  hitDeDxInfo.addHit(chargeAbs, pathLen, detId, lpos, type, recHit.stripCluster());
 }
 
 void DeDxHitInfoProducer::processHit(const TrackingRecHit* recHit,
@@ -298,17 +297,21 @@ void DeDxHitInfoProducer::processHit(const TrackingRecHit* recHit,
   if (clus.isPixel()) {
     if (!usePixel_)
       return;
-    if (useCompCluster_) {
-      const auto& pixelDet = *dynamic_cast<const PixelGeomDetUnit*>(detUnit);
-      const auto& pixelRecHit = *dynamic_cast<const SiPixelRecHit*>(recHit);
-      ClusterData data;
-      ClusterShape().determineShape(pixelDet, clus.pixelCluster(), data);
-      if (!data.isComplete || !clShape_->isCompatible(pixelRecHit, trackDirection, *pixShapeCache_))
-        return;
-    }
+
+    uint8_t type(0);
+    const auto& pixelDet = *dynamic_cast<const PixelGeomDetUnit*>(detUnit);
+    const auto& pixelRecHit = *dynamic_cast<const SiPixelRecHit*>(recHit);
+    ClusterData data;
+    ClusterShape().determineShape(pixelDet, clus.pixelCluster(), data);
+    if (data.isComplete)
+      type |= (1 << reco::DeDxHitInfo::Complete);
+    if (clShape_->isCompatible(pixelRecHit, trackDirection, *pixShapeCache_))
+      type |= (1 << reco::DeDxHitInfo::Compatible);
+    if (data.isComplete && data.isStraight && data.hasBigPixelsOnlyInside)
+      type |= (1 << reco::DeDxHitInfo::Calibration);
 
     float chargeAbs = clus.pixelCluster().charge();
-    hitDeDxInfo.addHit(chargeAbs, pathLen, thit.geographicalId(), hitLocalPos, clus.pixelCluster());
+    hitDeDxInfo.addHit(chargeAbs, pathLen, thit.geographicalId(), hitLocalPos, type, clus.pixelCluster());
   } else if (clus.isStrip() && !thit.isMatched()) {
     if (!useStrip_)
       return;

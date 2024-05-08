@@ -1,12 +1,12 @@
-#ifndef _FerencDeDxEstimator_h_
-#define _FerencDeDxEstimator_h_
+#ifndef _LikelihoodFitDeDxEstimator_h_
+#define _LikelihoodFitDeDxEstimator_h_
 
 #include "RecoTracker/DeDx/interface/BaseDeDxEstimator.h"
 #include "DataFormats/TrackReco/interface/DeDxHit.h"
 
-class FerencDeDxEstimator : public BaseDeDxEstimator {
+class LikelihoodFitDeDxEstimator : public BaseDeDxEstimator {
 public:
-  FerencDeDxEstimator(const edm::ParameterSet& iConfig) {};
+  LikelihoodFitDeDxEstimator(const edm::ParameterSet& iConfig){};
 
   std::pair<float, float> dedx(const reco::DeDxHitCollection& Hits) override {
     if (Hits.empty())
@@ -36,9 +36,9 @@ private:
 };
 
 /*****************************************************************************/
-inline void FerencDeDxEstimator::calculate_wrt_epsilon(const reco::DeDxHit& h,
-                                                       const double& epsilon,
-                                                       std::vector<double>& value) {
+inline void LikelihoodFitDeDxEstimator::calculate_wrt_epsilon(const reco::DeDxHit& h,
+                                                              const double& epsilon,
+                                                              std::vector<double>& value) {
   const auto& ls = h.pathLength();
   const auto& sn = h.momentum();   // energy sigma
   const auto y = h.charge() * ls;  // = g * y
@@ -83,17 +83,17 @@ inline void FerencDeDxEstimator::calculate_wrt_epsilon(const reco::DeDxHit& h,
 }
 
 /*****************************************************************************/
-inline void FerencDeDxEstimator::functionEpsilon(const reco::DeDxHitCollection& Hits,
-                                                 const double& epsilon,
-                                                 std::vector<double>& val) {
+inline void LikelihoodFitDeDxEstimator::functionEpsilon(const reco::DeDxHitCollection& Hits,
+                                                        const double& epsilon,
+                                                        std::vector<double>& val) {
   std::fill(val.begin(), val.end(), 0.);
   for (const auto& h : Hits)
     calculate_wrt_epsilon(h, epsilon, val);
 }
 
 /*****************************************************************************/
-inline double FerencDeDxEstimator::minimizeAllSaturated(const reco::DeDxHitCollection& Hits,
-                                                        std::array<double, 2>& value) {
+inline double LikelihoodFitDeDxEstimator::minimizeAllSaturated(const reco::DeDxHitCollection& Hits,
+                                                               std::array<double, 2>& value) {
   int nStep(0);
   double par(3.0);  // input MeV/cm
 
@@ -112,8 +112,8 @@ inline double FerencDeDxEstimator::minimizeAllSaturated(const reco::DeDxHitColle
 }
 
 /*****************************************************************************/
-inline double FerencDeDxEstimator::newtonMethodEpsilon(const reco::DeDxHitCollection& Hits,
-                                                       std::array<double, 2>& value) {
+inline double LikelihoodFitDeDxEstimator::newtonMethodEpsilon(const reco::DeDxHitCollection& Hits,
+                                                              std::array<double, 2>& value) {
   int nStep(0);
   double par(3.0);  // input MeV/cm
   double dpar(0);
@@ -139,7 +139,7 @@ inline double FerencDeDxEstimator::newtonMethodEpsilon(const reco::DeDxHitCollec
 }
 
 /*****************************************************************************/
-inline double FerencDeDxEstimator::estimate(const reco::DeDxHitCollection& Hits, std::array<double, 2>& value) {
+inline double LikelihoodFitDeDxEstimator::estimate(const reco::DeDxHitCollection& Hits, std::array<double, 2>& value) {
   // use newton method if at least one hit is not saturated
   for (const auto& h : Hits)
     if (h.rawDetId() == 0)

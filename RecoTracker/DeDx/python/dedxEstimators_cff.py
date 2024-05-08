@@ -16,9 +16,7 @@ dedxHitInfo = cms.EDProducer("DeDxHitInfoProducer",
     useCalibration     = cms.bool(False),
     calibrationPath    = cms.string("file:Gains.root"),
     shapeTest          = cms.bool(True),
-
-    clusterShapeCache  = cms.InputTag(""),
-    useCompatibleClusters = cms.bool(False),
+    clusterShapeCache  = cms.InputTag("siPixelClusterShapeCache"),
 
     lowPtTracksPrescalePass = cms.uint32(100),   # prescale factor for low pt tracks above the dEdx cut
     lowPtTracksPrescaleFail = cms.uint32(2000), # prescale factor for low pt tracks below the dEdx cut
@@ -90,3 +88,20 @@ run3_common.toModify(dedxHitInfo,
     lowPtTracksEstimatorParameters = dict(fraction = 0., exponent = -2.0,truncate = False),
     usePixelForPrescales = False
 )
+
+# dEdx for Run-3 UPC
+from Configuration.Eras.Modifier_run3_upc_cff import run3_upc
+run3_upc.toModify(dedxHitInfo, minTrackPt = 0)
+
+from RecoTracker.DeDx.dedxHitCalibrator_cfi import dedxHitCalibrator
+
+dedxAllLikelihood = dedxPixelAndStripHarmonic2T085.clone(
+    estimator = 'likelihoodFit',
+    UseDeDxHits = True,
+    pixelDeDxHits = 'dedxHitCalibrator:PixelHits',
+    stripDeDxHits = 'dedxHitCalibrator:StripHits'
+)
+dedxPixelLikelihood = dedxAllLikelihood.clone(UseStrip = False, UsePixel = True)
+dedxStripLikelihood = dedxAllLikelihood.clone(UseStrip = True,  UsePixel = False)
+
+run3_upc.toReplaceWith(doAlldEdXEstimatorsTask, cms.Task(doAlldEdXEstimatorsTask.copy(), dedxHitCalibrator, dedxStripLikelihood, dedxPixelLikelihood, dedxAllLikelihood))

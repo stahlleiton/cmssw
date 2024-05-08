@@ -65,8 +65,8 @@ DeDxEstimatorProducer::DeDxEstimatorProducer(const edm::ParameterSet& iConfig)
     m_estimator = std::make_unique<GenericTruncatedAverageDeDxEstimator>(iConfig);
   else if (estimatorName == "unbinnedFit")
     m_estimator = std::make_unique<UnbinnedFitDeDxEstimator>(iConfig);
-  else if (estimatorName == "ferenc")
-    m_estimator = std::make_unique<FerencDeDxEstimator>(iConfig);
+  else if (estimatorName == "likelihoodFit")
+    m_estimator = std::make_unique<LikelihoodFitDeDxEstimator>(iConfig);
   else if (estimatorName == "productDiscrim")
     m_estimator = std::make_unique<ProductDeDxDiscriminator>(iConfig, cCollector);
   else if (estimatorName == "btagDiscrim")
