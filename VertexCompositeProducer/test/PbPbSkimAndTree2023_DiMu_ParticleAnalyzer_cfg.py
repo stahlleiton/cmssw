@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process('ANASKIM', eras.Run3_2023)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -14,15 +14,18 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/SKIM/SKIM_AOD_HIForward0_HIRun2023A_20231009/HIForward0/SKIM_AOD_HIForward0_HIRun2023A_20231009/231009_081732/0000/reco_RAW2DIGI_L1Reco_RECO_89.root"),
+    fileNames = cms.untracked.vstring("root://cms-xrd-global.cern.ch//store/hidata/HIRun2023A/HIForward0/AOD/PromptReco-v2/000/375/202/00000/76e6c739-a417-4ea2-8176-6b2fbec3c7c8.root"),
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = cms.string('132X_dataRun3_Prompt_v4')
+process.GlobalTag.globaltag = cms.string('132X_dataRun3_Prompt_v7')
 
 # Set ZDC information
+process.load('VertexCompositeAnalysis.VertexCompositeProducer.QWZDC2018Producer_cfi')
+process.load('VertexCompositeAnalysis.VertexCompositeProducer.QWZDC2018RecHit_cfi')
+process.zdcdigi.SOI = cms.untracked.int32(2)
 process.es_pool = cms.ESSource("PoolDBESSource",
     timetype = cms.string('runnumber'),
     toGet = cms.VPSet(cms.PSet(record = cms.string("HcalElectronicsMapRcd"), tag = cms.string("HcalElectronicsMap_2021_v2.0_data"))),
@@ -31,21 +34,8 @@ process.es_pool = cms.ESSource("PoolDBESSource",
 )
 process.es_prefer = cms.ESPrefer('HcalTextCalibrations', 'es_ascii')
 process.es_ascii = cms.ESSource('HcalTextCalibrations',
-    input = cms.VPSet(cms.PSet(object = cms.string('ElectronicsMap'), file = cms.FileInPath("emap_2023_newZDC_v3.txt")))
+    input = cms.VPSet(cms.PSet(object = cms.string('ElectronicsMap'), file = cms.FileInPath("VertexCompositeAnalysis/VertexCompositeProducer/data/emap_2023_newZDC_v3.txt")))
 )
-
-# Add PbPb centrality
-process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
-process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
-process.GlobalTag.toGet.extend([
-    cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289"),
-        connect = cms.string("sqlite_file:CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db"),
-        label = cms.untracked.string("HFtowers")
-        )
-    ]
-)
-process.cent_seq = cms.Sequence(process.centralityBin)
 
 # Add the Particle producer
 from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import generalParticles
@@ -56,13 +46,14 @@ muonSelection = cms.string("(pt > 0.0 && abs(eta) < 2.5) && "+SoftIdReco)
 diMuSelection = cms.string("charge==0")
 hpMuSelection = cms.string("innerTrack.isNonnull && innerTrack.quality(\"highPurity\")")
 process.diMu = generalParticles.clone(
-    pdgId = cms.int32(443),
+    pdgId = cms.uint32(443),
     preSelection = diMuSelection,
     # daughter information
     daughterInfo = cms.VPSet([
-        cms.PSet(pdgId = cms.int32(13), charge = cms.int32(+1), selection = muonSelection),
-        cms.PSet(pdgId = cms.int32(13), charge = cms.int32(-1), selection = muonSelection),
+        cms.PSet(pdgId = cms.uint32(13), charge = cms.int32(+1), selection = muonSelection),
+        cms.PSet(pdgId = cms.uint32(13), charge = cms.int32(-1), selection = muonSelection),
     ]),
+    muons = cms.InputTag('patMuons')
 )
 process.oneDiMu = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diMu"), minNumber = cms.uint32(1))
 
@@ -133,7 +124,7 @@ process.eventFilter_HM = cms.Sequence(
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 # Define the analysis steps
-process.diMu_rereco_step = cms.Path(process.eventFilter_HM * process.mergedMuons * process.patMuonSequence *  process.diMu * process.oneDiMu * process.cent_seq)
+process.diMu_rereco_step = cms.Path(process.eventFilter_HM * process.mergedMuons * process.patMuonSequence *  process.diMu * process.oneDiMu)
 
 # Add the VertexComposite tree
 from VertexCompositeAnalysis.VertexCompositeAnalyzer.particle_tree_cff import particleAna
