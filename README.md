@@ -2,9 +2,9 @@
 
 Example of setting up and running gamma+gamma to dimuon tree
 
-cmsrel CMSSW_13_2_6_patch2
+cmsrel CMSSW_13_2_11
 
-cd CMSSW_13_2_6_patch2/src
+cd CMSSW_13_2_11/src
 
 cmsenv
 

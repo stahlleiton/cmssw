@@ -1082,9 +1082,10 @@ void ParticleDaughter::setDeDx(pat::GenericParticle& c,
   if (track.isNull()) return;
   for (const auto& dEdxMapPair : dEdxMaps) {
     const auto& dEdxMap = dEdxMapPair.second;
-    if (dEdxMap.isValid() && dEdxMap->contains(track.id())) {
-      const auto& dEdx = (*dEdxMap)[track].dEdx();
-      c.addUserFloat("dEdx_"+dEdxMapPair.first, dEdx);
+    if (dEdxMap->contains(track.id()) || track.key() < dEdxMap->size()) {
+      const auto& par = dEdxMap->contains(track.id()) ? (*dEdxMap)[track] : dEdxMap->get(track.key());
+      c.addUserFloat("dEdx_"+dEdxMapPair.first, par.dEdx());
+      c.addUserFloat("dEdxErr_"+dEdxMapPair.first, par.dEdxError());
     }
   }
 };

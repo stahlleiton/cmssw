@@ -656,6 +656,10 @@ ParticleAnalyzer::fillEventInfo(const edm::Event& iEvent)
   eventInfo_.add("bestvtxX", vertex_.x());
   eventInfo_.add("bestvtxY", vertex_.y());
   eventInfo_.add("bestvtxZ", vertex_.z());
+  eventInfo_.add("vtxXerr", vertex_.xError());
+  eventInfo_.add("vtxYerr", vertex_.yError());
+  eventInfo_.add("vtxZerr", vertex_.zError());
+  eventInfo_.add("isValid", bool(vertex_.isValid() && !vertex_.isFake()));
 
   // fill event selection information
   const auto& filterResults = iEvent.getHandle(tok_filterResults_);
@@ -1260,6 +1264,9 @@ ParticleAnalyzer::fillTrackInfo(const pat::GenericParticle& cand, const UInt_t& 
       std::string dedxName = "dEdx_" + input;
       std::replace(dedxName.begin(), dedxName.end(), ':', '_');
       info.add(dedxName, getFloat(cand, "dEdx_"+input));
+      std::string dedxErrName = "dEdxErr_" + input;
+      std::replace(dedxErrName.begin(), dedxErrName.end(), ':', '_');
+      info.add(dedxErrName, getFloat(cand, "dEdxErr_"+input));
     }
   }
 

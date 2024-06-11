@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process('ANASKIM', eras.Run3_2023)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -14,25 +14,26 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/STARLIGHT/2023_10_23/STARLIGHT_5p36TeV_2023Run3/QED_muon_STARLIGHT_5p36TeV_2023Run3_pp_RECO_AOD_2023_10_23/231022_214310/0000/STARLIGHT_QED_muon_RECO_1.root"),
+    fileNames = cms.untracked.vstring("root://xrootd-cms.infn.it//store/user/anstahll/CERN/PbPb2023/MC/2024_04_18/STARLIGHT/STARLIGHT_5p36TeV_2023Run3/coh_jpsi_dimu_STARLIGHT_5p36TeV_2023Run3_UPCRECO_2024_04_18/240421_024544/0000/STARLIGHT_coh_jpsi_dimu_RECO_971.root"),
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v5')
+process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v10')
 
 # Add the Particle producer
 from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import generalParticles
 
 # DiMu selection
 process.diMu = generalParticles.clone(
-    pdgId = cms.int32(443),
+    pdgId = cms.uint32(443),
     # daughter information
     daughterInfo = cms.VPSet([
-        cms.PSet(pdgId = cms.int32(13), charge = cms.int32(+1)),
-        cms.PSet(pdgId = cms.int32(13), charge = cms.int32(-1)),
+        cms.PSet(pdgId = cms.uint32(13), charge = cms.int32(+1)),
+        cms.PSet(pdgId = cms.uint32(13), charge = cms.int32(-1)),
     ]),
+    muons = cms.InputTag('patMuons')
 )
 
 # Add muons
@@ -112,9 +113,30 @@ process.schedule = cms.Schedule(
 
 # Add the event selection filters
 process.Flag_colEvtSel = cms.Path(process.colEvtSel)
+process.Flag_hfCoincFilter2Th4 = cms.Path(process.hfCoincFilter2Th4)
 process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter)
+process.Flag_hfPosFilterNTh3 = cms.Path(process.hfPosFilterNTh3_seq)
+process.Flag_hfPosFilterNTh4 = cms.Path(process.hfPosFilterNTh4_seq)
+process.Flag_hfPosFilterNTh5 = cms.Path(process.hfPosFilterNTh5_seq)
+process.Flag_hfPosFilterNTh6 = cms.Path(process.hfPosFilterNTh6_seq)
+process.Flag_hfPosFilterNTh7 = cms.Path(process.hfPosFilterNTh7_seq)
+process.Flag_hfPosFilterTh8 = cms.Path(process.hfPosFilterTh8_seq)
+process.Flag_hfPosFilterNTh8 = cms.Path(process.hfPosFilterNTh8_seq)
+process.Flag_hfPosFilterNTh7p3 = cms.Path(process.hfPosFilterNTh7p3_seq)
+process.Flag_hfPosFilterNTh200 = cms.Path(process.hfPosFilterNTh200_seq)
+process.Flag_hfNegFilterNTh3 = cms.Path(process.hfNegFilterNTh3_seq)
+process.Flag_hfNegFilterNTh4 = cms.Path(process.hfNegFilterNTh4_seq)
+process.Flag_hfNegFilterNTh5 = cms.Path(process.hfNegFilterNTh5_seq)
+process.Flag_hfNegFilterNTh6 = cms.Path(process.hfNegFilterNTh6_seq)
+process.Flag_hfNegFilterNTh7 = cms.Path(process.hfNegFilterNTh7_seq)
+process.Flag_hfNegFilterTh8 = cms.Path(process.hfNegFilterTh8_seq)
+process.Flag_hfNegFilterNTh8 = cms.Path(process.hfNegFilterNTh8_seq)
+process.Flag_hfNegFilterNTh7p6 = cms.Path(process.hfNegFilterNTh7p6_seq)
+process.Flag_hfNegFilterNTh200 = cms.Path(process.hfNegFilterNTh200_seq)
 
-eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_primaryVertexFilter ]
+eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_hfCoincFilter2Th4 , process.Flag_primaryVertexFilter, process.Flag_hfPosFilterNTh3, process.Flag_hfNegFilterNTh3,process.Flag_hfPosFilterNTh4,
+                     process.Flag_hfNegFilterNTh4, process.Flag_hfPosFilterNTh5, process.Flag_hfNegFilterNTh5, process.Flag_hfPosFilterNTh6, process.Flag_hfNegFilterNTh6, process.Flag_hfPosFilterNTh7, process.Flag_hfNegFilterNTh7,
+                     process.Flag_hfPosFilterTh8, process.Flag_hfPosFilterNTh8, process.Flag_hfNegFilterTh8, process.Flag_hfNegFilterNTh8, process.Flag_hfPosFilterNTh7p3, process.Flag_hfNegFilterNTh7p6 ]
 
 for P in eventFilterPaths:
     process.schedule.insert(0, P)
