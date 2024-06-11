@@ -59,8 +59,9 @@ from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import
 kaonSelection = cms.string("")#(pt > 0.0 && abs(eta) < 3.0) && quality(\"highPurity\")")
 kaonFinalSelection = cms.string("")#abs(userFloat(\"dzSig\"))<3.0 && abs(userFloat(\"dxySig\"))<3.0")
 diKaSelection = cms.string("charge==0")
-process.diKaOldPV = generalParticles.clone(
+process.diKa = generalParticles.clone(
     pdgId = cms.uint32(333),
+    primaryVertices = "primaryVertexRecoveryForUPC",
     preSelection = diKaSelection,
     # daughter information
     daughterInfo = cms.VPSet([
@@ -68,9 +69,8 @@ process.diKaOldPV = generalParticles.clone(
         cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
     ]),
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
-    # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits')
+    # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits', 'energyLossProducer:energyLossPixHits', 'energyLossProducer:energyLossStrHits')
 )
-process.diKa = process.diKaOldPV.clone(primaryVertices = "primaryVertexRecoveryForUPC")
 process.oneDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diKa"), minNumber = cms.uint32(1))
 
 # Add diKa event selection
@@ -131,7 +131,7 @@ process.eventFilter_HM = cms.Sequence(
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 # Define the analysis steps
-process.diKa_rereco_step = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh8_seq * process.hfNegFilterNTh8_seq * process.diKaOldPV * process.diKa * process.oneDiKa * process.cent_seq)
+process.diKa_rereco_step = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh10_seq * process.hfNegFilterNTh10_seq * process.diKa * process.oneDiKa * process.cent_seq)
 
 ## Adding the VertexComposite tree ################################################################################################
 
@@ -156,7 +156,7 @@ trig_info = cms.untracked.VPSet([
     cms.PSet(path = cms.string('HLT_HIZeroBias_HighRate_v*')),
     # UPC ZB triggers
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrack_MaxPixelTrack_v*')),
-    cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrackLowPt_MaxPixelCluster400_v*')),
+    cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrackLowPt_MaxPixelCluster400_v*'), filter = cms.string('hltSinglePixelTrackLowPtForUPC'), minN = cms.int32(1)),
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_MinPixelCluster400_MaxPixelCluster10000_v*')),
     # UPC ZDC triggers
     # cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_SinglePixelTrack_MaxPixelTrack_v*')),
@@ -165,21 +165,19 @@ trig_info = cms.untracked.VPSet([
   ])
 
 from VertexCompositeAnalysis.VertexCompositeAnalyzer.particle_tree_cff import particleAna
-process.diKaAnaOldPV = particleAna.clone(
-  recoParticles = cms.InputTag("diKaOldPV"),
+process.diKaAna = particleAna.clone(
+  recoParticles = cms.InputTag("diKa"),
+  primaryVertices = cms.InputTag("primaryVertexRecoveryForUPC"),
   selectEvents = cms.string("diKa_rereco_step"),
   eventFilterNames = event_filter,
+  addTrgObj = cms.untracked.bool(True),
   triggerInfo = trig_info,
-)
-process.diKaAna = process.diKaAnaOldPV.clone(
-  recoParticles = cms.InputTag("diKa"),
-  primaryVertices = cms.InputTag("primaryVertexRecoveryForUPC")
 )
 
 # Define the output
 process.TFileService = cms.Service("TFileService", fileName = cms.string('diKa_ana.root'))
 # process.p = cms.EndPath(process.diKaAna * process.generalTracksAna * process.hiConformalPixelTracksAna)
-process.p = cms.EndPath(process.diKaAnaOldPV * process.diKaAna)
+process.p = cms.EndPath(process.diKaAna)
 
 #! Define the process schedule !!!!!!!!!!!!!!!!!!
 process.schedule = cms.Schedule(

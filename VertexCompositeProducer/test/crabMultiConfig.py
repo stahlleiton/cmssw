@@ -38,7 +38,7 @@ config.Data.publication = False
 
 ## Site #####################################################################################
 config.section_('Site')
-# config.Site.whitelist = ['T2_CH_CERN']
+config.Site.whitelist = ['T2_US_Vanderbilt', 'T2_CH_CERN']
 config.Site.storageSite = 'T2_CH_CERN'
 
 ## Submit PDs ###############################################################################
