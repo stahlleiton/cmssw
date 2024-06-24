@@ -361,6 +361,7 @@ def customiseMerging(process, changeProcessname=True,reselect=False):
     process.merge_step += process.vertexreco
     process.unsortedOfflinePrimaryVertices.beamSpotLabel = cms.InputTag("offlineBeamSpot","",dataTier)
     process.ak4CaloJetsForTrk.srcPVs = cms.InputTag("firstStepPrimaryVertices","",dataTier)
+    process.dedxHitInfo.clusterShapeCache = cms.InputTag("")
 
     process.muons.FillDetectorBasedIsolation = cms.bool(False)
     process.muons.FillSelectorMaps = cms.bool(False)
