@@ -41,21 +41,12 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '132X_dataRun3_Prompt_v4', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '132X_dataRun3_Prompt_v7', '')
 process.HiForestInfo.GlobalTagLabel = process.GlobalTag.globaltag
 
 ###############################################################################
 
 # Define centrality binning
-process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
-process.GlobalTag.toGet.extend([
-    cms.PSet(record = cms.string("HeavyIonRcd"),
-        tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289"),
-        connect = cms.string("sqlite_file:CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db"),
-        label = cms.untracked.string("HFtowers")
-        ),
-    ])
-
 process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
 process.centralityBin.Centrality = cms.InputTag("hiCentrality")
 process.centralityBin.centralityVariable = cms.string("HFtowers")
@@ -66,17 +57,6 @@ process.centralityBin.centralityVariable = cms.string("HFtowers")
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("HiForestMiniAOD.root"))
 
-# # edm output for debugging purposes
-# process.output = cms.OutputModule(
-#     "PoolOutputModule",
-#     fileName = cms.untracked.string('HiForestEDM.root'),
-#     outputCommands = cms.untracked.vstring(
-#         'keep *',
-#         )
-#     )
-
-# process.output_path = cms.EndPath(process.output)
-
 ###############################################################################
 
 # event analysis
@@ -85,9 +65,6 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_data_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
-
-#process.hiEvtAnalyzer.doCentrality = cms.bool(False)
-#process.hiEvtAnalyzer.doHFfilters = cms.bool(False)
 
 from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_data_2023_skimmed
 process.hltobject.triggerNames = trigger_list_data_2023_skimmed
@@ -100,7 +77,9 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
 # jet reco sequence
 process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_data_cff')
-process.load('HeavyIonsAnalysis.JetAnalysis.hiFJRhoAnalyzer_cff')
+process.load('HeavyIonsAnalysis.JetAnalysis.hiFJSoftKillerAnalyzer_cff')
+from HeavyIonsAnalysis.JetAnalysis.hiFJRhoAnalyzer_cff import addRhoSequence
+addRhoSequence(process, 0)
 ################################
 # tracks
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
@@ -158,18 +137,18 @@ process.forest = cms.Path(
     process.hltanalysis +
     process.hltobject +
     process.l1object +
-    process.trackSequencePbPb +
+    process.unpackedTracksAndVertices +
     process.particleFlowAnalyser +
     process.unpackedMuons +
     process.ggHiNtuplizer +
-    process.rhoSequence +
-    #process.zdcdigi +
-    #process.QWzdcreco +
-    process.zdcanalyzer +
-    process.muonAnalyzer
+    process.rhoSequences +
+    process.hiFJSoftKillerAnalyzer +
+    process.zdcanalyzer
     )
 
 #customisation
+process.particleFlowAnalyser.ptMin = 0.0
+process.ggHiNtuplizer.muonPtMin = 0.0
 
 # Select the types of jets filled
 addR3Jets = False

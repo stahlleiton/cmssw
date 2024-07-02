@@ -156,19 +156,18 @@ process.forest = cms.Path(
     process.hltanalysis +
     process.hltobject +
     process.l1object +
-    process.trackSequencePbPb +
+    process.unpackedTracksAndVertices +
     process.particleFlowAnalyser +
     process.unpackedMuons +
     process.ggHiNtuplizer +
     process.rhoSequences +
     process.hiFJSoftKillerAnalyzer +
-    #process.zdcdigi +
-    #process.QWzdcreco +
-    process.zdcanalyzer +
-    process.muonAnalyzer
+    process.zdcanalyzer
     )
 
 #customisation
+process.particleFlowAnalyser.ptMin = 0.0
+process.ggHiNtuplizer.muonPtMin = 0.0
 
 # Select the types of jets filled
 addR3Jets = False
@@ -295,22 +294,35 @@ process.pphfCoincFilter4Th6 = cms.Path(process.phfCoincFilter4Th6)
 process.pphfCoincFilter5Th6 = cms.Path(process.phfCoincFilter5Th6)
 process.pAna = cms.EndPath(process.skimanalysis)
 
-from HLTrigger.HLTfilters.hltHighLevel_cfi import hltHighLevel
-process.hltfilter = hltHighLevel.clone(
-    HLTPaths = [
-        "HLT_HIL3SingleMu12_v*",
-        "HLT_HIEle20Gsf_v*",
-    ]
+process.goodMuons = cms.EDFilter("PATMuonSelector",
+    src = cms.InputTag("slimmedMuons"),
+    cut = cms.string("pt >= 15.0 && passed('CutBasedIdTight')")
 )
+process.goodElectrons = cms.EDFilter("PATElectronSelector",
+    src = cms.InputTag("slimmedElectrons"),
+    cut = cms.string("pt >= 15.0")
+)
+process.oneLepton = cms.EDFilter("PATLeptonCountFilter",
+    electronSource = cms.InputTag("goodElectrons"),
+    muonSource     = cms.InputTag("goodMuons"),
+    tauSource      = cms.InputTag(""),
+    countElectrons = cms.bool(True),
+    countMuons     = cms.bool(True),
+    countTaus      = cms.bool(False),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(1000000),
+)
+process.leptonSelection = cms.Sequence(process.goodElectrons * process.goodMuons * process.oneLepton)
 process.filterSequence = cms.Sequence(
-    process.hltfilter *
     process.clusterCompatibilityFilter *
-    process.primaryVertexFilter
+    process.primaryVertexFilter *
+    process.leptonSelection
 )
 
 process.superFilterPath = cms.Path(process.filterSequence)
 process.skimanalysis.superFilters = cms.vstring("superFilterPath")
 
 for path in process.paths:
-    getattr(process, path)._seq = process.filterSequence * getattr(process,path)._seq
+    if path != "superFilterPath":
+        getattr(process, path)._seq = process.filterSequence * getattr(process,path)._seq
 
