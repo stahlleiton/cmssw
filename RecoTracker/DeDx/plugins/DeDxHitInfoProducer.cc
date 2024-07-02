@@ -54,9 +54,10 @@ private:
   void produce(edm::Event&, const edm::EventSetup&) override;
 
   void makeCalibrationMap(const TrackerGeometry& tkGeom_);
-  void processRec(reco::DeDxHitInfo&, const SiStripRecHit2D&, const LocalPoint&, const LocalVector&, const float&);
+  void processRec(
+      reco::DeDxHitInfo&, const SiStripRecHit2D&, const LocalPoint&, const LocalVector&, const float&, const float&);
   void processHit(const TrackingRecHit* recHit,
-                  const float trackMomentum,
+                  const float& trackMomentum,
                   const LocalVector& trackDirection,
                   reco::DeDxHitInfo& hitDeDxInfo,
                   const LocalPoint& hitLocalPos);
@@ -188,7 +189,8 @@ void DeDxHitInfoProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
       if (!trackerHitRTTI::isFromDet(*recHit))
         continue;
 
-      processHit(recHit, track.p(), trajParams[h].direction(), hitDeDxInfo, trajParams[h].position());
+      const auto& traj = trajParams[h];
+      processHit(recHit, traj.momentum().mag(), traj.direction(), hitDeDxInfo, traj.position());
     }
 
     if (!passPt) {
@@ -253,6 +255,7 @@ void DeDxHitInfoProducer::processRec(reco::DeDxHitInfo& hitDeDxInfo,
                                      const SiStripRecHit2D& recHit,
                                      const LocalPoint& lpos,
                                      const LocalVector& ldir,
+                                     const float& lmom,
                                      const float& cos) {
   uint8_t type(0);
   int meas;
@@ -272,11 +275,11 @@ void DeDxHitInfoProducer::processRec(reco::DeDxHitInfo& hitDeDxInfo,
     detUnit = tkGeom_->idToDet(detId);
   const auto pathLen = detUnit->surface().bounds().thickness() / cos;
   float chargeAbs = deDxTools::getCharge(&(recHit.stripCluster()), NSaturating, *detUnit, calibGains_, offsetDU_);
-  hitDeDxInfo.addHit(chargeAbs, pathLen, detId, lpos, type, recHit.stripCluster());
+  hitDeDxInfo.addHit(chargeAbs, pathLen, detId, lpos, lmom, type, recHit.stripCluster());
 }
 
 void DeDxHitInfoProducer::processHit(const TrackingRecHit* recHit,
-                                     const float trackMomentum,
+                                     const float& trackMomentum,
                                      const LocalVector& trackDirection,
                                      reco::DeDxHitInfo& hitDeDxInfo,
                                      const LocalPoint& hitLocalPos) {
@@ -315,12 +318,13 @@ void DeDxHitInfoProducer::processHit(const TrackingRecHit* recHit,
       type |= (1 << reco::DeDxHitInfo::Calibration);
 
     float chargeAbs = clus.pixelCluster().charge();
-    hitDeDxInfo.addHit(chargeAbs, pathLen, thit.geographicalId(), hitLocalPos, type, clus.pixelCluster());
+    hitDeDxInfo.addHit(
+        chargeAbs, pathLen, thit.geographicalId(), hitLocalPos, trackMomentum, type, clus.pixelCluster());
   } else if (clus.isStrip() && !thit.isMatched()) {
     if (!useStrip_)
       return;
 
-    processRec(hitDeDxInfo, {thit.geographicalId(), clus}, hitLocalPos, trackDirection, cosineAbs);
+    processRec(hitDeDxInfo, {thit.geographicalId(), clus}, hitLocalPos, trackDirection, trackMomentum, cosineAbs);
   } else if (clus.isStrip() && thit.isMatched()) {
     if (!useStrip_)
       return;
@@ -328,8 +332,8 @@ void DeDxHitInfoProducer::processHit(const TrackingRecHit* recHit,
     if (!matchedHit)
       return;
 
-    processRec(hitDeDxInfo, matchedHit->monoHit(), hitLocalPos, trackDirection, cosineAbs);
-    processRec(hitDeDxInfo, matchedHit->stereoHit(), hitLocalPos, trackDirection, cosineAbs);
+    processRec(hitDeDxInfo, matchedHit->monoHit(), hitLocalPos, trackDirection, trackMomentum, cosineAbs);
+    processRec(hitDeDxInfo, matchedHit->stereoHit(), hitLocalPos, trackDirection, trackMomentum, cosineAbs);
   }
 }
 
