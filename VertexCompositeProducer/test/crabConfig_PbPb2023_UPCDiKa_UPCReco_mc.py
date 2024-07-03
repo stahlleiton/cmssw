@@ -10,7 +10,7 @@ request_name    = 'VCTree_STARlight_UPCDiKa_UPCReco_mc'
 channel         = 'CohPhiToKK'
 request_name    += '_%s' % datetime.now().strftime('%y%m%d_%H%M%S')
 
-input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/STARlight/CohPhiToKK_132X_Reco.txt'
+input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/STARlight/STARLIGHT_5p36TeV_2023Run3.txt'
 # input_dataset	= ''
 
 output_pd       = 'STARlight'
@@ -32,7 +32,6 @@ config.JobType.inputFiles = ['emap_2023_newZDC_v3.txt', 'CentralityTable_HFtower
 config.JobType.numCores = 1
 # config.JobType.maxMemoryMB = 4000
 # config.JobType.maxJobRuntimeMin = 1000
-config.JobType.allowUndistributedCMSSW = True
 
 ## Data #####################################################################################
 config.section_('Data')

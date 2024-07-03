@@ -15,7 +15,8 @@ process.options.numberOfThreads=cms.untracked.uint32(1)
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_240125_044529/STARlight/CohPhiToKK/240125_034539/0000/step3_STARlight_Reco_10.root"),
+    # fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_240125_044529/STARlight/CohPhiToKK/240125_034539/0000/step3_STARlight_Reco_10.root"),
+    fileNames = cms.untracked.vstring("root://xrootd-cms.infn.it//store/user/anstahll/CERN/PbPb2023/MC/2024_04_18/STARLIGHT/STARLIGHT_5p36TeV_2023Run3/coh_phi_dika_v2_STARLIGHT_5p36TeV_2023Run3_UPCRECO_2024_04_18/240424_015508/0001/STARLIGHT_coh_phi_dika_RECO_1185.root"),
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
@@ -60,6 +61,7 @@ kaonSelection = cms.string("")#(pt > 0.0 && abs(eta) < 3.0) && quality(\"highPur
 kaonFinalSelection = cms.string("")#abs(userFloat(\"dzSig\"))<3.0 && abs(userFloat(\"dxySig\"))<3.0")
 diKaSelection = cms.string("charge==0")
 process.diKa = generalParticles.clone(
+    primaryVertices = "primaryVertexRecoveryForUPC",
     pdgId = cms.uint32(333),
     preSelection = diKaSelection,
     # daughter information
@@ -68,18 +70,9 @@ process.diKa = generalParticles.clone(
         cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
     ]),
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
-    # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits')
+    # dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2', 'energyLossProducer:energyLossAllHits', 'energyLossProducer:energyLossPixHits', 'energyLossProducer:energyLossStrHits')
 )
 process.oneDiKa = cms.EDFilter("CandViewCountFilter", src = cms.InputTag("diKa"), minNumber = cms.uint32(1))
-
-process.generalTracks = generalParticles.clone(
-    tracks = cms.InputTag('generalTracks'),
-    dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
-)
-
-process.hiConformalPixelTracks = generalParticles.clone(
-    tracks = cms.InputTag('hiConformalPixelTracks')
-)
 
 # Add diKa event selection
 process.twoTracks = cms.EDFilter("TrackCountFilter", src = cms.InputTag("generalTracks"), minNumber = cms.uint32(2))
@@ -105,19 +98,21 @@ process.diKaEvtSel = cms.Sequence(process.twoTracks * process.hpTracks * process
 
 
 # Add PbPb collision event selection
+process.load('VertexCompositeAnalysis.VertexCompositeProducer.primaryVertexRecoveryForUPC_cfi')
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.collisionEventSelection_cff')
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.hfCoincFilter_cff')
-process.colEvtSel = cms.Sequence(process.hiClusterCompatibility * process.primaryVertexFilter)
+process.colEvtSel = cms.Sequence(process.hiClusterCompatibility)
+process.primaryVertexFilterRecoveryForUPC = process.primaryVertexFilter.clone(src = "primaryVertexRecoveryForUPC")
 
 # Define the event selection sequence
 process.eventFilter_HM = cms.Sequence(
-    process.colEvtSel
+    process.colEvtSel *
+    process.primaryVertexRecoveryForUPC
 )
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 # Define the analysis steps
 process.diKa_rereco_step = cms.Path(process.diKa * process.cent_seq)
-process.track_step = cms.Path(process.generalTracks * process.hiConformalPixelTracks)
 
 ## Adding the VertexComposite tree ################################################################################################
 
@@ -125,80 +120,70 @@ event_filter = cms.untracked.vstring(
         "Flag_colEvtSel",
         "Flag_clusterCompatibilityFilter",
         "Flag_primaryVertexFilter",
+        "Flag_primaryVertexFilterRecoveryForUPC",
         "Flag_hfPosFilterNTh7",
         "Flag_hfPosFilterNTh7p3",
         "Flag_hfPosFilterNTh8",
+        "Flag_hfPosFilterNTh10",
         "Flag_hfNegFilterNTh7",
         "Flag_hfNegFilterNTh7p6",
         "Flag_hfNegFilterNTh8",
+        "Flag_hfNegFilterNTh10",
     )
 
 trig_info = cms.untracked.VPSet([
-    # zero bias triggers
+    # Zero Bias triggers
     cms.PSet(path = cms.string('HLT_HIZeroBias_v*')),
     cms.PSet(path = cms.string('HLT_HIZeroBias_HighRate_v*')),
-    # UPC low pT triggers
+    # UPC ZB triggers
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrack_MaxPixelTrack_v*')),
-    cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrackLowPt_MaxPixelCluster400_v*')),
+    cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_SinglePixelTrackLowPt_MaxPixelCluster400_v*'), filter = cms.string('hltSinglePixelTrackLowPtForUPC'), minN = cms.int32(1)),
     cms.PSet(path = cms.string('HLT_HIUPC_ZeroBias_MinPixelCluster400_MaxPixelCluster10000_v*')),
     # UPC ZDC triggers
-    cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_SinglePixelTrack_MaxPixelTrack_v*')),
-    cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_SinglePixelTrackLowPt_MaxPixelCluster400_v*')),
-    cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_MinPixelCluster400_MaxPixelCluster10000_v*')),
+    # cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_SinglePixelTrack_MaxPixelTrack_v*')),
+    # cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_SinglePixelTrackLowPt_MaxPixelCluster400_v*')),
+    # cms.PSet(path = cms.string('HLT_HIUPC_ZDC1nOR_MinPixelCluster400_MaxPixelCluster10000_v*')),
   ])
 
 from VertexCompositeAnalysis.VertexCompositeAnalyzer.particle_tree_cff import particleAna_mc
 process.diKaAna = particleAna_mc.clone(
   recoParticles = cms.InputTag("diKa"),
+  primaryVertices = cms.InputTag("primaryVertexRecoveryForUPC"),
   genPdgId     = cms.untracked.vuint32([333]),
   selectEvents = cms.string(""),
   eventFilterNames = event_filter,
+  addTrgObj = cms.untracked.bool(True),
   triggerInfo = trig_info,
-)
-
-process.generalTracksAna = particleAna_mc.clone(
-    recoParticles = cms.InputTag("generalTracks"),
-    selectEvents = cms.string(""),
-    maxGenDeltaR = cms.untracked.double(0.3),
-    maxGenDeltaPtRel = cms.untracked.double(0.5),
-    eventFilterNames = event_filter,
-    triggerInfo = trig_info,
-)
-
-process.hiConformalPixelTracksAna = particleAna_mc.clone(
-	recoParticles = cms.InputTag("hiConformalPixelTracks"),
-    selectEvents = cms.string(""),
-    maxGenDeltaR = cms.untracked.double(0.3),
-    maxGenDeltaPtRel = cms.untracked.double(0.5),
-    eventFilterNames = event_filter,
-    triggerInfo = trig_info,
 )
 
 # Define the output
 process.TFileService = cms.Service("TFileService", fileName = cms.string('diKa_ana_mc.root'))
-process.p = cms.EndPath(process.diKaAna * process.generalTracksAna * process.hiConformalPixelTracksAna)
+# process.p = cms.EndPath(process.diKaAna * process.generalTracksAna * process.hiConformalPixelTracksAna)
+process.p = cms.EndPath(process.diKaAna)
 
 #! Define the process schedule !!!!!!!!!!!!!!!!!!
 process.schedule = cms.Schedule(
     process.eventFilter_HM_step,
     process.diKa_rereco_step,
-    # process.track_step,
     process.p
 )
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## Add the event selection filters ###############################################################################################
 process.Flag_colEvtSel = cms.Path(process.colEvtSel)
-process.Flag_clusterCompatibilityFilter = cms.Path(process.hiClusterCompatibility)
-process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter)
-process.Flag_hfPosFilterNTh7 = cms.Path(process.hfPosFilterNTh7_seq)
-process.Flag_hfPosFilterNTh7p3 = cms.Path(process.hfPosFilterNTh7p3_seq)
-process.Flag_hfPosFilterNTh8 = cms.Path(process.hfPosFilterNTh8_seq)
-process.Flag_hfNegFilterNTh7 = cms.Path(process.hfNegFilterNTh7_seq)
-process.Flag_hfNegFilterNTh7p6 = cms.Path(process.hfNegFilterNTh7p6_seq)
-process.Flag_hfNegFilterNTh8 = cms.Path(process.hfNegFilterNTh8_seq)
+process.Flag_clusterCompatibilityFilter = cms.Path(process.eventFilter_HM * process.hiClusterCompatibility)
+process.Flag_primaryVertexFilter = cms.Path(process.eventFilter_HM * process.primaryVertexFilter)
+process.Flag_primaryVertexFilterRecoveryForUPC = cms.Path(process.eventFilter_HM * process.primaryVertexFilterRecoveryForUPC)
+process.Flag_hfPosFilterNTh7 = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh7_seq)
+process.Flag_hfPosFilterNTh7p3 = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh7p3_seq)
+process.Flag_hfPosFilterNTh8 = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh8_seq)
+process.Flag_hfPosFilterNTh10 = cms.Path(process.eventFilter_HM * process.hfPosFilterNTh10_seq)
+process.Flag_hfNegFilterNTh7 = cms.Path(process.eventFilter_HM * process.hfNegFilterNTh7_seq)
+process.Flag_hfNegFilterNTh7p6 = cms.Path(process.eventFilter_HM * process.hfNegFilterNTh7p6_seq)
+process.Flag_hfNegFilterNTh8 = cms.Path(process.eventFilter_HM * process.hfNegFilterNTh8_seq)
+process.Flag_hfNegFilterNTh10 = cms.Path(process.eventFilter_HM * process.hfNegFilterNTh10_seq)
 
-eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 ]
+eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_clusterCompatibilityFilter , process.Flag_primaryVertexFilter , process.Flag_primaryVertexFilterRecoveryForUPC , process.Flag_hfPosFilterNTh7 , process.Flag_hfPosFilterNTh7p3 , process.Flag_hfPosFilterNTh8 , process.Flag_hfPosFilterNTh10 , process.Flag_hfNegFilterNTh7 , process.Flag_hfNegFilterNTh7p6 , process.Flag_hfNegFilterNTh8 , process.Flag_hfNegFilterNTh10 ]
 
 #! Adding the process schedule !!!!!!!!!!!!!!!!!!
 for P in eventFilterPaths:

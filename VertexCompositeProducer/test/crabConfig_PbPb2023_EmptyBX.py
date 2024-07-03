@@ -4,17 +4,17 @@ from CRABClient.UserUtilities import config
 config = config()
 
 ## User Input ##############################################################################
-pset_name       = 'VCTree_PbPb2023_UPCDiPi_UPCReco_mc_cfg.py'
+pset_name       = 'VCTree_PbPb2023_EmptyBX_cfg.py'
 
-request_name    = 'VCTree_STARlight_UPCDiPi_UPCReco_mc'
-channel         = 'CohRhoToPiPi'
+request_name    = 'PbPb2023_EmptyBX_test'
+channel         = 'HIEmptyBX'
 request_name    += '_%s' % datetime.now().strftime('%y%m%d_%H%M%S')
 
-input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/STARlight/CohRhoToPiPi_132X_Reco_UPCReco.txt'
-# input_dataset	= ''
+input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/HIEmptyBX_test.txt'
+# input_dataset	= '/HIEmptyBX/HIRun2023A-16Jan2024-v1/AOD'
 
 output_pd       = 'STARlight'
-output_dir      = '/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/VCTree/%s' %  request_name
+output_dir      = '/store/group/phys_heavyions/jiazhao/Data_Run3/VCTree/%s' %  request_name
 
 ## General #################################################################################
 config.section_('General')
@@ -32,7 +32,6 @@ config.JobType.inputFiles = ['emap_2023_newZDC_v3.txt', 'CentralityTable_HFtower
 config.JobType.numCores = 1
 # config.JobType.maxMemoryMB = 4000
 # config.JobType.maxJobRuntimeMin = 1000
-config.JobType.allowUndistributedCMSSW = True
 
 ## Data #####################################################################################
 config.section_('Data')
@@ -41,6 +40,7 @@ config.Data.inputDBS = 'phys03'
 # config.Data.inputDataset = input_dataset
 # config.Data.splitting = 'FileBased'
 # config.Data.unitsPerJob = 1
+# config.Data.publication = False
 #* Using FileList ***************************************
 config.Data.userInputFiles = open(input_filelist).readlines() 
 config.Data.splitting = 'FileBased'
@@ -52,7 +52,6 @@ config.Data.outputPrimaryDataset = output_pd
 # config.Data.outputDatasetTag = config.General.requestName
 config.Data.outputDatasetTag = channel
 config.Data.outLFNDirBase = output_dir
-config.Data.ignoreLocality = True
 
 ## Site #####################################################################################
 config.section_('Site')

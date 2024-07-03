@@ -6,15 +6,12 @@ config = config()
 ## User Input ##############################################################################
 pset_name       = 'VCTree_PbPb2023_UPCDiKa_UPCReco_cfg.py'
 
-request_name    = 'VCTree_PbPb2023_UPCDiKa_UPCReco_Full'
+request_name    = 'VCTree_PbPb2023_UPCDiKa_UPCReco_HIRun2023A-16Jan2024-v1'
 channel         = 'CohPhiToKK'
 request_name    += '_%s' % datetime.now().strftime('%y%m%d_%H%M%S')
 
-# input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/skim_track_hiforward_reco_test.txt'
-# input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/skim_track_hiforward_reco.txt'
-# input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/hiforward_skim_track_upcreco.txt'
-input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/hiforward_skim_track_dEdx_upcreco.txt'
-# input_dataset	= ''
+input_filelist	= '/afs/cern.ch/user/j/jiazhao/fileList/Reco/hiforward_official_upcreco.txt'
+# input_dataset	= '/HIForward0/HIRun2023A-16Jan2024-v1/AOD'
 
 output_pd       = 'PbPb2023'
 output_dir      = '/store/group/phys_heavyions/jiazhao/Data_Run3/VCTree/%s' %  request_name
@@ -35,7 +32,6 @@ config.JobType.inputFiles = ['emap_2023_newZDC_v3.txt', 'CentralityTable_HFtower
 config.JobType.numCores = 1
 # config.JobType.maxMemoryMB = 4000
 # config.JobType.maxJobRuntimeMin = 1000
-config.JobType.allowUndistributedCMSSW = True
 
 ## Data #####################################################################################
 config.section_('Data')
@@ -58,7 +54,7 @@ config.Data.outLFNDirBase = output_dir
 
 ## Site #####################################################################################
 config.section_('Site')
-config.Site.whitelist = ['T2_US_Vanderbilt']
+config.Site.whitelist = ['T2_CH_CERN']
 config.Site.storageSite = 'T2_CH_CERN'
 
 #############################################################################################

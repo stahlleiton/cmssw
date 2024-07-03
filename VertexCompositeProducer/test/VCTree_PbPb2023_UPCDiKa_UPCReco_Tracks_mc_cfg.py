@@ -1,8 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
-from Configuration.Eras.Modifier_highBetaStar_2018_cff import highBetaStar_2018
-Run3_2023_highBetaStar = cms.ModifierChain(eras.Run3_2023, highBetaStar_2018)
-process = cms.Process('ANASKIM', Run3_2023_highBetaStar)
+process = cms.Process('ANASKIM', eras.Run3_2023_UPC)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
@@ -17,69 +15,41 @@ process.options.numberOfThreads=cms.untracked.uint32(1)
 
 # Define the input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_231114_035147/STARlight/CohPhiToKK/231114_025227/0000/step3_STARlight_Reco_100.root"),
+    fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/jiazhao/STARlight/2023Run3/Reco/STARlight_CohPhiToKK_Reco_132X_240125_044529/STARlight/CohPhiToKK/240125_034539/0000/step3_STARlight_Reco_10.root"),
+    # fileNames = cms.untracked.vstring("file:/eos/cms/store/group/phys_heavyions/anstahll/CERN/PbPb2023/MC/STARLIGHT/2024_01_19/STARLIGHT_5p36TeV_2023Run3/double_diff_STARLIGHT_5p36TeV_2023Run3_UPCRECO_2024_01_19/240119_020712/0000/STARLIGHT_double_diff_RECO_10.root"),
+
 )
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v5')
+process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v9')
 
 
 ## ##############################################################################################################################
 ## Variables Production #########################################################################################################
 
-#* Set ZDC information
-process.es_pool = cms.ESSource("PoolDBESSource",
-    timetype = cms.string('runnumber'),
-    toGet = cms.VPSet(cms.PSet(record = cms.string("HcalElectronicsMapRcd"), tag = cms.string("HcalElectronicsMap_2021_v2.0_data"))),
-    connect = cms.string('frontier://FrontierProd/CMS_CONDITIONS'),
-    authenticationMethod = cms.untracked.uint32(1)
-)
-process.es_prefer = cms.ESPrefer('HcalTextCalibrations', 'es_ascii')
-process.es_ascii = cms.ESSource('HcalTextCalibrations',
-    input = cms.VPSet(cms.PSet(object = cms.string('ElectronicsMap'), file = cms.FileInPath("emap_2023_newZDC_v3.txt")))
-)
-
-#* cent_seq: Add PbPb centrality
-# process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
-# process.GlobalTag.snapshotTime = cms.string("9999-12-31 23:59:59.000")
-# process.GlobalTag.toGet.extend([
-#     cms.PSet(record = cms.string("HeavyIonRcd"),
-#         tag = cms.string("CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289"),
-#         connect = cms.string("sqlite_file:CentralityTable_HFtowers200_DataPbPb_periHYDJETshape_run3v1302x04_offline_374289.db"),
-#         label = cms.untracked.string("HFtowers")
-#         )
-#     ]
-# )
-# process.cent_seq = cms.Sequence(process.centralityBin)
-
 #* Add the Particle producer
 from VertexCompositeAnalysis.VertexCompositeProducer.generalParticles_cff import generalParticles
 
-# DiKa selection
-kaonSelection = cms.string("")#(pt > 0.0 && abs(eta) < 3.0) && quality(\"highPurity\")")
-kaonFinalSelection = cms.string("")#abs(userFloat(\"dzSig\"))<3.0 && abs(userFloat(\"dxySig\"))<3.0")
-diKaSelection = cms.string("")
-process.diKa = generalParticles.clone(
-    pdgId = cms.uint32(333),
-    preSelection = diKaSelection,
-    # daughter information
-    daughterInfo = cms.VPSet([
-        cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(+1), selection = kaonSelection, finalSelection = kaonFinalSelection),
-        cms.PSet(pdgId = cms.uint32(321), charge = cms.int32(-1), selection = kaonSelection, finalSelection = kaonFinalSelection),
-    ]),
-    dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
+generalTrackParticles = generalParticles.clone(
+    # recoToSimTrackMap = cms.InputTag('trackingParticleRecoTrackAsssociation')
 )
 
-process.generalTracks = generalParticles.clone(
+process.tracks = generalTrackParticles.clone(
     tracks = cms.InputTag('generalTracks'),
     dEdxInputs = cms.vstring('dedxHarmonic2', 'dedxPixelHarmonic2')
 )
 
-# process.hiConformalPixelTracks = generalParticles.clone(
-#     tracks = cms.InputTag('hiConformalPixelTracks')
-# )
+process.pixelTracks = generalParticles.clone(
+    tracks = cms.InputTag('hiConformalPixelTracks'),
+    # recoToSimTrackMap = cms.InputTag('trackingParticlePixelTrackAsssociation')
+)
+
+process.pfCandidates = generalTrackParticles.clone(
+    pfParticles = cms.InputTag('particleFlow'),
+    tracks = cms.InputTag('')
+)
 
 
 # Add PbPb collision event selection
@@ -87,18 +57,21 @@ process.load('VertexCompositeAnalysis.VertexCompositeProducer.collisionEventSele
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.hfCoincFilter_cff')
 process.colEvtSel = cms.Sequence(process.hiClusterCompatibility * process.primaryVertexFilter)
 
+# Add sim-reco matching
+# process.load('SimTracker.TrackAssociation.trackingParticleRecoTrackAsssociation_cff')
+# process.load('SimTracker.TrackAssociatorProducers.quickTrackAssociatorByHits_cfi')
+# process.load('SimTracker.TrackerHitAssociation.tpClusterProducer_cfi')
+# process.trackingParticlePixelTrackAsssociation = process.trackingParticleRecoTrackAsssociation.clone(label_tr = cms.InputTag("hiConformalPixelTracks"))
+# process.simRecoTrackAssocSeq = cms.Sequence(process.tpClusterProducer * process.quickTrackAssociatorByHitsTrackerHitAssociator * process.trackingParticleRecoTrackAsssociation * process.trackingParticlePixelTrackAsssociation)
+
 # Define the event selection sequence
 process.eventFilter_HM = cms.Sequence(
-    process.hiClusterCompatibility *
-    process.primaryVertexFilter *
-    process.hfPosFilterNTh8_seq *
-    process.hfNegFilterNTh8_seq
+    process.colEvtSel
 )
 process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
-# Define the analysis steps
-process.diKa_rereco_step = cms.Path(process.diKa)
-process.track_step = cms.Path(process.generalTracks)
+# process.track_step = cms.Path(process.simRecoTrackAssocSeq * process.tracks * process.pixelTracks * process.pfCandidates)
+process.track_step = cms.Path(process.tracks * process.pixelTracks * process.pfCandidates)
 
 ## Adding the VertexComposite tree ################################################################################################
 
@@ -113,7 +86,7 @@ event_filter = cms.untracked.vstring(
         "Flag_hfNegFilterNTh7",
         "Flag_hfNegFilterNTh7p6",
         "Flag_hfNegFilterNTh8",
-        "Flag_hfNegFilterNTh10"
+        "Flag_hfNegFilterNTh10",
     )
 
 trig_info = cms.untracked.VPSet([
@@ -131,16 +104,9 @@ trig_info = cms.untracked.VPSet([
   ])
 
 from VertexCompositeAnalysis.VertexCompositeAnalyzer.particle_tree_cff import particleAna_mc
-process.diKaAna = particleAna_mc.clone(
-  recoParticles = cms.InputTag("diKa"),
-  genPdgId     = cms.untracked.vuint32([333]),
-  selectEvents = cms.string(""),
-  eventFilterNames = event_filter,
-  triggerInfo = trig_info,
-)
 
-process.generalTracksAna = particleAna_mc.clone(
-    recoParticles = cms.InputTag("generalTracks"),
+process.trackAna = particleAna_mc.clone(
+    recoParticles = cms.InputTag("tracks"),
     selectEvents = cms.string(""),
     maxGenDeltaR = cms.untracked.double(0.3),
     maxGenDeltaPtRel = cms.untracked.double(0.5),
@@ -148,22 +114,31 @@ process.generalTracksAna = particleAna_mc.clone(
     triggerInfo = trig_info,
 )
 
-# process.hiConformalPixelTracksAna = particleAna_mc.clone(
-# 	recoParticles = cms.InputTag("hiConformalPixelTracks"),
-#     maxGenDeltaR = cms.untracked.double(0.03),
-#     maxGenDeltaPtRel = cms.untracked.double(0.5),
-#     eventFilterNames = event_filter,
-#     triggerInfo = trig_info,
-# )
+process.pixelTrackAna = particleAna_mc.clone(
+	recoParticles = cms.InputTag("pixelTracks"),
+    selectEvents = cms.string(""),
+    maxGenDeltaR = cms.untracked.double(0.3),
+    maxGenDeltaPtRel = cms.untracked.double(0.5),
+    eventFilterNames = event_filter,
+    triggerInfo = trig_info,
+)
+
+process.pfCandidatesAna = particleAna_mc.clone(
+	recoParticles = cms.InputTag("pfCandidates"),
+	selectEvents = cms.string(""),
+	maxGenDeltaR = cms.untracked.double(0.3),
+	maxGenDeltaPtRel = cms.untracked.double(0.5),
+	eventFilterNames = event_filter,
+	triggerInfo = trig_info,
+)
 
 # Define the output
-process.TFileService = cms.Service("TFileService", fileName = cms.string('diKa_ana_mc.root'))
-process.p = cms.EndPath(process.diKaAna * process.generalTracksAna)
+process.TFileService = cms.Service("TFileService", fileName = cms.string('track_ana_mc.root'))
+process.p = cms.EndPath(process.trackAna * process.pixelTrackAna * process.pfCandidatesAna)
 
 #! Define the process schedule !!!!!!!!!!!!!!!!!!
 process.schedule = cms.Schedule(
     process.eventFilter_HM_step,
-    process.diKa_rereco_step,
     process.track_step,
     process.p
 )
