@@ -149,7 +149,7 @@ for module in ["hltTriggerType", "HLTSiStripClusterChargeCutNone", "hltPixelTrac
 process.hltSiStripRawToDigi.ProductLabel = "rawDataRepacker"
 process.hltSiPixelDigisLegacyPPOnAA.InputLabel = "rawDataRepacker"
 process.hltSiStripExcludedFEDListProducer.ProductLabel = "rawDataRepacker"
-process.hltSinglePixelTrackLowPtForUPC = cms.EDFilter("HLTPixlMBFilt", saveTags = cms.bool(True), pixlTag = cms.InputTag("hltPixelCandsLowPtForUPCPPOnAA"), MinPt = cms.double(-1), MinTrks = cms.uint32(1), MinSep = cms.double(1000000))
+process.hltSinglePixelTrackLowPtForUPC = cms.EDFilter("HLTPixelTrackFilter2", saveTags = cms.bool(True), pixelTracks = cms.InputTag( "hltPixelCandsLowPtForUPCPPOnAA" ), minPixelTracks = cms.uint32( 1 ) )
 
 process.HLTBeginSequence = cms.Sequence( process.hltTriggerType + process.hltOnlineBeamSpot )
 process.HLTDoSiStripZeroSuppression = cms.Sequence( process.hltSiStripRawToDigi + process.hltSiStripZeroSuppression )

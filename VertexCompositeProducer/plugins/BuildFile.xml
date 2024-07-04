@@ -9,4 +9,5 @@
 <use name="CalibFormats/HcalObjects"/>
 <use name="MuonAnalysis/MuonAssociators"/>
 <use name="SimTracker/TrackAssociation"/>
+<use name="HLTrigger/HLTcore"/>
 <flags EDM_PLUGIN="1"/>
