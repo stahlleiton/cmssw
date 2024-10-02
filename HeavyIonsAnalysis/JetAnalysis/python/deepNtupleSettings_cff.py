@@ -48,15 +48,22 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         'pfUnifiedParticleTransformerAK4JetTags:probtaum1h2p',
         'pfUnifiedParticleTransformerAK4JetTags:probtaum3h0p',
         'pfUnifiedParticleTransformerAK4JetTags:probtaum3h1p',
+        'pfUnifiedParticleTransformerAK4JetTags:probele',
+        'pfUnifiedParticleTransformerAK4JetTags:probmu',
+        'pfUnifiedParticleTransformerAK4JetTags:ptcorr',
+        'pfUnifiedParticleTransformerAK4JetTags:ptnu',
     ]
 
     # Create gen-level information
     if isMC:
-        from PhysicsTools.PatAlgos.producersHeavyIons.heavyIonJets_cff import allPartons, cleanedPartons
-        process.allPartons = allPartons.clone(
-            src = 'prunedGenParticles'
+        from RecoHI.HiJetAlgos.hiSignalParticleProducer_cfi import hiSignalParticleProducer as hiSignalGenParticles
+        process.hiSignalGenParticles = hiSignalGenParticles.clone(
+            src = "prunedGenParticles"
         )
-        process.cleanedPartons = cleanedPartons.clone()
+        from PhysicsTools.PatAlgos.producersHeavyIons.heavyIonJets_cff import allPartons
+        process.allPartons = allPartons.clone(
+            src = 'hiSignalGenParticles'
+        )
         from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
         process.ak4GenJetsWithNu = ak4GenJets.clone(
             src = 'packedGenParticlesSignal'
@@ -68,7 +75,7 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         process.ak4GenJetsRecluster = ak4GenJets.clone(
             src = 'packedGenParticlesForJetsNoNu'
         )
-        process.genTask = cms.Task(process.allPartons, process.cleanedPartons, process.ak4GenJetsWithNu, process.packedGenParticlesForJetsNoNu, process.ak4GenJetsRecluster)
+        process.genTask = cms.Task(process.hiSignalGenParticles, process.allPartons, process.ak4GenJetsWithNu, process.packedGenParticlesForJetsNoNu, process.ak4GenJetsRecluster)
 
     # Remake secondary vertices
     from RecoVertex.AdaptiveVertexFinder.inclusiveVertexing_cff import inclusiveCandidateVertexFinder, candidateVertexMerger, candidateVertexArbitrator, inclusiveCandidateSecondaryVertices
@@ -102,13 +109,11 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         muSource           = cms.InputTag("slimmedMuons"),
         elSource           = cms.InputTag("slimmedElectrons"),
         getJetMCFlavour    = isMC,
-        genJetCollection   = cms.InputTag("slimmedGenJets" if isMC else ""),
-        genParticles       = cms.InputTag("prunedGenParticles" if isMC else ""),
+        genJetCollection   = cms.InputTag("ak4GenJetsWithNu" if isMC else ""),
+        genParticles       = cms.InputTag("hiSignalGenParticles" if isMC else ""),
         jetCorrections     = ('AK4PF',) + jetCorrectionsAK4[1:],
     )
     process.patJetsAK4PFUnsubJets.useLegacyJetMCFlavour = False
-    if isMC:
-        process.patJetPartonMatchAK4PFUnsubJets = process.patJetPartonMatchAK4PFUnsubJets.clone(matched = "cleanedPartons")
 
     from PhysicsTools.PatAlgos.producersLayer1.jetProducer_cff import ak4PFJets
     process.ak4PFUnsubJets = ak4PFJets.clone(
@@ -132,13 +137,11 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         muSource           = cms.InputTag("slimmedMuons"),
         elSource           = cms.InputTag("slimmedElectrons"),
         getJetMCFlavour    = isMC,
-        genJetCollection   = cms.InputTag("slimmedGenJets" if isMC else ""),
-        genParticles       = cms.InputTag("prunedGenParticles" if isMC else ""),
+        genJetCollection   = cms.InputTag("ak4GenJetsWithNu" if isMC else ""),
+        genParticles       = cms.InputTag("hiSignalGenParticles" if isMC else ""),
         jetCorrections     = jetCorrectionsAK4,
     )
     process.patJetsAKCs4PF.embedPFCandidates = True
-    if isMC:
-        process.patJetPartonMatchAKCs4PF = process.patJetPartonMatchAKCs4PF.clone(matched = "cleanedPartons")
 
     if not isMC:
         for label in ["patJetsAK4PFUnsubJets", "patJetsAKCs4PF"]:
@@ -186,6 +189,7 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
     process.patAlgosToolsTask.add(process.unsubUpdatedPatJetsDeepFlavour)
 
     process.pfUnifiedParticleTransformerAK4JetTagsDeepFlavour.model_path = 'HeavyIonsAnalysis/Configuration/data/UParTAK4_HIMG5132XADV.onnx'
+    process.pfUnifiedParticleTransformerAK4TagInfosDeepFlavour.sort_cand_by_pt = True
 
     if hasattr(process,'updatedPatJetsTransientCorrectedDeepFlavour'):
         process.updatedPatJetsTransientCorrectedDeepFlavour.addTagInfos = True
