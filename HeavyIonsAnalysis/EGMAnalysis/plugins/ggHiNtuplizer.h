@@ -151,17 +151,22 @@ private:
   std::vector<float> mcPhi_;
   std::vector<float> muL1Eta_;
   std::vector<float> muL1Phi_;
+  std::vector<float> muIso_;
   std::vector<float> mcE_;
   std::vector<float> mcEt_;
   std::vector<float> mcMass_;
 
   std::vector<int> mcParentage_;
   std::vector<int> mcMomPID_;
+  std::vector<int> mcMomKey_;
   std::vector<float> mcMomPt_;
   std::vector<float> mcMomEta_;
   std::vector<float> mcMomPhi_;
   std::vector<float> mcMomMass_;
   std::vector<int> mcGMomPID_;
+  std::vector<int> mcGMomKey_;
+  std::vector<int> mcGGMomPID_;
+  std::vector<int> mcGGMomKey_;
 
   std::vector<int> mcIndex_;
   std::vector<int> mcSube_;
@@ -219,6 +224,8 @@ private:
 
   std::vector<float> eleHoverE_;
   std::vector<float> eleHoverEBc_;
+  std::vector<float> eleRawHoverE_;
+  std::vector<float> eleRawHoverEBc_;
   std::vector<float> eleEoverP_;
   std::vector<float> eleEoverPInv_;
   std::vector<float> eleEcalE_;
@@ -263,6 +270,8 @@ private:
   std::vector<float> eleSeedCryPhi_;
   std::vector<float> eleSeedCryIeta_;
   std::vector<float> eleSeedCryIphi_;
+
+  std::vector<int> ele_genMatchedIndex_;
 
   // photons
   int nPho_;
@@ -543,6 +552,7 @@ private:
   std::vector<float> muPFNeuIso_;
   std::vector<float> muPFPUIso_;
 
+  std::vector<uint64_t> muSelectors_;
   std::vector<int> muIDSoft_;
   std::vector<int> muIDLoose_;
   std::vector<int> muIDMedium_;
@@ -551,6 +561,8 @@ private:
   std::vector<int> muIDGlobalHighPt_;
   std::vector<int> muIDTrkHighPt_;
   std::vector<int> muIDInTime_;
+
+  std::vector<int> mu_genMatchedIndex_;
 };
 
 #endif /* HEAVYIONSANALYSIS_EGMANALYSIS_GGHINTUPLIZER_H */

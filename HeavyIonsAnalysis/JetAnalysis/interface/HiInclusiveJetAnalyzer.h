@@ -21,6 +21,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/Common/interface/AssociationMap.h"
 #include "fastjet/contrib/Njettiness.hh"
 //
 
@@ -63,15 +64,33 @@ private:
 
   int TaggedJet(pat::Jet patjet, edm::Handle<reco::JetTagCollection > jetTags );
 
+  reco::GenParticleRef findGenMother(const reco::GenParticleRef& par, const int& pId=0) {
+    if (par.isNull() || (pId==0 && par->numberOfMothers() == 0))
+      return reco::GenParticleRef();
+    auto mom = pId==0 ? par->motherRef(0) : par;
+    const auto& pdgId = pId==0 ? par->pdgId() : pId;
+    while (mom->numberOfMothers() > 0 && mom->pdgId() == pdgId)
+      mom = mom->motherRef(0);
+    if (mom->pdgId() == pdgId)
+      return reco::GenParticleRef();
+    return mom;
+  };
+  reco::GenParticleRef findGenMother(const reco::GenParticle& p) {
+    return p.numberOfMothers()>0 ? findGenMother(p.motherRef(0), p.pdgId()) : reco::GenParticleRef();
+  }
+
   edm::InputTag jetTagLabel_;
-  edm::EDGetTokenT<pat::JetCollection> jetTag_;
+  edm::EDGetTokenT<edm::View<pat::Jet>> jetTag_;
   edm::EDGetTokenT<reco::CaloJetCollection> caloJetTag_;
   edm::EDGetTokenT<pat::JetCollection> matchTag_;
+  typedef edm::AssociationMap<edm::OneToOne<reco::JetView, reco::JetView> > JetMatchMap;
+  edm::EDGetTokenT<JetMatchMap> unsubjetMapToken_;
   edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfCandidateLabel_;
   edm::EDGetTokenT<reco::GenParticleCollection> genParticleSrc_;
   edm::EDGetTokenT<edm::View<reco::GenJet>> genjetTag_;
   edm::EDGetTokenT<edm::HepMCProduct> eventInfoTag_;
   edm::EDGetTokenT<GenEventInfoProduct> eventGenInfoTag_;
+
 
   std::string jetName_;  //used as prefix for jet structures
   edm::EDGetTokenT<edm::View<reco::Jet>> subjetGenTag_;
@@ -265,6 +284,8 @@ private:
     float matchedPu[MAXJETS] = {0};
     int matchedHadronFlavor[MAXJETS] = {0};
     int matchedPartonFlavor[MAXJETS] = {0};
+    int matchedNbHad[MAXJETS] = {0};
+    int matchedNcHad[MAXJETS] = {0};
 
     float discr_csvV2[MAXJETS] = {0};
     float discr_deepCSV[MAXJETS] = {0};
@@ -333,6 +354,8 @@ private:
     float refparton_pt[MAXJETS] = {0};
     int refparton_flavor[MAXJETS] = {0};
     int refparton_flavorForB[MAXJETS] = {0};
+    int refparton_momKey[MAXJETS] = {0};
+    int refparton_gMomKey[MAXJETS] = {0};
 
     float refptG[MAXJETS] = {0};
     float refetaG[MAXJETS] = {0};

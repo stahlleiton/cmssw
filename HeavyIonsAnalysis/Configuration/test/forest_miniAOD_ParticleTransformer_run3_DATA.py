@@ -79,11 +79,17 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 # jet reco sequence
 process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_data_cff')
 process.load('HeavyIonsAnalysis.JetAnalysis.hiFJRhoAnalyzer_cff')
+process.load('HeavyIonsAnalysis.JetAnalysis.hiFJSoftKillerAnalyzer_cff')
+process.load('HeavyIonsAnalysis.JetAnalysis.hiFlowRhoAnalyzer_cff')
 ################################
 # tracks
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
 # muons
 process.load("HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi")
+process.load('HeavyIonsAnalysis.MuonAnalysis.hiIsoMuons_cfi')
+process.hiIsoMuons.muon_minPt = 10
+process.unpackedMuons.muons = "hiIsoMuons"
+process.muonSequence = cms.Sequence(process.hiIsoMuons * process.unpackedMuons)
 process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
 ###############################################################################
 
@@ -112,9 +118,11 @@ process.forest = cms.Path(
     process.l1object +
     process.unpackedTracksAndVertices +
     process.particleFlowAnalyser +
-    process.unpackedMuons +
-    process.ggHiNtuplizer +
     process.rhoSequence +
+    process.muonSequence +
+    process.ggHiNtuplizer +
+    process.hiFJSoftKillerAnalyzer +
+    process.rhoFlowDataSequence +
     process.metFilters +
     process.zdcanalyzer
     )
@@ -132,23 +140,28 @@ doHIJetID = True             # Fill jet ID and composition information branches
 doWTARecluster = True        # Add jet phi and eta for WTA axis
 
 # add candidate tagging
-from HeavyIonsAnalysis.JetAnalysis.deepNtupleSettings_cff import candidateBtaggingMiniAOD
-candidateBtaggingMiniAOD(process, isMC = False, jetPtMin = jetPtMin, jetCorrLevels = ['L2Relative', 'L2L3Residual'])
+for jetR in [0.3, 0.4]:
+    R = str(int(jetR*10))
+    from HeavyIonsAnalysis.JetAnalysis.deepNtupleSettings_cff import candidateBtaggingMiniAOD
+    candidateBtaggingMiniAOD(process, isMC = False, jetPtMin = jetPtMin, jetR = jetR, jetCorrLevels = ['L2Relative', 'L2L3Residual'])
 
-# setup jet analyzer
-process.akCs4PFJetAnalyzer.jetTag = 'selectedUpdatedPatJetsDeepFlavour'
-process.akCs4PFJetAnalyzer.jetName = 'akCs0PF'
-process.akCs4PFJetAnalyzer.doHiJetID = doHIJetID
-process.akCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
-process.akCs4PFJetAnalyzer.useNewBtaggers = True
-process.akCs4PFJetAnalyzer.jetPtMin = jetPtMin
-process.akCs4PFJetAnalyzer.jetAbsEtaMax = cms.untracked.double(jetAbsEtaMax)
-process.akCs4PFJetAnalyzer.pfJetProbabilityBJetTag = cms.untracked.string("pfJetProbabilityBJetTagsDeepFlavour")
-process.akCs4PFJetAnalyzer.pfDeepCSVJetTags = cms.untracked.string("pfDeepCSVJetTagsDeepFlavour")
-process.akCs4PFJetAnalyzer.pfDeepFlavourJetTags = cms.untracked.string("pfDeepFlavourJetTagsDeepFlavour")
-process.akCs4PFJetAnalyzer.pfParticleTransformerAK4JetTags = cms.untracked.string("pfParticleTransformerAK4JetTagsDeepFlavour")
-process.akCs4PFJetAnalyzer.pfUnifiedParticleTransformerAK4JetTags = cms.untracked.string("pfUnifiedParticleTransformerAK4JetTagsDeepFlavour")
-process.forest += process.akCs4PFJetAnalyzer
+    # setup jet analyzer
+    setattr(process,f'akCs{R}PFJetAnalyzer', process.akCs4PFJetAnalyzer.clone())
+    getattr(process,f'akCs{R}PFJetAnalyzer').jetTag = f'selectedUpdatedPatJetsAKCs{R}DeepFlavour'
+    getattr(process,f'akCs{R}PFJetAnalyzer').jetName = f'akCs{R}PF'
+    getattr(process,f'akCs{R}PFJetAnalyzer').rParam = jetR
+    getattr(process,f'akCs{R}PFJetAnalyzer').doHiJetID = doHIJetID
+    getattr(process,f'akCs{R}PFJetAnalyzer').doWTARecluster = doWTARecluster
+    getattr(process,f'akCs{R}PFJetAnalyzer').useNewBtaggers = True
+    getattr(process,f'akCs{R}PFJetAnalyzer').jetPtMin = jetPtMin
+    getattr(process,f'akCs{R}PFJetAnalyzer').useRawPt = True
+    getattr(process,f'akCs{R}PFJetAnalyzer').jetAbsEtaMax = cms.untracked.double(jetAbsEtaMax)
+    getattr(process,f'akCs{R}PFJetAnalyzer').pfJetProbabilityBJetTag = cms.untracked.string(f"pfJetProbabilityBJetTagsAKCs{R}DeepFlavour")
+    getattr(process,f'akCs{R}PFJetAnalyzer').pfDeepCSVJetTags = cms.untracked.string(f"pfDeepCSVJetTagsAKCs{R}DeepFlavour")
+    getattr(process,f'akCs{R}PFJetAnalyzer').pfDeepFlavourJetTags = cms.untracked.string(f"pfDeepFlavourJetTagsAKCs{R}DeepFlavour")
+    getattr(process,f'akCs{R}PFJetAnalyzer').pfParticleTransformerAK4JetTags = cms.untracked.string(f"pfParticleTransformerAK4JetTagsAKCs{R}DeepFlavour")
+    getattr(process,f'akCs{R}PFJetAnalyzer').pfUnifiedParticleTransformerAK4JetTags = cms.untracked.string(f"pfUnifiedParticleTransformerAK4JetTagsAKCs{R}DeepFlavour")
+    process.forest += getattr(process,f'akCs{R}PFJetAnalyzer')
 
 
 #########################

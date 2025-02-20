@@ -1,8 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 
-def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels = ['L2Relative', 'L3Absolute']):
+def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetR = 0.4, jetCorrLevels = ['L2Relative', 'L3Absolute']):
     # DeepNtuple settings
-    jetCorrectionsAK4 = ('AK4PFchs', jetCorrLevels, 'None')
+    R = str(int(jetR*10))
+    jetCorrectionsAK = ('AK4PF', jetCorrLevels, 'None')
 
     bTagInfos = [
         'pfDeepCSVTagInfos',
@@ -64,18 +65,16 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         process.allPartons = allPartons.clone(
             src = 'hiSignalGenParticles'
         )
-        from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
-        process.ak4GenJetsWithNu = ak4GenJets.clone(
-            src = 'packedGenParticlesSignal'
-        )
         process.packedGenParticlesForJetsNoNu = cms.EDFilter("CandPtrSelector",
             src = cms.InputTag("packedGenParticlesSignal"),
             cut = cms.string("abs(pdgId) != 12 && abs(pdgId) != 14 && abs(pdgId) != 16")
         )
-        process.ak4GenJetsRecluster = ak4GenJets.clone(
-            src = 'packedGenParticlesForJetsNoNu'
-        )
-        process.genTask = cms.Task(process.hiSignalGenParticles, process.allPartons, process.ak4GenJetsWithNu, process.packedGenParticlesForJetsNoNu, process.ak4GenJetsRecluster)
+        from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+        setattr(process,f'ak{R}GenJetsRecluster', ak4GenJets.clone(
+            src = 'packedGenParticlesForJetsNoNu',
+            rParam = jetR
+        ))
+        setattr(process,f'genAK{R}Task', cms.Task(process.hiSignalGenParticles, process.allPartons, process.packedGenParticlesForJetsNoNu, getattr(process,f'ak{R}GenJetsRecluster')))
 
     # Remake secondary vertices
     from RecoVertex.AdaptiveVertexFinder.inclusiveVertexing_cff import inclusiveCandidateVertexFinder, candidateVertexMerger, candidateVertexArbitrator, inclusiveCandidateSecondaryVertices
@@ -99,58 +98,64 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
     addJetCollection(
         process,
         postfix            = "UnsubJets",
-        labelName          = "AK4PF",
-        jetSource          = cms.InputTag("ak4PFUnsubJets"),
+        labelName          = f"AK{R}PF",
+        jetSource          = cms.InputTag(f"ak{R}PFUnsubJets"),
         algo               = "ak", #name of algo must be in this format
-        rParam             = 0.4,
+        rParam             = jetR,
         pvSource           = cms.InputTag("offlineSlimmedPrimaryVertices"),
         pfCandidates       = cms.InputTag("packedPFCandidates"),
         svSource           = svSource,
         muSource           = cms.InputTag("slimmedMuons"),
         elSource           = cms.InputTag("slimmedElectrons"),
         getJetMCFlavour    = isMC,
-        genJetCollection   = cms.InputTag("ak4GenJetsWithNu" if isMC else ""),
+        genJetCollection   = cms.InputTag(f"ak{R}GenJetsRecluster" if isMC else ""),
         genParticles       = cms.InputTag("hiSignalGenParticles" if isMC else ""),
-        jetCorrections     = ('AK4PF',) + jetCorrectionsAK4[1:],
+        jetCorrections     = jetCorrectionsAK,
     )
-    process.patJetsAK4PFUnsubJets.useLegacyJetMCFlavour = False
+    getattr(process,f'patJetsAK{R}PFUnsubJets').useLegacyJetMCFlavour = False
+    getattr(process,f'patJetPartonMatchAK{R}PFUnsubJets').maxDeltaR = jetR
 
     from PhysicsTools.PatAlgos.producersLayer1.jetProducer_cff import ak4PFJets
-    process.ak4PFUnsubJets = ak4PFJets.clone(
+    setattr(process,f'ak{R}PFUnsubJets', ak4PFJets.clone(
         src = 'packedPFCandidates',
+        rParam = jetR,
         jetPtMin = jetPtMin
-    )
-    process.patAlgosToolsTask.add(process.ak4PFUnsubJets)
+    ))
+    process.patAlgosToolsTask.add(getattr(process,f'ak{R}PFUnsubJets'))
 
     # Create HIN subtracted reco jets
     from PhysicsTools.PatAlgos.tools.jetTools import addJetCollection
     addJetCollection(
         process,
         postfix            = "",
-        labelName          = "AKCs4PF",
-        jetSource          = cms.InputTag("akCs4PFJets"),
+        labelName          = f"AKCs{R}PF",
+        jetSource          = cms.InputTag(f"akCs{R}PFJets"),
         algo               = "ak", #name of algo must be in this format
-        rParam             = 0.4,
+        rParam             = jetR,
         pvSource           = cms.InputTag("offlineSlimmedPrimaryVertices"),
         pfCandidates       = cms.InputTag("packedPFCandidates"),
         svSource           = svSource,
         muSource           = cms.InputTag("slimmedMuons"),
         elSource           = cms.InputTag("slimmedElectrons"),
         getJetMCFlavour    = isMC,
-        genJetCollection   = cms.InputTag("ak4GenJetsWithNu" if isMC else ""),
+        genJetCollection   = cms.InputTag(f"ak{R}GenJetsRecluster" if isMC else ""),
         genParticles       = cms.InputTag("hiSignalGenParticles" if isMC else ""),
-        jetCorrections     = jetCorrectionsAK4,
+        jetCorrections     = jetCorrectionsAK,
     )
-    process.patJetsAKCs4PF.embedPFCandidates = True
+    getattr(process,f'patJetsAKCs{R}PF').embedPFCandidates = True
+    getattr(process,f'patJetPartonMatchAKCs{R}PF').maxDeltaR = jetR
 
     if not isMC:
-        for label in ["patJetsAK4PFUnsubJets", "patJetsAKCs4PF"]:
+        for label in [f"patJetsAK{R}PFUnsubJets", f"patJetsAKCs{R}PF"]:
             getattr(process, label).addGenJetMatch = False
             getattr(process, label).addGenPartonMatch = False
             getattr(process, label).embedGenJetMatch = False
             getattr(process, label).embedGenPartonMatch = False
             getattr(process, label).genJetMatch = ""
             getattr(process, label).genPartonMatch = ""
+    else:
+        getattr(process,f'patJetPartonAssociationLegacyAK{R}PFUnsubJets').coneSizeToAssociate = min(jetR, 0.3)
+        getattr(process,f'patJetPartonAssociationLegacyAKCs{R}PF').coneSizeToAssociate = min(jetR, 0.3)
 
     from PhysicsTools.PatAlgos.producersHeavyIons.heavyIonJets_cff import PackedPFTowers, hiPuRho
     process.PackedPFTowers = PackedPFTowers.clone()
@@ -158,20 +163,21 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         src = 'PackedPFTowers'
     )
     from PhysicsTools.PatAlgos.producersLayer1.jetProducer_cff import akCs4PFJets
-    process.akCs4PFJets = akCs4PFJets.clone(
+    setattr(process,f'akCs{R}PFJets', akCs4PFJets.clone(
         src = 'packedPFCandidates',
+        rParam = jetR,
         jetPtMin = jetPtMin
-    )
-    for mod in ["PackedPFTowers", "hiPuRho", "akCs4PFJets"]:
+    ))
+    for mod in ["PackedPFTowers", "hiPuRho", f"akCs{R}PFJets"]:
         process.patAlgosToolsTask.add(getattr(process, mod))
 
     # Create b-tagging sequence ----------------
     from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
     updateJetCollection(
         process,
-        labelName = "DeepFlavour",
-        jetSource = cms.InputTag('patJetsAKCs4PF'), # 'ak4Jets'
-        jetCorrections = jetCorrectionsAK4,
+        labelName = f"AKCs{R}DeepFlavour",
+        jetSource = cms.InputTag(f'patJetsAKCs{R}PF'),
+        jetCorrections = jetCorrectionsAK,
         pfCandidates = cms.InputTag('packedPFCandidates'),
         pvSource = cms.InputTag("offlineSlimmedPrimaryVertices"),
         svSource = svSource,
@@ -182,44 +188,48 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         explicitJTA = False
     )
 
-    process.unsubUpdatedPatJetsDeepFlavour = cms.EDProducer("JetMatcherDR",
-        source = cms.InputTag("updatedPatJetsDeepFlavour"),
-        matched = cms.InputTag("patJetsAK4PFUnsubJets")
-    )
-    process.patAlgosToolsTask.add(process.unsubUpdatedPatJetsDeepFlavour)
+    setattr(process,f'unsubUpdatedPatJetsAKCs{R}DeepFlavour', cms.EDProducer("JetMatcherDR",
+        source = cms.InputTag(f"updatedPatJetsAKCs{R}DeepFlavour"),
+        matched = cms.InputTag(f"patJetsAK{R}PFUnsubJets")
+    ))
+    process.patAlgosToolsTask.add(getattr(process,f'unsubUpdatedPatJetsAKCs{R}DeepFlavour'))
 
-    process.pfUnifiedParticleTransformerAK4JetTagsDeepFlavour.model_path = 'HeavyIonsAnalysis/Configuration/data/UParTAK4_HIMG5132XADV.onnx'
-    process.pfUnifiedParticleTransformerAK4TagInfosDeepFlavour.sort_cand_by_pt = True
+    getattr(process,f'pfUnifiedParticleTransformerAK4JetTagsAKCs{R}DeepFlavour').model_path = f'HeavyIonsAnalysis/Configuration/data/UParTAK{R}HIUpdatedGENJetEps.onnx'
+    getattr(process,f'pfUnifiedParticleTransformerAK4TagInfosAKCs{R}DeepFlavour').sort_cand_by_pt = True
 
-    if hasattr(process,'updatedPatJetsTransientCorrectedDeepFlavour'):
-        process.updatedPatJetsTransientCorrectedDeepFlavour.addTagInfos = True
-        process.updatedPatJetsTransientCorrectedDeepFlavour.addBTagInfo = True
+    getattr(process,f'pfImpactParameterTagInfosAKCs{R}DeepFlavour').maxDeltaR = jetR
+    for taginfo in [f"pfDeepFlavourTagInfosAKCs{R}DeepFlavour", f"pfParticleTransformerAK4TagInfosAKCs{R}DeepFlavour", f"pfUnifiedParticleTransformerAK4TagInfosAKCs{R}DeepFlavour"]:
+        getattr(process, taginfo).jet_radius = jetR
+
+    if hasattr(process,f'updatedPatJetsTransientCorrectedAKCs{R}DeepFlavour'):
+        getattr(process,f'updatedPatJetsTransientCorrectedAKCs{R}DeepFlavour').addTagInfos = True
+        getattr(process,f'updatedPatJetsTransientCorrectedAKCs{R}DeepFlavour').addBTagInfo = True
     else:
-        raise ValueError('I could not find updatedPatJetsTransientCorrectedDeepFlavour to embed the tagInfos, please check the cfg')
+        raise ValueError(f'I could not find updatedPatJetsTransientCorrectedAKCs{R}DeepFlavour to embed the tagInfos, please check the cfg')
 
     # Remove PUPPI
     process.patAlgosToolsTask.remove(process.packedpuppi)
     process.patAlgosToolsTask.remove(process.packedpuppiNoLep)
-    process.pfInclusiveSecondaryVertexFinderTagInfosDeepFlavour.weights = ""
-    for taginfo in ["pfDeepFlavourTagInfosDeepFlavour", "pfParticleTransformerAK4TagInfosDeepFlavour", "pfUnifiedParticleTransformerAK4TagInfosDeepFlavour"]:
+    getattr(process,f'pfInclusiveSecondaryVertexFinderTagInfosAKCs{R}DeepFlavour').weights = ""
+    for taginfo in [f"pfDeepFlavourTagInfosAKCs{R}DeepFlavour", f"pfParticleTransformerAK4TagInfosAKCs{R}DeepFlavour", f"pfUnifiedParticleTransformerAK4TagInfosAKCs{R}DeepFlavour"]:
         getattr(process, taginfo).fallback_puppi_weight = True
         getattr(process, taginfo).fallback_vertex_association = True
-        getattr(process, taginfo).unsubjet_map = "unsubUpdatedPatJetsDeepFlavour"
+        getattr(process, taginfo).unsubjet_map = f"unsubUpdatedPatJetsAKCs{R}DeepFlavour"
         getattr(process, taginfo).puppi_value_map = ""
 
     # Match with unsubtracted jets
-    process.unsubJetMap = process.unsubUpdatedPatJetsDeepFlavour.clone(
-        source = "selectedUpdatedPatJetsDeepFlavour"
-    )
-    process.patAlgosToolsTask.add(process.unsubJetMap)
+    setattr(process,f'unsubAK{R}JetMap', getattr(process,f'unsubUpdatedPatJetsAKCs{R}DeepFlavour').clone(
+        source = f"selectedUpdatedPatJetsAKCs{R}DeepFlavour"
+    ))
+    process.patAlgosToolsTask.add(getattr(process,f'unsubAK{R}JetMap'))
 
     # Add extra b tagging algos
     from RecoBTag.ImpactParameter.pfJetProbabilityBJetTags_cfi import pfJetProbabilityBJetTags
-    process.pfJetProbabilityBJetTagsDeepFlavour = pfJetProbabilityBJetTags.clone(tagInfos = ["pfImpactParameterTagInfosDeepFlavour"])
-    process.patAlgosToolsTask.add(process.pfJetProbabilityBJetTagsDeepFlavour)
+    setattr(process,f'pfJetProbabilityBJetTagsAKCs{R}DeepFlavour', pfJetProbabilityBJetTags.clone(tagInfos = [f"pfImpactParameterTagInfosAKCs{R}DeepFlavour"]))
+    process.patAlgosToolsTask.add(getattr(process,f'pfJetProbabilityBJetTagsAKCs{R}DeepFlavour'))
 
     # Associate to forest sequence
     if isMC:
-        process.forest.associate(process.genTask)
+        process.forest.associate(getattr(process,f'genAK{R}Task'))
     process.forest.associate(process.svTask)
     process.forest.associate(process.patAlgosToolsTask)

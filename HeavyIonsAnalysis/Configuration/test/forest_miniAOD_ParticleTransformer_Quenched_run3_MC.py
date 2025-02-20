@@ -213,3 +213,36 @@ process.pphfCoincFilter3Th6 = cms.Path(process.phfCoincFilter3Th6)
 process.pphfCoincFilter4Th6 = cms.Path(process.phfCoincFilter4Th6)
 process.pphfCoincFilter5Th6 = cms.Path(process.phfCoincFilter5Th6)
 process.pAna = cms.EndPath(process.skimanalysis)
+
+
+###############################################################################
+# quench particles
+from Configuration.Applications.ConfigBuilder import MassReplaceInputTag
+MassReplaceInputTag(process, new="hiQuenchedParticles:packedPFCandidates", old="packedPFCandidates")
+MassReplaceInputTag(process, new="hiQuenchedParticles:lostTracks", old="lostTracks")
+MassReplaceInputTag(process, new="hiQuenchedParticles:lostTrackseleTracks", old="lostTracks:eleTracks")
+
+process.unpackedTracksAndVertices.packedCandidates = cms.VInputTag("packedPFCandidates", "lostTracks", "lostTracks:eleTracks")
+process.load('HeavyIonsAnalysis.EventAnalysis.hiQuenchedParticles_cfi')
+'''
+process.PackedPFTowersUnquenched = process.PackedPFTowers.clone(src = cms.InputTag("packedPFCandidates"))
+process.hiPuRhoUnquenched = process.hiPuRho.clone(src = cms.InputTag("PackedPFTowersUnquenched"))
+process.ak4PFJetsForFlowUnquenched = process.ak4PFJetsForFlow.clone(src = cms.InputTag("PackedPFTowersUnquenched"))
+process.hiFJRhoFlowModulationUnquenched = process.hiFJRhoFlowModulation.clone(
+    jetTag = cms.InputTag("ak4PFJetsForFlowUnquenched"),
+    pfCandSource = cms.InputTag("packedPFCandidates")
+)
+process.akCs4PFUnquenchedJets = process.akCs4PFJets.clone(
+    etaMap = cms.InputTag("hiPuRhoUnquenched","mapEtaEdges"),
+    rhom = cms.InputTag("hiPuRhoUnquenched","mapToRhoM"),
+    rho = cms.InputTag("hiPuRhoUnquenched","mapToRho"),
+    rhoFlowFitParams = cms.InputTag("hiFJRhoFlowModulationUnquenched","rhoFlowFitParams"),
+    src = cms.InputTag("packedPFCandidates"),
+    jetPtMin = 15.
+)
+process.quenchTask = cms.Task(process.centralityBin, process.PackedPFTowersUnquenched, process.hiPuRhoUnquenched, process.ak4PFJetsForFlowUnquenched, process.hiFJRhoFlowModulationUnquenched, process.akCs4PFUnquenchedJets, process.hiQuenchedParticles)
+'''
+process.ak4GenJetsWithNuUnquenched = process.ak4GenJetsWithNu.clone(jetPtMin = 15.)
+process.hiQuenchedParticles.jets = "ak4GenJetsWithNuUnquenched"
+process.quenchTask = cms.Task(process.centralityBin, process.ak4GenJetsWithNuUnquenched, process.hiQuenchedParticles)
+process.forest.associate(process.quenchTask)
