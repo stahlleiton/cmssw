@@ -1,0 +1,11 @@
+#include <DataFormats/PatCandidates/interface/UserData.h>
+#include <DataFormats/PatCandidates/interface/Muon.h>
+#include <DataFormats/PatCandidates/interface/Electron.h>
+#include <DataFormats/PatCandidates/interface/Tau.h>
+#include <DataFormats/PatCandidates/interface/Jet.h>
+#include <DataFormats/PatCandidates/interface/MET.h>
+#include <DataFormats/PatCandidates/interface/Photon.h>
+#include <DataFormats/PatCandidates/interface/GenericParticle.h>
+#include <DataFormats/TrackReco/interface/Track.h>
+#include <RecoVertex/KinematicFitPrimitives/interface/KinematicParametersError.h>
+#include <SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h>
