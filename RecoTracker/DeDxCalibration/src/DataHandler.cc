@@ -771,6 +771,10 @@ pair<double,double> DataHandler::processTrack(const TTrack & track,
 /*****************************************************************************/
 void DataHandler::processTrack(const TTrack & track)
 {
+  const auto aeta = std::abs(track.eta);
+  if (track.pt < (aeta < 1.5 ? 0.1 : 0.04*(aeta+1)))
+    return;
+
   if(coupledHits)
   {
     getCoupledMeasurements(track);
