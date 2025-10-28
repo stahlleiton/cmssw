@@ -45,6 +45,8 @@ class Eras (object):
                  'Run3_pp_on_PbPb_2024',
                  'Run3_pp_on_PbPb_approxSiStripClusters_2024',
                  'Run3_pp_on_PbPb_2025',
+                 'Run3_pp_on_PbPb_2025_v1',
+                 'Run3_pp_on_PbPb_2025_v2',
                  'Run3_pp_on_PbPb_approxSiStripClusters_2025',
                  'Run3_dd4hep',
                  'Run3_DDD',

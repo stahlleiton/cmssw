@@ -4,9 +4,9 @@ from RecoParticleFlow.PFTracking.modules import GoodSeedProducer
 trackerDrivenElectronSeeds = GoodSeedProducer()
 
 from Configuration.Eras.Modifier_pp_on_XeXe_2017_cff import pp_on_XeXe_2017
-from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA
+from Configuration.ProcessModifiers.pp_on_AA_cff import pp_on_AA, pp_on_AA_v2
 for e in [pp_on_XeXe_2017, pp_on_AA]:
-    e.toModify(trackerDrivenElectronSeeds, MinPt = 5.0) 
+    (e & ~pp_on_AA_v2).toModify(trackerDrivenElectronSeeds, MinPt = 5.0)
 
 # tracker driven electron seeds depend on the generalTracks trajectory collection
 # However, in FastSim jobs, trajectories are only available for the 'before mixing' track collections
