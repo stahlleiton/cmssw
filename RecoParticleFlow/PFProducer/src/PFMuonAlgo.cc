@@ -177,7 +177,16 @@ bool PFMuonAlgo::isTrackerTightMuon(const reco::MuonRef& muonRef) {
 
   unsigned nTrackerHits = track.hitPattern().numberOfValidTrackerHits();
 
-  if (nTrackerHits <= 12)
+  bool hasME0(false);
+  for (const auto& m : muonRef->matches())
+    if (m.detector() == MuonSubdetId::GEM && m.station() == 0) {
+      hasME0 = true;
+      break;
+    }
+
+  if (hasME0 && std::abs(muonRef->eta()) > 2.3)
+    return nTrackerHits > 8;
+  else if (nTrackerHits <= 12)
     return false;
 
   bool isAllArbitrated = muon::isGoodMuon(*muonRef, muon::AllArbitrated);
