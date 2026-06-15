@@ -177,7 +177,9 @@ bool PFMuonAlgo::isTrackerTightMuon(const reco::MuonRef& muonRef) {
 
   unsigned nTrackerHits = track.hitPattern().numberOfValidTrackerHits();
 
-  if (nTrackerHits <= 12)
+  if (muonRef->isPhase2Muon() && std::abs(muonRef->eta()) > 2.3)
+    return nTrackerHits > 8;
+  else if (nTrackerHits <= 12)
     return false;
 
   bool isAllArbitrated = muon::isGoodMuon(*muonRef, muon::AllArbitrated);
