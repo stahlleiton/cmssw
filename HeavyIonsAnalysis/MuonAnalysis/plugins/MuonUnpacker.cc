@@ -24,8 +24,8 @@ namespace pat {
           trackBuilderToken_(esConsumes(edm::ESInputTag("", "TransientTrackBuilder"))),
           candidateMuonIDToken_(getPackedCandidateMap(muonSelectors_)),
           propToMuonSetup_(getMuonPropagator(iConfig, consumesCollector())),
-          patMuonPutToken_(produces<pat::MuonCollection>()){};
-    ~MuonUnpacker() override{};
+          patMuonPutToken_(produces<pat::MuonCollection>()) {};
+    ~MuonUnpacker() override {};
 
     void produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const override;
 
@@ -42,7 +42,7 @@ namespace pat {
     const edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
     const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> trackBuilderToken_;
     const PackedCandidateRefVectorMap candidateMuonIDToken_;
-    const std::unique_ptr<PropagateToMuonSetup> propToMuonSetup_;
+    const std::unique_ptr<const PropagateToMuonSetup> propToMuonSetup_;
     const edm::EDPutTokenT<pat::MuonCollection> patMuonPutToken_;
 
     PackedCandidateRefVectorMap getPackedCandidateMap(const std::vector<std::string>& v) {
@@ -56,7 +56,7 @@ namespace pat {
       return m;
     };
 
-    PropagateToMuonSetup* getMuonPropagator(const edm::ParameterSet& iConfig, edm::ConsumesCollector iC) {
+    const PropagateToMuonSetup* getMuonPropagator(const edm::ParameterSet& iConfig, edm::ConsumesCollector iC) {
       if (iConfig.getParameter<bool>("addPropToMuonSt"))
         return new PropagateToMuonSetup(iConfig, iC);
       return nullptr;

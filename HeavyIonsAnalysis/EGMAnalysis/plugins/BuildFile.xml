@@ -6,7 +6,6 @@
 <use name="RecoEgamma/EgammaTools"/>
 <use name="CommonTools/Egamma"/>
 <use name="TrackingTools/IPTools"/>
-<use name="rootcore"/>
 <use name="fastjet"/>
 <use name="fastjet-contrib"/>
 <use name="correctionlib"/>

@@ -59,10 +59,12 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
 
         # Define generator level jets without neutrinos
         from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+
         process.packedGenParticlesForJetsNoNu = cms.EDFilter("CandPtrSelector",
             src = cms.InputTag("packedGenParticles"),
             cut = cms.string("abs(pdgId) != 12 && abs(pdgId) != 14 && abs(pdgId) != 16")
         )
+
         setattr(process,"ak"+labelR+"GenJetsReclusterNoNu",
                 ak4GenJets.clone(
                     src = 'packedGenParticlesForJetsNoNu',
@@ -71,7 +73,7 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
         )
          # We need to be careful not to override the previous genTask in case several different jet radii are defined in the forest configuration file
         if hasattr(process, "genTask"):
-            process.genTask.add(getattr(process,"ak"+labelR+"GenJetsReclusterNoNu"))
+            process.genTask.add( getattr(process,"ak"+labelR+"GenJetsReclusterNoNu"))
         else:
             process.genTask = cms.Task(process.hiSignalGenParticles, process.allPartons, process.packedGenParticlesForJetsNoNu, getattr(process,"ak"+labelR+"GenJetsReclusterNoNu"))
 
@@ -106,7 +108,7 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
     matchedGenJets = ""
     if isMC:
         if labelR == "0": matchedGenJets = "slimmedGenJets"
-        else: matchedGenJets  = "ak"+labelR+"GenJetsReclusterNoNu"
+        else: matchedGenJets = "ak"+labelR+"GenJetsReclusterNoNu"
 
 
     svSource = cms.InputTag("slimmedSecondaryVertices")
@@ -206,6 +208,7 @@ def candidateBtaggingMiniAOD(process, isMC = True, jetPtMin = 15, jetCorrLevels 
     if doBtagging:
         getattr(process,"pfUnifiedParticleTransformerAK4JetTagsAK"+labelR+"PFCHSBtag").model_path = 'RecoBTag/Combined/data/UParTAK4/HIN/V00/UParTAK4_PbPb_2023.onnx'
         getattr(process,"pfUnifiedParticleTransformerAK4TagInfosAK"+labelR+"PFCHSBtag").sort_cand_by_pt = True 
+        getattr(process,"pfUnifiedParticleTransformerAK4TagInfosAK"+labelR+"PFCHSBtag").fix_lt_sorting = True
 
         if hasattr(process,'updatedPatJetsTransientCorrectedAK'+labelR+'PFCHSBtag'):
             getattr(process,'updatedPatJetsTransientCorrectedAK'+labelR+'PFCHSBtag').addTagInfos = True

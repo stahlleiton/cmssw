@@ -457,7 +457,7 @@ void MuonAnalyzer::analyze(const edm::Event& e, const edm::EventSetup& es) {
       recoMVAIDMediumLowPt_.push_back(mu.passed(reco::Muon::LowPtMvaMedium));
 
     }  // muons loop
-  }    // end of doReco_
+  }  // end of doReco_
 
   tree_->Fill();
 }

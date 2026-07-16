@@ -267,6 +267,7 @@ ggHiNtuplizer::ggHiNtuplizer(const edm::ParameterSet& ps)
 
     tree_->Branch("phoE", &phoE_);
     tree_->Branch("phoEt", &phoEt_);
+    tree_->Branch("phoRawEt", &phoRawEt_);
     tree_->Branch("phoEta", &phoEta_);
     tree_->Branch("phoPhi", &phoPhi_);
 
@@ -729,6 +730,7 @@ void ggHiNtuplizer::analyze(const edm::Event& e, const edm::EventSetup& es) {
 
     phoE_.clear();
     phoEt_.clear();
+    phoRawEt_.clear();
     phoEta_.clear();
     phoPhi_.clear();
 
@@ -1540,6 +1542,7 @@ void ggHiNtuplizer::fillPhotons(const edm::Event& e, const edm::EventSetup& es, 
 
     phoE_.push_back(pho->energy());
     phoEt_.push_back(pho->et());
+    phoRawEt_.push_back(pho->hasUserFloat("rawEt") ? pho->userFloat("rawEt") : pho->et());
     phoEta_.push_back(pho->eta());
     phoPhi_.push_back(pho->phi());
 

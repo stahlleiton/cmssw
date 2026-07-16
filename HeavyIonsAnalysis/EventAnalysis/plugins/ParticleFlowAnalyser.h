@@ -27,6 +27,7 @@ private:
 
   edm::EDGetTokenT<pat::PackedCandidateCollection> pfCandidateToken_;
 
+  bool addInfo_;
   float ptMin_;
   float absEtaMax_;
 
@@ -37,6 +38,9 @@ private:
   std::vector<float> pfPhi_;
   std::vector<float> pfE_;
   std::vector<float> pfM_;
+  std::vector<int> pfChg_;
+  std::vector<float> pfDxy_;
+  std::vector<float> pfDz_;
 
   TTree* tree_;
 

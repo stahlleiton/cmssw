@@ -285,6 +285,7 @@ private:
 
   std::vector<float> phoE_;
   std::vector<float> phoEt_;
+  std::vector<float> phoRawEt_;
   std::vector<float> phoEta_;
   std::vector<float> phoPhi_;
 

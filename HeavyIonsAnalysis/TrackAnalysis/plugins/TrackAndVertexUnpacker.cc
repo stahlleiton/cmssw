@@ -24,7 +24,7 @@ namespace pat {
       produces<edm::Association<reco::TrackCollection> >();
       produces<std::vector<edm::Ptr<pat::PackedCandidate> > >();
     };
-    ~TrackAndVertexUnpacker() override{};
+    ~TrackAndVertexUnpacker() override {};
 
     void produce(edm::StreamID, edm::Event& iEvent, const edm::EventSetup& iSetup) const override;
 
@@ -180,7 +180,7 @@ void pat::TrackAndVertexUnpacker::produce(edm::StreamID, edm::Event& iEvent, con
   iEvent.put(std::move(assoc_pc2track));
 
   // create output association track -> packed candidate
-  const auto& outPCandsHandle = iEvent.put(std::move(outPCands));
+  iEvent.put(std::move(outPCands));
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------

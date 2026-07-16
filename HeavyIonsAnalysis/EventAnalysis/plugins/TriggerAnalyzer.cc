@@ -51,6 +51,7 @@ private:
 
   std::string processName_;
 
+  bool addAllPaths_;
   std::vector<std::string> hltdummies;
   std::vector<std::string> l1dummies;
 
@@ -80,6 +81,7 @@ TriggerAnalyzer::TriggerAnalyzer(edm::ParameterSet const& conf)
       hltPrescaleDenominator(new int[kMaxHLTFlag]),
       l1Prescl(new int[kMaxL1Flag]),
       processName_(conf.getParameter<std::string>("HLTProcessName")),
+      addAllPaths_(conf.getParameter<bool>("addAllPaths")),
       hltdummies(conf.getParameter<std::vector<std::string>>("hltdummybranches")),
       l1dummies(conf.getParameter<std::vector<std::string>>("l1dummybranches")),
       hltresultsToken_(consumes<edm::TriggerResults>(conf.getParameter<edm::InputTag>("hltresults"))),
@@ -148,6 +150,8 @@ void TriggerAnalyzer::analyze(edm::Event const& iEvent, edm::EventSetup const& i
       }
 
       for (int itrig = 0; itrig != ntrigs; ++itrig) {
+        if (not addAllPaths_)
+          break;
         const std::string& trigname = triggerNames.triggerName(itrig);
         if (pathtoindex.find(trigname) == pathtoindex.end()) {
           TString hltname = trigname;
@@ -168,6 +172,8 @@ void TriggerAnalyzer::analyze(edm::Event const& iEvent, edm::EventSetup const& i
     FractionalPrescale thisTriggerPrescale;
     for (int itrig = 0; itrig != ntrigs; ++itrig) {
       const std::string& trigname = triggerNames.triggerName(itrig);
+      if (pathtoindex.find(trigname) == pathtoindex.end())
+        continue;
       bool accept = hltresults->accept(itrig);
 
       int index = pathtoindex[trigname];
@@ -211,6 +217,8 @@ void TriggerAnalyzer::analyze(edm::Event const& iEvent, edm::EventSetup const& i
       int il1 = 0;
       // get the bit/name association
       for (auto const& keyval : menu->getAlgorithmMap()) {
+        if (not addAllPaths_)
+          break;
         std::string const& trigname = keyval.second.getName();
 
         if (pathtoindex.find(trigname) == pathtoindex.end()) {
@@ -230,6 +238,8 @@ void TriggerAnalyzer::analyze(edm::Event const& iEvent, edm::EventSetup const& i
     // get the individual decisions from the GlobalAlgBlk
     for (auto const& keyval : menu->getAlgorithmMap()) {
       auto const& l1name = keyval.second.getName();
+      if (pathtoindex.find(l1name) == pathtoindex.end())
+        continue;
       int l1index = keyval.second.getIndex();
 
       int index = pathtoindex[l1name];

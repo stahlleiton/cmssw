@@ -12,6 +12,7 @@
 ParticleFlowAnalyser::ParticleFlowAnalyser(const edm::ParameterSet& iConfig)
     : pfCandidateToken_(
           consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCandidateSrc"))),
+      addInfo_(iConfig.getParameter<bool>("addInfo")),
       ptMin_(iConfig.getParameter<double>("ptMin")),
       absEtaMax_(iConfig.getParameter<double>("absEtaMax")) {}
 
@@ -49,6 +50,11 @@ void ParticleFlowAnalyser::analyze(const edm::Event& iEvent, const edm::EventSet
     pfPhi_.push_back(pfcand.phi());
     pfE_.push_back(pfcand.energy());
     pfM_.push_back(pfcand.mass());
+    if (addInfo_) {
+      pfChg_.push_back(pfcand.charge());
+      pfDxy_.push_back((pfcand.hasTrackDetails() && std::isfinite(pfcand.dxy())) ? pfcand.dxy() : -999.);
+      pfDz_.push_back((pfcand.hasTrackDetails() && std::isfinite(pfcand.dz())) ? pfcand.dz() : -999.);
+    }
 
     ++nPF_;
   }
@@ -69,6 +75,11 @@ void ParticleFlowAnalyser::beginJob() {
   tree_->Branch("pfPhi", &pfPhi_);
   tree_->Branch("pfE", &pfE_);
   tree_->Branch("pfM", &pfM_);
+  if (addInfo_) {
+    tree_->Branch("pfChg", &pfChg_);
+    tree_->Branch("pfDxy", &pfDxy_);
+    tree_->Branch("pfDz", &pfDz_);
+  }
 }
 
 void ParticleFlowAnalyser::endJob() {}
@@ -82,6 +93,9 @@ void ParticleFlowAnalyser::clear() {
   pfPhi_.clear();
   pfE_.clear();
   pfM_.clear();
+  pfChg_.clear();
+  pfDxy_.clear();
+  pfDz_.clear();
 }
 
 DEFINE_FWK_MODULE(ParticleFlowAnalyser);
